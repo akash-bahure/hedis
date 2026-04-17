@@ -1,0 +1,12 @@
+{
+  "name": "ui",
+  "tags": ["type:ui"],
+  "targets": {
+    "lint": {
+      "command": "echo 'No lint configured for packages/ui'"
+    },
+    "test": {
+      "command": "echo 'No tests configured for packages/ui'"
+    }
+  }
+}

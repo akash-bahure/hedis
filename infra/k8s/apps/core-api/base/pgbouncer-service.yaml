@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgbouncer
+  labels:
+    app: core-api
+    component: pgbouncer
+spec:
+  selector:
+    app: core-api
+    component: pgbouncer
+  ports:
+    - protocol: TCP
+      port: 6432
+      targetPort: 6432

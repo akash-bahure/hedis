@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespaces-app.yaml
+  - openbao-app.yaml
+  - openbao-config-app.yaml
+  - external-secrets-app.yaml
+  - external-secrets-config-app.yaml
+  - apps-dev.yaml
+  - apps-qa.yaml
+  - apps-stage.yaml
+  - apps-prod.yaml

@@ -1,0 +1,26 @@
+# PostgreSQL + PgBouncer local environment variables
+# Copy this file to .postgres and fill in your values:
+#   cp .envs/.local/.postgres.example .envs/.local/.postgres
+
+# PostgreSQL
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=myapp
+POSTGRES_USER=myapp_user
+POSTGRES_PASSWORD=changeme_local_password
+
+# PgBouncer (used by the entrypoint to construct DATABASE_URL)
+PGBOUNCER_HOST=pgbouncer
+PGBOUNCER_PORT=6432
+
+# PgBouncer auth (matches PostgreSQL credentials)
+AUTH_TYPE=plain
+LISTEN_PORT=6432
+DB_HOST=postgres
+DB_PORT=5432
+DB_USER=myapp_user
+DB_PASSWORD=changeme_local_password
+DB_NAME=myapp
+POOL_MODE=transaction
+MAX_CLIENT_CONN=100
+DEFAULT_POOL_SIZE=20

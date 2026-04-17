@@ -1,0 +1,12 @@
+{
+  "name": "sdk",
+  "tags": ["type:contracts"],
+  "targets": {
+    "lint": {
+      "command": "echo 'No lint configured for packages/sdk'"
+    },
+    "test": {
+      "command": "echo 'No tests configured for packages/sdk'"
+    }
+  }
+}

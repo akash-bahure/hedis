@@ -1,0 +1,29 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: stage
+
+resources:
+  - ../../base
+  - configmap.yaml
+  - ingress.yaml
+  - certificate.yaml
+  - externalsecrets.yaml
+  - flower-ingress.yaml
+  - flower-certificate.yaml
+  - basic-auth-secret.yaml
+  - basic-auth-middleware.yaml
+  - mailpit-deployment.yaml
+  - mailpit-service.yaml
+  - mailpit-ingress.yaml
+  - mailpit-certificate.yaml
+
+images:
+  - name: ghcr.io/my-org/django
+    newTag: stage-latest
+  - name: ghcr.io/my-org/celeryworker
+    newTag: stage-latest
+  - name: ghcr.io/my-org/celerybeat
+    newTag: stage-latest
+  - name: ghcr.io/my-org/flower
+    newTag: stage-latest

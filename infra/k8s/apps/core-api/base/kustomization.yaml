@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - django-deployment.yaml
+  - django-service.yaml
+  - celeryworker-deployment.yaml
+  - celerybeat-deployment.yaml
+  - flower-deployment.yaml
+  - flower-service.yaml
+  - postgres-statefulset.yaml
+  - postgres-service.yaml
+  - pgbouncer-configmap.yaml
+  - pgbouncer-deployment.yaml
+  - pgbouncer-service.yaml
+  - redis-deployment.yaml
+  - redis-service.yaml
+  - redis-pvc.yaml

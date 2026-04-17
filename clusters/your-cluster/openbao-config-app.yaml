@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: openbao-config
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:my-org/myapp-monorepo.git
+    targetRevision: main
+    path: infra/k8s/platform/openbao
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openbao
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

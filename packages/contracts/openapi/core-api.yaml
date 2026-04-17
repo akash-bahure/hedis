@@ -1,0 +1,51 @@
+openapi: "3.1.0"
+info:
+  title: myapp Core API
+  description: |
+    OpenAPI specification for the myapp core-api service.
+    This file is the authoritative source of truth — all clients are generated from it.
+  version: "1.0.0"
+  contact:
+    name: myapp Team
+    email: dev@example.com
+
+servers:
+  - url: http://localhost:8000
+    description: Local development
+  - url: https://api.example.com
+    description: Production
+
+paths:
+  /api/health/:
+    get:
+      operationId: health_check
+      summary: Health check
+      tags:
+        - health
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok]
+      required:
+        - status
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []

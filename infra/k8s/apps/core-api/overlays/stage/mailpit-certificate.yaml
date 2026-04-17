@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: mailpit-stage-tls
+  namespace: stage
+spec:
+  secretName: mailpit-stage-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - mailpit.stage.example.com

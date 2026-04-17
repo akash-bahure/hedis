@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mailpit
+  namespace: qa
+  labels:
+    app: core-api
+    component: mailpit
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: core-api
+      component: mailpit
+  template:
+    metadata:
+      labels:
+        app: core-api
+        component: mailpit
+    spec:
+      containers:
+        - name: mailpit
+          image: axllent/mailpit:latest
+          ports:
+            - containerPort: 1025
+            - containerPort: 8025
+          resources:
+            requests:
+              cpu: "20m"
+              memory: "32Mi"
+            limits:
+              cpu: "100m"
+              memory: "64Mi"

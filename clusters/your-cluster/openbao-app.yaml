@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: openbao
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://openbao.github.io/openbao
+    chart: openbao
+    targetRevision: "0.4.0"  # Pin to a specific version
+    helm:
+      valueFiles:
+        - $values/infra/k8s/platform/openbao/values.yaml
+  sources:
+    - repoURL: https://openbao.github.io/openbao
+      chart: openbao
+      targetRevision: "0.4.0"
+      helm:
+        valueFiles:
+          - $values/infra/k8s/platform/openbao/values.yaml
+    - repoURL: git@github.com:my-org/myapp-monorepo.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openbao
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true

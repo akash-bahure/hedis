@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgbouncer
+  labels:
+    app: core-api
+    component: pgbouncer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: core-api
+      component: pgbouncer
+  template:
+    metadata:
+      labels:
+        app: core-api
+        component: pgbouncer
+    spec:
+      containers:
+        - name: pgbouncer
+          image: docker.io/edoburu/pgbouncer:latest
+          ports:
+            - containerPort: 6432
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+          envFrom:
+            - configMapRef:
+                name: pgbouncer-config
+            - secretRef:
+                name: core-api-secrets
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -h localhost -p 6432"]
+            initialDelaySeconds: 10
+            periodSeconds: 10

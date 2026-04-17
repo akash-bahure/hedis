@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: core-api
+  labels:
+    app: core-api
+    component: django
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: core-api
+      component: django
+  template:
+    metadata:
+      labels:
+        app: core-api
+        component: django
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+      containers:
+        - name: django
+          image: ghcr.io/my-org/django:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          envFrom:
+            - configMapRef:
+                name: core-api-config
+            - secretRef:
+                name: core-api-secrets
+          command: ["/start"]
+          livenessProbe:
+            httpGet:
+              path: /api/health/
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /api/health/
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10

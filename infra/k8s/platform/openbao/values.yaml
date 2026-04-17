@@ -1,0 +1,41 @@
+# OpenBao Helm chart values
+# See: https://github.com/openbao/openbao/tree/main/charts/openbao
+
+global:
+  enabled: true
+
+server:
+  enabled: true
+  image:
+    repository: quay.io/openbao/openbao
+    tag: latest
+
+  # Use dev mode for initial testing — switch to ha or standalone for production
+  dev:
+    enabled: false
+
+  standalone:
+    enabled: true
+    config: |
+      ui = true
+      listener "tcp" {
+        tls_disable = 1
+        address = "[::]:8200"
+        cluster_address = "[::]:8201"
+      }
+      storage "file" {
+        path = "/openbao/data"
+      }
+
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 100m
+    limits:
+      memory: 256Mi
+
+  ingress:
+    enabled: false  # We manage ingress via Kustomize manifests
+
+ui:
+  enabled: true

@@ -1,0 +1,27 @@
+---
+# Root Application — the "App of Apps" pattern.
+# Apply this once to bootstrap the entire cluster.
+#
+# Usage:
+#   kubectl apply -f clusters/your-cluster/root-app.yaml
+#
+# After applying this, ArgoCD will automatically sync all child applications
+# defined in clusters/your-cluster/kustomization.yaml.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cluster-bootstrap
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:my-org/myapp-monorepo.git
+    targetRevision: main
+    path: clusters/your-cluster
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

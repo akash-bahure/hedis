@@ -1,0 +1,17 @@
+{
+  "name": "myapp-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "apps/ws-gateway",
+    "apps/docs",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "nx": "^20.0.0"
+  },
+  "scripts": {
+    "nx": "nx"
+  },
+  "packageManager": "yarn@1.22.22"
+}

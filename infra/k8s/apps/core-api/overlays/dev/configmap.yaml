@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: core-api-config
+  namespace: dev
+data:
+  DJANGO_SETTINGS_MODULE: "config.settings.production"
+  DJANGO_ALLOWED_HOSTS: "api.dev.example.com"
+  DJANGO_SECURE_SSL_REDIRECT: "False"
+  DJANGO_ADMIN_URL: "admin/"
+  REDIS_URL: "redis://redis:6379/0"
+  POSTGRES_HOST: "postgres"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "myapp"
+  PGBOUNCER_HOST: "pgbouncer"
+  PGBOUNCER_PORT: "6432"
+  CORS_ALLOWED_ORIGINS: "https://app.dev.example.com"
+  SENTRY_ENVIRONMENT: "dev"
+  USE_MAILPIT: "True"
+  MAILPIT_HOST: "mailpit"
+  MAILPIT_PORT: "1025"

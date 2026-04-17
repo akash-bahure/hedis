@@ -1,0 +1,15 @@
+{
+  "name": "core-api",
+  "tags": ["type:backend"],
+  "targets": {
+    "lint": {
+      "command": "echo 'No lint configured for apps/core-api'"
+    },
+    "test": {
+      "command": "echo 'No tests configured for apps/core-api'"
+    },
+    "dev": {
+      "command": "make -C apps/core-api local-up"
+    }
+  }
+}

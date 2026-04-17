@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+if [ -z "${POSTGRES_USER}" ]; then
+    base_postgres_image_default_user='postgres'
+    export POSTGRES_USER="${base_postgres_image_default_user}"
+fi
+PGBOUNCER_HOST="${PGBOUNCER_HOST:-${POSTGRES_HOST}}"
+PGBOUNCER_PORT="${PGBOUNCER_PORT:-${POSTGRES_PORT}}"
+
+export DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PGBOUNCER_HOST}:${PGBOUNCER_PORT}/${POSTGRES_DB}"
+
+wait-for-it "${PGBOUNCER_HOST}:${PGBOUNCER_PORT}" -t 30
+
+>&2 echo 'PgBouncer is available'
+
+exec "$@"

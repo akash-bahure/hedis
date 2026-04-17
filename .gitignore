@@ -1,0 +1,64 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node
+node_modules/
+.yarn/cache
+.yarn/install-state.gz
+bun.lockb
+dist/
+.next/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+dist/
+build/
+*.so
+*.pyd
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Django
+staticfiles/
+media/
+*.log
+
+# Environment files (real env files — .example files are committed)
+apps/core-api/.envs/.local/.django
+apps/core-api/.envs/.local/.postgres
+apps/core-api/.envs/.production/.django
+apps/core-api/.envs/.production/.postgres
+
+# Nx
+.nx/cache
+.nx/workspace-data
+
+# Docker
+.docker/
+
+# Kubernetes secrets (never commit real secrets)
+**/secrets.yaml
+**/*-secret.yaml
+!**/*-secret-store.yaml
+
+# Terraform
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.backup

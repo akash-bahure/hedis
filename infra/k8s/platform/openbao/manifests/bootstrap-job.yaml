@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: openbao-bootstrap
+  namespace: openbao
+  annotations:
+    # Run only once — delete and recreate to re-run
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    spec:
+      serviceAccountName: openbao-bootstrap
+      restartPolicy: OnFailure
+      containers:
+        - name: bootstrap
+          image: curlimages/curl:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              # Wait for OpenBao to be ready
+              until curl -sf http://openbao:8200/v1/sys/health; do
+                echo "Waiting for OpenBao..."
+                sleep 5
+              done
+
+              # Enable KV v2 secrets engine
+              curl -sf -X POST http://openbao:8200/v1/sys/mounts/kv \
+                -H "X-Vault-Token: ${BOOTSTRAP_TOKEN}" \
+                -d '{"type":"kv","options":{"version":"2"}}'
+
+              # Enable Kubernetes auth method
+              curl -sf -X POST http://openbao:8200/v1/sys/auth/kubernetes \
+                -H "X-Vault-Token: ${BOOTSTRAP_TOKEN}" \
+                -d '{"type":"kubernetes"}'
+
+              echo "Bootstrap complete!"
+          envFrom:
+            - secretRef:
+                name: openbao-bootstrap-secret

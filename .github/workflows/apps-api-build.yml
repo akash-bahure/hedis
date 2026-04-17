@@ -1,0 +1,111 @@
+name: Apps API Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - dev
+          - qa
+          - stage
+          - prod
+      services:
+        description: "Comma-separated services to build (default: django,celeryworker,celerybeat,flower)"
+        required: false
+        default: "django,celeryworker,celerybeat,flower"
+      platforms:
+        description: "Target platforms (comma-separated)"
+        required: false
+        default: "linux/amd64"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.services.outputs.services }}
+      environments: ${{ steps.environments.outputs.environments }}
+    steps:
+      - name: Resolve services list
+        id: services
+        shell: bash
+        run: |
+          SERVICES_INPUT="${{ github.event.inputs.services }}"
+          if [ -z "${SERVICES_INPUT}" ]; then
+            SERVICES_INPUT="django,celeryworker,celerybeat,flower"
+          fi
+          SERVICES_JSON=$(python -c "import json, os; services=[s.strip() for s in os.environ['SERVICES'].split(',') if s.strip()]; print(json.dumps(services))")
+          echo "services=${SERVICES_JSON}" >> "$GITHUB_OUTPUT"
+        env:
+          SERVICES: ${{ github.event.inputs.services }}
+
+      - name: Resolve environments list
+        id: environments
+        shell: bash
+        run: |
+          ENV_INPUT="${{ github.event.inputs.environment }}"
+          if [ "${ENV_INPUT}" = "all" ]; then
+            ENV_INPUT="dev,qa,stage,prod"
+          fi
+          ENV_JSON=$(python -c "import json, os; envs=[e.strip() for e in os.environ['ENVS'].split(',') if e.strip()]; print(json.dumps(envs))")
+          echo "environments=${ENV_JSON}" >> "$GITHUB_OUTPUT"
+        env:
+          ENVS: ${{ github.event.inputs.environment }}
+
+  build:
+    needs: plan
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1
+      matrix:
+        environment: ${{ fromJson(needs.plan.outputs.environments) }}
+        service: ${{ fromJson(needs.plan.outputs.services) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve tag
+        id: tag
+        shell: bash
+        run: |
+          ENVIRONMENT="${{ matrix.environment }}"
+          if [ "${ENVIRONMENT}" = "prod" ]; then
+            if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+              TAG="${GITHUB_REF_NAME}"
+            else
+              TAG="latest"
+            fi
+          else
+            TAG="${ENVIRONMENT}-latest"
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push ${{ matrix.service }} for ${{ matrix.environment }}
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/core-api
+          file: apps/core-api/compose/production/django/Dockerfile
+          push: true
+          platforms: ${{ github.event.inputs.platforms }}
+          # Build cache stored in GHCR — no extra infrastructure needed
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/core-api:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/core-api:buildcache,mode=max
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:${{ steps.tag.outputs.tag }}

@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celeryworker
+  labels:
+    app: core-api
+    component: celeryworker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: core-api
+      component: celeryworker
+  template:
+    metadata:
+      labels:
+        app: core-api
+        component: celeryworker
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+      containers:
+        - name: celeryworker
+          image: ghcr.io/my-org/celeryworker:latest
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          envFrom:
+            - configMapRef:
+                name: core-api-config
+            - secretRef:
+                name: core-api-secrets
+          command: ["/start-celeryworker"]

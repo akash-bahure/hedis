@@ -1,0 +1,15 @@
+{
+  "name": "contracts",
+  "tags": ["type:contracts"],
+  "targets": {
+    "lint": {
+      "command": "bash tooling/scripts/contracts/validate_openapi.sh"
+    },
+    "generate": {
+      "command": "bash tooling/scripts/contracts/generate_clients.sh"
+    },
+    "contracts": {
+      "command": "bash tooling/scripts/contracts/validate_openapi.sh && bash tooling/scripts/contracts/generate_clients.sh"
+    }
+  }
+}

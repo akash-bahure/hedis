@@ -1,0 +1,36 @@
+{
+  "name": "web",
+  "tags": ["type:frontend"],
+  "targets": {
+    "dev": {
+      "command": "bun run dev",
+      "options": {
+        "cwd": "{projectRoot}"
+      }
+    },
+    "build": {
+      "command": "bun run build",
+      "options": {
+        "cwd": "{projectRoot}"
+      }
+    },
+    "preview": {
+      "command": "bun run preview",
+      "options": {
+        "cwd": "{projectRoot}"
+      }
+    },
+    "lint": {
+      "command": "bun run lint",
+      "options": {
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test": {
+      "command": "bun run test",
+      "options": {
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+# Django local development environment variables
+# Copy this file to .django and fill in your values:
+#   cp .envs/.local/.django.example .envs/.local/.django
+
+# General
+DJANGO_READ_DOT_ENV_FILE=False
+DJANGO_SETTINGS_MODULE=config.settings.local
+DJANGO_SECRET_KEY=local-dev-secret-key-change-in-production
+DJANGO_DEBUG=True
+USE_DOCKER=yes
+
+# Django admin
+DJANGO_ADMIN_FORCE_ALLAUTH=False
+
+# Email (Mailpit for local dev)
+USE_MAILPIT=True
+MAILPIT_HOST=mailpit
+MAILPIT_PORT=1025
+
+# Celery
+CELERY_BROKER_URL=redis://redis:6379/0
+REDIS_URL=redis://redis:6379/0
+CELERY_FLOWER_USER=admin
+CELERY_FLOWER_PASSWORD=admin
+
+# PgBouncer (derived automatically by the entrypoint from POSTGRES_* vars)
+# These are set here to override defaults if needed:
+# PGBOUNCER_HOST=pgbouncer
+# PGBOUNCER_PORT=6432

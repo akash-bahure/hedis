@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celerybeat
+  labels:
+    app: core-api
+    component: celerybeat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: core-api
+      component: celerybeat
+  template:
+    metadata:
+      labels:
+        app: core-api
+        component: celerybeat
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+      containers:
+        - name: celerybeat
+          image: ghcr.io/my-org/celerybeat:latest
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+          envFrom:
+            - configMapRef:
+                name: core-api-config
+            - secretRef:
+                name: core-api-secrets
+          command: ["/start-celerybeat"]
