@@ -19,6 +19,7 @@ import {
   User,
   Users,
 } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 
 /* ═══════════════════════════════════════════
    TYPES
@@ -69,13 +70,13 @@ const PRIMARY_NAV: NavItem[] = [
     badge: { count: 12, variant: "blue" },
   },
   {
-    id: "reports-submissions",
+    id: "reports",
     label: "Reports",
     icon: BarChart2,
     roles: ["program-manager", "abstractor"],
   },
   {
-    id: "measures-library",
+    id: "measure-library",
     label: "Measure Library",
     icon: BookOpen,
     roles: ["program-manager", "abstractor"],
@@ -376,6 +377,8 @@ export function Sidebar({
   const visiblePrimary = PRIMARY_NAV.filter((n) => n.roles.includes(role));
   const visibleSettings = SETTINGS_NAV.filter((n) => n.roles.includes(role));
 
+  const navigate = useNavigate();
+
   const collapse = () => {
     setCollapsed(true);
     setShowRolePicker(false);
@@ -465,7 +468,10 @@ export function Sidebar({
                 (item.id === "start-coding" && activeView === "abstraction")
               }
               collapsed={collapsed}
-              onClick={() => handleNav(item.id)}
+              onClick={() => {
+                handleNav(item.id);
+                navigate({ to: `/${item.id}` });
+              }}
             />
           ))}
         </div>

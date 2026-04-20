@@ -34,7 +34,7 @@ const ROLE_ACCESS: Record<UserRole, string[]> = {
     "qa-review",
     "audit-sampling",
     "reports-submissions",
-    "measures-library",
+    "measure-library",
     "admin-settings",
     "security",
     "ai-optimization",
@@ -44,7 +44,7 @@ const ROLE_ACCESS: Record<UserRole, string[]> = {
     "dashboard",
     "work-queue",
     "reports-submissions",
-    "measures-library",
+    "measure-library",
   ],
   "qa-analyst": ["dashboard", "work-queue"],
 };
@@ -130,7 +130,7 @@ export default function App() {
         return <AuditReview onOpenPatient360={() => navigate("patient-360")} />;
       case "qa-review":
         return <QAReview onOpenPatient360={() => navigate("patient-360")} />;
-      case "measures-library":
+      case "measure-library":
         return <MeasuresLibrary />;
 
       /* ── Insights ── */

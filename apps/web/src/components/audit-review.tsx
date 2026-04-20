@@ -1925,19 +1925,19 @@ export function AuditReview({
 
                   {/* Extracted Evidence Panel */}
                   <div
-                    className="flex flex-col overflow-hidden bg-background"
+                    className="flex flex-col flex-[0_0_44%] overflow-hidden bg-background"
                     style={{ width: "44%" }}
                   >
                     {/* Panel header */}
                     <div className="flex-shrink-0 px-4 py-2.5 border-b border-border bg-card">
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-wrap items-center justify-between gap-1">
                         <div className="flex items-center gap-1.5">
                           <ClipboardCheck className="w-3.5 h-3.5 text-violet-600" />
                           <span className="text-[11px] font-bold text-foreground">
                             Extracted Evidence
                           </span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-1 justify-end">
                           <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full">
                             <AlertTriangle className="w-2.5 h-2.5" />2 mismatch
                           </span>
