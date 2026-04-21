@@ -1,9 +1,15 @@
-import { defineConfig } from "vite";
+ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [tanstackRouter({
+      target: "react",
+      autoCodeSplitting: true,
+    }),react(), tailwindcss(),],
+  
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -14,7 +20,6 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        // Chunk vendor libs separately for better caching
         manualChunks: {
           vendor: ["react", "react-dom"],
           router: ["@tanstack/react-router"],
