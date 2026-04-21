@@ -24,6 +24,7 @@ import { AuditReview } from "./components/audit-review";
 import { WorkspaceSubtabs } from "./components/workspace-subtabs";
 import { SidebarShowcase } from "./components/sidebar-showcase";
 import { OperationsOverview } from "./components/operations-overview";
+import { ProfilePreferences } from "./components/profile-preferences";
 
 /* ── Views accessible by role ──────────────────────────────── */
 const ROLE_ACCESS: Record<UserRole, string[]> = {
@@ -153,6 +154,16 @@ export default function App() {
       case "sidebar-showcase":
         return <SidebarShowcase />;
 
+      /* ── Profile ── */
+      case "profile":
+        return (
+          <ProfilePreferences
+            onBack={() => navigate(previousView)}
+            darkMode={darkMode}
+            onToggleDarkMode={() => setDarkMode((d) => !d)}
+          />
+        );
+
       default:
         return <Dashboard />;
     }
@@ -183,6 +194,7 @@ export default function App() {
           onToggleDarkMode={() => setDarkMode((d) => !d)}
           activeView={activeView}
           onMenuClick={() => setMobileSidebarOpen(true)}
+          onNavigate={navigate}
         />
 
         <main className="flex-1 overflow-hidden flex flex-col">
