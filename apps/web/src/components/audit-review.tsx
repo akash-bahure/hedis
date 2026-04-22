@@ -1438,11 +1438,11 @@ export function AuditReview({
   ];
 
   return (
-    <div className="flex h-full overflow-hidden bg-background">
+    <div className="flex h-full overflow-hidden bg-background flex-col lg:flex-row">
       {/* ══════════════════════════════════════
           LEFT PANEL — AUDIT QUEUE (full height)
       ══════════════════════════════════════ */}
-      <div className="w-[272px] flex-shrink-0 flex flex-col border-r border-border overflow-hidden bg-card">
+      <div className="w-full lg:w-[272px] flex-shrink-0 flex flex-col border-r border-border overflow-hidden bg-card">
         {/* Queue header */}
         <div className="flex-shrink-0 px-4 pt-4 pb-3 border-b border-border bg-card">
           <div className="flex items-center justify-between mb-3">
@@ -1601,129 +1601,127 @@ export function AuditReview({
         </div>
 
         {/* ── Patient Header ── */}
-        <div className="flex-shrink-0 border-b border-border bg-card">
-          <div className="flex items-center gap-4 px-5 py-3">
-            {/* Avatar + patient info */}
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="w-10 h-10 rounded-full bg-violet-100 border-2 border-violet-200 flex items-center justify-center flex-shrink-0">
-                <span className="text-[11px] font-bold text-violet-700">
-                  {CASE.member.split(",")[0].substring(0, 2).toUpperCase()}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-3">
+          {/* <div className="flex items-center gap-4 px-5 py-3"> */}
+          {/* Avatar + patient info */}
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-10 h-10 rounded-full bg-violet-100 border-2 border-violet-200 flex items-center justify-center flex-shrink-0">
+              <span className="text-[11px] font-bold text-violet-700">
+                {CASE.member.split(",")[0].substring(0, 2).toUpperCase()}
+              </span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[14px] font-bold text-foreground truncate">
+                  {phiVisible ? CASE.member : "████████████"}
+                </span>
+                <span className="text-[11px] text-muted-foreground font-mono">
+                  {phiVisible ? CASE.memberId : "█████████"}
+                </span>
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold ${activeDecisionStatus().cls}`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
+                  {activeDecisionStatus().label}
+                </span>
+                <LevelBadge level={CASE.auditLevel} />
+              </div>
+              <div className="flex items-center gap-2 flex-wrap text-[11px] text-muted-foreground mt-1">
+                <span className="inline-flex items-center gap-1">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[9px] font-bold border border-primary/20">
+                    {CASE.measureCode}
+                  </span>
+                  <span className="text-foreground/70 truncate">
+                    {CASE.measureName}
+                  </span>
+                </span>
+                <span className="text-border">·</span>
+                <span className="inline-flex items-center gap-1">
+                  <User className="w-3 h-3" />
+                  <span className="font-medium text-foreground">
+                    Abstractor:
+                  </span>{" "}
+                  {CASE.abstractor}
+                </span>
+                <span className="hidden sm:inline text-border">·</span>
+                <span className="inline-flex items-center gap-1">
+                  <UserCheck className="w-3 h-3" />
+                  <span className="font-medium text-foreground">QA:</span>{" "}
+                  {CASE.qaReviewer}
+                </span>
+                <span className="hidden sm:inline text-border">·</span>
+                <span className="inline-flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  Due {CASE.dueBy}
                 </span>
               </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                  <span className="text-[14px] font-bold text-foreground">
-                    {phiVisible ? CASE.member : "████████████"}
-                  </span>
-                  <span className="text-[11px] text-muted-foreground font-mono">
-                    {phiVisible ? CASE.memberId : "█████████"}
-                  </span>
-                  <span
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold ${activeDecisionStatus().cls}`}
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
-                    {activeDecisionStatus().label}
-                  </span>
-                  <LevelBadge level={CASE.auditLevel} />
-                </div>
-                <div className="flex items-center gap-2 flex-wrap text-[11px] text-muted-foreground">
-                  <span className="inline-flex items-center gap-1">
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[9px] font-bold border border-primary/20">
-                      {CASE.measureCode}
-                    </span>
-                    <span className="text-foreground/70">
-                      {CASE.measureName}
-                    </span>
-                  </span>
-                  <span className="text-border">·</span>
-                  <span className="inline-flex items-center gap-1">
-                    <User className="w-3 h-3" />
-                    <span className="font-medium text-foreground">
-                      Abstractor:
-                    </span>{" "}
-                    {CASE.abstractor}
-                  </span>
-                  <span className="text-border">·</span>
-                  <span className="inline-flex items-center gap-1">
-                    <UserCheck className="w-3 h-3" />
-                    <span className="font-medium text-foreground">
-                      QA:
-                    </span>{" "}
-                    {CASE.qaReviewer}
-                  </span>
-                  <span className="text-border">·</span>
-                  <span className="inline-flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    Due {CASE.dueBy}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Header actions */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <button
-                onClick={() => setPhiVisible((v) => !v)}
-                className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1.5 text-[11px] border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors"
-              >
-                {phiVisible ? (
-                  <EyeOff className="w-3.5 h-3.5" />
-                ) : (
-                  <Eye className="w-3.5 h-3.5" />
-                )}
-                {phiVisible ? "Mask PHI" : "Show PHI"}
-              </button>
-              <div className="w-px h-6 bg-border" />
-              <button
-                onClick={() => {
-                  setDecision("rework");
-                  setFailReason("");
-                  setAuditNote("");
-                }}
-                className={`inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all
-                  ${
-                    decision === "rework"
-                      ? "bg-orange-500 text-white border-orange-500 shadow-sm"
-                      : "border-orange-300 text-orange-700 hover:bg-orange-50"
-                  }`}
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                Request Rework
-              </button>
-              <button
-                onClick={() => {
-                  setDecision("fail");
-                  setFailReason("");
-                  setAuditNote("");
-                }}
-                className={`inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all
-                  ${
-                    decision === "fail"
-                      ? "bg-red-600 text-white border-red-600 shadow-sm"
-                      : "border-red-300 text-red-700 hover:bg-red-50"
-                  }`}
-              >
-                <XCircle className="w-3.5 h-3.5" />
-                Audit Fail
-              </button>
-              <button
-                onClick={() => {
-                  setDecision("approve");
-                  setFailReason("");
-                  setAuditNote("");
-                }}
-                className={`inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all
-                  ${
-                    decision === "approve"
-                      ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-                      : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"
-                  }`}
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                Audit Approve
-              </button>
             </div>
           </div>
+
+          {/* Header actions */}
+          <div className="flex items-center gap-2 flex-shrink-0 flex-nowrap overflow-x-auto">
+            <button
+              onClick={() => setPhiVisible((v) => !v)}
+              className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1.5 text-[11px] border border-border rounded-lg text-muted-foreground hover:bg-muted"
+            >
+              {phiVisible ? (
+                <EyeOff className="w-3.5 h-3.5" />
+              ) : (
+                <Eye className="w-3.5 h-3.5" />
+              )}
+              {phiVisible ? "Mask PHI" : "Show PHI"}
+            </button>
+            <div className="w-px h-6 bg-border" />
+            <button
+              onClick={() => {
+                setDecision("rework");
+                setFailReason("");
+                setAuditNote("");
+              }}
+              className={`inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 text-[11px] font-bold rounded-lg border
+                    ${
+                      decision === "rework"
+                        ? "bg-orange-500 text-white border-orange-500"
+                        : "border-orange-300 text-orange-700 hover:bg-orange-50"
+                    }`}
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              Request Rework
+            </button>
+            <button
+              onClick={() => {
+                setDecision("fail");
+                setFailReason("");
+                setAuditNote("");
+              }}
+              className={`inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 text-[11px] font-bold rounded-lg border
+                    ${
+                      decision === "fail"
+                        ? "bg-red-600 text-white border-red-600"
+                        : "border-red-300 text-red-700 hover:bg-red-50"
+                    }`}
+            >
+              <XCircle className="w-3.5 h-3.5" />
+              Audit Fail
+            </button>
+            <button
+              onClick={() => {
+                setDecision("approve");
+                setFailReason("");
+                setAuditNote("");
+              }}
+              className={`inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 text-[11px] font-bold rounded-lg border
+                    ${
+                      decision === "approve"
+                        ? "bg-emerald-600 text-white border-emerald-600"
+                        : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                    }`}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Audit Approve
+            </button>
+          </div>
+          {/* </div> */}
 
           {/* Fail / Rework reason bar */}
           {(decision === "fail" || decision === "rework") && (
@@ -1777,9 +1775,9 @@ export function AuditReview({
         </div>
 
         {/* ── 3-Panel Content Row ── */}
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
           {/* ── CENTER PANEL — Document Viewer ── */}
-          <div className="flex-1 flex flex-col overflow-hidden min-w-0 border-r border-border">
+          <div className="flex-1 flex flex-col overflow-hidden min-w-0 border-r border-border lg:border-r">
             {/* Tab strip */}
             <div className="flex-shrink-0 border-b border-border bg-card flex items-center gap-1 px-4">
               {[
@@ -2108,7 +2106,7 @@ export function AuditReview({
           </div>
 
           {/* ── RIGHT PANEL — Validation Checklist + Decision ── */}
-          <div className="w-[296px] flex-shrink-0 flex flex-col overflow-hidden bg-card">
+          <div className="w-full lg:w-[296px] flex-shrink-0 flex flex-col overflow-hidden bg-card">
             {/* Panel header */}
             <div className="flex-shrink-0 px-4 py-3 border-b border-border">
               <div className="flex items-center justify-between mb-2.5">

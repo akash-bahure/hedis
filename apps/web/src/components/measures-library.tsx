@@ -2241,9 +2241,9 @@ export function MeasuresLibrary() {
       {/* ══════════════════════════════════════════════════════
           2-PANEL LAYOUT
       ══════════════════════════════════════════════════════ */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 flex-col md:flex-row overflow-hidden">
         {/* ── LEFT PANEL: MEASURE LIST ── */}
-        <div className="w-72 flex-shrink-0 flex flex-col border-r border-border overflow-hidden bg-card">
+        <div className="w-full md:w-72 flex-shrink-0 flex flex-col border-b md:border-b-0 md:border-r border-border overflow-hidden bg-card">
           <div className="flex-shrink-0 px-3 py-2 border-b border-border">
             <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
               {filteredMeasures.length} Measures · {myFilter}
