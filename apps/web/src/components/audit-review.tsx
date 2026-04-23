@@ -819,7 +819,7 @@ function PDFPage({ page }: { page: number }) {
     return (
       <div className="space-y-3 text-[11px] text-gray-800">
         <div className="text-center border-b border-gray-200 pb-3">
-          <p className="font-bold text-[13px] text-gray-900 tracking-tight">
+          <p className="font-bold text-[13px] text-gray-900 tracking-tight break-words">
             METRO HEALTH PRIMARY CARE
           </p>
           <p className="text-gray-400 text-[10px]">
@@ -829,7 +829,7 @@ function PDFPage({ page }: { page: number }) {
         <p className="text-center font-bold uppercase tracking-widest text-gray-500 text-[9px]">
           Office Visit Note — Page 1 of 3
         </p>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 border border-gray-100 rounded-lg p-3 bg-gray-50/60">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 border border-gray-100 rounded-lg p-2 sm:p-3 bg-gray-50/60">
           {[
             ["Patient", "Garcia, Maria E."],
             ["MRN", "MRN-445521"],
@@ -841,10 +841,10 @@ function PDFPage({ page }: { page: number }) {
             ["Visit Type", "Office Visit — Established"],
           ].map(([k, v]) => (
             <div key={k}>
-              <span className="font-semibold text-gray-500 text-[10px]">
+              <span className="font-semibold text-gray-500 text-[10px] break-words">
                 {k}:{" "}
               </span>
-              <span className="text-gray-800">{v}</span>
+              <span className="text-gray-800 break-words">{v}</span>
             </div>
           ))}
         </div>
@@ -869,7 +869,7 @@ function PDFPage({ page }: { page: number }) {
         </div>
         <div>
           <p className="font-semibold text-gray-600 mb-1">Chief Complaint:</p>
-          <p className="text-gray-700">
+          <p className="text-gray-700 break-words">
             Follow-up for hypertension management. Good medication adherence. No
             chest pain or dyspnea.
           </p>
@@ -878,7 +878,7 @@ function PDFPage({ page }: { page: number }) {
           <p className="font-semibold text-gray-600 mb-1">
             Current Medications:
           </p>
-          <p className="text-gray-700">
+          <p className="text-gray-700 break-words">
             Lisinopril 10 mg · Amlodipine 5 mg · Hydrochlorothiazide 25 mg
           </p>
         </div>
@@ -901,47 +901,54 @@ function PDFPage({ page }: { page: number }) {
         </div>
 
         {/* ★ Key Evidence — Vital Signs */}
-        <div className="border-2 border-yellow-300 rounded-lg p-3 bg-yellow-50/50 relative">
-          <div className="absolute -top-2.5 left-3 bg-yellow-300 text-yellow-900 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+        <div className="border-2 border-yellow-300 rounded-lg p-2 sm:p-3 bg-yellow-50/50 relative">
+          <div className="absolute top-1 left-2 sm:-top-2.5 sm:left-3 bg-yellow-300 text-yellow-900 text-[8px] sm:text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider max-w-[90%] truncate">
             Evidence Zone
           </div>
           <p className="font-bold text-gray-900 mb-2 text-[11px] uppercase tracking-wider">
             Vital Signs
           </p>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-            <div className="col-span-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1.5">
+            <div className="sm:col-span-2 break-words">
               <span className="font-semibold text-gray-600">
                 Blood Pressure:{" "}
               </span>
               <mark className="bg-yellow-200 px-1.5 py-0.5 rounded font-bold text-gray-900 text-[12px]">
                 142/88 mmHg
               </mark>
-              <span className="ml-2 text-red-600 text-[9px] font-bold bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full">
+              <span className="block sm:inline mt-1 sm:mt-0 sm:ml-2 text-red-600 text-[9px] font-bold bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full break-words max-w-full">
                 ⚠ Abstractor recorded: 138/84
               </span>
             </div>
-            <div>
+            <div className="break-words">
               <span className="font-semibold text-gray-600">Heart Rate: </span>
               76 bpm
             </div>
-            <div>
+            <div className="break-words">
               <span className="font-semibold text-gray-600">SpO₂: </span>97%
             </div>
-            <div>
+            <div className="break-words">
               <span className="font-semibold text-gray-600">Weight: </span>164
               lbs
             </div>
-            <div>
+            <div className="break-words">
               <span className="font-semibold text-gray-600">
                 Cuff Position:{" "}
               </span>
               Right arm, seated
             </div>
           </div>
-          <div className="mt-2 flex items-start gap-1.5 text-[10px] text-red-700 font-semibold bg-red-50 border border-red-200 rounded-lg p-2">
+          {/* <div className="mt-2 flex items-start gap-1.5 text-[10px] text-red-700 font-semibold bg-red-50 border border-red-200 rounded-lg p-2 break-words">
             <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
             AUDIT FINDING: BP 142/88 mmHg ≥ 140/90 threshold — CBP numerator NOT
             MET. Abstractor error flips compliance status.
+          </div> */}
+          <div className="mt-2 flex items-start gap-1.5 text-[10px] text-red-700 font-semibold bg-red-50 border border-red-200 rounded-lg p-2">
+            <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />{" "}
+            <span className="min-w-0 break-words leading-snug">
+              AUDIT FINDING: BP 142/88 mmHg ≥ 140/90 threshold — CBP numerator
+              NOT + MET. Abstractor error flips compliance status.{" "}
+            </span>{" "}
           </div>
         </div>
 
@@ -949,31 +956,31 @@ function PDFPage({ page }: { page: number }) {
           <p className="font-semibold text-gray-600 mb-1">
             Physical Examination:
           </p>
-          <p className="text-gray-700">
+          <p className="text-gray-700 break-words">
             <span className="font-semibold">CV:</span> Regular rate and rhythm.
             No murmurs, gallops, or rubs. No edema.
           </p>
-          <p className="mt-1 text-gray-700">
+          <p className="mt-1 text-gray-700 break-words">
             <span className="font-semibold">Resp:</span> Clear bilaterally. No
             wheezes.
           </p>
         </div>
         <div>
           <p className="font-semibold text-gray-600 mb-1">Assessment & Plan:</p>
-          <p className="text-gray-700">
+          <p className="text-gray-700 break-words">
             <span className="font-semibold">1. HTN (I10)</span> — BP suboptimal
             142/88. Increase Lisinopril to 20 mg. RTC 6 weeks.
           </p>
-          <p className="mt-1 text-gray-700">
+          <p className="mt-1 text-gray-700 break-words">
             <span className="font-semibold">2. Hyperlipidemia (E78.5)</span> —
             Stable on Atorvastatin. Continue.
           </p>
         </div>
-        <div className="border-l-4 border-red-400 pl-3 bg-red-50/60 rounded-r-lg p-2.5">
+        <div className="border-l-4 border-red-400 pl-3 bg-red-50/60 rounded-r-lg p-2.5 break-words">
           <p className="font-bold text-gray-900 text-[10px] mb-0.5">
             Auditor Annotation:
           </p>
-          <p className="text-gray-700">
+          <p className="text-gray-700 break-words">
             BP{" "}
             <mark className="bg-yellow-200 font-bold px-0.5 rounded">
               142/88 mmHg
@@ -1010,31 +1017,39 @@ function PDFPage({ page }: { page: number }) {
       </div>
       <div className="border border-gray-100 rounded-lg p-2.5">
         <p className="font-semibold text-gray-600 mb-2">Billing Summary:</p>
-        <table className="w-full text-[10px]">
-          <thead>
-            <tr className="border-b border-gray-200">
-              <th className="text-left pb-1 text-gray-500 font-semibold">
-                CPT
-              </th>
-              <th className="text-left pb-1 text-gray-500 font-semibold">
-                Description
-              </th>
-              <th className="text-left pb-1 text-gray-500 font-semibold">DX</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="pt-1 font-bold text-blue-700">99214</td>
-              <td className="pt-1">E&M Office Visit — Established, Moderate</td>
-              <td className="pt-1 font-bold">I10</td>
-            </tr>
-          </tbody>
-        </table>
+        <div className="overflow-x-auto">
+          <table className="w-full text-[10px] min-w-[400px]">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="text-left pb-1 text-gray-500 font-semibold">
+                  CPT
+                </th>
+                <th className="text-left pb-1 text-gray-500 font-semibold">
+                  Description
+                </th>
+                <th className="text-left pb-1 text-gray-500 font-semibold">
+                  DX
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="pt-1 font-bold text-blue-700">99214</td>
+                <td className="pt-1">
+                  E&M Office Visit — Established, Moderate
+                </td>
+                <td className="pt-1 font-bold">I10</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
       <div className="border-t border-gray-100 pt-2">
         <p className="text-[10px] text-gray-400">
           Electronic attestation:{" "}
-          <span className="font-semibold text-gray-700">Elena Reyes, MD</span>
+          <span className="font-semibold text-gray-700 break-words">
+            Elena Reyes, MD
+          </span>
         </p>
         <p className="mt-1 text-[10px] text-gray-400">
           Note status:{" "}
@@ -1068,7 +1083,7 @@ function EvidenceCard({
   const isCrit = critical && discrepancy;
   return (
     <div
-      className={`rounded-xl border p-3 transition-all
+      className={`rounded-xl border p-3 transition-all  
       ${
         isCrit
           ? "border-red-300 bg-red-50/50 shadow-sm shadow-red-100"
@@ -1600,178 +1615,186 @@ export function AuditReview({
           </div>
         </div>
 
-        {/* ── Patient Header ── */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-3">
-          {/* <div className="flex items-center gap-4 px-5 py-3"> */}
-          {/* Avatar + patient info */}
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className="w-10 h-10 rounded-full bg-violet-100 border-2 border-violet-200 flex items-center justify-center flex-shrink-0">
-              <span className="text-[11px] font-bold text-violet-700">
-                {CASE.member.split(",")[0].substring(0, 2).toUpperCase()}
-              </span>
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[14px] font-bold text-foreground truncate">
-                  {phiVisible ? CASE.member : "████████████"}
-                </span>
-                <span className="text-[11px] text-muted-foreground font-mono">
-                  {phiVisible ? CASE.memberId : "█████████"}
-                </span>
-                <span
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold ${activeDecisionStatus().cls}`}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
-                  {activeDecisionStatus().label}
-                </span>
-                <LevelBadge level={CASE.auditLevel} />
-              </div>
-              <div className="flex items-center gap-2 flex-wrap text-[11px] text-muted-foreground mt-1">
-                <span className="inline-flex items-center gap-1">
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[9px] font-bold border border-primary/20">
-                    {CASE.measureCode}
+        <div className="px-4 sm:px-5 py-3 space-y-3">
+          {/* ── TOP ROW ── */}
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+            {/* ── Patient Header ── */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-3">
+              {/* Avatar + patient info */}
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="w-10 h-10 rounded-full bg-violet-100 border-2 border-violet-200 flex items-center justify-center flex-shrink-0">
+                  <span className="text-[11px] font-bold text-violet-700">
+                    {CASE.member.split(",")[0].substring(0, 2).toUpperCase()}
                   </span>
-                  <span className="text-foreground/70 truncate">
-                    {CASE.measureName}
-                  </span>
-                </span>
-                <span className="text-border">·</span>
-                <span className="inline-flex items-center gap-1">
-                  <User className="w-3 h-3" />
-                  <span className="font-medium text-foreground">
-                    Abstractor:
-                  </span>{" "}
-                  {CASE.abstractor}
-                </span>
-                <span className="hidden sm:inline text-border">·</span>
-                <span className="inline-flex items-center gap-1">
-                  <UserCheck className="w-3 h-3" />
-                  <span className="font-medium text-foreground">QA:</span>{" "}
-                  {CASE.qaReviewer}
-                </span>
-                <span className="hidden sm:inline text-border">·</span>
-                <span className="inline-flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  Due {CASE.dueBy}
-                </span>
-              </div>
-            </div>
-          </div>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[13px] sm:text-[14px] font-bold truncate max-w-full">
+                      {phiVisible ? CASE.member : "████████████"}
+                    </span>
+                    <span className="text-[10px] sm:text-[11px] text-muted-foreground font-mono truncate">
+                      {phiVisible ? CASE.memberId : "█████████"}
+                    </span>
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold ${activeDecisionStatus().cls}`}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
+                      {activeDecisionStatus().label}
+                    </span>
+                    <LevelBadge level={CASE.auditLevel} />
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] sm:text-[11px] text-muted-foreground mt-1">
+                    <span className="inline-flex items-center gap-1 min-w-0">
+                      <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[9px] font-bold border border-primary/20">
+                        {CASE.measureCode}
+                      </span>
+                      <span className="truncate max-w-[140px] sm:max-w-[220px]">
+                        {CASE.measureName}
+                      </span>
+                    </span>
+                    <span className="hidden sm:inline">·</span>
+                    <span className="inline-flex items-center gap-1">
+                      <User className="w-3 h-3" />
+                      <span className="font-medium">Abstractor:</span>{" "}
+                      <span className="truncate max-w-[120px]">
+                        {CASE.abstractor}
+                      </span>
+                    </span>
+                    <span className="hidden sm:inline">·</span>
 
-          {/* Header actions */}
-          <div className="flex items-center gap-2 flex-shrink-0 flex-nowrap overflow-x-auto">
-            <button
-              onClick={() => setPhiVisible((v) => !v)}
-              className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1.5 text-[11px] border border-border rounded-lg text-muted-foreground hover:bg-muted"
-            >
-              {phiVisible ? (
-                <EyeOff className="w-3.5 h-3.5" />
-              ) : (
-                <Eye className="w-3.5 h-3.5" />
-              )}
-              {phiVisible ? "Mask PHI" : "Show PHI"}
-            </button>
-            <div className="w-px h-6 bg-border" />
-            <button
-              onClick={() => {
-                setDecision("rework");
-                setFailReason("");
-                setAuditNote("");
-              }}
-              className={`inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 text-[11px] font-bold rounded-lg border
+                    <span className="inline-flex items-center gap-1">
+                      <UserCheck className="w-3 h-3" />
+                      <span className="font-medium">QA:</span>
+                      <span className="truncate max-w-[120px]">
+                        {CASE.qaReviewer}
+                      </span>
+                    </span>
+
+                    <span className="hidden sm:inline">·</span>
+
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      Due {CASE.dueBy}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Header actions */}
+              <div className="flex flex-wrap lg:flex-nowrap items-center gap-2 justify-start lg:w-auto">
+                <button
+                  onClick={() => setPhiVisible((v) => !v)}
+                  className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1.5 text-[11px] border border-border rounded-lg text-muted-foreground hover:bg-muted"
+                >
+                  {phiVisible ? (
+                    <EyeOff className="w-3.5 h-3.5" />
+                  ) : (
+                    <Eye className="w-3.5 h-3.5" />
+                  )}
+                  {phiVisible ? "Mask PHI" : "Show PHI"}
+                </button>
+                <div className="w-px h-6 bg-border" />
+                <button
+                  onClick={() => {
+                    setDecision("rework");
+                    setFailReason("");
+                    setAuditNote("");
+                  }}
+                  className={`inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 text-[11px] font-bold rounded-lg border
                     ${
                       decision === "rework"
                         ? "bg-orange-500 text-white border-orange-500"
                         : "border-orange-300 text-orange-700 hover:bg-orange-50"
                     }`}
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              Request Rework
-            </button>
-            <button
-              onClick={() => {
-                setDecision("fail");
-                setFailReason("");
-                setAuditNote("");
-              }}
-              className={`inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 text-[11px] font-bold rounded-lg border
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Request Rework
+                </button>
+                <button
+                  onClick={() => {
+                    setDecision("fail");
+                    setFailReason("");
+                    setAuditNote("");
+                  }}
+                  className={`inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 text-[11px] font-bold rounded-lg border
                     ${
                       decision === "fail"
                         ? "bg-red-600 text-white border-red-600"
                         : "border-red-300 text-red-700 hover:bg-red-50"
                     }`}
-            >
-              <XCircle className="w-3.5 h-3.5" />
-              Audit Fail
-            </button>
-            <button
-              onClick={() => {
-                setDecision("approve");
-                setFailReason("");
-                setAuditNote("");
-              }}
-              className={`inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 text-[11px] font-bold rounded-lg border
+                >
+                  <XCircle className="w-3.5 h-3.5" />
+                  Audit Fail
+                </button>
+                <button
+                  onClick={() => {
+                    setDecision("approve");
+                    setFailReason("");
+                    setAuditNote("");
+                  }}
+                  className={`inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 text-[11px] font-bold rounded-lg border
                     ${
                       decision === "approve"
                         ? "bg-emerald-600 text-white border-emerald-600"
                         : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"
                     }`}
-            >
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              Audit Approve
-            </button>
-          </div>
-          {/* </div> */}
-
-          {/* Fail / Rework reason bar */}
-          {(decision === "fail" || decision === "rework") && (
-            <div
-              className={`flex items-center gap-3 px-5 py-2.5 border-t
-              ${decision === "fail" ? "bg-red-50 border-red-100" : "bg-orange-50 border-orange-100"}`}
-            >
-              <Flag
-                className={`w-4 h-4 flex-shrink-0 ${decision === "fail" ? "text-red-500" : "text-orange-500"}`}
-              />
-              <span
-                className={`text-[11px] font-bold whitespace-nowrap ${decision === "fail" ? "text-red-700" : "text-orange-700"}`}
-              >
-                {decision === "fail"
-                  ? "Failure reason required:"
-                  : "Rework instruction required:"}
-              </span>
-              <select
-                value={failReason}
-                onChange={(e) => setFailReason(e.target.value)}
-                className={`px-3 py-1.5 text-[11px] border rounded-lg bg-white text-foreground focus:outline-none focus:ring-2
-                  ${decision === "fail" ? "border-red-300 focus:ring-red-200" : "border-orange-300 focus:ring-orange-200"}`}
-              >
-                <option value="">— Select reason —</option>
-                {FAIL_REASONS.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="text"
-                value={auditNote}
-                onChange={(e) => setAuditNote(e.target.value)}
-                placeholder="Additional comments for abstractor / QA reviewer…"
-                className={`flex-1 px-3 py-1.5 text-[11px] border rounded-lg bg-white text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2
-                  ${decision === "fail" ? "border-red-300 focus:ring-red-200" : "border-orange-300 focus:ring-orange-200"}`}
-              />
-              <button
-                onClick={() => {
-                  setDecision(null);
-                  setFailReason("");
-                  setAuditNote("");
-                }}
-                className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-              >
-                <X className="w-4 h-4" />
-              </button>
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Audit Approve
+                </button>
+              </div>
             </div>
-          )}
+
+            {/* Fail / Rework reason bar */}
+            {(decision === "fail" || decision === "rework") && (
+              <div
+                className={`flex items-center gap-3 px-5 py-2.5 border-t
+              ${decision === "fail" ? "bg-red-50 border-red-100" : "bg-orange-50 border-orange-100"}`}
+              >
+                <Flag
+                  className={`w-4 h-4 flex-shrink-0 ${decision === "fail" ? "text-red-500" : "text-orange-500"}`}
+                />
+                <span
+                  className={`text-[11px] font-bold whitespace-nowrap ${decision === "fail" ? "text-red-700" : "text-orange-700"}`}
+                >
+                  {decision === "fail"
+                    ? "Failure reason required:"
+                    : "Rework instruction required:"}
+                </span>
+                <select
+                  value={failReason}
+                  onChange={(e) => setFailReason(e.target.value)}
+                  className={`px-3 py-1.5 text-[11px] border rounded-lg bg-white text-foreground focus:outline-none focus:ring-2
+                  ${decision === "fail" ? "border-red-300 focus:ring-red-200" : "border-orange-300 focus:ring-orange-200"}`}
+                >
+                  <option value="">— Select reason —</option>
+                  {FAIL_REASONS.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  value={auditNote}
+                  onChange={(e) => setAuditNote(e.target.value)}
+                  placeholder="Additional comments for abstractor / QA reviewer…"
+                  className={`flex-1 px-3 py-1.5 text-[11px] border rounded-lg bg-white text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2
+                  ${decision === "fail" ? "border-red-300 focus:ring-red-200" : "border-orange-300 focus:ring-orange-200"}`}
+                />
+                <button
+                  onClick={() => {
+                    setDecision(null);
+                    setFailReason("");
+                    setAuditNote("");
+                  }}
+                  className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ── 3-Panel Content Row ── */}
@@ -2381,11 +2404,11 @@ export function AuditReview({
 
       {/* ── Save Confirmation Modal ── */}
       {showSaveModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-card border border-border rounded-2xl shadow-2xl w-[480px] overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-lg sm:max-w-xl mx-3 sm:mx-0 max-h-[90vh] flex flex-col overflow-hidden">
             {/* Modal header */}
             <div
-              className={`px-6 py-4 border-b border-border flex items-center gap-3
+              className={`px-4 sm:px-6 py-4 border-b border-border flex items-start sm:items-center gap-3
               ${decision === "approve" ? "bg-emerald-50" : decision === "fail" ? "bg-red-50" : "bg-orange-50"}`}
             >
               <div
@@ -2404,7 +2427,7 @@ export function AuditReview({
               </div>
               <div>
                 <p
-                  className={`text-[13px] font-bold
+                  className={`text-[13px] font-bold  break-words
                   ${decision === "approve" ? "text-emerald-700" : decision === "fail" ? "text-red-700" : "text-orange-700"}`}
                 >
                   {decision === "approve" ? "Confirm Audit Approval" : ""}
@@ -2425,8 +2448,8 @@ export function AuditReview({
             </div>
 
             {/* Modal body */}
-            <div className="px-6 py-4 space-y-3">
-              <div className="grid grid-cols-2 gap-3 text-[11px]">
+            <div className="px-4 sm:px-6 py-4 space-y-3 overflow-y-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
                 {[
                   ["Case Ref", CASE.caseRef],
                   ["Member", phiVisible ? CASE.member : "████████"],
@@ -2454,7 +2477,7 @@ export function AuditReview({
                     <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5">
                       {k}
                     </p>
-                    <p className="font-semibold text-foreground text-[11px] truncate">
+                    <p className="font-semibold text-foreground text-[11px] break-words">
                       {v}
                     </p>
                   </div>
@@ -2482,16 +2505,16 @@ export function AuditReview({
             </div>
 
             {/* Modal footer */}
-            <div className="px-6 py-3 border-t border-border bg-muted/10 flex items-center justify-end gap-2">
+            <div className="px-4 sm:px-6 py-3 border-t border-border bg-muted/10 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2">
               <button
                 onClick={() => setShowSaveModal(false)}
-                className="inline-flex items-center gap-1.5 whitespace-nowrap px-4 py-2 text-[12px] font-semibold rounded-lg border border-border text-muted-foreground hover:bg-muted transition-colors"
+                className="w-full sm:w-auto inline-flex items-center gap-1.5 whitespace-nowrap px-4 py-2 text-[12px] font-semibold rounded-lg border border-border text-muted-foreground hover:bg-muted transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={() => setShowSaveModal(false)}
-                className={`inline-flex items-center gap-1.5 whitespace-nowrap px-5 py-2 text-[12px] font-bold rounded-lg shadow-sm transition-all
+                className={`w-full sm:w-auto inline-flex items-center gap-1.5 whitespace-nowrap px-5 py-2 text-[12px] font-bold rounded-lg shadow-sm transition-all
                   ${
                     decision === "approve"
                       ? "bg-emerald-600 text-white hover:bg-emerald-700"
