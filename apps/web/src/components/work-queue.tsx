@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import type { ElementType } from "react";
 import {
   Search,
@@ -2104,6 +2104,21 @@ export function WorkQueue({
 
   // Current user - in a real app this would come from auth context
   const currentUser = "S. Johnson";
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setClientSidebarCollapsed(true); // collapse on small screens
+      } else {
+        setClientSidebarCollapsed(false); // expand on large screens
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   /* ── Pipeline counts ── */
   const stageCounts = useMemo(() => {

@@ -1899,9 +1899,9 @@ function RolesView() {
   const rm = ROLE_META[selectedRole];
 
   return (
-    <div className="flex gap-4 h-full">
+    <div className="flex flex-col lg:flex-row gap-4 h-full">
       {/* LEFT: Role List */}
-      <div className="w-64 flex-shrink-0 space-y-2">
+      <div className="w-full lg:w-64 flex-shrink-0 space-y-2">
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs font-black text-foreground">
             System Roles
@@ -1963,7 +1963,7 @@ function RolesView() {
       </div>
 
       {/* RIGHT: Permission Matrix */}
-      <div className="flex-1 min-w-0 bg-card border border-border rounded-2xl overflow-hidden shadow-sm flex flex-col">
+      <div className="w-full flex-1 min-w-0 bg-card border border-border rounded-2xl overflow-hidden shadow-sm flex flex-col">
         {/* Role header */}
         <div className="flex items-center gap-4 px-5 py-4 border-b border-border bg-muted/5 flex-shrink-0">
           <div
@@ -1973,13 +1973,15 @@ function RolesView() {
             <UserCog className="w-5 h-5" style={{ color: rm.color }} />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-black text-foreground">{rm.label}</h3>
-              <span className="text-[10px] text-muted-foreground">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-sm font-black text-foreground truncate">
+                {rm.label}
+              </h3>
+              <span className="text-[10px] text-muted-foreground whitespace-nowrap">
                 · {rm.userCount} user{rm.userCount !== 1 ? "s" : ""}
               </span>
               <span
-                className="text-[9px] font-bold px-2 py-0.5 rounded-full border"
+                className="text-[9px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap flex-shrink-0"
                 style={{
                   backgroundColor: rm.color + "15",
                   borderColor: rm.color + "40",
@@ -1989,7 +1991,7 @@ function RolesView() {
                 Level {rm.level}
               </span>
             </div>
-            <p className="text-[10px] text-muted-foreground truncate">
+            <p className="text-[10px] text-muted-foreground break-words">
               {rm.desc}
             </p>
           </div>

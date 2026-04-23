@@ -470,7 +470,7 @@ function FullProfileModal({
           </div>
 
           {/* KPI strip */}
-          <div className="grid grid-cols-4 gap-3 mt-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
             {[
               {
                 label: "Total Charts",
@@ -507,12 +507,12 @@ function FullProfileModal({
             ].map((k) => (
               <div
                 key={k.label}
-                className="bg-muted/40 rounded-xl px-3 py-2.5 border border-border flex items-center gap-2"
+                className="bg-muted/40 rounded-xl px-3 py-2.5 border border-border flex items-center gap-2 min-w-0"
               >
                 <k.icon className={`w-4 h-4 flex-shrink-0 ${k.cls}`} />
                 <div>
                   <p
-                    className={`font-bold leading-tight ${k.cls}`}
+                    className={`font-bold leading-tight ${k.cls} truncate`}
                     style={{ fontSize: 16 }}
                   >
                     {k.value}
@@ -724,7 +724,7 @@ function FullProfileModal({
           {/* CHARTS */}
           {tab === "charts" && (
             <div className="space-y-5">
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {[
                   {
                     label: "Total Assigned",
@@ -768,7 +768,7 @@ function FullProfileModal({
                 ].map((s) => (
                   <div
                     key={s.label}
-                    className="bg-card border border-border rounded-xl p-3 flex items-center gap-3"
+                    className="bg-card border border-border rounded-xl p-3 flex items-center gap-3 min-w-0"
                   >
                     <div
                       className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${s.cls}`}
@@ -777,13 +777,13 @@ function FullProfileModal({
                     </div>
                     <div>
                       <p
-                        className="font-bold text-foreground"
+                        className="font-bold text-foreground truncate"
                         style={{ fontSize: 18 }}
                       >
                         {s.val.toLocaleString()}
                       </p>
                       <p
-                        className="text-muted-foreground"
+                        className="text-muted-foreground break-words"
                         style={{ fontSize: 10 }}
                       >
                         {s.label}
@@ -1322,10 +1322,10 @@ function ClientPanel({
   return (
     <>
       <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
-      <aside className="fixed right-0 top-0 h-full w-[420px] max-w-full bg-card border-l border-border shadow-2xl z-50 flex flex-col overflow-hidden">
+      <aside className="fixed right-0 top-0 h-full w-full sm:w-[420px] max-w-full bg-card border-l border-border shadow-2xl z-50 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="px-5 py-4 border-b border-border bg-gradient-to-r from-primary/5 to-transparent flex-shrink-0">
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start justify-between gap-3 flex-wrap sm:flex-nowrap">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 border border-primary/20">
                 <span
@@ -1337,7 +1337,7 @@ function ClientPanel({
               </div>
               <div className="min-w-0">
                 <h2
-                  className="font-bold text-foreground truncate"
+                  className="font-bold text-foreground truncate sm:whitespace-nowrap"
                   style={{ fontSize: 15 }}
                 >
                   {client.name}
@@ -1407,7 +1407,7 @@ function ClientPanel({
                 <ProgressBar value={abstraction} colorCls="bg-cyan-500" />
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-2 mt-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
               {[
                 {
                   label: "Total",
@@ -1465,7 +1465,7 @@ function ClientPanel({
               ].map((row, i) => (
                 <div
                   key={row.label}
-                  className={`flex items-center justify-between px-3 py-2 ${i % 2 === 0 ? "bg-muted/20" : ""}`}
+                  className={`flex items-center justify-between px-3 py-2 gap-2 flex-wrap sm:flex-nowrap ${i % 2 === 0 ? "bg-muted/20" : ""}`}
                   style={{ fontSize: 12 }}
                 >
                   <span className="text-muted-foreground">{row.label}</span>
@@ -1513,7 +1513,7 @@ function ClientPanel({
                   style={{ fontSize: 12 }}
                 >
                   <row.icon className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>{row.val}</span>
+                  <span className="break-all">{row.val}</span>
                 </div>
               ))}
             </div>
@@ -1553,17 +1553,17 @@ function ClientPanel({
         </div>
 
         {/* Footer actions */}
-        <div className="px-5 py-3 border-t border-border flex items-center gap-2 flex-shrink-0">
+        <div className="px-5 py-3 border-t border-border flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-shrink-0">
           <button
             onClick={() => setShowFullProfile(true)}
-            className="inline-flex items-center gap-2 whitespace-nowrap flex-1 justify-center px-3 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors"
+            className="inline-flex items-center justify-center w-full sm:w-auto gap-2 whitespace-nowrap flex-1 justify-center px-3 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors"
             style={{ fontSize: 13 }}
           >
             <ExternalLink className="w-3.5 h-3.5" />
             Open Full Profile
           </button>
           <button
-            className="inline-flex items-center gap-2 whitespace-nowrap px-3 py-2 rounded-lg border border-border text-foreground hover:bg-accent transition-colors"
+            className="inline-flex items-center justify-center w-full sm:w-auto gap-2 whitespace-nowrap px-3 py-2 rounded-lg border border-border text-foreground hover:bg-accent transition-colors"
             style={{ fontSize: 13 }}
           >
             <FileText className="w-3.5 h-3.5" />
@@ -2295,9 +2295,9 @@ export function Clients() {
       </div>
 
       {/* ── Toolbar ──────────────────────────────── */}
-      <div className="flex-shrink-0 px-6 py-3 flex items-center gap-3 border-b border-border bg-card/60">
+      <div className="flex-shrink-0 px-6 py-3 flex flex-wrap items-center gap-3 border-b border-border bg-card/60">
         {/* Search */}
-        <div className="relative flex-1 max-w-xs">
+        <div className="relative flex-1 w-full sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
           <input
             value={search}
@@ -2309,7 +2309,7 @@ export function Clients() {
         </div>
 
         {/* Status filter */}
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <select
             value={statusFilter}
             onChange={(e) => setStatus(e.target.value as ClientStatus | "all")}
@@ -2326,7 +2326,7 @@ export function Clients() {
         </div>
 
         {/* Region filter */}
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <select
             value={regionFilter}
             onChange={(e) => setRegion(e.target.value)}
@@ -2342,12 +2342,16 @@ export function Clients() {
           <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
         </div>
 
-        <div className="ml-auto flex items-center gap-1 border border-border rounded-lg overflow-hidden">
+        <div className="w-full sm:w-auto sm:ml-auto flex items-center gap-1 border border-border rounded-lg overflow-hidden">
           {(["table", "grid"] as const).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
-              className={`px-3 py-1.5 transition-colors ${view === v ? "bg-primary text-white" : "bg-background text-muted-foreground hover:bg-accent"}`}
+              className={`flex-1 sm:flex-none px-3 py-1.5 transition-colors ${
+                view === v
+                  ? "bg-primary text-white"
+                  : "bg-background text-muted-foreground hover:bg-accent"
+              }`}
               style={{ fontSize: 12 }}
             >
               {v === "table" ? "Table" : "Cards"}
@@ -2356,7 +2360,7 @@ export function Clients() {
         </div>
 
         <span
-          className="text-muted-foreground flex-shrink-0"
+          className="w-full sm:w-auto text-muted-foreground text-center sm:text-left"
           style={{ fontSize: 12 }}
         >
           {filtered.length} of {CLIENTS.length}
@@ -2367,172 +2371,177 @@ export function Clients() {
       <div className="flex-1 overflow-y-auto px-6 py-4">
         {view === "table" ? (
           /* TABLE VIEW */
-          <div className="rounded-xl border border-border overflow-hidden bg-card shadow-sm">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b border-border bg-muted/40">
-                  {[
-                    "Client",
-                    "Status",
-                    "Contract",
-                    "Region",
-                    "Charts",
-                    "Completion",
-                    "Due Date",
-                    "Score",
-                    "",
-                  ].map((h) => (
-                    <th
-                      key={h}
-                      className="px-4 py-2.5 text-left text-muted-foreground font-semibold"
-                      style={{
-                        fontSize: 11,
-                        letterSpacing: "0.04em",
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((client, i) => {
-                  const comp = pct(client.chartsCompleted, client.chartsTotal);
-                  return (
-                    <tr
-                      key={client.id}
-                      onClick={() => setSelected(client)}
-                      className={`border-b border-border last:border-b-0 cursor-pointer transition-colors hover:bg-primary/5 ${i % 2 === 0 ? "" : "bg-muted/20"}`}
-                    >
-                      {/* Client */}
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
-                            <span
-                              className="text-primary font-bold"
-                              style={{ fontSize: 10 }}
-                            >
-                              {client.shortCode.slice(0, 2)}
+          <div className="rounded-xl border border-border bg-card shadow-sm">
+            <div className="w-full overflow-x-auto">
+              <table className="w-full min-w-[1000px] border-collapse">
+                <thead>
+                  <tr className="border-b border-border bg-muted/40">
+                    {[
+                      "Client",
+                      "Status",
+                      "Contract",
+                      "Region",
+                      "Charts",
+                      "Completion",
+                      "Due Date",
+                      "Score",
+                      "",
+                    ].map((h) => (
+                      <th
+                        key={h}
+                        className="px-4 py-2.5 text-left text-muted-foreground font-semibold"
+                        style={{
+                          fontSize: 11,
+                          letterSpacing: "0.04em",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((client, i) => {
+                    const comp = pct(
+                      client.chartsCompleted,
+                      client.chartsTotal,
+                    );
+                    return (
+                      <tr
+                        key={client.id}
+                        onClick={() => setSelected(client)}
+                        className={`border-b border-border last:border-b-0 cursor-pointer transition-colors hover:bg-primary/5 ${i % 2 === 0 ? "" : "bg-muted/20"}`}
+                      >
+                        {/* Client */}
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
+                              <span
+                                className="text-primary font-bold"
+                                style={{ fontSize: 10 }}
+                              >
+                                {client.shortCode.slice(0, 2)}
+                              </span>
+                            </div>
+                            <div>
+                              <p
+                                className="font-semibold text-foreground truncate max-w-[160px]"
+                                style={{ fontSize: 13 }}
+                              >
+                                {client.name}
+                              </p>
+                              <p
+                                className="text-muted-foreground"
+                                style={{ fontSize: 11 }}
+                              >
+                                {client.id} · {client.measureYear}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        {/* Status */}
+                        <td className="px-4 py-3">
+                          <StatusBadge status={client.status} />
+                        </td>
+                        {/* Contract */}
+                        <td className="px-4 py-3">
+                          <span
+                            className="text-foreground"
+                            style={{ fontSize: 12 }}
+                          >
+                            {client.contractType}
+                          </span>
+                        </td>
+                        {/* Region */}
+                        <td className="px-4 py-3">
+                          <div
+                            className="flex items-center gap-1 text-muted-foreground"
+                            style={{ fontSize: 12 }}
+                          >
+                            <MapPin className="w-3 h-3 flex-shrink-0" />
+                            {client.region}
+                          </div>
+                        </td>
+                        {/* Charts */}
+                        <td className="px-4 py-3">
+                          <div style={{ fontSize: 12 }}>
+                            <span className="font-semibold text-foreground">
+                              {client.chartsCompleted.toLocaleString()}
+                            </span>
+                            <span className="text-muted-foreground">
+                              {" "}
+                              / {client.chartsTotal.toLocaleString()}
                             </span>
                           </div>
-                          <div>
-                            <p
-                              className="font-semibold text-foreground truncate max-w-[160px]"
-                              style={{ fontSize: 13 }}
-                            >
-                              {client.name}
-                            </p>
-                            <p
-                              className="text-muted-foreground"
+                        </td>
+                        {/* Completion bar */}
+                        <td className="px-4 py-3 min-w-[100px]">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1">
+                              <ProgressBar
+                                value={comp}
+                                colorCls={
+                                  comp >= 90
+                                    ? "bg-emerald-500"
+                                    : comp >= 60
+                                      ? "bg-primary"
+                                      : "bg-amber-500"
+                                }
+                              />
+                            </div>
+                            <span
+                              className="text-foreground font-semibold flex-shrink-0"
                               style={{ fontSize: 11 }}
                             >
-                              {client.id} · {client.measureYear}
-                            </p>
+                              {comp}%
+                            </span>
                           </div>
-                        </div>
-                      </td>
-                      {/* Status */}
-                      <td className="px-4 py-3">
-                        <StatusBadge status={client.status} />
-                      </td>
-                      {/* Contract */}
-                      <td className="px-4 py-3">
-                        <span
-                          className="text-foreground"
-                          style={{ fontSize: 12 }}
-                        >
-                          {client.contractType}
-                        </span>
-                      </td>
-                      {/* Region */}
-                      <td className="px-4 py-3">
-                        <div
-                          className="flex items-center gap-1 text-muted-foreground"
-                          style={{ fontSize: 12 }}
-                        >
-                          <MapPin className="w-3 h-3 flex-shrink-0" />
-                          {client.region}
-                        </div>
-                      </td>
-                      {/* Charts */}
-                      <td className="px-4 py-3">
-                        <div style={{ fontSize: 12 }}>
-                          <span className="font-semibold text-foreground">
-                            {client.chartsCompleted.toLocaleString()}
-                          </span>
-                          <span className="text-muted-foreground">
-                            {" "}
-                            / {client.chartsTotal.toLocaleString()}
-                          </span>
-                        </div>
-                      </td>
-                      {/* Completion bar */}
-                      <td className="px-4 py-3 min-w-[100px]">
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1">
-                            <ProgressBar
-                              value={comp}
-                              colorCls={
-                                comp >= 90
-                                  ? "bg-emerald-500"
-                                  : comp >= 60
-                                    ? "bg-primary"
-                                    : "bg-amber-500"
-                              }
-                            />
-                          </div>
-                          <span
-                            className="text-foreground font-semibold flex-shrink-0"
-                            style={{ fontSize: 11 }}
+                        </td>
+                        {/* Due date */}
+                        <td className="px-4 py-3">
+                          <div
+                            className="flex items-center gap-1 text-muted-foreground"
+                            style={{ fontSize: 12 }}
                           >
-                            {comp}%
+                            <Calendar className="w-3 h-3 flex-shrink-0" />
+                            {client.dueDate}
+                          </div>
+                        </td>
+                        {/* Score */}
+                        <td className="px-4 py-3">
+                          <span
+                            className={`font-bold ${client.complianceScore >= 90 ? "text-emerald-600" : client.complianceScore >= 75 ? "text-amber-600" : "text-red-500"}`}
+                            style={{ fontSize: 13 }}
+                          >
+                            {client.complianceScore}%
                           </span>
-                        </div>
-                      </td>
-                      {/* Due date */}
-                      <td className="px-4 py-3">
-                        <div
-                          className="flex items-center gap-1 text-muted-foreground"
-                          style={{ fontSize: 12 }}
-                        >
-                          <Calendar className="w-3 h-3 flex-shrink-0" />
-                          {client.dueDate}
-                        </div>
-                      </td>
-                      {/* Score */}
-                      <td className="px-4 py-3">
-                        <span
-                          className={`font-bold ${client.complianceScore >= 90 ? "text-emerald-600" : client.complianceScore >= 75 ? "text-amber-600" : "text-red-500"}`}
-                          style={{ fontSize: 13 }}
-                        >
-                          {client.complianceScore}%
-                        </span>
-                      </td>
-                      {/* Actions */}
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelected(client);
-                          }}
-                          className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                        >
-                          <MoreHorizontal className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        </td>
+                        {/* Actions */}
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelected(client);
+                            }}
+                            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
 
-            {filtered.length === 0 && (
-              <div className="py-16 text-center text-muted-foreground">
-                <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                <p style={{ fontSize: 14 }}>No clients match your filters.</p>
-              </div>
-            )}
+              {filtered.length === 0 && (
+                <div className="py-16 text-center text-muted-foreground">
+                  <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                  <p style={{ fontSize: 14 }}>No clients match your filters.</p>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           /* GRID / CARD VIEW */
