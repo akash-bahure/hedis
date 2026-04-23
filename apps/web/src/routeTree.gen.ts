@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppLayoutRouteImport } from './routes/_appLayout'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthIndexRouteImport } from './routes/auth/index'
 import { Route as AppLayoutWorkQueueIndexRouteImport } from './routes/_appLayout/work-queue/index'
 import { Route as AppLayoutSystemLogsIndexRouteImport } from './routes/_appLayout/system-logs/index'
 import { Route as AppLayoutReportsIndexRouteImport } from './routes/_appLayout/reports/index'
@@ -19,6 +20,8 @@ import { Route as AppLayoutDashboardIndexRouteImport } from './routes/_appLayout
 import { Route as AppLayoutClientsIndexRouteImport } from './routes/_appLayout/clients/index'
 import { Route as AppLayoutAuditSamplingIndexRouteImport } from './routes/_appLayout/audit-sampling/index'
 import { Route as AppLayoutAdminIndexRouteImport } from './routes/_appLayout/admin/index'
+import { Route as AuthLayoutLogoutRouteImport } from './routes/auth/_layout/logout'
+import { Route as AuthLayoutLoginRouteImport } from './routes/auth/_layout/login'
 
 const AppLayoutRoute = AppLayoutRouteImport.update({
   id: '/_appLayout',
@@ -27,6 +30,11 @@ const AppLayoutRoute = AppLayoutRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthIndexRoute = AuthIndexRouteImport.update({
+  id: '/auth/',
+  path: '/auth/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppLayoutWorkQueueIndexRoute = AppLayoutWorkQueueIndexRouteImport.update({
@@ -72,9 +80,22 @@ const AppLayoutAdminIndexRoute = AppLayoutAdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => AppLayoutRoute,
 } as any)
+const AuthLayoutLogoutRoute = AuthLayoutLogoutRouteImport.update({
+  id: '/auth/_layout/logout',
+  path: '/auth/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLayoutLoginRoute = AuthLayoutLoginRouteImport.update({
+  id: '/auth/_layout/login',
+  path: '/auth/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth/': typeof AuthIndexRoute
+  '/auth/login': typeof AuthLayoutLoginRoute
+  '/auth/logout': typeof AuthLayoutLogoutRoute
   '/admin/': typeof AppLayoutAdminIndexRoute
   '/audit-sampling/': typeof AppLayoutAuditSamplingIndexRoute
   '/clients/': typeof AppLayoutClientsIndexRoute
@@ -86,6 +107,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthIndexRoute
+  '/auth/login': typeof AuthLayoutLoginRoute
+  '/auth/logout': typeof AuthLayoutLogoutRoute
   '/admin': typeof AppLayoutAdminIndexRoute
   '/audit-sampling': typeof AppLayoutAuditSamplingIndexRoute
   '/clients': typeof AppLayoutClientsIndexRoute
@@ -99,6 +123,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_appLayout': typeof AppLayoutRouteWithChildren
+  '/auth/': typeof AuthIndexRoute
+  '/auth/_layout/login': typeof AuthLayoutLoginRoute
+  '/auth/_layout/logout': typeof AuthLayoutLogoutRoute
   '/_appLayout/admin/': typeof AppLayoutAdminIndexRoute
   '/_appLayout/audit-sampling/': typeof AppLayoutAuditSamplingIndexRoute
   '/_appLayout/clients/': typeof AppLayoutClientsIndexRoute
@@ -112,6 +139,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth/'
+    | '/auth/login'
+    | '/auth/logout'
     | '/admin/'
     | '/audit-sampling/'
     | '/clients/'
@@ -123,6 +153,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
+    | '/auth/login'
+    | '/auth/logout'
     | '/admin'
     | '/audit-sampling'
     | '/clients'
@@ -135,6 +168,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_appLayout'
+    | '/auth/'
+    | '/auth/_layout/login'
+    | '/auth/_layout/logout'
     | '/_appLayout/admin/'
     | '/_appLayout/audit-sampling/'
     | '/_appLayout/clients/'
@@ -148,6 +184,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppLayoutRoute: typeof AppLayoutRouteWithChildren
+  AuthIndexRoute: typeof AuthIndexRoute
+  AuthLayoutLoginRoute: typeof AuthLayoutLoginRoute
+  AuthLayoutLogoutRoute: typeof AuthLayoutLogoutRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -164,6 +203,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/': {
+      id: '/auth/'
+      path: '/auth'
+      fullPath: '/auth/'
+      preLoaderRoute: typeof AuthIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_appLayout/work-queue/': {
@@ -222,6 +268,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLayoutAdminIndexRouteImport
       parentRoute: typeof AppLayoutRoute
     }
+    '/auth/_layout/logout': {
+      id: '/auth/_layout/logout'
+      path: '/auth/logout'
+      fullPath: '/auth/logout'
+      preLoaderRoute: typeof AuthLayoutLogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/_layout/login': {
+      id: '/auth/_layout/login'
+      path: '/auth/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLayoutLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -254,6 +314,9 @@ const AppLayoutRouteWithChildren = AppLayoutRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppLayoutRoute: AppLayoutRouteWithChildren,
+  AuthIndexRoute: AuthIndexRoute,
+  AuthLayoutLoginRoute: AuthLayoutLoginRoute,
+  AuthLayoutLogoutRoute: AuthLayoutLogoutRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

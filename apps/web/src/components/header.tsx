@@ -1,3 +1,4 @@
+import { useNavigate } from "@tanstack/react-router";
 import {
   Search,
   Bell,
@@ -23,6 +24,7 @@ interface HeaderProps {
   onToggleDarkMode: () => void;
   activeView?: string;
   onMenuClick?: () => void;
+  onNavigate?: (view: string) => void;
 }
 
 const breadcrumbMap: Record<string, { path: string[] }> = {
@@ -105,6 +107,7 @@ export function Header({
   onToggleDarkMode,
   activeView = "dashboard",
   onMenuClick,
+  onNavigate,
 }: HeaderProps) {
   const [showProgramMenu, setShowProgramMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -113,6 +116,7 @@ export function Header({
 
   const unreadCount = notifications.filter((n) => n.unread).length;
   const crumbs = (breadcrumbMap[activeView] ?? breadcrumbMap["dashboard"]).path;
+  const navigate = useNavigate();
 
   const iconColor = (type: string) =>
     type === "assignment"
@@ -343,14 +347,20 @@ export function Header({
                   </span>
                 </div>
                 <button
-                  onClick={() => setShowUserMenu(false)}
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    onNavigate?.("profile");
+                  }}
                   className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors flex items-center gap-2"
                 >
                   <User className="w-4 h-4 text-muted-foreground" />
                   My Profile
                 </button>
                 <button
-                  onClick={() => setShowUserMenu(false)}
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    onNavigate?.("profile");
+                  }}
                   className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors flex items-center gap-2"
                 >
                   <SettingsIcon className="w-4 h-4 text-muted-foreground" />
@@ -365,7 +375,11 @@ export function Header({
                 </button>
                 <div className="border-t border-border my-1" />
                 <button
-                  onClick={() => setShowUserMenu(false)}
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    localStorage.removeItem("auth");
+                    navigate({ to: "/auth/login" });
+                  }}
                   className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-accent transition-colors flex items-center gap-2"
                 >
                   <LogOut className="w-4 h-4" />
