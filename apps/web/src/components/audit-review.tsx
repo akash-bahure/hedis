@@ -1681,10 +1681,10 @@ export function AuditReview({
               </div>
 
               {/* Header actions */}
-              <div className="flex flex-wrap lg:flex-nowrap items-center gap-2 justify-start lg:w-auto">
+              <div className="flex flex-nowrap items-center gap-2 overflow-x-auto max-w-full scrollbar-thin">
                 <button
                   onClick={() => setPhiVisible((v) => !v)}
-                  className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1.5 text-[11px] border border-border rounded-lg text-muted-foreground hover:bg-muted"
+                  className="flex-shrink-0 inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1.5 text-[11px] border border-border rounded-lg text-muted-foreground hover:bg-muted"
                 >
                   {phiVisible ? (
                     <EyeOff className="w-3.5 h-3.5" />
@@ -1693,7 +1693,7 @@ export function AuditReview({
                   )}
                   {phiVisible ? "Mask PHI" : "Show PHI"}
                 </button>
-                <div className="w-px h-6 bg-border" />
+                <div className="w-px h-6 bg-border flex-shrink-0" />
                 <button
                   onClick={() => {
                     setDecision("rework");
