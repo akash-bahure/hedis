@@ -2193,11 +2193,11 @@ function ProjectAccessView() {
 
       {/* Matrix Table */}
       <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto relative">
+          <table className="w-full min-w-max">
             <thead>
-              <tr className="border-b border-border bg-muted/10">
-                <th className="px-5 py-3 text-left text-[10px] font-black text-muted-foreground uppercase tracking-wide sticky left-0 bg-muted/10 min-w-[180px]">
+              <tr className="border-b border-border bg-muted">
+                <th className="px-5 py-3 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-wide sticky left-0 z-40 bg-muted min-w-[180px]">
                   User
                 </th>
                 <th className="px-4 py-3 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-wide min-w-[100px]">
@@ -2224,7 +2224,7 @@ function ProjectAccessView() {
                   key={u.id}
                   className={`hover:bg-muted/10 transition-colors ${ri % 2 === 0 ? "" : "bg-muted/5"}`}
                 >
-                  <td className="px-5 py-3 sticky left-0 bg-card">
+                  <td className="px-5 py-3 sticky left-0 z-30 bg-card shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                     <div className="flex items-center gap-2">
                       <Avatar initials={u.initials} size={7} />
                       <div>
@@ -2237,7 +2237,7 @@ function ProjectAccessView() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 z-10">
                     <RoleBadge roleId={u.role} small />
                   </td>
                   {PROJECTS_LIST.map((p) => {
@@ -2376,11 +2376,11 @@ function ShiftView() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto relative">
+          <table className="w-full min-w-max">
             <thead>
-              <tr className="border-b border-border bg-muted/10">
-                <th className="px-5 py-2.5 text-left text-[10px] font-black text-muted-foreground uppercase tracking-wide min-w-[180px] sticky left-0 bg-muted/10">
+              <tr className="border-b border-border bg-muted">
+                <th className="px-5 py-2.5 text-left text-[10px] font-black text-muted-foreground uppercase tracking-wide min-w-[180px] sticky left-0 z-40 bg-muted border-r border-border">
                   Coder / Auditor
                 </th>
                 {WEEK_DAYS.map((d, i) => (
@@ -2403,7 +2403,7 @@ function ShiftView() {
                   key={u.id}
                   className={`hover:bg-muted/10 transition-colors ${ri % 2 === 0 ? "" : "bg-muted/5"}`}
                 >
-                  <td className="px-5 py-3 sticky left-0 bg-card">
+                  <td className="px-5 py-3 sticky left-0 z-30 bg-card border-r border-border shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                     <div className="flex items-center gap-2.5">
                       <Avatar initials={u.initials} size={7} />
                       <div>
@@ -2417,7 +2417,10 @@ function ShiftView() {
                   {WEEK_DAYS.map((d, di) => {
                     const sh = schedule[u.id]?.[d] ?? "Off";
                     return (
-                      <td key={d} className="px-3 py-3 text-center">
+                      <td
+                        key={d}
+                        className="px-3 py-3 text-center relative z-10"
+                      >
                         <select
                           value={sh}
                           onChange={(e) =>
@@ -2434,7 +2437,7 @@ function ShiftView() {
                       </td>
                     );
                   })}
-                  <td className="px-3 py-3 text-center">
+                  <td className="px-3 py-3 text-center relative z-10">
                     <ShiftChip shift={u.shift} />
                   </td>
                 </tr>

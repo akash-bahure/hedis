@@ -378,7 +378,7 @@ export function ProfilePreferences({
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mt-4">
+        <div className="flex gap-1 overflow-x-auto sm:flex-wrap">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -1240,14 +1240,22 @@ export function ProfilePreferences({
                 title="Recent Login Activity"
                 subtitle="Last 5 sign-in events for your account"
               >
-                <div className="overflow-hidden rounded-lg border border-border">
-                  <table className="table-enterprise">
+                <div className="rounded-lg border border-border overflow-x-auto">
+                  <table className="table-enterprise min-w-[600px]">
                     <thead>
                       <tr>
-                        <th>Date & Time</th>
-                        <th>Device / Browser</th>
-                        <th>Location</th>
-                        <th>Status</th>
+                        <th className="text-[11px] sm:text-xs whitespace-nowrap">
+                          Date & Time
+                        </th>
+                        <th className="text-[11px] sm:text-xs whitespace-nowrap">
+                          Device / Browser
+                        </th>
+                        <th className="text-[11px] sm:text-xs whitespace-nowrap">
+                          Location
+                        </th>
+                        <th className="text-[11px] sm:text-xs whitespace-nowrap">
+                          Status
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1260,13 +1268,13 @@ export function ProfilePreferences({
                               : ""
                           }
                         >
-                          <td className="text-xs font-mono text-muted-foreground">
+                          <td className="text-xs font-mono text-muted-foreground whitespace-nowrap">
                             {row.date}
                           </td>
-                          <td className="text-xs text-foreground">
+                          <td className="text-xs text-foreground whitespace-nowrap">
                             {row.device}
                           </td>
-                          <td className="text-xs text-muted-foreground">
+                          <td className="text-xs text-muted-foreground whitespace-nowrap">
                             {row.location}
                           </td>
                           <td>
