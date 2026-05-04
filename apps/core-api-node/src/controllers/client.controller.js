@@ -20,6 +20,26 @@ exports.getClients = async (req, res) => {
   }
 };
 
+// EXPORT ALL (CSV / PDF)
+exports.exportClients = async (req, res) => {
+  try {
+    const format = req.query.format || "csv";
+    const exportData = await clientService.exportClients(format);
+    
+    if (format === "pdf") {
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", 'attachment; filename="clients.pdf"');
+      res.send(exportData);
+    } else {
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", 'attachment; filename="clients.csv"');
+      res.send(exportData);
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // GET ONE
 exports.getClientById = async (req, res) => {
   try {

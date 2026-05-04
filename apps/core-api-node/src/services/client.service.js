@@ -1,25 +1,10 @@
-const { Client } = require("../models");
 const { Op } = require("sequelize");
+const Client = require("../models/client.model");
 
 // CREATE
-exports.createClient = async (req, res) => {
-  try {
-    console.log("Body:", req.body);
-
-    const data = await clientService.createClient(req.body);
-
-    res.status(201).json({
-      message: "Client created",
-      data,
-    });
-
-  } catch (err) {
-    console.error("ERROR:", err);
-
-    res.status(500).json({
-      error: err.message,
-    });
-  }
+exports.createClient = async (body) => {
+  const client = await Client.create(body);
+  return client;
 };
 
 // GET ALL (with filters + pagination)
@@ -38,7 +23,7 @@ exports.getClients = async (query) => {
   // Search
   if (search) {
     where[Op.or] = [
-      { name: { [Op.iLike]: `%${search}%` } },
+      { org_name: { [Op.iLike]: `%${search}%` } },
       { email: { [Op.iLike]: `%${search}%` } },
       { short_code: { [Op.iLike]: `%${search}%` } },
     ]; 
@@ -55,7 +40,7 @@ exports.getClients = async (query) => {
     where,
     limit: Number(limit),
     offset: Number(offset),
-    order: [["createdAt", "DESC"]],
+    order: [["created_at", "DESC"]],
   });
 
   return {
@@ -64,6 +49,59 @@ exports.getClients = async (query) => {
     limit: Number(limit),
     data: rows,
   };
+};
+
+// EXPORT ALL (with filters)
+exports.exportClients = async (query) => {
+  const {
+    search,
+    region,
+    status,
+    contract_type,
+  } = query;
+
+  let where = {};
+
+  // Search
+  if (search) {
+    where[Op.or] = [
+      { org_name: { [Op.iLike]: `%${search}%` } },
+      { email: { [Op.iLike]: `%${search}%` } },
+      { short_code: { [Op.iLike]: `%${search}%` } },
+    ]; 
+  }
+
+  //Filters
+  if (region) where.region = region;
+  if (status) where.status = status;
+  if (contract_type) where.contract_type = contract_type;
+
+  const rows = await Client.findAll({
+    where,
+    order: [["created_at", "DESC"]],
+  });
+
+  const fields = [
+    "id", "org_name", "short_code", "region", "plan_tier", "status", 
+    "contract_type", "measure_year", "total_charts", "start_date", 
+    "due_date", "primary_contact_name", "email", "phone", "abstractors_assigned",
+    "created_at", "updated_at"
+  ];
+
+  const csvRows = [];
+  csvRows.push(fields.join(","));
+
+  for (const row of rows) {
+    const values = fields.map(field => {
+      let val = row[field];
+      if (val === null || val === undefined) val = "";
+      val = val.toString().replace(/"/g, '""');
+      return `"${val}"`;
+    });
+    csvRows.push(values.join(","));
+  }
+
+  return csvRows.join("\n");
 };
 
 //GET ONE

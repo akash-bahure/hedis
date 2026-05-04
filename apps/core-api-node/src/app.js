@@ -61,5 +61,10 @@ app.get("/", (req, res) => {
   res.send("Server running");
 });
 app.use("/api/auth", require("./routes/authRoutes"));
+const clientRoutes = require("./routes/client.routes");
+app.use("/api/clients", clientRoutes);
+
+console.log("clientRoutes:", typeof require("./routes/client.routes"));
+console.log("authRoutes:", typeof require("./routes/authRoutes"));
 
 module.exports = app;
