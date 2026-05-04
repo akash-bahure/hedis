@@ -61,5 +61,6 @@ app.get("/", (req, res) => {
   res.send("Server running");
 });
 app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/user-roles", require("./routes/userRoleRoutes"));
 
 module.exports = app;
