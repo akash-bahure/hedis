@@ -2,32 +2,31 @@ const pool = require("../config/db");
 
 // CREATE USER ROLE
 exports.createUserRole = async (req, res) => {
-  const client = await pool.connect();
+  const client = req.db;
+
   try {
     const { name, description, level, active, role_permissions } = req.body;
 
-    // Simple validation
     if (!name) {
       return res.status(400).json({ message: "Role name is required" });
     }
 
     await client.query("BEGIN");
 
-    // Insert into user_roles
     const roleResult = await client.query(
-      "INSERT INTO user_roles (name, description, level, active) VALUES ($1, $2, $3, $4) RETURNING *",
-      [name, description, level || 0, active !== undefined ? active : true]
+      `INSERT INTO user_roles (name, description, level, active) 
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [name, description, level || 0, active ?? true]
     );
 
     const roleId = roleResult.rows[0].id;
 
-    // Insert permissions if provided
-    if (role_permissions && Array.isArray(role_permissions)) {
+    if (Array.isArray(role_permissions)) {
       for (const permission of role_permissions) {
         await client.query(
           `INSERT INTO role_permissions 
-          (role_id, module, can_view, can_edit, can_assign, can_approve, can_reject, can_export, can_override) 
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+           (role_id, module, can_view, can_edit, can_assign, can_approve, can_reject, can_export, can_override) 
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
           [
             roleId,
             permission.module,
@@ -53,8 +52,6 @@ exports.createUserRole = async (req, res) => {
   } catch (error) {
     await client.query("ROLLBACK");
     res.status(500).json({ error: error.message });
-  } finally {
-    client.release();
   }
 };
 
@@ -69,7 +66,7 @@ exports.getUserRoles = async (req, res) => {
       ORDER BY ur.created_at DESC
     `;
 
-    const result = await pool.query(rolesQuery);
+    const result = await req.db.query(rolesQuery);
 
     res.json({
       count: result.rows.length,
@@ -85,7 +82,7 @@ exports.getUserRoles = async (req, res) => {
 // UPDATE USER ROLE
 exports.updateUserRole = async (req, res) => {
   const { id } = req.params;
-  const client = await pool.connect();
+  const client = req.db;
   try {
     const { name, description, level, active, role_permissions } = req.body;
 
@@ -164,7 +161,7 @@ exports.updateUserRole = async (req, res) => {
       message: "User role updated successfully",
       role: roleResult
         ? roleResult.rows[0]
-        : (await pool.query("SELECT * FROM user_roles WHERE id = $1", [id]))
+        : (await client.query("SELECT * FROM user_roles WHERE id = $1", [id]))
             .rows[0],
       permissions: role_permissions || [],
     });
@@ -206,7 +203,7 @@ exports.getUserRoleById = async (req, res) => {
 
     const role = roleResult.rows[0];
 
-    const permissionsResult = await pool.query(
+    const permissionsResult = await req.db.query(
       "SELECT * FROM role_permissions WHERE role_id = $1",
       [id]
     );
