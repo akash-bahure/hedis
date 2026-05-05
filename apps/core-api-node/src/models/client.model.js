@@ -1,12 +1,23 @@
 const pool = require("../config/db");
+const crypto = require("crypto");
 
 const Client = {
   create: async (data) => {
+    if (!data.id) {
+      data.id = crypto.randomUUID();
+    }
+    if (!data.created_at) {
+      data.created_at = new Date();
+    }
+    if (!data.updated_at) {
+      data.updated_at = new Date();
+    }
+
     const keys = Object.keys(data);
     const values = Object.values(data);
     const placeholders = keys.map((_, i) => `$${i + 1}`).join(", ");
     const columns = keys.join(", ");
-    
+
     const query = `
       INSERT INTO clients (${columns})
       VALUES (${placeholders})
@@ -46,7 +57,7 @@ const Client = {
     }
 
     const whereString = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
-    
+
     const countQuery = `SELECT COUNT(*) FROM clients ${whereString}`;
     const countResult = await pool.query(countQuery, values);
     const count = parseInt(countResult.rows[0].count, 10);
@@ -93,7 +104,7 @@ const Client = {
     }
 
     const whereString = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
-    
+
     const query = `
       SELECT * FROM clients 
       ${whereString}
@@ -114,7 +125,7 @@ const Client = {
     const keys = Object.keys(data);
     const values = Object.values(data);
     const setString = keys.map((key, i) => `${key} = $${i + 1}`).join(", ");
-    
+
     const query = `
       UPDATE clients 
       SET ${setString}
