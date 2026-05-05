@@ -3,6 +3,17 @@ const clientService = require("../services/client.service");
 // CREATE
 exports.createClient = async (req, res) => {
   try {
+    const requiredFields = [
+      "org_name", "short_code", "region", "contract_type", "measure_year",
+      "total_charts", "start_date", "due_date", "primary_contact_name", "email"
+    ];
+
+    const missingFields = requiredFields.filter(field => !req.body[field]);
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({ error: `Missing required fields: ${missingFields.join(", ")}` });
+    }
+
     const data = await clientService.createClient(req.db, req.body);
     res.status(201).json({ message: "Client created Successfully", data });
   } catch (err) {

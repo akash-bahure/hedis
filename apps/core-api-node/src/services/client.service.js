@@ -1,13 +1,33 @@
-const Client = require("../models/client.model");
+const crypto = require("crypto");
 
 // CREATE
-exports.createClient = async (db, body) => {
-  const client = await Client.create(db, body);
-  return client;
+exports.createClient = async (db, data) => {
+  if (!data.id) {
+    data.id = crypto.randomUUID();
+  }
+  if (!data.created_at) {
+    data.created_at = new Date();
+  }
+  if (!data.updated_at) {
+    data.updated_at = new Date();
+  }
+
+  const keys = Object.keys(data);
+  const values = Object.values(data);
+  const placeholders = keys.map((_, i) => `$${i + 1}`).join(", ");
+  const columns = keys.join(", ");
+
+  const query = `
+    INSERT INTO clients (${columns})
+    VALUES (${placeholders})
+    RETURNING *;
+  `;
+  const result = await db.query(query, values);
+  return result.rows[0];
 };
 
 // GET ALL (with filters + pagination)
-exports.getClients = async (db, query) => {
+exports.getClients = async (db, queryParams) => {
   const {
     search,
     region,
@@ -15,31 +35,69 @@ exports.getClients = async (db, query) => {
     contract_type,
     page = 1,
     limit = 10,
-  } = query;
+  } = queryParams;
 
   const offset = (page - 1) * limit;
 
-  const { count, rows } = await Client.findAndCountAll(db, {
-    search,
-    region,
-    status,
-    contract_type,
-    limit: Number(limit),
-    offset: Number(offset),
-  });
+  let whereClauses = [];
+  let values = [];
+  let valueIndex = 1;
+
+  if (search) {
+    whereClauses.push(`(org_name ILIKE $${valueIndex} OR email ILIKE $${valueIndex} OR short_code ILIKE $${valueIndex})`);
+    values.push(`%${search}%`);
+    valueIndex++;
+  }
+
+  if (region) {
+    whereClauses.push(`region = $${valueIndex}`);
+    values.push(region);
+    valueIndex++;
+  }
+
+  if (status) {
+    whereClauses.push(`status = $${valueIndex}`);
+    values.push(status);
+    valueIndex++;
+  }
+
+  if (contract_type) {
+    whereClauses.push(`contract_type = $${valueIndex}`);
+    values.push(contract_type);
+    valueIndex++;
+  }
+
+  const whereString = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+
+  const countQuery = `SELECT COUNT(*) FROM clients ${whereString}`;
+  const countResult = await db.query(countQuery, values);
+  const count = parseInt(countResult.rows[0].count, 10);
+
+  const dataQuery = `
+    SELECT * FROM clients 
+    ${whereString}
+    ORDER BY created_at DESC
+    LIMIT $${valueIndex} OFFSET $${valueIndex + 1}
+  `;
+  const dataValues = [...values, limit, offset];
+  const dataResult = await db.query(dataQuery, dataValues);
 
   return {
     total: count,
     page: Number(page),
     limit: Number(limit),
-    data: rows,
+    data: dataResult.rows,
   };
 };
 
 // EXPORT ALL (CSV / PDF)
 exports.exportClients = async (db, format) => {
-  // Use findAll to get all clients without filters (as requested)
-  const rows = await Client.findAll(db, {});
+  const query = `
+    SELECT * FROM clients 
+    ORDER BY created_at DESC
+  `;
+  const result = await db.query(query);
+  const rows = result.rows;
 
   const fields = [
     "id", "org_name", "short_code", "region", "plan_tier", "status",
@@ -96,24 +154,40 @@ exports.exportClients = async (db, format) => {
 
 //GET ONE
 exports.getClientById = async (db, id) => {
-  return await Client.findByPk(db, id);
+  const query = `SELECT * FROM clients WHERE id = $1`;
+  const result = await db.query(query, [id]);
+  return result.rows[0];
 };
 
 //UPDATE
-exports.updateClient = async (db, id, body) => {
-  const client = await Client.findByPk(db, id);
+exports.updateClient = async (db, id, data) => {
+  const existingResult = await db.query(`SELECT * FROM clients WHERE id = $1`, [id]);
+  const client = existingResult.rows[0];
 
   if (!client) throw new Error("Client not found");
 
-  const updatedClient = await Client.update(db, id, body);
-  return updatedClient;
+  data.updated_at = new Date();
+  const keys = Object.keys(data);
+  const values = Object.values(data);
+  const setString = keys.map((key, i) => `${key} = $${i + 1}`).join(", ");
+
+  const query = `
+    UPDATE clients 
+    SET ${setString}
+    WHERE id = $${keys.length + 1}
+    RETURNING *;
+  `;
+  const result = await db.query(query, [...values, id]);
+  return result.rows[0];
 };
 
 // DELETE
 exports.deleteClient = async (db, id) => {
-  const client = await Client.findByPk(db, id);
+  const existingResult = await db.query(`SELECT * FROM clients WHERE id = $1`, [id]);
+  const client = existingResult.rows[0];
 
   if (!client) throw new Error("Client not found");
 
-  await Client.destroy(db, id);
+  const query = `DELETE FROM clients WHERE id = $1`;
+  await db.query(query, [id]);
 };
