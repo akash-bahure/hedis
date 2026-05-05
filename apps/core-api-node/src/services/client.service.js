@@ -1,13 +1,13 @@
 const Client = require("../models/client.model");
 
 // CREATE
-exports.createClient = async (body) => {
-  const client = await Client.create(body);
+exports.createClient = async (db, body) => {
+  const client = await Client.create(db, body);
   return client;
 };
 
 // GET ALL (with filters + pagination)
-exports.getClients = async (query) => {
+exports.getClients = async (db, query) => {
   const {
     search,
     region,
@@ -19,7 +19,7 @@ exports.getClients = async (query) => {
 
   const offset = (page - 1) * limit;
 
-  const { count, rows } = await Client.findAndCountAll({
+  const { count, rows } = await Client.findAndCountAll(db, {
     search,
     region,
     status,
@@ -37,9 +37,9 @@ exports.getClients = async (query) => {
 };
 
 // EXPORT ALL (CSV / PDF)
-exports.exportClients = async (format) => {
+exports.exportClients = async (db, format) => {
   // Use findAll to get all clients without filters (as requested)
-  const rows = await Client.findAll({});
+  const rows = await Client.findAll(db, {});
 
   const fields = [
     "id", "org_name", "short_code", "region", "plan_tier", "status",
@@ -95,25 +95,25 @@ exports.exportClients = async (format) => {
 };
 
 //GET ONE
-exports.getClientById = async (id) => {
-  return await Client.findByPk(id);
+exports.getClientById = async (db, id) => {
+  return await Client.findByPk(db, id);
 };
 
 //UPDATE
-exports.updateClient = async (id, body) => {
-  const client = await Client.findByPk(id);
+exports.updateClient = async (db, id, body) => {
+  const client = await Client.findByPk(db, id);
 
   if (!client) throw new Error("Client not found");
 
-  const updatedClient = await Client.update(id, body);
+  const updatedClient = await Client.update(db, id, body);
   return updatedClient;
 };
 
 // DELETE
-exports.deleteClient = async (id) => {
-  const client = await Client.findByPk(id);
+exports.deleteClient = async (db, id) => {
+  const client = await Client.findByPk(db, id);
 
   if (!client) throw new Error("Client not found");
 
-  await Client.destroy(id);
+  await Client.destroy(db, id);
 };

@@ -1,8 +1,7 @@
-const pool = require("../config/db");
 const crypto = require("crypto");
 
 const Client = {
-  create: async (data) => {
+  create: async (db, data) => {
     if (!data.id) {
       data.id = crypto.randomUUID();
     }
@@ -23,11 +22,11 @@ const Client = {
       VALUES (${placeholders})
       RETURNING *;
     `;
-    const result = await pool.query(query, values);
+    const result = await db.query(query, values);
     return result.rows[0];
   },
 
-  findAndCountAll: async ({ search, region, status, contract_type, limit, offset }) => {
+  findAndCountAll: async (db, { search, region, status, contract_type, limit, offset }) => {
     let whereClauses = [];
     let values = [];
     let valueIndex = 1;
@@ -59,7 +58,7 @@ const Client = {
     const whereString = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
 
     const countQuery = `SELECT COUNT(*) FROM clients ${whereString}`;
-    const countResult = await pool.query(countQuery, values);
+    const countResult = await db.query(countQuery, values);
     const count = parseInt(countResult.rows[0].count, 10);
 
     const dataQuery = `
@@ -69,12 +68,12 @@ const Client = {
       LIMIT $${valueIndex} OFFSET $${valueIndex + 1}
     `;
     const dataValues = [...values, limit, offset];
-    const dataResult = await pool.query(dataQuery, dataValues);
+    const dataResult = await db.query(dataQuery, dataValues);
 
     return { count, rows: dataResult.rows };
   },
 
-  findAll: async ({ search, region, status, contract_type }) => {
+  findAll: async (db, { search, region, status, contract_type }) => {
     let whereClauses = [];
     let values = [];
     let valueIndex = 1;
@@ -110,17 +109,17 @@ const Client = {
       ${whereString}
       ORDER BY created_at DESC
     `;
-    const result = await pool.query(query, values);
+    const result = await db.query(query, values);
     return result.rows;
   },
 
-  findByPk: async (id) => {
+  findByPk: async (db, id) => {
     const query = `SELECT * FROM clients WHERE id = $1`;
-    const result = await pool.query(query, [id]);
+    const result = await db.query(query, [id]);
     return result.rows[0];
   },
 
-  update: async (id, data) => {
+  update: async (db, id, data) => {
     data.updated_at = new Date();
     const keys = Object.keys(data);
     const values = Object.values(data);
@@ -132,13 +131,13 @@ const Client = {
       WHERE id = $${keys.length + 1}
       RETURNING *;
     `;
-    const result = await pool.query(query, [...values, id]);
+    const result = await db.query(query, [...values, id]);
     return result.rows[0];
   },
 
-  destroy: async (id) => {
+  destroy: async (db, id) => {
     const query = `DELETE FROM clients WHERE id = $1`;
-    await pool.query(query, [id]);
+    await db.query(query, [id]);
   }
 };
 
