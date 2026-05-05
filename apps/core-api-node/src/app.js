@@ -66,5 +66,6 @@ app.use("/admin", require("./routes/orgRoutes"));
 
 app.use(tenantMiddleware);
 app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/user-roles", require("./routes/userRoleRoutes"));
 
 module.exports = app;
