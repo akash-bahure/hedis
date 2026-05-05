@@ -1,11 +1,15 @@
-const sequelize = require("../config/db");
-// Import models so Sequelize knows about them before syncing
-require("../models/client.model");
+const fs = require("fs");
+const path = require("path");
+const pool = require("../config/db");
 
 const initDB = async () => {
   try {
-    await sequelize.sync({ alter: true });
-    console.log("Database synchronized successfully (Sequelize)");
+    const filePath = path.join(__dirname, "schema.sql");
+    const sql = fs.readFileSync(filePath, "utf8");
+
+    await pool.query(sql);
+
+    console.log("Schema executed successfully");
   } catch (err) {
     console.error("Schema Error", err.message);
   }
