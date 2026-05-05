@@ -3,11 +3,12 @@ const cors = require("cors");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsDoc = require("swagger-jsdoc");
 const path = require("path");
+const tenantMiddleware = require("./middlewares/tenantMiddleware");
 
 const app = express();
 
 var corsOptions = {
-  origin: "http://localhost:5000",
+  origin: "*",
   optionsSuccessStatus: 200,
 };
 
@@ -60,6 +61,10 @@ app.use(cors(corsOptions));
 app.get("/", (req, res) => {
   res.send("Server running");
 });
+
+app.use("/admin", require("./routes/orgRoutes"));
+
+app.use(tenantMiddleware);
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/user-roles", require("./routes/userRoleRoutes"));
 
