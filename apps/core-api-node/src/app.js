@@ -8,7 +8,7 @@ const tenantMiddleware = require("./middlewares/tenantMiddleware");
 const app = express();
 
 var corsOptions = {
-  origin: "http://localhost:5000",
+  origin: "*",
   optionsSuccessStatus: 200,
 };
 

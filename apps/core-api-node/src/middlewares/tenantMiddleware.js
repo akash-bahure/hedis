@@ -4,7 +4,7 @@ module.exports = async function tenantMiddleware(req, res, next) {
   const client = await pool.connect();
 
   try {
-    const host = req.headers.host;
+    const host = new URL(req.headers.origin).hostname;
     const hostname = host.split(":")[0];
 
     const subdomain = hostname.split(".")[0];
