@@ -1,4 +1,3 @@
-const { Op } = require("sequelize");
 const Client = require("../models/client.model");
 
 // CREATE
@@ -18,29 +17,15 @@ exports.getClients = async (query) => {
     limit = 10,
   } = query;
 
-  let where = {};
-
-  // Search
-  if (search) {
-    where[Op.or] = [
-      { org_name: { [Op.iLike]: `%${search}%` } },
-      { email: { [Op.iLike]: `%${search}%` } },
-      { short_code: { [Op.iLike]: `%${search}%` } },
-    ]; 
-  }
-
-  //Filters
-  if (region) where.region = region;
-  if (status) where.status = status;
-  if (contract_type) where.contract_type = contract_type;
-
   const offset = (page - 1) * limit;
 
   const { count, rows } = await Client.findAndCountAll({
-    where,
+    search,
+    region,
+    status,
+    contract_type,
     limit: Number(limit),
     offset: Number(offset),
-    order: [["created_at", "DESC"]],
   });
 
   return {
@@ -51,43 +36,48 @@ exports.getClients = async (query) => {
   };
 };
 
-// EXPORT ALL (with filters)
-exports.exportClients = async (query) => {
-  const {
-    search,
-    region,
-    status,
-    contract_type,
-  } = query;
-
-  let where = {};
-
-  // Search
-  if (search) {
-    where[Op.or] = [
-      { org_name: { [Op.iLike]: `%${search}%` } },
-      { email: { [Op.iLike]: `%${search}%` } },
-      { short_code: { [Op.iLike]: `%${search}%` } },
-    ]; 
-  }
-
-  //Filters
-  if (region) where.region = region;
-  if (status) where.status = status;
-  if (contract_type) where.contract_type = contract_type;
-
-  const rows = await Client.findAll({
-    where,
-    order: [["created_at", "DESC"]],
-  });
+// EXPORT ALL (CSV / PDF)
+exports.exportClients = async (format) => {
+  // Use findAll to get all clients without filters (as requested)
+  const rows = await Client.findAll({});
 
   const fields = [
-    "id", "org_name", "short_code", "region", "plan_tier", "status", 
-    "contract_type", "measure_year", "total_charts", "start_date", 
-    "due_date", "primary_contact_name", "email", "phone", "abstractors_assigned",
-    "created_at", "updated_at"
+    "id", "org_name", "short_code", "region", "plan_tier", "status",
+    "contract_type", "measure_year", "total_charts", "start_date",
+    "due_date", "primary_contact_name", "email", "phone", "abstractors_assigned"
   ];
 
+  if (format === "pdf") {
+    const PDFDocument = require("pdfkit-table");
+    return new Promise((resolve, reject) => {
+      try {
+        const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'landscape' });
+        const buffers = [];
+        doc.on('data', buffers.push.bind(buffers));
+        doc.on('end', () => resolve(Buffer.concat(buffers)));
+        
+        const table = {
+          title: "Clients Export",
+          headers: ["Org Name", "Short Code", "Region", "Status", "Contract", "Email"],
+          rows: rows.map(row => [
+            row.org_name || "", 
+            row.short_code || "", 
+            row.region || "", 
+            row.status || "", 
+            row.contract_type || "",
+            row.email || ""
+          ])
+        };
+        
+        doc.table(table, { width: 750 });
+        doc.end();
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  // Default to CSV
   const csvRows = [];
   csvRows.push(fields.join(","));
 
@@ -115,9 +105,8 @@ exports.updateClient = async (id, body) => {
 
   if (!client) throw new Error("Client not found");
 
-  await client.update(body);
-
-  return client;
+  const updatedClient = await Client.update(id, body);
+  return updatedClient;
 };
 
 // DELETE
@@ -126,5 +115,5 @@ exports.deleteClient = async (id) => {
 
   if (!client) throw new Error("Client not found");
 
-  await client.destroy();
+  await Client.destroy(id);
 };

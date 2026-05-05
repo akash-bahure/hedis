@@ -1,97 +1,134 @@
-const { DataTypes } = require("sequelize");
-const sequelize = require("../config/db");
+const pool = require("../config/db");
 
-const Client = sequelize.define(
-  "Client",
-  {
-    // PRIMARY KEY
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
-
-    // -------------------------
-    // STEP 1: ORGANIZATION
-    // -------------------------
-    org_name: {
-      type: DataTypes.STRING(200),
-      allowNull: false,
-      unique: true,
-    },
-    short_code: {
-      type: DataTypes.STRING(50),
-      allowNull: false,
-      unique: true,
-    },
-    region: {
-      type: DataTypes.ENUM("North", "South", "East", "West"),
-      allowNull: false,
-    },
-    plan_tier: {
-      type: DataTypes.ENUM("Basic", "Professional", "Enterprise"),
-      defaultValue: "Professional",
-    },
-    status: {
-      type: DataTypes.ENUM("Onboarding", "Active", "Inactive"),
-      defaultValue: "Onboarding",
-    },
-
-    // -------------------------
-    // STEP 2: CONTRACT (Single)
-    // -------------------------
-    contract_type: {
-      type: DataTypes.ENUM(
-        "HEDIS Hybrid",
-        "HEDIS Administrative",
-        "HEDIS Electronic",
-        "Multi-Measure"
-      ),
-      allowNull: false,
-    },
-    measure_year: {
-      type: DataTypes.ENUM("MY2024", "MY2025", "MY2026", "MY2027"),
-      allowNull: false,
-    },
-    total_charts: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    start_date: {
-      type: DataTypes.DATEONLY,
-      allowNull: false,
-    },
-    due_date: {
-      type: DataTypes.DATEONLY,
-      allowNull: false,
-    },
-
-    // -------------------------
-    // STEP 3: CONTACT (Single)
-    // -------------------------
-    primary_contact_name: {
-      type: DataTypes.STRING(150),
-      allowNull: false,
-    },
-    email: {
-      type: DataTypes.STRING(150),
-      allowNull: false,
-      unique: true,
-    },
-    phone: {
-      type: DataTypes.STRING(20),
-    },
-    abstractors_assigned: {
-      type: DataTypes.INTEGER,
-      defaultValue: 0,
-    },
+const Client = {
+  create: async (data) => {
+    const keys = Object.keys(data);
+    const values = Object.values(data);
+    const placeholders = keys.map((_, i) => `$${i + 1}`).join(", ");
+    const columns = keys.join(", ");
+    
+    const query = `
+      INSERT INTO clients (${columns})
+      VALUES (${placeholders})
+      RETURNING *;
+    `;
+    const result = await pool.query(query, values);
+    return result.rows[0];
   },
-  {
-    tableName: "clients",
-    timestamps: true,
-    createdAt: "created_at",
-    updatedAt: "updated_at",
+
+  findAndCountAll: async ({ search, region, status, contract_type, limit, offset }) => {
+    let whereClauses = [];
+    let values = [];
+    let valueIndex = 1;
+
+    if (search) {
+      whereClauses.push(`(org_name ILIKE $${valueIndex} OR email ILIKE $${valueIndex} OR short_code ILIKE $${valueIndex})`);
+      values.push(`%${search}%`);
+      valueIndex++;
+    }
+
+    if (region) {
+      whereClauses.push(`region = $${valueIndex}`);
+      values.push(region);
+      valueIndex++;
+    }
+
+    if (status) {
+      whereClauses.push(`status = $${valueIndex}`);
+      values.push(status);
+      valueIndex++;
+    }
+
+    if (contract_type) {
+      whereClauses.push(`contract_type = $${valueIndex}`);
+      values.push(contract_type);
+      valueIndex++;
+    }
+
+    const whereString = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+    
+    const countQuery = `SELECT COUNT(*) FROM clients ${whereString}`;
+    const countResult = await pool.query(countQuery, values);
+    const count = parseInt(countResult.rows[0].count, 10);
+
+    const dataQuery = `
+      SELECT * FROM clients 
+      ${whereString}
+      ORDER BY created_at DESC
+      LIMIT $${valueIndex} OFFSET $${valueIndex + 1}
+    `;
+    const dataValues = [...values, limit, offset];
+    const dataResult = await pool.query(dataQuery, dataValues);
+
+    return { count, rows: dataResult.rows };
+  },
+
+  findAll: async ({ search, region, status, contract_type }) => {
+    let whereClauses = [];
+    let values = [];
+    let valueIndex = 1;
+
+    if (search) {
+      whereClauses.push(`(org_name ILIKE $${valueIndex} OR email ILIKE $${valueIndex} OR short_code ILIKE $${valueIndex})`);
+      values.push(`%${search}%`);
+      valueIndex++;
+    }
+
+    if (region) {
+      whereClauses.push(`region = $${valueIndex}`);
+      values.push(region);
+      valueIndex++;
+    }
+
+    if (status) {
+      whereClauses.push(`status = $${valueIndex}`);
+      values.push(status);
+      valueIndex++;
+    }
+
+    if (contract_type) {
+      whereClauses.push(`contract_type = $${valueIndex}`);
+      values.push(contract_type);
+      valueIndex++;
+    }
+
+    const whereString = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+    
+    const query = `
+      SELECT * FROM clients 
+      ${whereString}
+      ORDER BY created_at DESC
+    `;
+    const result = await pool.query(query, values);
+    return result.rows;
+  },
+
+  findByPk: async (id) => {
+    const query = `SELECT * FROM clients WHERE id = $1`;
+    const result = await pool.query(query, [id]);
+    return result.rows[0];
+  },
+
+  update: async (id, data) => {
+    data.updated_at = new Date();
+    const keys = Object.keys(data);
+    const values = Object.values(data);
+    const setString = keys.map((key, i) => `${key} = $${i + 1}`).join(", ");
+    
+    const query = `
+      UPDATE clients 
+      SET ${setString}
+      WHERE id = $${keys.length + 1}
+      RETURNING *;
+    `;
+    const result = await pool.query(query, [...values, id]);
+    return result.rows[0];
+  },
+
+  destroy: async (id) => {
+    const query = `DELETE FROM clients WHERE id = $1`;
+    await pool.query(query, [id]);
   }
-);
+};
 
 module.exports = Client;
