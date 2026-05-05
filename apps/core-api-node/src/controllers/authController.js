@@ -8,7 +8,7 @@ exports.register = async (req, res) => {
     const { name, email, password } = req.body;
 
     // Check if user exists
-    const userCheck = await pool.query(
+    const userCheck = await req.db.query(
       "SELECT * FROM users WHERE email = $1",
       [email]
     );
@@ -21,7 +21,7 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Insert user
-    const result = await pool.query(
+    const result = await req.db.query(
       "INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING *",
       [name, email, hashedPassword]
     );
@@ -33,10 +33,9 @@ exports.register = async (req, res) => {
       user: {
         id: user.id,
         name: user.name,
-        email: user.email
-      }
+        email: user.email,
+      },
     });
-
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -48,10 +47,9 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     // Get user
-    const result = await pool.query(
-      "SELECT * FROM users WHERE email = $1",
-      [email]
-    );
+    const result = await req.db.query("SELECT * FROM users WHERE email = $1", [
+      email,
+    ]);
 
     if (result.rows.length === 0) {
       return res.status(400).json({ message: "Invalid credentials" });
@@ -67,21 +65,18 @@ exports.login = async (req, res) => {
     }
 
     // Generate token
-    const token = jwt.sign(
-      { id: user.id },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
 
     res.json({
       token,
       user: {
         id: user.id,
         name: user.name,
-        email: user.email
-      }
+        email: user.email,
+      },
     });
-
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
