@@ -126,6 +126,12 @@ async function runMigrations(client, schema) {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
+  await client.query(`
+    ALTER TABLE ${schema}.org_users 
+    ADD COLUMN IF NOT EXISTS invite_token TEXT,
+    ADD COLUMN IF NOT EXISTS invite_token_expiry TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS invite_used BOOLEAN DEFAULT FALSE;
+  `);
 
   await client.query(`
     CREATE TABLE IF NOT EXISTS ${schema}.user_projects (

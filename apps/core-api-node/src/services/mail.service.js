@@ -6,16 +6,19 @@ const transporter = nodemailer.createTransport({
   secure: false,
 });
 
-const sendInviteEmail = async (toEmail, name) => {
+const sendInviteEmail = async (toEmail, name, token) => {
+  const inviteLink = `http://localhost:5000/auth/set-password?token=${token}`;
+
   return transporter.sendMail({
     from: "no-reply@yourapp.com",
     to: toEmail,
-    subject: "User Invitation",
+    subject: "You're Invited!",
     html: `
-      <h3>Hello ${name || "User"},</h3>
-      <p>You have been invited to the system.</p>
-      <p>Please login to continue.</p>
-    `,
+        <h2>Hello ${name || "User"},</h2>
+        <p>You have been invited.</p>
+        <a href="${inviteLink}">Set Password</a>
+        <p>Expires in 24 hours</p>
+      `,
   });
 };
 

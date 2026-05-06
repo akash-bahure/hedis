@@ -1,7 +1,7 @@
 const { z } = require("zod");
 const PDFDocument = require("pdfkit");
 const { sendInviteEmail } = require("../services/mail.service");
-
+const crypto = require("crypto");
 const userSchema = z.object({
   full_name: z.string().max(255).optional(),
   email: z.string().email().max(254),
@@ -39,7 +39,7 @@ const userSchema = z.object({
   is_super_administrator: z.boolean().optional(),
   project_access: z.array(z.string().uuid()).optional(),
 });
-
+const generateInviteToken = () => crypto.randomBytes(32).toString("hex");
 // CREATE USER
 exports.createUser = async (req, res) => {
   const client = req.db;
@@ -58,7 +58,7 @@ exports.createUser = async (req, res) => {
       user_role,
       shift,
       user_type,
-      user_status,
+      user_status = "Pending",
       employee_id,
       send_email,
       two_fa_auth,
@@ -94,21 +94,24 @@ exports.createUser = async (req, res) => {
     const { address_line_1, address_line_2, country, city, state, zip_code } =
       address || {};
 
+    // Generate Invite Token
+    const inviteToken = generateInviteToken();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
     const query = `
-      INSERT INTO org_users (
-        full_name, email, phone, department, job_title,
-        address_line_1, address_line_2, country, city, state, zip_code,
-        bio, organization_id, user_role_id, shift, user_type, user_status,
-        employee_id, send_email, two_fa_auth, is_superuser, is_staff,
-        is_active, is_super_administrator, project_access
-      ) VALUES (
-        $1, $2, $3, $4, $5,
-        $6, $7, $8, $9, $10, $11,
-        $12, $13, $14, $15, $16, $17,
-        $18, $19, $20, $21, $22,
-        $23, $24, $25
-      ) RETURNING *
-    `;
+    INSERT INTO org_users (
+      full_name, email, phone, department, job_title,
+      address_line_1, address_line_2, country, city, state, zip_code,
+      bio, organization_id, user_role_id, shift, user_type, user_status,
+      employee_id, send_email, two_fa_auth, is_superuser, is_staff,
+      is_active, is_super_administrator, project_access,
+      invite_token, invite_token_expiry, invite_used
+    ) VALUES (
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+      $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22,
+      $23, $24, $25, $26, $27, $28
+    ) RETURNING *
+  `;
 
     const values = [
       full_name,
@@ -127,32 +130,39 @@ exports.createUser = async (req, res) => {
       user_role,
       shift,
       user_type,
-      user_status || "Active",
+      user_status,
       employee_id,
-      send_email ?? true,
+      send_email,
       two_fa_auth ?? false,
       is_superuser ?? false,
       is_staff ?? false,
-      is_active ?? true,
+      false,
       is_super_administrator ?? false,
       project_access || [],
+      inviteToken,
+      expiresAt,
+      false,
     ];
 
     const result = await client.query(query, values);
     const createdUser = result.rows[0];
 
-    if (send_email !== false) {
+    // Send Invite Email
+    if (send_email) {
       try {
-        await sendInviteEmail(createdUser.email, createdUser.full_name);
-        console.log(" Email sent");
+        await sendInviteEmail(
+          createdUser.email,
+          createdUser.full_name,
+          inviteToken
+        );
       } catch (err) {
-        console.error(" Email failed:", err.message);
+        console.error("Email failed:", err.message);
       }
     }
 
     res.status(201).json({
-      message: "User created successfully",
-      user: result.rows[0],
+      message: "User created. Invite sent.",
+      user: createdUser,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
