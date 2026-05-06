@@ -43,6 +43,24 @@ async function runMigrations(client, schema) {
   `);
 
   await client.query(`
+    CREATE TABLE IF NOT EXISTS projects (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      project_name VARCHAR(255) NOT NULL,
+      client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+      project_type VARCHAR(100),
+      specialty VARCHAR(100),
+      priority VARCHAR(50) DEFAULT 'High' CHECK (priority IN ('High', 'Medium', 'Low')),
+      notes TEXT,
+      start_date DATE NOT NULL,
+      end_date DATE NOT NULL,
+      project_manager_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+  `);
+
+  await client.query(`
     CREATE TABLE IF NOT EXISTS ${schema}.user_roles (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       name VARCHAR(150) NOT NULL,
