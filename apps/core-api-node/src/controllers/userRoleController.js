@@ -59,12 +59,13 @@ exports.createUserRole = async (req, res) => {
 exports.getUserRoles = async (req, res) => {
   try {
     const rolesQuery = `
-      SELECT 
-        ur.*, 
-        (SELECT COUNT(*)::int FROM role_permissions rp WHERE rp.role_id = ur.id) as permissions_count
-      FROM user_roles ur
-      ORDER BY ur.created_at DESC
-    `;
+  SELECT 
+    ur.*, 
+    (SELECT COUNT(*)::int FROM role_permissions rp WHERE rp.role_id = ur.id) as permissions_count,
+    (SELECT COUNT(*)::int FROM org_users u WHERE u.user_role_id = ur.id) as users_count
+  FROM user_roles ur
+  ORDER BY ur.created_at DESC
+`;
 
     const result = await req.db.query(rolesQuery);
 
@@ -162,7 +163,7 @@ exports.updateUserRole = async (req, res) => {
       role: roleResult
         ? roleResult.rows[0]
         : (await client.query("SELECT * FROM user_roles WHERE id = $1", [id]))
-            .rows[0],
+          .rows[0],
       permissions: role_permissions || [],
     });
   } catch (error) {
@@ -193,7 +194,14 @@ const MODULE_GROUP_MAPPING = {
 exports.getUserRoleById = async (req, res) => {
   const { id } = req.params;
   try {
-    const roleResult = await pool.query(
+    const usersCountResult = await req.db.query(
+      "SELECT COUNT(*)::int FROM org_users WHERE user_role_id = $1",
+      [id]
+    );
+
+    const usersCount = usersCountResult.rows[0].count;
+
+    const roleResult = await req.db.query(
       "SELECT * FROM user_roles WHERE id = $1",
       [id]
     );
@@ -240,7 +248,7 @@ exports.getUserRoleById = async (req, res) => {
       description: role.description,
       level: role.level,
       active: role.active,
-      users_count: 0, // Skipped for now
+      users_count: usersCount,
       permissions_count: permissions.length,
       permissions_all: groupedPermissions,
     });
