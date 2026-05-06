@@ -21,7 +21,7 @@ async function runMigrations(client, schema) {
 
   await client.query(`
     CREATE TABLE IF NOT EXISTS ${schema}.clients (
-       id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
        org_name VARCHAR(200) NOT NULL UNIQUE,
        short_code VARCHAR(50) NOT NULL UNIQUE,
        region VARCHAR(50) NOT NULL CHECK (region IN ('North', 'South', 'East', 'West')),
@@ -30,6 +30,7 @@ async function runMigrations(client, schema) {
        contract_type VARCHAR(100) NOT NULL CHECK (contract_type IN ('HEDIS Hybrid', 'HEDIS Administrative', 'HEDIS Electronic', 'Multi-Measure')),
        measure_year VARCHAR(50) NOT NULL CHECK (measure_year IN ('MY2024', 'MY2025', 'MY2026', 'MY2027')),
        total_charts INTEGER NOT NULL,
+       completed_charts INTEGER DEFAULT 0,
        start_date DATE NOT NULL,
        due_date DATE NOT NULL,
        primary_contact_name VARCHAR(150) NOT NULL,
@@ -43,17 +44,17 @@ async function runMigrations(client, schema) {
   `);
 
   await client.query(`
-    CREATE TABLE IF NOT EXISTS projects (
-      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+   CREATE TABLE IF NOT EXISTS ${schema}.projects (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       project_name VARCHAR(255) NOT NULL,
-      client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+      client_id UUID REFERENCES ${schema}.clients(id) ON DELETE CASCADE,
       project_type VARCHAR(100),
       specialty VARCHAR(100),
       priority VARCHAR(50) DEFAULT 'High' CHECK (priority IN ('High', 'Medium', 'Low')),
       notes TEXT,
       start_date DATE NOT NULL,
       end_date DATE NOT NULL,
-      project_manager_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      project_manager_id INTEGER REFERENCES ${schema}.users(id) ON DELETE SET NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -95,8 +96,10 @@ async function runMigrations(client, schema) {
     CREATE TABLE IF NOT EXISTS ${schema}.org_users  (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       full_name VARCHAR(255),
+      credentials VARCHAR(255),
       email VARCHAR(254) UNIQUE NOT NULL,
-      phone VARCHAR(15),
+      phone VARCHAR(20),
+      mobile_phone VARCHAR(20),
       department VARCHAR(75),
       job_title VARCHAR(150),
       address_line_1 TEXT,
@@ -105,6 +108,7 @@ async function runMigrations(client, schema) {
       city VARCHAR(100),
       state VARCHAR(100),
       zip_code VARCHAR(20),
+      location VARCHAR(255),
       bio TEXT,
       organization_id UUID,
       user_role_id UUID REFERENCES ${schema}.user_roles(id),
@@ -122,10 +126,28 @@ async function runMigrations(client, schema) {
       is_super_administrator BOOLEAN DEFAULT FALSE,
       project_access JSONB, -- List of project UUIDs/strings
       password TEXT, -- Adding for future auth if needed
+      preferences JSONB DEFAULT '{}'::jsonb,
+      certifications JSONB DEFAULT '[]'::jsonb,
+      notifications JSONB DEFAULT '{}'::jsonb,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
+
+  // Ensure new fields are added to existing schemas without wiping data
+  try {
+    await client.query(`
+      ALTER TABLE ${schema}.org_users
+        ADD COLUMN IF NOT EXISTS credentials VARCHAR(255),
+        ADD COLUMN IF NOT EXISTS mobile_phone VARCHAR(20),
+        ADD COLUMN IF NOT EXISTS location VARCHAR(255),
+        ADD COLUMN IF NOT EXISTS preferences JSONB DEFAULT '{}'::jsonb,
+        ADD COLUMN IF NOT EXISTS certifications JSONB DEFAULT '[]'::jsonb,
+        ADD COLUMN IF NOT EXISTS notifications JSONB DEFAULT '{}'::jsonb;
+    `);
+  } catch (err) {
+    // Columns might already exist or other harmless error
+  }
 }
 
 module.exports = { runMigrations };

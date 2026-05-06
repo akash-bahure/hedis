@@ -90,6 +90,44 @@ exports.getClients = async (db, queryParams) => {
   };
 };
 
+//GET API
+exports.getClientStats = async (db) => {
+  const result = await db.query(`
+    SELECT 
+      COUNT(*) AS total_clients,
+      COUNT(*) FILTER (WHERE status = 'Active') AS active_clients,
+      COALESCE(SUM(total_charts),0) AS charts_assigned,
+      COALESCE(SUM(completed_charts),0) AS completed_charts,
+      COUNT(*) FILTER (
+        WHERE due_date < CURRENT_DATE 
+        AND status != 'Active'
+      ) AS at_risk
+    FROM clients
+  `);
+
+  const row = result.rows[0];
+
+  const total_clients = parseInt(row.total_clients, 10);
+  const active_clients = parseInt(row.active_clients, 10);
+  const charts_assigned = parseInt(row.charts_assigned, 10);
+  const completed_charts = parseInt(row.completed_charts, 10);
+  const at_risk = parseInt(row.at_risk, 10);
+
+  const completion_rate =
+    charts_assigned > 0
+      ? Math.round((completed_charts / charts_assigned) * 100)
+      : 0;
+
+  return {
+    total_clients,
+    active_clients,
+    charts_assigned,
+    completed_charts,
+    completion_rate,
+    at_risk
+  };
+};
+
 // EXPORT ALL (CSV / PDF)
 exports.exportClients = async (db, format) => {
   const query = `

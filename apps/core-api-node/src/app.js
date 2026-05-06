@@ -72,5 +72,6 @@ const projectRoutes = require("./routes/project.routes");
 app.use("/api/projects", projectRoutes);
 app.use("/api/user-roles", require("./routes/userRoleRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
+app.use("/api/profile", require("./routes/profile.routes"));
 
 module.exports = app;
