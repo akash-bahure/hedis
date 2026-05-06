@@ -120,10 +120,20 @@ async function runMigrations(client, schema) {
       last_password_changed DATE,
       employee_id VARCHAR(100),
       is_super_administrator BOOLEAN DEFAULT FALSE,
-      project_access JSONB, -- List of project UUIDs/strings
+      project_access UUID[] DEFAULT ARRAY[]::UUID[],
       password TEXT, -- Adding for future auth if needed
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.user_projects (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES ${schema}.org_users(id) ON DELETE CASCADE,
+      project_id UUID REFERENCES ${schema}.projects(id) ON DELETE CASCADE,
+      assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, project_id)
     );
   `);
 }
