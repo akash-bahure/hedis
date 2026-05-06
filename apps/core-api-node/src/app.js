@@ -69,5 +69,6 @@ app.use("/api/auth", require("./routes/authRoutes"));
 const clientRoutes = require("./routes/client.routes");
 app.use("/api/clients", clientRoutes);
 app.use("/api/user-roles", require("./routes/userRoleRoutes"));
+app.use("/api/users", require("./routes/userRoutes"));
 
 module.exports = app;

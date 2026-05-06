@@ -17,8 +17,8 @@ async function runMigrations(client, schema) {
   //     created_at TIMESTAMP DEFAULT NOW()
   //   );
   // `);
-  // 
-  
+  //
+
   await client.query(`
     CREATE TABLE IF NOT EXISTS ${schema}.clients (
        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -40,24 +40,26 @@ async function runMigrations(client, schema) {
        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
      
       );
-  `)
+  `);
 
   await client.query(`
     CREATE TABLE IF NOT EXISTS ${schema}.user_roles (
-      id SERIAL PRIMARY KEY,
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       name VARCHAR(150) NOT NULL,
       description TEXT,
       level INTEGER DEFAULT 0,
       active BOOLEAN DEFAULT TRUE,
+      system_role BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
 
+  // Create role_permissions table with UUID references
   await client.query(`
     CREATE TABLE IF NOT EXISTS ${schema}.role_permissions (
-      id SERIAL PRIMARY KEY,
-      role_id INTEGER REFERENCES ${schema}.user_roles(id) ON DELETE CASCADE,
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      role_id UUID REFERENCES ${schema}.user_roles(id) ON DELETE CASCADE,
       module VARCHAR(50) NOT NULL,
       can_view BOOLEAN DEFAULT FALSE,
       can_edit BOOLEAN DEFAULT FALSE,
@@ -67,6 +69,43 @@ async function runMigrations(client, schema) {
       can_export BOOLEAN DEFAULT FALSE,
       can_override BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // Create org_users  table with extensive fields and UUID
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.org_users  (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      full_name VARCHAR(255),
+      email VARCHAR(254) UNIQUE NOT NULL,
+      phone VARCHAR(15),
+      department VARCHAR(75),
+      job_title VARCHAR(150),
+      address_line_1 TEXT,
+      address_line_2 TEXT,
+      country VARCHAR(100),
+      city VARCHAR(100),
+      state VARCHAR(100),
+      zip_code VARCHAR(20),
+      bio TEXT,
+      organization_id UUID,
+      user_role_id UUID REFERENCES ${schema}.user_roles(id),
+      shift VARCHAR(20), -- Morning, Afternoon, Night, General, Off
+      user_type VARCHAR(20), -- Local, Azure
+      send_email BOOLEAN DEFAULT TRUE,
+      two_fa_auth BOOLEAN DEFAULT FALSE,
+      user_status VARCHAR(20) DEFAULT 'Active', -- Pending, Active, Inactive, Suspended
+      last_login TIMESTAMP,
+      is_superuser BOOLEAN DEFAULT FALSE,
+      is_staff BOOLEAN DEFAULT FALSE,
+      is_active BOOLEAN DEFAULT TRUE,
+      last_password_changed DATE,
+      employee_id VARCHAR(100),
+      is_super_administrator BOOLEAN DEFAULT FALSE,
+      project_access JSONB, -- List of project UUIDs/strings
+      password TEXT, -- Adding for future auth if needed
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
 }

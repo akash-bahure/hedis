@@ -130,7 +130,8 @@ router.get("/", userRoleController.getUserRoles);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: The user role ID
  *     requestBody:
  *       required: true
@@ -191,7 +192,8 @@ router.patch("/:id", userRoleController.updateUserRole);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: The user role ID
  *     responses:
  *       200:
@@ -202,7 +204,8 @@ router.patch("/:id", userRoleController.updateUserRole);
  *               type: object
  *               properties:
  *                 id:
- *                   type: integer
+ *                   type: string
+ *                   format: uuid
  *                 name:
  *                   type: string
  *                 description:
