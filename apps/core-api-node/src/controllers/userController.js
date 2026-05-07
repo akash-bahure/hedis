@@ -1,6 +1,7 @@
 const { z } = require("zod");
 const PDFDocument = require("pdfkit");
-
+const { sendInviteEmail } = require("../services/mail.service");
+const crypto = require("crypto");
 const userSchema = z.object({
   full_name: z.string().max(255).optional(),
   email: z.string().email().max(254),
@@ -38,7 +39,7 @@ const userSchema = z.object({
   is_super_administrator: z.boolean().optional(),
   project_access: z.array(z.string().uuid()).optional(),
 });
-
+const generateInviteToken = () => crypto.randomBytes(32).toString("hex");
 // CREATE USER
 exports.createUser = async (req, res) => {
   const client = req.db;
@@ -57,7 +58,7 @@ exports.createUser = async (req, res) => {
       user_role,
       shift,
       user_type,
-      user_status,
+      user_status = "Pending",
       employee_id,
       send_email,
       two_fa_auth,
@@ -70,7 +71,7 @@ exports.createUser = async (req, res) => {
 
     // Check if email already exists
     const existingUser = await client.query(
-      "SELECT id FROM org_users WHERE email = $1",
+      "SELECT id FROM users WHERE email = $1",
       [email]
     );
     if (existingUser.rows.length > 0) {
@@ -93,21 +94,24 @@ exports.createUser = async (req, res) => {
     const { address_line_1, address_line_2, country, city, state, zip_code } =
       address || {};
 
+    // Generate Invite Token
+    const inviteToken = generateInviteToken();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
     const query = `
-      INSERT INTO org_users (
-        full_name, email, phone, department, job_title,
-        address_line_1, address_line_2, country, city, state, zip_code,
-        bio, organization_id, user_role_id, shift, user_type, user_status,
-        employee_id, send_email, two_fa_auth, is_superuser, is_staff,
-        is_active, is_super_administrator, project_access
-      ) VALUES (
-        $1, $2, $3, $4, $5,
-        $6, $7, $8, $9, $10, $11,
-        $12, $13, $14, $15, $16, $17,
-        $18, $19, $20, $21, $22,
-        $23, $24, $25
-      ) RETURNING *
-    `;
+    INSERT INTO users (
+      full_name, email, phone, department, job_title,
+      address_line_1, address_line_2, country, city, state, zip_code,
+      bio, organization_id, user_role_id, shift, user_type, user_status,
+      employee_id, send_email, two_fa_auth, is_superuser, is_staff,
+      is_active, is_super_administrator, project_access,
+      invite_token, invite_token_expiry, invite_used
+    ) VALUES (
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+      $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22,
+      $23, $24, $25, $26, $27, $28
+    ) RETURNING *
+  `;
 
     const values = [
       full_name,
@@ -126,22 +130,39 @@ exports.createUser = async (req, res) => {
       user_role,
       shift,
       user_type,
-      user_status || "Active",
+      user_status,
       employee_id,
-      send_email ?? true,
+      send_email,
       two_fa_auth ?? false,
       is_superuser ?? false,
       is_staff ?? false,
-      is_active ?? true,
+      false,
       is_super_administrator ?? false,
-      project_access ? JSON.stringify(project_access) : null,
+      project_access || [],
+      inviteToken,
+      expiresAt,
+      false,
     ];
 
     const result = await client.query(query, values);
+    const createdUser = result.rows[0];
+
+    // Send Invite Email
+    if (send_email) {
+      try {
+        await sendInviteEmail(
+          createdUser.email,
+          createdUser.full_name,
+          inviteToken
+        );
+      } catch (err) {
+        console.error("Email failed:", err.message);
+      }
+    }
 
     res.status(201).json({
-      message: "User created successfully",
-      user: result.rows[0],
+      message: "User created. Invite sent.",
+      user: createdUser,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -156,34 +177,30 @@ exports.getUsers = async (req, res) => {
   const client = req.db;
   try {
     const { page = 1, limit = 10, search, user_role, user_status } = req.query;
-
-    const offset = (page - 1) * limit;
-    const values = [];
-    let queryIndex = 1;
+    const offset = (page - 1) * Number(limit);
 
     let whereClause = "WHERE 1=1";
+    const values = [];
+    let paramIndex = 1;
 
     if (search) {
-      whereClause += ` AND (u.full_name ILIKE $${queryIndex} OR u.email ILIKE $${queryIndex})`;
+      whereClause += ` AND (u.full_name ILIKE $${paramIndex} OR u.email ILIKE $${paramIndex})`;
       values.push(`%${search}%`);
-      queryIndex++;
+      paramIndex++;
     }
-
     if (user_role) {
-      whereClause += ` AND u.user_role_id = $${queryIndex}`;
+      whereClause += ` AND u.user_role_id = $${paramIndex}`;
       values.push(user_role);
-      queryIndex++;
+      paramIndex++;
     }
-
     if (user_status) {
-      whereClause += ` AND u.user_status = $${queryIndex}`;
+      whereClause += ` AND u.user_status = $${paramIndex}`;
       values.push(user_status);
-      queryIndex++;
+      paramIndex++;
     }
 
-    // Main Query
     const query = `
-      SELECT 
+      SELECT
         u.*,
         json_build_object(
           'id', ur.id,
@@ -191,46 +208,61 @@ exports.getUsers = async (req, res) => {
           'description', ur.description,
           'active', ur.active,
           'system_role', ur.system_role,
-          'users', (SELECT COUNT(*)::int FROM org_users WHERE user_role_id = ur.id),
+          'users_count', (SELECT COUNT(*)::int FROM users WHERE user_role_id = ur.id),
           'permissions_count', (SELECT COUNT(*)::int FROM role_permissions WHERE role_id = ur.id)
-        ) as user_role
-      FROM org_users u
+        ) as user_role,
+        COALESCE(
+          (SELECT json_agg(
+            json_build_object(
+              'id', p.id,
+              'project_name', p.project_name,
+              'project_type', p.project_type,
+              'specialty', p.specialty,
+              'priority', p.priority,
+              'start_date', p.start_date,
+              'end_date', p.end_date,
+              'client_id', p.client_id
+            )
+          )
+           FROM projects p
+           WHERE p.id = ANY(u.project_access))
+          , '[]'::json
+        ) as projects
+      FROM users u
       LEFT JOIN user_roles ur ON u.user_role_id = ur.id
       ${whereClause}
       ORDER BY u.created_at DESC
-      LIMIT $${queryIndex} OFFSET $${queryIndex + 1}
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
-    values.push(limit);
-    values.push(offset);
+    values.push(Number(limit), offset);
 
     const result = await client.query(query, values);
 
-    // Count Query for pagination
-    const countQuery = `SELECT COUNT(*) FROM org_users u ${whereClause}`;
     const countResult = await client.query(
-      countQuery,
-      values.slice(0, queryIndex - 1)
+      `SELECT COUNT(*) FROM users u ${whereClause}`,
+      values.slice(0, paramIndex - 1)
     );
-    const totalCount = parseInt(countResult.rows[0].count);
 
+    const totalCount = parseInt(countResult.rows[0].count);
     const baseUrl = `${req.protocol}://${req.get("host")}${req.baseUrl}${
       req.path
     }`;
-    const next =
-      totalCount > page * limit
-        ? `${baseUrl}?page=${parseInt(page) + 1}&limit=${limit}`
-        : null;
-    const previous =
-      page > 1 ? `${baseUrl}?page=${parseInt(page) - 1}&limit=${limit}` : null;
 
     res.json({
       count: totalCount,
-      next,
-      previous,
+      next:
+        totalCount > page * limit
+          ? `${baseUrl}?page=${parseInt(page) + 1}&limit=${limit}`
+          : null,
+      previous:
+        page > 1
+          ? `${baseUrl}?page=${parseInt(page) - 1}&limit=${limit}`
+          : null,
       results: result.rows,
     });
   } catch (error) {
+    console.error("Get Users Error:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -239,9 +271,9 @@ exports.getUsers = async (req, res) => {
 exports.updateUser = async (req, res) => {
   const { id } = req.params;
   const client = req.db;
+
   try {
     const validatedData = userSchema.partial().parse(req.body);
-
     if (Object.keys(validatedData).length === 0) {
       return res.status(400).json({ message: "No fields to update" });
     }
@@ -255,29 +287,26 @@ exports.updateUser = async (req, res) => {
       ...otherFields
     } = validatedData;
 
-    // Check if user exists
-    const userCheck = await client.query(
-      "SELECT id FROM org_users WHERE id = $1",
-      [id]
-    );
+    // Existence check
+    const userCheck = await client.query("SELECT id FROM users WHERE id = $1", [
+      id,
+    ]);
     if (userCheck.rows.length === 0) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Check email uniqueness if email is updated
+    // Email uniqueness
     if (email) {
-      const existingUser = await client.query(
-        "SELECT id FROM org_users WHERE email = $1 AND id != $2",
+      const existing = await client.query(
+        "SELECT id FROM users WHERE email = $1 AND id != $2",
         [email, id]
       );
-      if (existingUser.rows.length > 0) {
-        return res
-          .status(400)
-          .json({ message: "User with this email already exists" });
+      if (existing.rows.length > 0) {
+        return res.status(400).json({ message: "Email already exists" });
       }
     }
 
-    // Check if user role exists if provided
+    // Role validation
     if (user_role) {
       const roleCheck = await client.query(
         "SELECT id FROM user_roles WHERE id = $1",
@@ -288,12 +317,11 @@ exports.updateUser = async (req, res) => {
       }
     }
 
-    // Build update query dynamically
     const fields = [];
     const values = [];
     let index = 1;
 
-    // Handle regular fields
+    // Other fields
     for (const [key, value] of Object.entries(otherFields)) {
       fields.push(`${key} = $${index++}`);
       values.push(value);
@@ -303,34 +331,30 @@ exports.updateUser = async (req, res) => {
       fields.push(`email = $${index++}`);
       values.push(email);
     }
-
     if (user_role) {
       fields.push(`user_role_id = $${index++}`);
       values.push(user_role);
     }
-
-    // Handle nested address fields
     if (address) {
       for (const [key, value] of Object.entries(address)) {
         fields.push(`${key} = $${index++}`);
         values.push(value);
       }
     }
-
-    // Handle project access
-    if (project_access) {
+    if (project_access !== undefined) {
       fields.push(`project_access = $${index++}`);
-      values.push(JSON.stringify(project_access));
+      values.push(project_access || []); // Direct array
     }
 
     fields.push(`updated_at = CURRENT_TIMESTAMP`);
 
     const query = `
-      UPDATE org_users 
+      UPDATE users 
       SET ${fields.join(", ")} 
       WHERE id = $${index} 
       RETURNING *
     `;
+
     values.push(id);
 
     const result = await client.query(query, values);
@@ -354,21 +378,141 @@ exports.deleteUser = async (req, res) => {
 
   try {
     //  Check if user exists
-    const userCheck = await client.query(
-      "SELECT id FROM org_users WHERE id = $1",
-      [id]
-    );
+    const userCheck = await client.query("SELECT id FROM users WHERE id = $1", [
+      id,
+    ]);
 
     if (userCheck.rows.length === 0) {
       return res.status(404).json({ message: "User not found" });
     }
 
     // Delete user
-    await client.query("DELETE FROM org_users WHERE id = $1", [id]);
+    await client.query("DELETE FROM users WHERE id = $1", [id]);
 
     res.json({
       message: "User deleted successfully",
       deleted_user_id: id,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// EXPORT USERS (CSV / PDF)
+exports.exportUsers = async (req, res) => {
+  const client = req.db;
+
+  try {
+    const format = req.query.format || "csv";
+
+    // Fetch users with role info
+    const result = await client.query(`
+      SELECT 
+        u.id,
+        u.full_name,
+        u.email,
+        u.phone,
+        u.department,
+        u.job_title,
+        u.user_status,
+        u.created_at,
+        ur.name as role_name
+      FROM users u
+      LEFT JOIN user_roles ur ON u.user_role_id = ur.id
+      ORDER BY u.created_at DESC
+    `);
+
+    const users = result.rows;
+
+    // ================= CSV =================
+    if (format === "csv") {
+      const headers = [
+        "ID",
+        "Full Name",
+        "Email",
+        "Phone",
+        "Department",
+        "Job Title",
+        "Status",
+        "Role",
+        "Created At",
+      ];
+
+      const csvRows = users.map((u) => [
+        u.id,
+        u.full_name,
+        u.email,
+        u.phone,
+        u.department,
+        u.job_title,
+        u.user_status,
+        u.role_name,
+        u.created_at,
+      ]);
+
+      const csvContent = [headers, ...csvRows]
+        .map((row) => row.map((val) => `"${val ?? ""}"`).join(","))
+        .join("\n");
+
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", 'attachment; filename="users.csv"');
+
+      return res.send(csvContent);
+    }
+
+    // ================= PDF (Basic JSON → string) =================
+    if (format === "pdf") {
+      const doc = new PDFDocument();
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", 'attachment; filename="users.pdf"');
+
+      doc.pipe(res);
+
+      doc.fontSize(18).text("Users Report", { align: "center" });
+      doc.moveDown();
+
+      users.forEach((u, index) => {
+        doc
+          .fontSize(10)
+          .text(
+            `${index + 1}. ${u.full_name || ""} | ${u.email} | ${
+              u.role_name || "No Role"
+            } | ${u.user_status}`
+          );
+      });
+
+      doc.end();
+      return;
+    }
+
+    // Invalid format
+    res.status(400).json({ message: "Invalid format. Use csv or pdf" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// USER STATS API
+exports.getUserStats = async (req, res) => {
+  const client = req.db;
+
+  try {
+    const query = `
+      SELECT 
+        COUNT(*)::int AS total_users,
+        COUNT(*) FILTER (WHERE user_status = 'Active')::int AS active_users,
+        COUNT(*) FILTER (WHERE user_status = 'Inactive')::int AS inactive_users,
+        COUNT(*) FILTER (WHERE two_fa_auth = true)::int AS two_fa_enabled,
+        COUNT(*) FILTER (WHERE user_type = 'Azure')::int AS sso_users
+      FROM users
+    `;
+
+    const result = await client.query(query);
+
+    res.json({
+      message: "User stats fetched successfully",
+      stats: result.rows[0],
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

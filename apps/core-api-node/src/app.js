@@ -62,6 +62,11 @@ app.get("/", (req, res) => {
   res.send("Server running");
 });
 
+app.get("/api-docs.json", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.send(swaggerSpec);
+});
+
 app.use("/admin", require("./routes/orgRoutes"));
 
 app.use(tenantMiddleware);

@@ -62,7 +62,7 @@ exports.getUserRoles = async (req, res) => {
   SELECT 
     ur.*, 
     (SELECT COUNT(*)::int FROM role_permissions rp WHERE rp.role_id = ur.id) as permissions_count,
-    (SELECT COUNT(*)::int FROM org_users u WHERE u.user_role_id = ur.id) as users_count
+    (SELECT COUNT(*)::int FROM users u WHERE u.user_role_id = ur.id) as users_count
   FROM user_roles ur
   ORDER BY ur.created_at DESC
 `;
@@ -163,7 +163,7 @@ exports.updateUserRole = async (req, res) => {
       role: roleResult
         ? roleResult.rows[0]
         : (await client.query("SELECT * FROM user_roles WHERE id = $1", [id]))
-          .rows[0],
+            .rows[0],
       permissions: role_permissions || [],
     });
   } catch (error) {
@@ -195,7 +195,7 @@ exports.getUserRoleById = async (req, res) => {
   const { id } = req.params;
   try {
     const usersCountResult = await req.db.query(
-      "SELECT COUNT(*)::int FROM org_users WHERE user_role_id = $1",
+      "SELECT COUNT(*)::int FROM users WHERE user_role_id = $1",
       [id]
     );
 

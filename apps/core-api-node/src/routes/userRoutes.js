@@ -317,4 +317,59 @@ router.patch("/:id", userController.updateUser);
  */
 router.delete("/:id", userController.deleteUser);
 
+/**
+ * @swagger
+ * /api/users/export:
+ *   get:
+ *     summary: Export users (CSV or PDF)
+ *     tags: [Users]
+ *     description: Export all users data in CSV or PDF format
+ *     parameters:
+ *       - in: query
+ *         name: format
+ *         schema:
+ *           type: string
+ *           enum: [csv, pdf]
+ *         description: Export format (default csv)
+ *     responses:
+ *       200:
+ *         description: File download
+ *       500:
+ *         description: Server error
+ */
+router.get("/export", userController.exportUsers);
+
+/**
+ * @swagger
+ * /api/users/stats:
+ *   get:
+ *     summary: Get user statistics
+ *     tags: [Users]
+ *     description: Returns aggregated stats of users
+ *     responses:
+ *       200:
+ *         description: User stats fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 stats:
+ *                   type: object
+ *                   properties:
+ *                     total_users:
+ *                       type: integer
+ *                     active_users:
+ *                       type: integer
+ *                     inactive_users:
+ *                       type: integer
+ *                     two_fa_enabled:
+ *                       type: integer
+ *                     sso_users:
+ *                       type: integer
+ *       500:
+ *         description: Server error
+ */
+router.get("/stats", userController.getUserStats);
+
 module.exports = router;
