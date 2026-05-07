@@ -7,7 +7,8 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendInviteEmail = async (toEmail, name, token) => {
-  const inviteLink = `http://localhost:5000/auth/set-password?token=${token}`;
+  // Update this URL to point to your frontend application's set-password page
+  const inviteLink = `http://localhost:3000/set-password?token=${token}`;
 
   return transporter.sendMail({
     from: "no-reply@yourapp.com",

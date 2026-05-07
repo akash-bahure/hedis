@@ -20,7 +20,7 @@ const authController = require("../controllers/authController");
  *               - email
  *               - password
  *             properties:
- *               name:
+ *               full_name:
  *                 type: string
  *                 example: John Doe
  *               email:
@@ -71,5 +71,47 @@ router.post("/register", authController.register);
  *         description: Server error
  */
 router.post("/login", authController.login);
+
+/**
+ * @swagger
+ * /api/auth/set-password:
+ *   post:
+ *     summary: Set password for invited user
+ *     tags: [Auth]
+ *     description: Sets the password for a user using an invite token
+ *     parameters:
+ *       - in: query
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The invite token sent via email
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - password
+ *               - confirmPassword
+ *             properties:
+ *               password:
+ *                 type: string
+ *                 example: newpassword123
+ *               confirmPassword:
+ *                 type: string
+ *                 example: newpassword123
+ *     responses:
+ *       200:
+ *         description: Password set successfully
+ *       400:
+ *         description: Invalid input or token expired/used
+ *       404:
+ *         description: Token not found
+ *       500:
+ *         description: Server error
+ */
+router.post("/set-password", authController.setPassword);
 
 module.exports = router;
