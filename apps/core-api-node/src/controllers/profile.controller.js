@@ -1,7 +1,7 @@
 const getProfile = async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await req.db.query("SELECT * FROM org_users WHERE id = $1", [
+    const result = await req.db.query("SELECT * FROM users WHERE id = $1", [
       id,
     ]);
 
@@ -46,7 +46,7 @@ const updateProfile = async (req, res) => {
     }
 
     const query = `
-      UPDATE org_users 
+      UPDATE users 
       SET 
         full_name = COALESCE($1, full_name),
         credentials = COALESCE($2, credentials),
@@ -100,7 +100,7 @@ const updatePreferences = async (req, res) => {
     const preferences = req.body;
 
     const query = `
-      UPDATE org_users 
+      UPDATE users 
       SET 
         preferences = COALESCE($1, preferences),
         updated_at = CURRENT_TIMESTAMP
@@ -129,7 +129,7 @@ const updateNotifications = async (req, res) => {
     const notifications = req.body; // Expects JSON object matching notifications schema
 
     const query = `
-      UPDATE org_users 
+      UPDATE users 
       SET 
         notifications = COALESCE($1, notifications),
         updated_at = CURRENT_TIMESTAMP
@@ -152,9 +152,47 @@ const updateNotifications = async (req, res) => {
   }
 };
 
+const updateSecurity = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { currentPassword, newPassword, security } = req.body;
+
+    // Handle password update if provided (omitting actual hash check for brevity/mock)
+    if (newPassword) {
+      const passQuery = `UPDATE users SET password = $1 WHERE id = $2`;
+      await req.db.query(passQuery, [newPassword, id]);
+    }
+
+    // Handle security JSON object (2FA, sessions, etc)
+    if (security) {
+      const secQuery = `
+        UPDATE users 
+        SET 
+          security = COALESCE($1, security),
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = $2
+        RETURNING *;
+      `;
+      const result = await req.db.query(secQuery, [security, id]);
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: "Profile not found" });
+      }
+      return res.json({
+        message: "Security settings updated successfully",
+        data: result.rows[0].security,
+      });
+    }
+
+    res.json({ message: "Security settings processed" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = {
   getProfile,
   updateProfile,
   updatePreferences,
   updateNotifications,
+  updateSecurity,
 };

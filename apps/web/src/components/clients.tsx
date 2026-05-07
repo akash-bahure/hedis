@@ -31,6 +31,16 @@ import {
   Target,
   AlertTriangle,
 } from "lucide-react";
+import {
+  PostApiClientsMutationRequest,
+  PostApiClientsMutationRequestContractTypeEnumKey,
+  PostApiClientsMutationRequestMeasureYearEnumKey,
+  PostApiClientsMutationRequestPlanTierEnumKey,
+  PostApiClientsMutationRequestRegionEnumKey,
+  PostApiClientsMutationRequestStatusEnumKey,
+  usePostApiClients,
+} from "@/api";
+import { toast } from "sonner";
 
 /* ─── Types ─────────────────────────────────────────────── */
 type ClientStatus = "active" | "onboarding" | "at-risk" | "inactive";
@@ -1667,6 +1677,26 @@ function AddClientModal({
     Partial<Record<keyof AddClientForm, string>>
   >({});
 
+  const { mutate: createClient, isPending } = usePostApiClients({
+    mutation: {
+      onSuccess: (response) => {
+        toast.success("Client created successfully");
+
+        if (response?.data) {
+          onAdd(response.data);
+        }
+
+        onClose();
+      },
+
+      onError: (error) => {
+        console.error(error);
+
+        toast.error(error?.response?.data?.error || "Failed to create client");
+      },
+    },
+  });
+
   const set = (k: keyof AddClientForm, v: string) => {
     setForm((f) => ({ ...f, [k]: v }));
     setErrors((e) => ({ ...e, [k]: undefined }));
@@ -1701,31 +1731,45 @@ function AddClientModal({
 
   const submit = () => {
     if (!validateStep()) return;
-    const total = Number(form.chartsTotal) || 0;
-    const newClient: Client = {
-      id: `CLT-00${Math.floor(Math.random() * 900) + 100}`,
-      name: form.name,
-      shortCode: form.shortCode.toUpperCase(),
-      contractType: form.contractType as ContractType,
-      status: form.status,
-      region: form.region,
-      contactName: form.contactName,
-      contactEmail: form.contactEmail,
-      contactPhone: form.contactPhone,
-      measureYear: form.measureYear,
-      chartsTotal: total,
-      chartsCompleted: 0,
-      chartsAbstracted: 0,
-      chartsPending: total,
-      dueDate: form.dueDate,
-      startDate: form.startDate,
-      complianceScore: 0,
-      abstractors: Number(form.abstractors) || 0,
-      plan: form.plan,
-      lastActivity: "Just now",
+
+    const payload: PostApiClientsMutationRequest = {
+      org_name: form.name,
+
+      short_code: form.shortCode.toUpperCase(),
+
+      region: form.region as PostApiClientsMutationRequestRegionEnumKey,
+
+      plan_tier: form.plan as PostApiClientsMutationRequestPlanTierEnumKey,
+
+      status:
+        form.status === "active"
+          ? ("Active" as PostApiClientsMutationRequestStatusEnumKey)
+          : ("Onboarding" as PostApiClientsMutationRequestStatusEnumKey),
+
+      contract_type:
+        form.contractType as PostApiClientsMutationRequestContractTypeEnumKey,
+
+      measure_year:
+        form.measureYear as PostApiClientsMutationRequestMeasureYearEnumKey,
+
+      total_charts: Number(form.chartsTotal),
+
+      start_date: form.startDate,
+
+      due_date: form.dueDate,
+
+      primary_contact_name: form.contactName,
+
+      email: form.contactEmail,
+
+      phone: form.contactPhone || "",
+
+      abstractors_assigned: Number(form.abstractors) || 0,
     };
-    onAdd(newClient);
-    onClose();
+
+    createClient({
+      data: payload,
+    });
   };
 
   return (
@@ -2178,11 +2222,12 @@ function AddClientModal({
             ) : (
               <button
                 onClick={submit}
+                disabled={isPending}
                 className="inline-flex items-center gap-2 whitespace-nowrap px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
                 style={{ fontSize: 13 }}
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                Create Client
+                {isPending ? "Creating..." : "Create Client"}
               </button>
             )}
           </div>
