@@ -9,7 +9,7 @@ exports.register = async (req, res) => {
 
     // Check if user exists
     const userCheck = await req.db.query(
-      "SELECT * FROM org_users WHERE email = $1",
+      "SELECT * FROM users WHERE email = $1",
       [email]
     );
 
@@ -22,7 +22,7 @@ exports.register = async (req, res) => {
 
     // Insert user
     const result = await req.db.query(
-      "INSERT INTO org_users (full_name, email, password, user_status, is_active) VALUES ($1, $2, $3, 'Active', true) RETURNING *",
+      "INSERT INTO users (full_name, email, password, user_status, is_active) VALUES ($1, $2, $3, 'Active', true) RETURNING *",
       [full_name, email, hashedPassword]
     );
 
@@ -42,52 +42,92 @@ exports.register = async (req, res) => {
 };
 
 // LOGIN
+// LOGIN
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     // Get user
-    const result = await req.db.query(
-      "SELECT * FROM org_users WHERE email = $1",
-      [email]
-    );
+    const result = await req.db.query("SELECT * FROM users WHERE email = $1", [
+      email,
+    ]);
 
     if (result.rows.length === 0) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({
+        message: "Invalid credentials",
+      });
     }
 
     const user = result.rows[0];
 
     // Check if user is active
     if (!user.is_active) {
-      return res.status(403).json({ message: "User account is inactive" });
+      return res.status(403).json({
+        message: "User account is inactive",
+      });
+    }
+
+    // Check password exists
+    if (!user.password) {
+      return res.status(400).json({
+        message: "Password not set for this user",
+      });
     }
 
     // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({
+        message: "Invalid credentials",
+      });
     }
 
-    // Generate token
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "1d",
-    });
+    // Update last login
+    await req.db.query(
+      `UPDATE users 
+       SET last_login = CURRENT_TIMESTAMP 
+       WHERE id = $1`,
+      [user.id]
+    );
 
-    res.json({
+    // Generate token
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1d",
+      }
+    );
+
+    // Remove sensitive fields
+    const {
+      password: _password,
+      invite_token,
+      invite_token_expiry,
+      invite_used,
+      ...safeUser
+    } = user;
+
+    res.status(200).json({
+      message: "Login successful",
       token,
       user: {
-        id: user.id,
-        full_name: user.full_name,
-        email: user.email,
+        ...safeUser,
+        last_login: new Date(),
       },
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Login Error:", error);
+
+    res.status(500).json({
+      error: error.message,
+    });
   }
 };
-
 // SET PASSWORD (INVITE FLOW)
 exports.setPassword = async (req, res) => {
   try {
@@ -112,7 +152,7 @@ exports.setPassword = async (req, res) => {
 
     // Find user by token
     const userResult = await client.query(
-      "SELECT id, invite_token_expiry, invite_used FROM org_users WHERE invite_token = $1",
+      "SELECT id, invite_token_expiry, invite_used FROM users WHERE invite_token = $1",
       [token]
     );
 
@@ -137,7 +177,7 @@ exports.setPassword = async (req, res) => {
 
     // Update user
     await client.query(
-      `UPDATE org_users 
+      `UPDATE users 
        SET password = $1, 
            invite_used = true, 
            is_active = true, 

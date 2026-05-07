@@ -71,7 +71,7 @@ exports.createUser = async (req, res) => {
 
     // Check if email already exists
     const existingUser = await client.query(
-      "SELECT id FROM org_users WHERE email = $1",
+      "SELECT id FROM users WHERE email = $1",
       [email]
     );
     if (existingUser.rows.length > 0) {
@@ -99,7 +99,7 @@ exports.createUser = async (req, res) => {
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     const query = `
-    INSERT INTO org_users (
+    INSERT INTO users (
       full_name, email, phone, department, job_title,
       address_line_1, address_line_2, country, city, state, zip_code,
       bio, organization_id, user_role_id, shift, user_type, user_status,
@@ -208,7 +208,7 @@ exports.getUsers = async (req, res) => {
           'description', ur.description,
           'active', ur.active,
           'system_role', ur.system_role,
-          'users_count', (SELECT COUNT(*)::int FROM org_users WHERE user_role_id = ur.id),
+          'users_count', (SELECT COUNT(*)::int FROM users WHERE user_role_id = ur.id),
           'permissions_count', (SELECT COUNT(*)::int FROM role_permissions WHERE role_id = ur.id)
         ) as user_role,
         COALESCE(
@@ -228,7 +228,7 @@ exports.getUsers = async (req, res) => {
            WHERE p.id = ANY(u.project_access))
           , '[]'::json
         ) as projects
-      FROM org_users u
+      FROM users u
       LEFT JOIN user_roles ur ON u.user_role_id = ur.id
       ${whereClause}
       ORDER BY u.created_at DESC
@@ -240,7 +240,7 @@ exports.getUsers = async (req, res) => {
     const result = await client.query(query, values);
 
     const countResult = await client.query(
-      `SELECT COUNT(*) FROM org_users u ${whereClause}`,
+      `SELECT COUNT(*) FROM users u ${whereClause}`,
       values.slice(0, paramIndex - 1)
     );
 
@@ -288,10 +288,9 @@ exports.updateUser = async (req, res) => {
     } = validatedData;
 
     // Existence check
-    const userCheck = await client.query(
-      "SELECT id FROM org_users WHERE id = $1",
-      [id]
-    );
+    const userCheck = await client.query("SELECT id FROM users WHERE id = $1", [
+      id,
+    ]);
     if (userCheck.rows.length === 0) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -299,7 +298,7 @@ exports.updateUser = async (req, res) => {
     // Email uniqueness
     if (email) {
       const existing = await client.query(
-        "SELECT id FROM org_users WHERE email = $1 AND id != $2",
+        "SELECT id FROM users WHERE email = $1 AND id != $2",
         [email, id]
       );
       if (existing.rows.length > 0) {
@@ -350,7 +349,7 @@ exports.updateUser = async (req, res) => {
     fields.push(`updated_at = CURRENT_TIMESTAMP`);
 
     const query = `
-      UPDATE org_users 
+      UPDATE users 
       SET ${fields.join(", ")} 
       WHERE id = $${index} 
       RETURNING *
@@ -379,17 +378,16 @@ exports.deleteUser = async (req, res) => {
 
   try {
     //  Check if user exists
-    const userCheck = await client.query(
-      "SELECT id FROM org_users WHERE id = $1",
-      [id]
-    );
+    const userCheck = await client.query("SELECT id FROM users WHERE id = $1", [
+      id,
+    ]);
 
     if (userCheck.rows.length === 0) {
       return res.status(404).json({ message: "User not found" });
     }
 
     // Delete user
-    await client.query("DELETE FROM org_users WHERE id = $1", [id]);
+    await client.query("DELETE FROM users WHERE id = $1", [id]);
 
     res.json({
       message: "User deleted successfully",
@@ -419,7 +417,7 @@ exports.exportUsers = async (req, res) => {
         u.user_status,
         u.created_at,
         ur.name as role_name
-      FROM org_users u
+      FROM users u
       LEFT JOIN user_roles ur ON u.user_role_id = ur.id
       ORDER BY u.created_at DESC
     `);
@@ -507,7 +505,7 @@ exports.getUserStats = async (req, res) => {
         COUNT(*) FILTER (WHERE user_status = 'Inactive')::int AS inactive_users,
         COUNT(*) FILTER (WHERE two_fa_auth = true)::int AS two_fa_enabled,
         COUNT(*) FILTER (WHERE user_type = 'Azure')::int AS sso_users
-      FROM org_users
+      FROM users
     `;
 
     const result = await client.query(query);

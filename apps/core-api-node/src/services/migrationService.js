@@ -1,14 +1,5 @@
 async function runMigrations(client, schema) {
   // Create users table
-  await client.query(`
-      CREATE TABLE IF NOT EXISTS ${schema}.users (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        email VARCHAR(100) UNIQUE NOT NULL,
-        password TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
 
   // await client.query(`
   //   CREATE TABLE IF NOT EXISTS ${schema}.projects (
@@ -43,24 +34,6 @@ async function runMigrations(client, schema) {
   `);
 
   await client.query(`
-    CREATE TABLE IF NOT EXISTS projects (
-      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-      project_name VARCHAR(255) NOT NULL,
-      client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
-      project_type VARCHAR(100),
-      specialty VARCHAR(100),
-      priority VARCHAR(50) DEFAULT 'High' CHECK (priority IN ('High', 'Medium', 'Low')),
-      notes TEXT,
-      start_date DATE NOT NULL,
-      end_date DATE NOT NULL,
-      project_manager_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-
-  `);
-
-  await client.query(`
     CREATE TABLE IF NOT EXISTS ${schema}.user_roles (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       name VARCHAR(150) NOT NULL,
@@ -73,26 +46,9 @@ async function runMigrations(client, schema) {
     );
   `);
 
-  // Create role_permissions table with UUID references
+  // Create users  table with extensive fields and UUID
   await client.query(`
-    CREATE TABLE IF NOT EXISTS ${schema}.role_permissions (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      role_id UUID REFERENCES ${schema}.user_roles(id) ON DELETE CASCADE,
-      module VARCHAR(50) NOT NULL,
-      can_view BOOLEAN DEFAULT FALSE,
-      can_edit BOOLEAN DEFAULT FALSE,
-      can_assign BOOLEAN DEFAULT FALSE,
-      can_approve BOOLEAN DEFAULT FALSE,
-      can_reject BOOLEAN DEFAULT FALSE,
-      can_export BOOLEAN DEFAULT FALSE,
-      can_override BOOLEAN DEFAULT FALSE,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
-
-  // Create org_users  table with extensive fields and UUID
-  await client.query(`
-    CREATE TABLE IF NOT EXISTS ${schema}.org_users  (
+    CREATE TABLE IF NOT EXISTS ${schema}.users  (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       full_name VARCHAR(255),
       email VARCHAR(254) UNIQUE NOT NULL,
@@ -126,8 +82,44 @@ async function runMigrations(client, schema) {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
+
   await client.query(`
-    ALTER TABLE ${schema}.org_users 
+    CREATE TABLE IF NOT EXISTS projects (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      project_name VARCHAR(255) NOT NULL,
+      client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+      project_type VARCHAR(100),
+      specialty VARCHAR(100),
+      priority VARCHAR(50) DEFAULT 'High' CHECK (priority IN ('High', 'Medium', 'Low')),
+      notes TEXT,
+      start_date DATE NOT NULL,
+      end_date DATE NOT NULL,
+    project_manager_id UUID REFERENCES users(id) ON DELETE SET NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+  `);
+
+  // Create role_permissions table with UUID references
+  await client.query(`
+      CREATE TABLE IF NOT EXISTS ${schema}.role_permissions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        role_id UUID REFERENCES ${schema}.user_roles(id) ON DELETE CASCADE,
+        module VARCHAR(50) NOT NULL,
+        can_view BOOLEAN DEFAULT FALSE,
+        can_edit BOOLEAN DEFAULT FALSE,
+        can_assign BOOLEAN DEFAULT FALSE,
+        can_approve BOOLEAN DEFAULT FALSE,
+        can_reject BOOLEAN DEFAULT FALSE,
+        can_export BOOLEAN DEFAULT FALSE,
+        can_override BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+  await client.query(`
+    ALTER TABLE ${schema}.users 
     ADD COLUMN IF NOT EXISTS invite_token TEXT,
     ADD COLUMN IF NOT EXISTS invite_token_expiry TIMESTAMP,
     ADD COLUMN IF NOT EXISTS invite_used BOOLEAN DEFAULT FALSE;
@@ -136,7 +128,7 @@ async function runMigrations(client, schema) {
   await client.query(`
     CREATE TABLE IF NOT EXISTS ${schema}.user_projects (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      user_id UUID REFERENCES ${schema}.org_users(id) ON DELETE CASCADE,
+      user_id UUID REFERENCES ${schema}.users(id) ON DELETE CASCADE,
       project_id UUID REFERENCES ${schema}.projects(id) ON DELETE CASCADE,
       assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(user_id, project_id)
