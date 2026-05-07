@@ -144,3 +144,80 @@ exports.deleteProject = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.getProjectAccessAll = async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+          u.id as uid, 
+          u.full_name, 
+          ur.name as role, 
+          u.department,
+          json_agg(
+              json_build_object(
+                  'project_id', p.id,
+                  'project_name', p.project_name,
+                  'access_level', COALESCE(upa.access_level, CASE WHEN p.id = ANY(u.project_access) THEN 'Full' ELSE 'None' END)
+              )
+          ) as project_access
+      FROM users u
+      LEFT JOIN user_roles ur ON u.user_role_id = ur.id
+      CROSS JOIN projects p
+      LEFT JOIN user_project_access upa ON upa.user_id = u.id AND upa.project_id = p.id
+      GROUP BY u.id, ur.name
+      ORDER BY u.full_name;
+    `;
+
+    const result = await req.db.query(query);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Get Project Access Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.updateProjectAccess = async (req, res) => {
+  const client = req.db;
+  const { id: projectId } = req.params;
+  const { user_id, access_level } = req.body;
+
+  if (!user_id || !access_level) {
+    return res.status(400).json({ error: "Missing required fields: user_id and access_level are required." });
+  }
+
+  try {
+    await client.query("BEGIN");
+
+    // 1. Upsert into user_project_access
+    const upsertQuery = `
+      INSERT INTO user_project_access (user_id, project_id, access_level)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (user_id, project_id)
+      DO UPDATE SET access_level = EXCLUDED.access_level, updated_at = CURRENT_TIMESTAMP
+      RETURNING *;
+    `;
+    await client.query(upsertQuery, [user_id, projectId, access_level]);
+
+    // 2. Sync with users.project_access array
+    if (access_level === 'None') {
+      // Remove from array
+      await client.query(
+        "UPDATE users SET project_access = array_remove(project_access, $1) WHERE id = $2",
+        [projectId, user_id]
+      );
+    } else {
+      // Add to array if not present
+      await client.query(
+        "UPDATE users SET project_access = array_append(project_access, $1) WHERE id = $2 AND NOT ($1 = ANY(project_access))",
+        [projectId, user_id]
+      );
+    }
+
+    await client.query("COMMIT");
+    res.json({ message: "Project access updated successfully" });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("Update Project Access Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};

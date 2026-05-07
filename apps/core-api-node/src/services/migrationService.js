@@ -134,6 +134,18 @@ async function runMigrations(client, schema) {
       UNIQUE(user_id, project_id)
     );
   `);
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.user_project_access (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES ${schema}.users(id) ON DELETE CASCADE,
+      project_id UUID REFERENCES ${schema}.projects(id) ON DELETE CASCADE,
+      access_level VARCHAR(20) DEFAULT 'None' CHECK (access_level IN ('Full', 'Edit', 'View', 'None')),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, project_id)
+    );
+  `);
 }
 
 module.exports = { runMigrations };

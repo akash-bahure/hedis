@@ -179,4 +179,83 @@ router.patch("/:id", controller.updateProject);
  */
 router.delete("/:id", controller.deleteProject);
 
+/**
+ * @swagger
+ * /api/projects/access/all:
+ *   get:
+ *     summary: Get all project access levels for all users
+ *     tags: [Projects]
+ *     description: Returns a grid of users and their access levels for each project.
+ *     responses:
+ *       200:
+ *         description: Project access grid fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   uid:
+ *                     type: string
+ *                   full_name:
+ *                     type: string
+ *                   role:
+ *                     type: string
+ *                   department:
+ *                     type: string
+ *                   project_access:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         project_id:
+ *                           type: string
+ *                         project_name:
+ *                           type: string
+ *                         access_level:
+ *                           type: string
+ *                           enum: [Full, Edit, View, None]
+ */
+router.get("/access/all", controller.getProjectAccessAll);
+
+/**
+ * @swagger
+ * /api/projects/{id}/access:
+ *   patch:
+ *     summary: Update project access level for a user
+ *     tags: [Projects]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The project ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - user_id
+ *               - access_level
+ *             properties:
+ *               user_id:
+ *                 type: string
+ *                 example: "34176070-7443-4eb7-b960-e4a45a515482"
+ *               access_level:
+ *                 type: string
+ *                 enum: [Full, Edit, View, None]
+ *     responses:
+ *       200:
+ *         description: Project access updated successfully
+ *       400:
+ *         description: Missing required fields
+ *       500:
+ *         description: Server error
+ */
+router.patch("/:id/access", controller.updateProjectAccess);
+
 module.exports = router;
