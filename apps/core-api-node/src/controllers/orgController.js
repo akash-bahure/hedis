@@ -9,7 +9,6 @@ exports.getOrganizations = async (req, res) => {
         id,
         name,
         subdomain,
-        schema_name,
         is_active,
         is_archived,
         created_at
@@ -28,7 +27,7 @@ exports.getOrganizations = async (req, res) => {
 // CREATE ORGANIZATION
 exports.createOrg = async (req, res) => {
   try {
-    const { name, subdomain } = req.body;
+    const { name, subdomain, is_active } = req.body;
 
     if (!name || !subdomain) {
       return res.status(400).json({
@@ -39,6 +38,7 @@ exports.createOrg = async (req, res) => {
     const tenant = await createTenant({
       name,
       subdomain,
+      is_active: is_active !== undefined ? is_active : true,
     });
 
     res.status(201).json({
