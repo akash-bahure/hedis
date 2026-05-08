@@ -1,14 +1,68 @@
 const express = require("express");
 const router = express.Router();
+
 const orgController = require("../controllers/orgController");
+
+const superAdminAuth = require("../middlewares/superAdminAuth");
 
 /**
  * @swagger
- * /admin/create-org:
+ * /admin/orgs:
+ *   get:
+ *     summary: Get all organizations
+ *     description: Fetch all tenant organizations in the system.
+ *     tags: [Organizations]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Organizations fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     example: 550e8400-e29b-41d4-a716-446655440000
+ *                   name:
+ *                     type: string
+ *                     example: Acme Corp
+ *                   subdomain:
+ *                     type: string
+ *                     example: acme
+ *                   schema_name:
+ *                     type: string
+ *                     example: acme_schema
+ *                   is_active:
+ *                     type: boolean
+ *                     example: true
+ *                   is_archived:
+ *                     type: boolean
+ *                     example: false
+ *                   created_at:
+ *                     type: string
+ *                     format: date-time
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/", superAdminAuth, orgController.getOrganizations);
+
+/**
+ * @swagger
+ * /admin/orgs:
  *   post:
- *     summary: Create a new organization (tenant)
- *     description: Creates a new tenant by generating a dedicated schema and storing tenant metadata.
- *     tags: [Admin]
+ *     summary: Create organization
+ *     description: Creates a new organization and dynamically provisions a tenant schema.
+ *     tags: [Organizations]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -41,21 +95,155 @@ const orgController = require("../controllers/orgController");
  *                   properties:
  *                     id:
  *                       type: string
- *                       example: "b3f8c8c2-1234-4abc-9def-123456789abc"
  *                     name:
  *                       type: string
- *                       example: Acme Corp
  *                     subdomain:
  *                       type: string
- *                       example: acme
  *                     schema_name:
  *                       type: string
- *                       example: acme_schema
+ *                     is_active:
+ *                       type: boolean
+ *                     is_archived:
+ *                       type: boolean
+ *                     created_at:
+ *                       type: string
+ *                       format: date-time
  *       400:
- *         description: Invalid input or duplicate subdomain
+ *         description: Invalid request
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
  *       500:
- *         description: Server error
+ *         description: Internal server error
  */
-router.post("/create-org", orgController.createOrg);
+router.post("/", superAdminAuth, orgController.createOrg);
+
+/**
+ * @swagger
+ * /admin/orgs/{id}:
+ *   patch:
+ *     summary: Update organization
+ *     description: Update organization details such as name and active status.
+ *     tags: [Organizations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Organization ID
+ *         schema:
+ *           type: string
+ *           example: 550e8400-e29b-41d4-a716-446655440000
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: Acme Updated
+ *               is_active:
+ *                 type: boolean
+ *                 example: false
+ *     responses:
+ *       200:
+ *         description: Organization updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Organization updated
+ *                 organization:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     subdomain:
+ *                       type: string
+ *                     schema_name:
+ *                       type: string
+ *                     is_active:
+ *                       type: boolean
+ *                     is_archived:
+ *                       type: boolean
+ *                     created_at:
+ *                       type: string
+ *                       format: date-time
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Organization not found
+ *       500:
+ *         description: Internal server error
+ */
+router.patch("/:id", superAdminAuth, orgController.updateOrg);
+
+/**
+ * @swagger
+ * /admin/orgs/{id}:
+ *   delete:
+ *     summary: Archive organization
+ *     description: Soft archive an organization. Archived organizations cannot be accessed.
+ *     tags: [Organizations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Organization ID
+ *         schema:
+ *           type: string
+ *           example: 550e8400-e29b-41d4-a716-446655440000
+ *     responses:
+ *       200:
+ *         description: Organization archived successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Organization archived
+ *                 organization:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     subdomain:
+ *                       type: string
+ *                     schema_name:
+ *                       type: string
+ *                     is_active:
+ *                       type: boolean
+ *                     is_archived:
+ *                       type: boolean
+ *                     created_at:
+ *                       type: string
+ *                       format: date-time
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Organization not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete("/:id", superAdminAuth, orgController.archiveOrg);
 
 module.exports = router;

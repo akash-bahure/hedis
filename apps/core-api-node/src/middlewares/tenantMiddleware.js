@@ -20,6 +20,12 @@ module.exports = async function tenantMiddleware(req, res, next) {
 
     const tenant = result.rows[0];
 
+    if (!tenant.is_active || tenant.is_archived) {
+      return res.status(403).json({
+        message: "Organization inactive",
+      });
+    }
+
     // Validate schema
     if (!/^[a-zA-Z0-9_]+$/.test(tenant.schema_name)) {
       throw new Error("Invalid schema");
