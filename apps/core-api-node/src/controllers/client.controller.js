@@ -31,6 +31,16 @@ exports.getClients = async (req, res) => {
   }
 };
 
+//GET Stats API
+exports.getClientStats = async (req, res) => {
+  try {
+    const stats = await clientService.getClientStats(req.db);
+    res.json(stats);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // EXPORT ALL (CSV / PDF)
 exports.exportClients = async (req, res) => {
   try {

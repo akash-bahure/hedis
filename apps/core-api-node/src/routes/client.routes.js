@@ -194,6 +194,44 @@ router.post("/", controller.createClient);
  */
 router.get("/", controller.getClients);
 
+
+/**
+ * @swagger
+ * /api/clients/stats:
+ *   get:
+ *     summary: Get client dashboard stats
+ *     tags: [Clients]
+ *     description: Returns overall client statistics for dashboard cards
+ *     responses:
+ *       200:
+ *         description: Stats fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total_clients:
+ *                   type: integer
+ *                   example: 6
+ *                 active_clients:
+ *                   type: integer
+ *                   example: 3
+ *                 charts_assigned:
+ *                   type: integer
+ *                   example: 10280
+ *                 completed_charts:
+ *                   type: integer
+ *                   example: 6898
+ *                 completion_rate:
+ *                   type: integer
+ *                   example: 67
+ *                   description: Completion percentage
+ *                 at_risk:
+ *                   type: integer
+ *                   example: 1
+ */
+router.get("/stats", controller.getClientStats);
+
 /**
  * @swagger
  * /api/clients/export:
