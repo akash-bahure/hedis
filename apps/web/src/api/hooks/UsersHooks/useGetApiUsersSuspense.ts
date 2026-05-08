@@ -4,11 +4,6 @@
  */
 
 import type {
-  GetApiUsersQueryResponse,
-  GetApiUsersQueryParams,
-  GetApiUsers500,
-} from "../../types/GetApiUsers.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -19,8 +14,13 @@ import type {
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
-import { getApiUsers } from "../../clients/getApiUsers.ts";
+import type {
+  GetApiUsersQueryResponse,
+  GetApiUsersQueryParams,
+  GetApiUsers500,
+} from "../../types/GetApiUsers.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { getApiUsers } from "../../clients/getApiUsers.ts";
 
 export const getApiUsersSuspenseQueryKey = (params?: GetApiUsersQueryParams) =>
   [{ url: "/api/users" }, ...(params ? [params] : [])] as const;

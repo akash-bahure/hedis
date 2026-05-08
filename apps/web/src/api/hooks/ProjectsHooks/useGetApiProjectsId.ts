@@ -4,11 +4,6 @@
  */
 
 import type {
-  GetApiProjectsIdQueryResponse,
-  GetApiProjectsIdPathParams,
-  GetApiProjectsId404,
-} from "../../types/GetApiProjectsId.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -19,8 +14,13 @@ import type {
   QueryObserverOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
-import { getApiProjectsId } from "../../clients/getApiProjectsId.ts";
+import type {
+  GetApiProjectsIdQueryResponse,
+  GetApiProjectsIdPathParams,
+  GetApiProjectsId404,
+} from "../../types/GetApiProjectsId.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
+import { getApiProjectsId } from "../../clients/getApiProjectsId.ts";
 
 export const getApiProjectsIdQueryKey = (
   id: GetApiProjectsIdPathParams["id"] | undefined,

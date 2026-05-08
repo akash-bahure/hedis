@@ -3,12 +3,12 @@
  * Do not edit manually.
  */
 
-import fetch from "./utils/client.ts";
+import fetch from "../../../utils/client.ts";
 import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
-} from "./utils/client.ts";
+} from "../../../utils/client.ts";
 import type {
   GetApiUserRolesIdQueryResponse,
   GetApiUserRolesIdPathParams,

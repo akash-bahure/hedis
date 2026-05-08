@@ -4,12 +4,6 @@
  */
 
 import type {
-  PostApiProjectsMutationRequest,
-  PostApiProjectsMutationResponse,
-  PostApiProjects400,
-  PostApiProjects500,
-} from "../../types/PostApiProjects.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -19,8 +13,14 @@ import type {
   UseMutationResult,
   QueryClient,
 } from "@tanstack/react-query";
-import { postApiProjects } from "../../clients/postApiProjects.ts";
+import type {
+  PostApiProjectsMutationRequest,
+  PostApiProjectsMutationResponse,
+  PostApiProjects400,
+  PostApiProjects500,
+} from "../../types/PostApiProjects.ts";
 import { mutationOptions, useMutation } from "@tanstack/react-query";
+import { postApiProjects } from "../../clients/postApiProjects.ts";
 
 export const postApiProjectsMutationKey = () =>
   [{ url: "/api/projects" }] as const;

@@ -4,12 +4,6 @@
  */
 
 import type {
-  GetApiUserRolesIdQueryResponse,
-  GetApiUserRolesIdPathParams,
-  GetApiUserRolesId404,
-  GetApiUserRolesId500,
-} from "../../types/GetApiUserRolesId.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -21,11 +15,17 @@ import type {
   UseSuspenseInfiniteQueryOptions,
   UseSuspenseInfiniteQueryResult,
 } from "@tanstack/react-query";
-import { getApiUserRolesId } from "../../clients/getApiUserRolesId.ts";
+import type {
+  GetApiUserRolesIdQueryResponse,
+  GetApiUserRolesIdPathParams,
+  GetApiUserRolesId404,
+  GetApiUserRolesId500,
+} from "../../types/GetApiUserRolesId.ts";
 import {
   infiniteQueryOptions,
   useSuspenseInfiniteQuery,
 } from "@tanstack/react-query";
+import { getApiUserRolesId } from "../../clients/getApiUserRolesId.ts";
 
 export const getApiUserRolesIdSuspenseInfiniteQueryKey = (
   id: GetApiUserRolesIdPathParams["id"] | undefined,

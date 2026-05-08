@@ -4,10 +4,6 @@
  */
 
 import type {
-  GetApiUserRolesQueryResponse,
-  GetApiUserRoles500,
-} from "../../types/GetApiUserRoles.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -19,11 +15,15 @@ import type {
   UseSuspenseInfiniteQueryOptions,
   UseSuspenseInfiniteQueryResult,
 } from "@tanstack/react-query";
-import { getApiUserRoles } from "../../clients/getApiUserRoles.ts";
+import type {
+  GetApiUserRolesQueryResponse,
+  GetApiUserRoles500,
+} from "../../types/GetApiUserRoles.ts";
 import {
   infiniteQueryOptions,
   useSuspenseInfiniteQuery,
 } from "@tanstack/react-query";
+import { getApiUserRoles } from "../../clients/getApiUserRoles.ts";
 
 export const getApiUserRolesSuspenseInfiniteQueryKey = () =>
   [{ url: "/api/user-roles" }] as const;

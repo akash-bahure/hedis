@@ -4,11 +4,6 @@
  */
 
 import type {
-  GetApiClientsIdQueryResponse,
-  GetApiClientsIdPathParams,
-  GetApiClientsId404,
-} from "../../types/GetApiClientsId.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -19,8 +14,13 @@ import type {
   QueryObserverOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
-import { getApiClientsId } from "../../clients/getApiClientsId.ts";
+import type {
+  GetApiClientsIdQueryResponse,
+  GetApiClientsIdPathParams,
+  GetApiClientsId404,
+} from "../../types/GetApiClientsId.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
+import { getApiClientsId } from "../../clients/getApiClientsId.ts";
 
 export const getApiClientsIdQueryKey = (
   id: GetApiClientsIdPathParams["id"] | undefined,

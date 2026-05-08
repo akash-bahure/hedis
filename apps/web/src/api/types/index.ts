@@ -42,6 +42,18 @@ export type {
   GetApiClientsIdQueryResponse,
 } from "./GetApiClientsId.ts";
 export type {
+  GetApiClientsStats200,
+  GetApiClientsStatsQuery,
+  GetApiClientsStatsQueryResponse,
+} from "./GetApiClientsStats.ts";
+export type {
+  GetApiProfileId200,
+  GetApiProfileId404,
+  GetApiProfileIdPathParams,
+  GetApiProfileIdQuery,
+  GetApiProfileIdQueryResponse,
+} from "./GetApiProfileId.ts";
+export type {
   GetApiProjects200,
   GetApiProjectsQuery,
   GetApiProjectsQueryParams,
@@ -77,11 +89,54 @@ export type {
   GetApiUsersQueryResponse,
 } from "./GetApiUsers.ts";
 export type {
+  GetApiUsersExport200,
+  GetApiUsersExport500,
+  GetApiUsersExportQuery,
+  GetApiUsersExportQueryParams,
+  GetApiUsersExportQueryParamsFormatEnumKey,
+  GetApiUsersExportQueryResponse,
+} from "./GetApiUsersExport.ts";
+export type {
+  GetApiUsersStats200,
+  GetApiUsersStats500,
+  GetApiUsersStatsQuery,
+  GetApiUsersStatsQueryResponse,
+} from "./GetApiUsersStats.ts";
+export type {
   PatchApiClientsId200,
   PatchApiClientsIdMutation,
   PatchApiClientsIdMutationResponse,
   PatchApiClientsIdPathParams,
 } from "./PatchApiClientsId.ts";
+export type {
+  PatchApiProfileId200,
+  PatchApiProfileIdMutation,
+  PatchApiProfileIdMutationRequest,
+  PatchApiProfileIdMutationResponse,
+  PatchApiProfileIdPathParams,
+} from "./PatchApiProfileId.ts";
+export type {
+  PatchApiProfileIdNotifications200,
+  PatchApiProfileIdNotificationsMutation,
+  PatchApiProfileIdNotificationsMutationRequest,
+  PatchApiProfileIdNotificationsMutationResponse,
+  PatchApiProfileIdNotificationsPathParams,
+} from "./PatchApiProfileIdNotifications.ts";
+export type {
+  PatchApiProfileIdPreferences200,
+  PatchApiProfileIdPreferencesMutation,
+  PatchApiProfileIdPreferencesMutationRequest,
+  PatchApiProfileIdPreferencesMutationResponse,
+  PatchApiProfileIdPreferencesPathParams,
+} from "./PatchApiProfileIdPreferences.ts";
+export type {
+  PatchApiProfileIdSecurity200,
+  PatchApiProfileIdSecurity404,
+  PatchApiProfileIdSecurityMutation,
+  PatchApiProfileIdSecurityMutationRequest,
+  PatchApiProfileIdSecurityMutationResponse,
+  PatchApiProfileIdSecurityPathParams,
+} from "./PatchApiProfileIdSecurity.ts";
 export type {
   PatchApiProjectsId200,
   PatchApiProjectsIdMutation,
@@ -135,6 +190,16 @@ export type {
   PostApiAuthRegisterMutationResponse,
 } from "./PostApiAuthRegister.ts";
 export type {
+  PostApiAuthSetPassword200,
+  PostApiAuthSetPassword400,
+  PostApiAuthSetPassword404,
+  PostApiAuthSetPassword500,
+  PostApiAuthSetPasswordMutation,
+  PostApiAuthSetPasswordMutationRequest,
+  PostApiAuthSetPasswordMutationResponse,
+  PostApiAuthSetPasswordQueryParams,
+} from "./PostApiAuthSetPassword.ts";
+export type {
   PostApiClients201,
   PostApiClients500,
   PostApiClientsMutation,
@@ -180,6 +245,7 @@ export { getApiClientsQueryParamsRegionEnum } from "./GetApiClients.ts";
 export { getApiClientsQueryParamsStatusEnum } from "./GetApiClients.ts";
 export { getApiClientsExportQueryParamsFormatEnum } from "./GetApiClientsExport.ts";
 export { getApiUsersQueryParamsUserStatusEnum } from "./GetApiUsers.ts";
+export { getApiUsersExportQueryParamsFormatEnum } from "./GetApiUsersExport.ts";
 export { patchApiUsersIdMutationRequestShiftEnum } from "./PatchApiUsersId.ts";
 export { patchApiUsersIdMutationRequestUserStatusEnum } from "./PatchApiUsersId.ts";
 export { patchApiUsersIdMutationRequestUserTypeEnum } from "./PatchApiUsersId.ts";

@@ -4,13 +4,6 @@
  */
 
 import type {
-  PatchApiUserRolesIdMutationRequest,
-  PatchApiUserRolesIdMutationResponse,
-  PatchApiUserRolesIdPathParams,
-  PatchApiUserRolesId404,
-  PatchApiUserRolesId500,
-} from "../../types/PatchApiUserRolesId.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -20,8 +13,15 @@ import type {
   UseMutationResult,
   QueryClient,
 } from "@tanstack/react-query";
-import { patchApiUserRolesId } from "../../clients/patchApiUserRolesId.ts";
+import type {
+  PatchApiUserRolesIdMutationRequest,
+  PatchApiUserRolesIdMutationResponse,
+  PatchApiUserRolesIdPathParams,
+  PatchApiUserRolesId404,
+  PatchApiUserRolesId500,
+} from "../../types/PatchApiUserRolesId.ts";
 import { mutationOptions, useMutation } from "@tanstack/react-query";
+import { patchApiUserRolesId } from "../../clients/patchApiUserRolesId.ts";
 
 export const patchApiUserRolesIdMutationKey = () =>
   [{ url: "/api/user-roles/:id" }] as const;

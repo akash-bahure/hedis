@@ -32,7 +32,7 @@ export const postApiAuthRegister500Schema =
   z.unknown() as unknown as ToZod<PostApiAuthRegister500>;
 
 export const postApiAuthRegisterMutationRequestSchema = z.object({
-  name: z.string(),
+  full_name: z.optional(z.string()),
   email: z.string(),
   password: z.string(),
 }) as unknown as ToZod<PostApiAuthRegisterMutationRequest>;

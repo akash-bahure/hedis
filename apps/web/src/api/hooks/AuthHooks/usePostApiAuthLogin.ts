@@ -4,12 +4,6 @@
  */
 
 import type {
-  PostApiAuthLoginMutationRequest,
-  PostApiAuthLoginMutationResponse,
-  PostApiAuthLogin400,
-  PostApiAuthLogin500,
-} from "../../types/PostApiAuthLogin.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -19,8 +13,14 @@ import type {
   UseMutationResult,
   QueryClient,
 } from "@tanstack/react-query";
-import { postApiAuthLogin } from "../../clients/postApiAuthLogin.ts";
+import type {
+  PostApiAuthLoginMutationRequest,
+  PostApiAuthLoginMutationResponse,
+  PostApiAuthLogin400,
+  PostApiAuthLogin500,
+} from "../../types/PostApiAuthLogin.ts";
 import { mutationOptions, useMutation } from "@tanstack/react-query";
+import { postApiAuthLogin } from "../../clients/postApiAuthLogin.ts";
 
 export const postApiAuthLoginMutationKey = () =>
   [{ url: "/api/auth/login" }] as const;

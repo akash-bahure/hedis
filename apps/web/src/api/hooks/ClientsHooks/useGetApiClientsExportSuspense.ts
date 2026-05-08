@@ -4,10 +4,6 @@
  */
 
 import type {
-  GetApiClientsExportQueryResponse,
-  GetApiClientsExportQueryParams,
-} from "../../types/GetApiClientsExport.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -18,8 +14,12 @@ import type {
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
-import { getApiClientsExport } from "../../clients/getApiClientsExport.ts";
+import type {
+  GetApiClientsExportQueryResponse,
+  GetApiClientsExportQueryParams,
+} from "../../types/GetApiClientsExport.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { getApiClientsExport } from "../../clients/getApiClientsExport.ts";
 
 export const getApiClientsExportSuspenseQueryKey = (
   params?: GetApiClientsExportQueryParams,

@@ -4,10 +4,6 @@
  */
 
 import type {
-  GetApiUserRolesQueryResponse,
-  GetApiUserRoles500,
-} from "../../types/GetApiUserRoles.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -18,8 +14,12 @@ import type {
   QueryObserverOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
-import { getApiUserRoles } from "../../clients/getApiUserRoles.ts";
+import type {
+  GetApiUserRolesQueryResponse,
+  GetApiUserRoles500,
+} from "../../types/GetApiUserRoles.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
+import { getApiUserRoles } from "../../clients/getApiUserRoles.ts";
 
 export const getApiUserRolesQueryKey = () =>
   [{ url: "/api/user-roles" }] as const;
