@@ -518,3 +518,325 @@ exports.getUserStats = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// GET USER SHIFTS (Shift Management Matrix)
+exports.getUserShifts = async (req, res) => {
+  const client = req.db;
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      shift,
+      week = 0,
+      department,
+      email,
+      full_name,
+      is_super_administrator,
+      job_title,
+      phone,
+      user_role,
+      user_status,
+    } = req.query;
+
+    const weekOffset = parseInt(week);
+    const offset = (page - 1) * Number(limit);
+
+    // Calculate Week Dates
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + diffToMonday);
+    monday.setHours(0, 0, 0, 0);
+
+    const startMonday = new Date(monday);
+    startMonday.setDate(monday.getDate() + weekOffset * 7);
+
+    const dates = [];
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(startMonday);
+      d.setDate(startMonday.getDate() + i);
+      dates.push({
+        date: d.toISOString().split("T")[0],
+        day: days[i],
+        day_num: `${months[d.getMonth()]} ${d.getDate()}`,
+      });
+    }
+
+    const startDate = new Date(startMonday);
+    const endDate = new Date(startMonday);
+    endDate.setDate(startMonday.getDate() + 6);
+
+    const weekStr = `Week of ${months[startDate.getMonth()]} ${startDate.getDate()} - ${
+      months[endDate.getMonth()] !== months[startDate.getMonth()]
+        ? months[endDate.getMonth()] + " "
+        : ""
+    }${endDate.getDate()}, ${endDate.getFullYear()}`;
+
+    let whereClause = "WHERE 1=1";
+    const values = [];
+    let paramIndex = 1;
+
+    if (search) {
+      whereClause += ` AND (u.full_name ILIKE $${paramIndex} OR u.email ILIKE $${paramIndex})`;
+      values.push(`%${search}%`);
+      paramIndex++;
+    }
+    if (shift) {
+      whereClause += ` AND u.shift = $${paramIndex}`;
+      values.push(shift);
+      paramIndex++;
+    }
+    if (user_role) {
+      whereClause += ` AND u.user_role_id = $${paramIndex}`;
+      values.push(user_role);
+      paramIndex++;
+    }
+    if (user_status) {
+      whereClause += ` AND u.user_status = $${paramIndex}`;
+      values.push(user_status);
+      paramIndex++;
+    }
+    if (department) {
+      whereClause += ` AND u.department ILIKE $${paramIndex}`;
+      values.push(`%${department}%`);
+      paramIndex++;
+    }
+    if (email) {
+      whereClause += ` AND u.email ILIKE $${paramIndex}`;
+      values.push(`%${email}%`);
+      paramIndex++;
+    }
+    if (full_name) {
+      whereClause += ` AND u.full_name ILIKE $${paramIndex}`;
+      values.push(`%${full_name}%`);
+      paramIndex++;
+    }
+    if (is_super_administrator !== undefined) {
+      whereClause += ` AND u.is_super_administrator = $${paramIndex}`;
+      values.push(is_super_administrator === "true");
+      paramIndex++;
+    }
+    if (job_title) {
+      whereClause += ` AND u.job_title ILIKE $${paramIndex}`;
+      values.push(`%${job_title}%`);
+      paramIndex++;
+    }
+    if (phone) {
+      whereClause += ` AND u.phone ILIKE $${paramIndex}`;
+      values.push(`%${phone}%`);
+      paramIndex++;
+    }
+
+    const query = `
+      SELECT
+        u.id,
+        u.full_name,
+        u.shift as default_shift,
+        ur.name as role
+      FROM users u
+      LEFT JOIN user_roles ur ON u.user_role_id = ur.id
+      ${whereClause}
+      ORDER BY u.created_at DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+
+    const queryValues = [...values, Number(limit), offset];
+    const userResult = await client.query(query, queryValues);
+    const userIds = userResult.rows.map((u) => u.id);
+
+    // Fetch Overrides from user_shifts
+    let overrides = [];
+    if (userIds.length > 0) {
+      const overrideQuery = `
+        SELECT user_id, date::text, shift 
+        FROM user_shifts 
+        WHERE user_id = ANY($1) 
+        AND date >= $2 AND date <= $3
+      `;
+      const overrideResult = await client.query(overrideQuery, [
+        userIds,
+        dates[0].date,
+        dates[6].date,
+      ]);
+      overrides = overrideResult.rows;
+    }
+
+    const countResult = await client.query(
+      `SELECT COUNT(*) FROM users u ${whereClause}`,
+      values
+    );
+
+    const totalCount = parseInt(countResult.rows[0].count);
+    const baseUrl = `${req.protocol}://${req.get("host")}${req.baseUrl}${
+      req.path
+    }`;
+
+    // Transform results
+    const users = userResult.rows.map((user) => {
+      const initials = user.full_name
+        ? user.full_name
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .toUpperCase()
+            .substring(0, 2)
+        : "";
+
+      const userSchedule = dates.map((d) => {
+        const override = overrides.find(
+          (o) => o.user_id === user.id && o.date === d.date
+        );
+        return {
+          date: d.date,
+          day: d.day,
+          shift: override ? override.shift : user.default_shift || "Off",
+        };
+      });
+
+      return {
+        id: user.id,
+        full_name: user.full_name,
+        initials: initials,
+        role: user.role || "No Role",
+        default_shift: user.default_shift || "Off",
+        schedule: userSchedule,
+      };
+    });
+
+    res.json({
+      week: weekStr,
+      week_offset: weekOffset,
+      dates: dates,
+      users: users,
+      count: totalCount,
+      next:
+        totalCount > page * limit
+          ? `${baseUrl}?page=${parseInt(page) + 1}&limit=${limit}&week=${weekOffset}`
+          : null,
+      previous:
+        page > 1
+          ? `${baseUrl}?page=${parseInt(page) - 1}&limit=${limit}&week=${weekOffset}`
+          : null,
+    });
+  } catch (error) {
+    console.error("Get User Shifts Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const updateUserShiftSchema = z.array(
+  z.object({
+    user_id: z.string().uuid(),
+    schedules: z.array(
+      z.object({
+        date: z.string(),
+        shift: z.enum(["Morning", "Afternoon", "Night", "General", "Off"]),
+      })
+    ),
+  })
+);
+
+// PATCH USER SHIFTS (Bulk Update)
+exports.updateUserShifts = async (req, res) => {
+  const client = req.db;
+
+  try {
+    const payload = updateUserShiftSchema.parse(req.body);
+
+    await client.query("BEGIN");
+
+    for (const item of payload) {
+      const { user_id, schedules } = item;
+
+      for (const sched of schedules) {
+        const { date, shift } = sched;
+
+        const upsertQuery = `
+          INSERT INTO user_shifts (user_id, date, shift)
+          VALUES ($1, $2, $3)
+          ON CONFLICT (user_id, date)
+          DO UPDATE SET
+            shift = EXCLUDED.shift,
+            updated_at = CURRENT_TIMESTAMP
+        `;
+
+        await client.query(upsertQuery, [user_id, date, shift]);
+      }
+    }
+
+    await client.query("COMMIT");
+
+    res.json({
+      message: "User shifts updated successfully",
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        errors: error.errors,
+      });
+    }
+
+    console.error("Update User Shifts Error:", error);
+
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
+// GET SHIFT STATS
+exports.getShiftStats = async (req, res) => {
+  const client = req.db;
+  try {
+    const query = `
+      SELECT 
+        shift,
+        COUNT(*)::int as count
+      FROM users
+      GROUP BY shift
+    `;
+    const result = await client.query(query);
+    const counts = result.rows;
+
+    const shiftMetadata = [
+      { shift: "Morning", time: "08:00-16:00" },
+      { shift: "Afternoon", time: "14:00-22:00" },
+      { shift: "Night", time: "22:00-06:00" },
+      { shift: "General", time: "09:00-18:00" },
+      { shift: "Off", time: "—" },
+    ];
+
+    const stats = shiftMetadata.map((meta) => {
+      const dbCount = counts.find((c) => c.shift === meta.shift);
+      return {
+        ...meta,
+        count: dbCount ? dbCount.count : 0,
+      };
+    });
+
+    res.json(stats);
+  } catch (error) {
+    console.error("Get Shift Stats Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
