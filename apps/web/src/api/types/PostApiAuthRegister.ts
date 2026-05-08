@@ -20,9 +20,9 @@ export type PostApiAuthRegister500 = any;
 
 export type PostApiAuthRegisterMutationRequest = {
   /**
-   * @type string
+   * @type string | undefined
    */
-  name: string;
+  full_name?: string;
   /**
    * @type string
    */

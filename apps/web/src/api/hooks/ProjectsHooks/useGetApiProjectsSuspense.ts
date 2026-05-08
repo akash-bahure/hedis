@@ -4,10 +4,6 @@
  */
 
 import type {
-  GetApiProjectsQueryResponse,
-  GetApiProjectsQueryParams,
-} from "../../types/GetApiProjects.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -18,8 +14,12 @@ import type {
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
-import { getApiProjects } from "../../clients/getApiProjects.ts";
+import type {
+  GetApiProjectsQueryResponse,
+  GetApiProjectsQueryParams,
+} from "../../types/GetApiProjects.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { getApiProjects } from "../../clients/getApiProjects.ts";
 
 export const getApiProjectsSuspenseQueryKey = (
   params?: GetApiProjectsQueryParams,

@@ -4,11 +4,6 @@
  */
 
 import type {
-  GetApiClientsIdQueryResponse,
-  GetApiClientsIdPathParams,
-  GetApiClientsId404,
-} from "../../types/GetApiClientsId.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -20,11 +15,16 @@ import type {
   UseSuspenseInfiniteQueryOptions,
   UseSuspenseInfiniteQueryResult,
 } from "@tanstack/react-query";
-import { getApiClientsId } from "../../clients/getApiClientsId.ts";
+import type {
+  GetApiClientsIdQueryResponse,
+  GetApiClientsIdPathParams,
+  GetApiClientsId404,
+} from "../../types/GetApiClientsId.ts";
 import {
   infiniteQueryOptions,
   useSuspenseInfiniteQuery,
 } from "@tanstack/react-query";
+import { getApiClientsId } from "../../clients/getApiClientsId.ts";
 
 export const getApiClientsIdSuspenseInfiniteQueryKey = (
   id: GetApiClientsIdPathParams["id"] | undefined,

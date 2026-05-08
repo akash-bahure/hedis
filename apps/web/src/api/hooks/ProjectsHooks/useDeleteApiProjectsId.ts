@@ -4,10 +4,6 @@
  */
 
 import type {
-  DeleteApiProjectsIdMutationResponse,
-  DeleteApiProjectsIdPathParams,
-} from "../../types/DeleteApiProjectsId.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -17,8 +13,12 @@ import type {
   UseMutationResult,
   QueryClient,
 } from "@tanstack/react-query";
-import { deleteApiProjectsId } from "../../clients/deleteApiProjectsId.ts";
+import type {
+  DeleteApiProjectsIdMutationResponse,
+  DeleteApiProjectsIdPathParams,
+} from "../../types/DeleteApiProjectsId.ts";
 import { mutationOptions, useMutation } from "@tanstack/react-query";
+import { deleteApiProjectsId } from "../../clients/deleteApiProjectsId.ts";
 
 export const deleteApiProjectsIdMutationKey = () =>
   [{ url: "/api/projects/:id" }] as const;

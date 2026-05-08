@@ -4,11 +4,6 @@
  */
 
 import type {
-  PostApiClientsMutationRequest,
-  PostApiClientsMutationResponse,
-  PostApiClients500,
-} from "../../types/PostApiClients.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -18,8 +13,13 @@ import type {
   UseMutationResult,
   QueryClient,
 } from "@tanstack/react-query";
-import { postApiClients } from "../../clients/postApiClients.ts";
+import type {
+  PostApiClientsMutationRequest,
+  PostApiClientsMutationResponse,
+  PostApiClients500,
+} from "../../types/PostApiClients.ts";
 import { mutationOptions, useMutation } from "@tanstack/react-query";
+import { postApiClients } from "../../clients/postApiClients.ts";
 
 export const postApiClientsMutationKey = () =>
   [{ url: "/api/clients" }] as const;

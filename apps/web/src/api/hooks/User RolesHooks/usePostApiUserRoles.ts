@@ -4,12 +4,6 @@
  */
 
 import type {
-  PostApiUserRolesMutationRequest,
-  PostApiUserRolesMutationResponse,
-  PostApiUserRoles400,
-  PostApiUserRoles500,
-} from "../../types/PostApiUserRoles.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -19,8 +13,14 @@ import type {
   UseMutationResult,
   QueryClient,
 } from "@tanstack/react-query";
-import { postApiUserRoles } from "../../clients/postApiUserRoles.ts";
+import type {
+  PostApiUserRolesMutationRequest,
+  PostApiUserRolesMutationResponse,
+  PostApiUserRoles400,
+  PostApiUserRoles500,
+} from "../../types/PostApiUserRoles.ts";
 import { mutationOptions, useMutation } from "@tanstack/react-query";
+import { postApiUserRoles } from "../../clients/postApiUserRoles.ts";
 
 export const postApiUserRolesMutationKey = () =>
   [{ url: "/api/user-roles" }] as const;

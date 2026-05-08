@@ -4,12 +4,6 @@
  */
 
 import type {
-  PostAdminCreateOrgMutationRequest,
-  PostAdminCreateOrgMutationResponse,
-  PostAdminCreateOrg400,
-  PostAdminCreateOrg500,
-} from "../../types/PostAdminCreateOrg.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -19,8 +13,14 @@ import type {
   UseMutationResult,
   QueryClient,
 } from "@tanstack/react-query";
-import { postAdminCreateOrg } from "../../clients/postAdminCreateOrg.ts";
+import type {
+  PostAdminCreateOrgMutationRequest,
+  PostAdminCreateOrgMutationResponse,
+  PostAdminCreateOrg400,
+  PostAdminCreateOrg500,
+} from "../../types/PostAdminCreateOrg.ts";
 import { mutationOptions, useMutation } from "@tanstack/react-query";
+import { postAdminCreateOrg } from "../../clients/postAdminCreateOrg.ts";
 
 export const postAdminCreateOrgMutationKey = () =>
   [{ url: "/admin/create-org" }] as const;

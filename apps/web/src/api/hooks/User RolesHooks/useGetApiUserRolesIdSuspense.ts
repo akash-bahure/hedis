@@ -4,12 +4,6 @@
  */
 
 import type {
-  GetApiUserRolesIdQueryResponse,
-  GetApiUserRolesIdPathParams,
-  GetApiUserRolesId404,
-  GetApiUserRolesId500,
-} from "../../types/GetApiUserRolesId.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -20,8 +14,14 @@ import type {
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
-import { getApiUserRolesId } from "../../clients/getApiUserRolesId.ts";
+import type {
+  GetApiUserRolesIdQueryResponse,
+  GetApiUserRolesIdPathParams,
+  GetApiUserRolesId404,
+  GetApiUserRolesId500,
+} from "../../types/GetApiUserRolesId.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { getApiUserRolesId } from "../../clients/getApiUserRolesId.ts";
 
 export const getApiUserRolesIdSuspenseQueryKey = (
   id: GetApiUserRolesIdPathParams["id"] | undefined,

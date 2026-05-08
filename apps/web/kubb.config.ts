@@ -20,7 +20,7 @@ export default defineConfig(() => {
     plugins: [
       pluginOas(),
       pluginClient({
-        importPath: "./utils/client.ts",
+        importPath: "../../../utils/client.ts",
       }),
       pluginTs(),
       pluginZod({

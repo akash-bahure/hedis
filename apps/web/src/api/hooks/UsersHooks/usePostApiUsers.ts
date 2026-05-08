@@ -4,12 +4,6 @@
  */
 
 import type {
-  PostApiUsersMutationRequest,
-  PostApiUsersMutationResponse,
-  PostApiUsers400,
-  PostApiUsers500,
-} from "../../types/PostApiUsers.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -19,8 +13,14 @@ import type {
   UseMutationResult,
   QueryClient,
 } from "@tanstack/react-query";
-import { postApiUsers } from "../../clients/postApiUsers.ts";
+import type {
+  PostApiUsersMutationRequest,
+  PostApiUsersMutationResponse,
+  PostApiUsers400,
+  PostApiUsers500,
+} from "../../types/PostApiUsers.ts";
 import { mutationOptions, useMutation } from "@tanstack/react-query";
+import { postApiUsers } from "../../clients/postApiUsers.ts";
 
 export const postApiUsersMutationKey = () => [{ url: "/api/users" }] as const;
 

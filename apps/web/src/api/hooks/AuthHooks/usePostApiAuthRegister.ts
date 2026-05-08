@@ -4,12 +4,6 @@
  */
 
 import type {
-  PostApiAuthRegisterMutationRequest,
-  PostApiAuthRegisterMutationResponse,
-  PostApiAuthRegister400,
-  PostApiAuthRegister500,
-} from "../../types/PostApiAuthRegister.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -19,8 +13,14 @@ import type {
   UseMutationResult,
   QueryClient,
 } from "@tanstack/react-query";
-import { postApiAuthRegister } from "../../clients/postApiAuthRegister.ts";
+import type {
+  PostApiAuthRegisterMutationRequest,
+  PostApiAuthRegisterMutationResponse,
+  PostApiAuthRegister400,
+  PostApiAuthRegister500,
+} from "../../types/PostApiAuthRegister.ts";
 import { mutationOptions, useMutation } from "@tanstack/react-query";
+import { postApiAuthRegister } from "../../clients/postApiAuthRegister.ts";
 
 export const postApiAuthRegisterMutationKey = () =>
   [{ url: "/api/auth/register" }] as const;

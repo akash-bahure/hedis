@@ -4,14 +4,6 @@
  */
 
 import type {
-  PatchApiUsersIdMutationRequest,
-  PatchApiUsersIdMutationResponse,
-  PatchApiUsersIdPathParams,
-  PatchApiUsersId400,
-  PatchApiUsersId404,
-  PatchApiUsersId500,
-} from "../../types/PatchApiUsersId.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -21,8 +13,16 @@ import type {
   UseMutationResult,
   QueryClient,
 } from "@tanstack/react-query";
-import { patchApiUsersId } from "../../clients/patchApiUsersId.ts";
+import type {
+  PatchApiUsersIdMutationRequest,
+  PatchApiUsersIdMutationResponse,
+  PatchApiUsersIdPathParams,
+  PatchApiUsersId400,
+  PatchApiUsersId404,
+  PatchApiUsersId500,
+} from "../../types/PatchApiUsersId.ts";
 import { mutationOptions, useMutation } from "@tanstack/react-query";
+import { patchApiUsersId } from "../../clients/patchApiUsersId.ts";
 
 export const patchApiUsersIdMutationKey = () =>
   [{ url: "/api/users/:id" }] as const;

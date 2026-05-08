@@ -4,10 +4,6 @@
  */
 
 import type {
-  GetApiClientsExportQueryResponse,
-  GetApiClientsExportQueryParams,
-} from "../../types/GetApiClientsExport.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -19,11 +15,15 @@ import type {
   UseSuspenseInfiniteQueryOptions,
   UseSuspenseInfiniteQueryResult,
 } from "@tanstack/react-query";
-import { getApiClientsExport } from "../../clients/getApiClientsExport.ts";
+import type {
+  GetApiClientsExportQueryResponse,
+  GetApiClientsExportQueryParams,
+} from "../../types/GetApiClientsExport.ts";
 import {
   infiniteQueryOptions,
   useSuspenseInfiniteQuery,
 } from "@tanstack/react-query";
+import { getApiClientsExport } from "../../clients/getApiClientsExport.ts";
 
 export const getApiClientsExportSuspenseInfiniteQueryKey = (
   params?: GetApiClientsExportQueryParams,

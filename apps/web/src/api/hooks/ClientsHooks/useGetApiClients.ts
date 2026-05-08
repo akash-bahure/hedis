@@ -4,10 +4,6 @@
  */
 
 import type {
-  GetApiClientsQueryResponse,
-  GetApiClientsQueryParams,
-} from "../../types/GetApiClients.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -18,8 +14,12 @@ import type {
   QueryObserverOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
-import { getApiClients } from "../../clients/getApiClients.ts";
+import type {
+  GetApiClientsQueryResponse,
+  GetApiClientsQueryParams,
+} from "../../types/GetApiClients.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
+import { getApiClients } from "../../clients/getApiClients.ts";
 
 export const getApiClientsQueryKey = (params?: GetApiClientsQueryParams) =>
   [{ url: "/api/clients" }, ...(params ? [params] : [])] as const;

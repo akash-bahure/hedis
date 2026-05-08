@@ -4,10 +4,6 @@
  */
 
 import type {
-  GetApiProjectsQueryResponse,
-  GetApiProjectsQueryParams,
-} from "../../types/GetApiProjects.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
@@ -18,8 +14,12 @@ import type {
   QueryObserverOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
-import { getApiProjects } from "../../clients/getApiProjects.ts";
+import type {
+  GetApiProjectsQueryResponse,
+  GetApiProjectsQueryParams,
+} from "../../types/GetApiProjects.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
+import { getApiProjects } from "../../clients/getApiProjects.ts";
 
 export const getApiProjectsQueryKey = (params?: GetApiProjectsQueryParams) =>
   [{ url: "/api/projects" }, ...(params ? [params] : [])] as const;
