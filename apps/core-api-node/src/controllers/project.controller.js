@@ -147,12 +147,21 @@ exports.deleteProject = async (req, res) => {
 
 exports.getProjectAccessAll = async (req, res) => {
   try {
+    const { department_id } = req.query;
+    let whereClause = "WHERE 1=1";
+    const values = [];
+
+    if (department_id) {
+      whereClause += ` AND u.department_id = $1`;
+      values.push(department_id);
+    }
+
     const query = `
       SELECT 
           u.id as uid, 
           u.full_name, 
           ur.name as role, 
-          u.department,
+          d.name as department,
           json_agg(
               json_build_object(
                   'project_id', p.id,
@@ -162,13 +171,15 @@ exports.getProjectAccessAll = async (req, res) => {
           ) as project_access
       FROM users u
       LEFT JOIN user_roles ur ON u.user_role_id = ur.id
+      LEFT JOIN departments d ON u.department_id = d.id
       CROSS JOIN projects p
       LEFT JOIN user_project_access upa ON upa.user_id = u.id AND upa.project_id = p.id
-      GROUP BY u.id, ur.name
+      ${whereClause}
+      GROUP BY u.id, ur.name, d.name
       ORDER BY u.full_name;
     `;
 
-    const result = await req.db.query(query);
+    const result = await req.db.query(query, values);
     res.json(result.rows);
   } catch (err) {
     console.error("Get Project Access Error:", err);

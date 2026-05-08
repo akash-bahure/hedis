@@ -28,9 +28,10 @@ const userController = require("../controllers/userController");
  *               phone:
  *                 type: string
  *                 example: "+1234567890"
- *               department:
+ *               department_id:
  *                 type: string
- *                 example: Clinical Operations
+ *                 format: uuid
+ *                 example: "550e8400-e29b-41d4-a716-446655440000"
  *               job_title:
  *                 type: string
  *                 example: Senior Auditor
@@ -123,6 +124,12 @@ router.post("/", userController.createUser);
  *           type: string
  *           enum: [Pending, Active, Inactive, Suspended]
  *         description: Filter by user status
+ *       - in: query
+ *         name: department_id
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filter by department ID
  *     responses:
  *       200:
  *         description: Paginated list of users
@@ -177,8 +184,9 @@ router.get("/", userController.getUsers);
  *                 format: email
  *               phone:
  *                 type: string
- *               department:
+ *               department_id:
  *                 type: string
+ *                 format: uuid
  *               job_title:
  *                 type: string
  *               shift:
@@ -250,7 +258,10 @@ router.patch("/:id", userController.updateUser);
  *           type: string
  *         phone:
  *           type: string
- *         department:
+ *         department_id:
+ *           type: string
+ *           format: uuid
+ *         department_name:
  *           type: string
  *         job_title:
  *           type: string

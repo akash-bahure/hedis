@@ -34,8 +34,6 @@ async function runMigrations(client, schema) {
       );
   `);
 
- 
-
   await client.query(`
     CREATE TABLE IF NOT EXISTS ${schema}.user_roles (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -144,13 +142,43 @@ async function runMigrations(client, schema) {
       );
     `);
 
-     
-
   await client.query(`
     ALTER TABLE ${schema}.users 
     ADD COLUMN IF NOT EXISTS invite_token TEXT,
     ADD COLUMN IF NOT EXISTS invite_token_expiry TIMESTAMP,
     ADD COLUMN IF NOT EXISTS invite_used BOOLEAN DEFAULT FALSE;
+  `);
+
+  // Create departments table
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.departments (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      name VARCHAR(255) NOT NULL UNIQUE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // Add department_id to users and migrate data
+  await client.query(`
+    ALTER TABLE ${schema}.users 
+    ADD COLUMN IF NOT EXISTS department_id UUID REFERENCES ${schema}.departments(id) ON DELETE SET NULL;
+  `);
+
+  // Migration logic: populate departments from unique department strings in users
+  await client.query(`
+    INSERT INTO ${schema}.departments (name)
+    SELECT DISTINCT department FROM ${schema}.users
+    WHERE department IS NOT NULL AND department <> ''
+    ON CONFLICT (name) DO NOTHING;
+  `);
+
+  // Link users to departments
+  await client.query(`
+    UPDATE ${schema}.users u
+    SET department_id = d.id
+    FROM ${schema}.departments d
+    WHERE u.department = d.name AND u.department_id IS NULL;
   `);
 
   await client.query(`

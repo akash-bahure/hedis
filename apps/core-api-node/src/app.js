@@ -78,6 +78,7 @@ const clientRoutes = require("./routes/client.routes");
 app.use("/api/clients", clientRoutes);
 const projectRoutes = require("./routes/project.routes");
 app.use("/api/projects", projectRoutes);
+app.use("/api/departments", require("./routes/department.routes"));
 app.use("/api/user-roles", require("./routes/userRoleRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/profile", require("./routes/profile.routes"));
