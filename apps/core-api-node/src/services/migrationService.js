@@ -34,23 +34,7 @@ async function runMigrations(client, schema) {
       );
   `);
 
-  await client.query(`
-   CREATE TABLE IF NOT EXISTS ${schema}.projects (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      project_name VARCHAR(255) NOT NULL,
-      client_id UUID REFERENCES ${schema}.clients(id) ON DELETE CASCADE,
-      project_type VARCHAR(100),
-      specialty VARCHAR(100),
-      priority VARCHAR(50) DEFAULT 'High' CHECK (priority IN ('High', 'Medium', 'Low')),
-      notes TEXT,
-      start_date DATE NOT NULL,
-      end_date DATE NOT NULL,
-      project_manager_id INTEGER REFERENCES ${schema}.users(id) ON DELETE SET NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-
-  `);
+ 
 
   await client.query(`
     CREATE TABLE IF NOT EXISTS ${schema}.user_roles (
@@ -103,6 +87,7 @@ async function runMigrations(client, schema) {
       preferences JSONB DEFAULT '{}'::jsonb,
       certifications JSONB DEFAULT '[]'::jsonb,
       notifications JSONB DEFAULT '{}'::jsonb,
+      security JSONB DEFAULT '{}'::jsonb,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -111,30 +96,31 @@ async function runMigrations(client, schema) {
   // Ensure new fields are added to existing schemas without wiping data
   try {
     await client.query(`
-      ALTER TABLE ${schema}.org_users
+      ALTER TABLE ${schema}.users
         ADD COLUMN IF NOT EXISTS credentials VARCHAR(255),
         ADD COLUMN IF NOT EXISTS mobile_phone VARCHAR(20),
         ADD COLUMN IF NOT EXISTS location VARCHAR(255),
         ADD COLUMN IF NOT EXISTS preferences JSONB DEFAULT '{}'::jsonb,
         ADD COLUMN IF NOT EXISTS certifications JSONB DEFAULT '[]'::jsonb,
-        ADD COLUMN IF NOT EXISTS notifications JSONB DEFAULT '{}'::jsonb;
+        ADD COLUMN IF NOT EXISTS notifications JSONB DEFAULT '{}'::jsonb,
+        ADD COLUMN IF NOT EXISTS security JSONB DEFAULT '{}'::jsonb;
     `);
   } catch (err) {
     // Columns might already exist or other harmless error
   }
 
   await client.query(`
-    CREATE TABLE IF NOT EXISTS projects (
-      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+   CREATE TABLE IF NOT EXISTS ${schema}.projects (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       project_name VARCHAR(255) NOT NULL,
-      client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+      client_id UUID REFERENCES ${schema}.clients(id) ON DELETE CASCADE,
       project_type VARCHAR(100),
       specialty VARCHAR(100),
       priority VARCHAR(50) DEFAULT 'High' CHECK (priority IN ('High', 'Medium', 'Low')),
       notes TEXT,
       start_date DATE NOT NULL,
       end_date DATE NOT NULL,
-    project_manager_id UUID REFERENCES users(id) ON DELETE SET NULL,
+      project_manager_id UUID REFERENCES ${schema}.users(id) ON DELETE SET NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -157,6 +143,8 @@ async function runMigrations(client, schema) {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+     
 
   await client.query(`
     ALTER TABLE ${schema}.users 

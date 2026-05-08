@@ -236,4 +236,49 @@ router.patch("/:id/preferences", controller.updatePreferences);
  */
 router.patch("/:id/notifications", controller.updateNotifications);
 
+/**
+ * @swagger
+ * /api/profile/{id}/security:
+ *   patch:
+ *     summary: Update security settings
+ *     tags: [Profile]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *                 example: oldPassword123
+ *               newPassword:
+ *                 type: string
+ *                 example: newPassword123
+ *               security:
+ *                 type: object
+ *                 properties:
+ *                   two_factor_auth:
+ *                     type: boolean
+ *                     example: true
+ *                   session_timeout:
+ *                     type: integer
+ *                     example: 30
+ *                   login_alerts:
+ *                     type: boolean
+ *                     example: true
+ *     responses:
+ *       200:
+ *         description: Security settings updated successfully
+ *       404:
+ *         description: Profile not found
+ */
+router.patch("/:id/security", controller.updateSecurity);
+
 module.exports = router;
