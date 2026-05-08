@@ -67,7 +67,10 @@ app.get("/api-docs.json", (req, res) => {
   res.send(swaggerSpec);
 });
 
-app.use("/admin", require("./routes/orgRoutes"));
+// Admin routes
+app.use("/admin/auth", require("./routes/adminAuthRoutes"));
+app.use("/admin/users", require("./routes/adminUserRoutes"));
+app.use("/admin/orgs", require("./routes/orgRoutes"));
 
 app.use(tenantMiddleware);
 app.use("/api/auth", require("./routes/authRoutes"));
