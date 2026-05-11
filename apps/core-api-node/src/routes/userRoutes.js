@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/userController");
+const rbacMiddleware = require("../middlewares/rbacMiddleware");
 
 /**
  * @swagger
@@ -85,6 +86,8 @@ const userController = require("../controllers/userController");
  *         description: Server error
  */
 router.post("/", userController.createUser);
+
+// router.post("/", rbacMiddleware(["Admin"]), userController.createUser);
 
 /**
  * @swagger

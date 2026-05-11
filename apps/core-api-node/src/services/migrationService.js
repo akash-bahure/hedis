@@ -88,6 +88,8 @@ async function runMigrations(client, schema) {
       certifications JSONB DEFAULT '[]'::jsonb,
       notifications JSONB DEFAULT '{}'::jsonb,
       security JSONB DEFAULT '{}'::jsonb,
+      reset_token TEXT,
+      reset_token_expiry TIMESTAMP,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -150,8 +152,11 @@ async function runMigrations(client, schema) {
     ALTER TABLE ${schema}.users 
     ADD COLUMN IF NOT EXISTS invite_token TEXT,
     ADD COLUMN IF NOT EXISTS invite_token_expiry TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS invite_used BOOLEAN DEFAULT FALSE;
+    ADD COLUMN IF NOT EXISTS invite_used BOOLEAN DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS reset_token TEXT,
+    ADD COLUMN IF NOT EXISTS reset_token_expiry TIMESTAMP;
   `);
+
 
   await client.query(`
     CREATE TABLE IF NOT EXISTS ${schema}.user_projects (
