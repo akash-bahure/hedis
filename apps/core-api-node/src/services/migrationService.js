@@ -97,6 +97,8 @@ async function runMigrations(client, schema) {
       certifications JSONB DEFAULT '[]'::jsonb,
       notifications JSONB DEFAULT '{}'::jsonb,
       security JSONB DEFAULT '{}'::jsonb,
+      reset_token TEXT,
+      reset_token_expiry TIMESTAMP,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -157,10 +159,10 @@ async function runMigrations(client, schema) {
     ALTER TABLE ${schema}.users 
     ADD COLUMN IF NOT EXISTS invite_token TEXT,
     ADD COLUMN IF NOT EXISTS invite_token_expiry TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS invite_used BOOLEAN DEFAULT FALSE;
+    ADD COLUMN IF NOT EXISTS invite_used BOOLEAN DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS reset_token TEXT,
+    ADD COLUMN IF NOT EXISTS reset_token_expiry TIMESTAMP;
   `);
-
-  
 
   // Migration logic: populate departments from unique department strings in users
   await client.query(`
@@ -197,6 +199,17 @@ async function runMigrations(client, schema) {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(user_id, project_id)
+    );
+  `);
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.user_shifts (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES ${schema}.users(id) ON DELETE CASCADE,
+      date DATE NOT NULL,
+      shift VARCHAR(20) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, date)
     );
   `);
 }

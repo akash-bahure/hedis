@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/userController");
+const rbacMiddleware = require("../middlewares/rbacMiddleware");
 
 /**
  * @swagger
@@ -87,6 +88,8 @@ const userController = require("../controllers/userController");
  */
 router.post("/", userController.createUser);
 
+// router.post("/", rbacMiddleware(["Admin"]), userController.createUser);
+
 /**
  * @swagger
  * /api/users:
@@ -154,6 +157,277 @@ router.post("/", userController.createUser);
  *         description: Server error
  */
 router.get("/", userController.getUsers);
+
+/**
+ * @swagger
+ * /api/users/export:
+ *   get:
+ *     summary: Export users (CSV or PDF)
+ *     tags: [Users]
+ *     description: Export all users data in CSV or PDF format
+ *     parameters:
+ *       - in: query
+ *         name: format
+ *         schema:
+ *           type: string
+ *           enum: [csv, pdf]
+ *         description: Export format (default csv)
+ *     responses:
+ *       200:
+ *         description: File download
+ *       500:
+ *         description: Server error
+ */
+router.get("/export", userController.exportUsers);
+
+/**
+ * @swagger
+ * /api/users/stats:
+ *   get:
+ *     summary: Get user statistics
+ *     tags: [Users]
+ *     description: Returns aggregated stats of users
+ *     responses:
+ *       200:
+ *         description: User stats fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 stats:
+ *                   type: object
+ *                   properties:
+ *                     total_users:
+ *                       type: integer
+ *                     active_users:
+ *                       type: integer
+ *                     inactive_users:
+ *                       type: integer
+ *                     two_fa_enabled:
+ *                       type: integer
+ *                     sso_users:
+ *                       type: integer
+ *       500:
+ *         description: Server error
+ */
+router.get("/stats", userController.getUserStats);
+
+/**
+ * @swagger
+ * /api/users/shifts:
+ *   get:
+ *     summary: Get user shift management matrix
+ *     tags: [Users]
+ *     description: Returns a paginated list of users with their weekly shift schedule matrix
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of items per page
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by full name or email
+ *       - in: query
+ *         name: shift
+ *         schema:
+ *           type: string
+ *           enum: [Morning, Afternoon, Night, General, Off]
+ *         description: Filter by default shift
+ *       - in: query
+ *         name: week
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Week offset (0=current, -1=prev, 1=next)
+ *       - in: query
+ *         name: department
+ *         schema:
+ *           type: string
+ *         description: Filter by department
+ *       - in: query
+ *         name: email
+ *         schema:
+ *           type: string
+ *         description: Filter by email
+ *       - in: query
+ *         name: full_name
+ *         schema:
+ *           type: string
+ *         description: Filter by full name
+ *       - in: query
+ *         name: is_super_administrator
+ *         schema:
+ *           type: boolean
+ *         description: Filter by super admin status
+ *       - in: query
+ *         name: job_title
+ *         schema:
+ *           type: string
+ *         description: Filter by job title
+ *       - in: query
+ *         name: phone
+ *         schema:
+ *           type: string
+ *         description: Filter by phone
+ *       - in: query
+ *         name: user_role
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filter by user role ID
+ *       - in: query
+ *         name: user_status
+ *         schema:
+ *           type: string
+ *           enum: [Pending, Active, Inactive, Suspended]
+ *         description: Filter by user status
+ *     responses:
+ *       200:
+ *         description: Paginated shift schedule matrix
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 week:
+ *                   type: string
+ *                   example: "Week of May 18 - 24, 2026"
+ *                 week_offset:
+ *                   type: integer
+ *                 dates:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       date: { type: string }
+ *                       day: { type: string }
+ *                       day_num: { type: string }
+ *                 users:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/ShiftScheduleMatrix'
+ *                 count:
+ *                   type: integer
+ *                 next:
+ *                   type: string
+ *                   nullable: true
+ *                 previous:
+ *                   type: string
+ *                   nullable: true
+ *       500:
+ *         description: Server error
+ */
+router.get("/shifts", userController.getUserShifts);
+
+/**
+ * @swagger
+ * /api/users/shifts:
+ *   patch:
+ *     summary: Bulk update user shifts
+ *     tags: [Users]
+ *     description: Updates individual shifts for multiple users and dates
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: object
+ *               properties:
+ *                 user_id:
+ *                   type: string
+ *                   format: uuid
+ *                   example: 985d105f-c8a4-4fa6-9c91-1e7902424f38
+ *                 schedules:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       date:
+ *                         type: string
+ *                         format: date
+ *                         example: "2026-05-05"
+ *                       shift:
+ *                         type: string
+ *                         enum: [Morning, Afternoon, Night, General, Off]
+ *                         example: "General"
+ *     responses:
+ *       200:
+ *         description: User shifts updated successfully
+ *       400:
+ *         description: Invalid payload or format
+ *       500:
+ *         description: Server error
+ */
+router.patch("/shifts", userController.updateUserShifts);
+
+/**
+ * @swagger
+ * /api/users/shifts/stats:
+ *   get:
+ *     summary: Get shift statistics
+ *     tags: [Users]
+ *     description: Returns the count of users for each shift type along with their predefined times
+ *     responses:
+ *       200:
+ *         description: Array of shift statistics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   shift:
+ *                     type: string
+ *                   time:
+ *                     type: string
+ *                   count:
+ *                     type: integer
+ *       500:
+ *         description: Server error
+ */
+router.get("/shifts/stats", userController.getShiftStats);
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     ShiftScheduleMatrix:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: uuid
+ *         full_name:
+ *           type: string
+ *         initials:
+ *           type: string
+ *         role:
+ *           type: string
+ *         default_shift:
+ *           type: string
+ *         schedule:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               date: { type: string }
+ *               day: { type: string }
+ *               shift: { type: string }
+ */
 
 /**
  * @swagger
@@ -327,60 +601,5 @@ router.patch("/:id", userController.updateUser);
  *         description: Server error
  */
 router.delete("/:id", userController.deleteUser);
-
-/**
- * @swagger
- * /api/users/export:
- *   get:
- *     summary: Export users (CSV or PDF)
- *     tags: [Users]
- *     description: Export all users data in CSV or PDF format
- *     parameters:
- *       - in: query
- *         name: format
- *         schema:
- *           type: string
- *           enum: [csv, pdf]
- *         description: Export format (default csv)
- *     responses:
- *       200:
- *         description: File download
- *       500:
- *         description: Server error
- */
-router.get("/export", userController.exportUsers);
-
-/**
- * @swagger
- * /api/users/stats:
- *   get:
- *     summary: Get user statistics
- *     tags: [Users]
- *     description: Returns aggregated stats of users
- *     responses:
- *       200:
- *         description: User stats fetched successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 stats:
- *                   type: object
- *                   properties:
- *                     total_users:
- *                       type: integer
- *                     active_users:
- *                       type: integer
- *                     inactive_users:
- *                       type: integer
- *                     two_fa_enabled:
- *                       type: integer
- *                     sso_users:
- *                       type: integer
- *       500:
- *         description: Server error
- */
-router.get("/stats", userController.getUserStats);
 
 module.exports = router;

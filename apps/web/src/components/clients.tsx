@@ -38,6 +38,7 @@ import {
   PostApiClientsMutationRequestPlanTierEnumKey,
   PostApiClientsMutationRequestRegionEnumKey,
   PostApiClientsMutationRequestStatusEnumKey,
+  useGetApiClientsStats,
   usePostApiClients,
 } from "@/api";
 import { toast } from "sonner";
@@ -428,7 +429,7 @@ function FullProfileModal({
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
               <span className="text-primary font-bold" style={{ fontSize: 15 }}>
-                {client.shortCode.slice(0, 2)}
+                {client.shortCode?.slice(0, 2)}
               </span>
             </div>
             <div className="flex-1 min-w-0">
@@ -942,7 +943,7 @@ function FullProfileModal({
                         label: "Status",
                         value:
                           client.status.charAt(0).toUpperCase() +
-                          client.status.slice(1),
+                          client.status?.slice(1),
                       },
                     ].map((row, i) => (
                       <div
@@ -1119,7 +1120,7 @@ function FullProfileModal({
                         {client.contactName
                           .split(" ")
                           .filter((w) => /^[A-Z]/.test(w))
-                          .slice(0, 2)
+                          ?.slice(0, 2)
                           .map((w) => w[0])
                           .join("")}
                       </span>
@@ -1342,7 +1343,7 @@ function ClientPanel({
                   className="text-primary font-bold"
                   style={{ fontSize: 13 }}
                 >
-                  {client.shortCode.slice(0, 2)}
+                  {client.shortCode?.slice(0, 2)}
                 </span>
               </div>
               <div className="min-w-0">
@@ -1502,7 +1503,7 @@ function ClientPanel({
                     {client.contactName
                       .split(" ")
                       .map((n) => n[0])
-                      .slice(0, 2)
+                      ?.slice(0, 2)
                       .join("")}
                   </span>
                 </div>
@@ -1940,7 +1941,7 @@ function AddClientModal({
                         className="text-primary font-bold"
                         style={{ fontSize: 11 }}
                       >
-                        {form.shortCode.slice(0, 2)}
+                        {form.shortCode?.slice(0, 2)}
                       </span>
                     </div>
                     <div>
@@ -2264,11 +2265,22 @@ export function Clients() {
     const matchRegion = regionFilter === "all" || c.region === regionFilter;
     return matchSearch && matchStatus && matchRegion;
   });
+  const { data: statsData, isLoading: statsLoading } = useGetApiClientsStats({
+    query: {
+      refetchOnWindowFocus: false,
+    },
+  });
+  const totalClients = statsData?.total_clients ?? 0;
 
-  const totalCharts = clientList.reduce((s, c) => s + c.chartsTotal, 0);
-  const doneCharts = clientList.reduce((s, c) => s + c.chartsCompleted, 0);
-  const activeClients = clientList.filter((c) => c.status === "active").length;
-  const atRisk = clientList.filter((c) => c.status === "at-risk").length;
+  const activeClients = statsData?.active_clients ?? 0;
+
+  const totalCharts = statsData?.charts_assigned ?? 0;
+
+  const doneCharts = statsData?.completed_charts ?? 0;
+
+  const completionRate = statsData?.completion_rate ?? 0;
+
+  const atRisk = statsData?.at_risk ?? 0;
 
   return (
     <div className="relative flex flex-col h-full overflow-hidden bg-background">
@@ -2310,28 +2322,28 @@ export function Clients() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
           <KpiCard
             label="Total Clients"
-            value={CLIENTS.length}
+            value={statsLoading ? "..." : totalClients.toLocaleString()}
             sub={`${activeClients} active`}
             icon={Users}
             colorCls="bg-primary"
           />
           <KpiCard
             label="Charts Assigned"
-            value={totalCharts.toLocaleString()}
+            value={statsLoading ? "..." : totalCharts.toLocaleString()}
             sub="across all clients"
             icon={FileText}
             colorCls="bg-cyan-500"
           />
           <KpiCard
             label="Completion Rate"
-            value={`${pct(doneCharts, totalCharts)}%`}
+            value={statsLoading ? "..." : `${completionRate}%`}
             sub={`${doneCharts.toLocaleString()} completed`}
             icon={TrendingUp}
             colorCls="bg-emerald-500"
           />
           <KpiCard
             label="At Risk"
-            value={atRisk}
+            value={statsLoading ? "..." : atRisk.toLocaleString()}
             sub="need immediate attention"
             icon={AlertCircle}
             colorCls="bg-amber-500"
@@ -2466,7 +2478,7 @@ export function Clients() {
                                 className="text-primary font-bold"
                                 style={{ fontSize: 10 }}
                               >
-                                {client.shortCode.slice(0, 2)}
+                                {client.shortCode?.slice(0, 2)}
                               </span>
                             </div>
                             <div>
@@ -2607,7 +2619,7 @@ export function Clients() {
                           className="text-primary font-bold"
                           style={{ fontSize: 12 }}
                         >
-                          {client.shortCode.slice(0, 2)}
+                          {client.shortCode?.slice(0, 2)}
                         </span>
                       </div>
                       <div>

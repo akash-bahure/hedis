@@ -4,6 +4,7 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerJsDoc = require("swagger-jsdoc");
 const path = require("path");
 const tenantMiddleware = require("./middlewares/tenantMiddleware");
+const authMiddleware = require("./middlewares/authMiddleware");
 
 const app = express();
 
@@ -72,8 +73,13 @@ app.use("/admin/auth", require("./routes/adminAuthRoutes"));
 app.use("/admin/users", require("./routes/adminUserRoutes"));
 app.use("/admin/orgs", require("./routes/orgRoutes"));
 
+// Tenant & Authentication
 app.use(tenantMiddleware);
 app.use("/api/auth", require("./routes/authRoutes"));
+
+// Protected Routes
+app.use(authMiddleware);
+
 const clientRoutes = require("./routes/client.routes");
 app.use("/api/clients", clientRoutes);
 const projectRoutes = require("./routes/project.routes");
@@ -84,3 +90,4 @@ app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/profile", require("./routes/profile.routes"));
 
 module.exports = app;
+
