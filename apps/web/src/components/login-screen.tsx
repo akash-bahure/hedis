@@ -15,6 +15,8 @@ import {
   Users,
   KeyRound,
 } from "lucide-react";
+import { toast } from "sonner";
+import { usePostApiAuthLogin } from "@/api";
 
 interface LoginScreenProps {
   onLogin: (roleId: RoleId) => void;
@@ -109,33 +111,113 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
   const currentRole = ROLES.find((r) => r.id === selectedRole)!;
 
-  const handleDemoSelect = (user: (typeof DEMO_USERS)[0]) => {
-    setEmail(user.email);
-    setPassword("Demo@12345");
-    setSelectedRole(user.roleId);
-    setShowDemoUsers(false);
-    setError("");
+  // const handleDemoSelect = (user: (typeof DEMO_USERS)[0]) => {
+  //   setEmail(user.email);
+  //   setPassword("Demo@12345");
+  //   setSelectedRole(user.roleId);
+  //   setShowDemoUsers(false);
+  //   setError("");
+  // };
+
+  // const handleSubmit = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setError("");
+
+  //   if (!email.trim()) {
+  //     setError("Please enter your email address.");
+  //     return;
+  //   }
+  //   if (!password.trim()) {
+  //     setError("Please enter your password.");
+  //     return;
+  //   }
+
+  //   setIsLoading(true);
+  //   // Simulate auth delay
+  //   setTimeout(() => {
+  //     setIsLoading(false);
+  //     onLogin(selectedRole);
+  //   }, 1200);
+  // };
+
+  const { mutate: loginUser, isPending } = usePostApiAuthLogin({
+    mutation: {
+      onSuccess: (response: any) => {
+        console.log("Login Success:", response);
+
+        if (response?.token) {
+          localStorage.setItem("token", response.token);
+        }
+
+        if (response?.user) {
+          localStorage.setItem("user", JSON.stringify(response.user));
+        }
+
+        localStorage.setItem("role", selectedRole);
+
+        if (rememberMe) {
+          localStorage.setItem("rememberMe", "true");
+        } else {
+          localStorage.removeItem("rememberMe");
+        }
+
+        toast.success(response?.message || "Login successful. Redirecting...");
+
+        setTimeout(() => {
+          onLogin(selectedRole);
+        }, 1000);
+      },
+
+      onError: (error: any) => {
+        console.error("Login Error:", error);
+
+        const message =
+          error?.response?.data?.message ||
+          error?.message ||
+          "Invalid email or password.";
+
+        toast.error(message);
+      },
+    },
+  });
+
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const validatePassword = (password: string) => {
+    return password.length >= 6;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
 
     if (!email.trim()) {
-      setError("Please enter your email address.");
-      return;
-    }
-    if (!password.trim()) {
-      setError("Please enter your password.");
+      toast.error("Email address is required.");
       return;
     }
 
-    setIsLoading(true);
-    // Simulate auth delay
-    setTimeout(() => {
-      setIsLoading(false);
-      onLogin(selectedRole);
-    }, 1200);
+    if (!validateEmail(email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
+    if (!password.trim()) {
+      toast.error("Password is required.");
+      return;
+    }
+
+    if (!validatePassword(password)) {
+      toast.error("Password must be at least 6 characters.");
+      return;
+    }
+
+    loginUser({
+      data: {
+        email: email.trim().toLowerCase(),
+        password: password.trim(),
+      },
+    });
   };
 
   return (
@@ -344,7 +426,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
           </div>
 
           {/* Demo User Quick-Select */}
-          <div className="mb-6">
+          {/* <div className="mb-6">
             <div className="relative">
               <button
                 type="button"
@@ -437,7 +519,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 </>
               )}
             </div>
-          </div>
+          </div> */}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -456,10 +538,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setError("");
-                  }}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter Email Address"
                   autoComplete="email"
                   className="w-full pl-10 pr-4 py-2.5 bg-input-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground/60 transition-colors"
@@ -492,10 +571,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setError("");
-                  }}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••"
                   autoComplete="current-password"
                   className="w-full pl-10 pr-11 py-2.5 bg-input-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground/60 transition-colors"
@@ -652,15 +728,15 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             {/* Submit */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isPending}
               className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-lg text-white font-semibold transition-all active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed mt-2"
               style={{
-                background: isLoading
+                background: isPending
                   ? "#0891b2"
                   : "linear-gradient(135deg, #0891b2 0%, #0e7490 100%)",
                 fontSize: "13px",
                 letterSpacing: "0.02em",
-                boxShadow: isLoading
+                boxShadow: isPending
                   ? "none"
                   : "0 4px 14px rgba(8, 145, 178, 0.35)",
               }}
