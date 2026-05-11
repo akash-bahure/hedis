@@ -66,7 +66,6 @@ async function runMigrations(client, schema) {
       email VARCHAR(254) UNIQUE NOT NULL,
       phone VARCHAR(20),
       mobile_phone VARCHAR(20),
-      department VARCHAR(75),
       department_id UUID REFERENCES ${schema}.departments(id) ON DELETE SET NULL,
       job_title VARCHAR(150),
       address_line_1 TEXT,
@@ -162,22 +161,6 @@ async function runMigrations(client, schema) {
     ADD COLUMN IF NOT EXISTS invite_used BOOLEAN DEFAULT FALSE,
     ADD COLUMN IF NOT EXISTS reset_token TEXT,
     ADD COLUMN IF NOT EXISTS reset_token_expiry TIMESTAMP;
-  `);
-
-  // Migration logic: populate departments from unique department strings in users
-  await client.query(`
-    INSERT INTO ${schema}.departments (name)
-    SELECT DISTINCT department FROM ${schema}.users
-    WHERE department IS NOT NULL AND department <> ''
-    ON CONFLICT (name) DO NOTHING;
-  `);
-
-  // Link users to departments
-  await client.query(`
-    UPDATE ${schema}.users u
-    SET department_id = d.id
-    FROM ${schema}.departments d
-    WHERE u.department = d.name AND u.department_id IS NULL;
   `);
 
   await client.query(`
