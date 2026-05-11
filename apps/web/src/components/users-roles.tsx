@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Users,
   Shield,
@@ -57,6 +57,15 @@ import {
   LayoutDashboard,
   ClipboardPen,
 } from "lucide-react";
+import {
+  usePostApiUserRoles,
+  usePatchApiUserRolesId,
+  useGetApiUserRoles,
+  useGetApiUserRolesId,
+  getApiUserRolesQueryKey,
+} from "@/api";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 /* ════════════════════════════════════════════  TYPES  */
 type ViewTab = "users" | "roles" | "projects" | "shifts";
@@ -1580,7 +1589,7 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
         if (filterStatus !== "all" && u.status !== filterStatus) return false;
         return true;
       }),
-    [search, filterRole, filterStatus],
+    [search, filterRole, filterStatus]
   );
 
   const toggleSelect = (id: string) =>
@@ -1864,22 +1873,371 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
   );
 }
 
+interface AddRoleModalProps {
+  open: boolean;
+  onClose: () => void;
+  onSave: (roleName: string, perms: Record<string, boolean>) => void;
+  basePerms: Record<string, boolean>;
+  baseMeta?: { name?: string; description?: string; level?: number };
+}
+
+function AddRoleModal({
+  open,
+  onClose,
+  basePerms,
+  baseMeta,
+}: AddRoleModalProps) {
+  const { mutate: createRole, isPending } = usePostApiUserRoles();
+  // const tokenStr = localStorage.getItem("userDetail");
+  // const token = tokenStr ? JSON.parse(tokenStr) : null;
+  // const uid = token?.user?.organization?.id;
+
+  const [form, setForm] = useState({
+    name: "",
+    description: "",
+    level: "",
+  });
+
+  const [errors, setErrors] = useState<any>({});
+  const [localPerms, setLocalPerms] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (open) {
+      setForm({
+        name: baseMeta?.name ? `${baseMeta.name} (Copy)` : "",
+        description: baseMeta?.description || "",
+        level: baseMeta?.level !== undefined ? String(baseMeta.level) : "",
+      });
+      setLocalPerms(basePerms);
+      setErrors({});
+    }
+  }, [open, basePerms, baseMeta]);
+
+  const setField = (key: string, value: any) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const togglePerm = (key: string) => {
+    setLocalPerms((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  const buildRolePermissionsPayload = (perms: Record<string, boolean>) => {
+    return MODULES.map((mod) => {
+      const get = (action: string) => perms[`${mod.id}:${action}`] ?? false;
+      return {
+        module: mod.label,
+        can_view: get("view"),
+        can_edit: get("edit"),
+        can_assign: get("assign"),
+        can_approve: get("approve"),
+        can_reject: get("reject"),
+        can_export: get("export"),
+        can_override: get("override"),
+      };
+    });
+  };
+  const queryClient = useQueryClient();
+
+  const handleSave = () => {
+    if (!form.name.trim()) {
+      setErrors({ name: "Role name is required" });
+      return;
+    }
+
+    const payload = {
+      name: form.name,
+      description: form.description || "",
+      level: Number(form.level) || 0,
+      active: true,
+      role_permissions: buildRolePermissionsPayload(localPerms),
+    };
+
+    createRole(
+      { data: payload },
+      {
+        onSuccess: () => {
+          toast.success("Role Created successfully");
+          queryClient.invalidateQueries({
+            queryKey: getApiUserRolesQueryKey(),
+          });
+          onClose();
+        },
+        onError: (err) => {
+          console.log("Create role failed", err);
+        },
+      }
+    );
+  };
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-card w-[1000px] max-h-[90vh] rounded-2xl border border-border shadow-lg flex flex-col">
+        {/* Header */}
+        <div className="px-5 py-4 border-b border-border">
+          <h2 className="text-sm font-black text-foreground">
+            {baseMeta?.name
+              ? `Clone Role — ${baseMeta.name}`
+              : "Create New Role"}
+          </h2>
+        </div>
+
+        {/* Body */}
+        <div className="p-5 overflow-auto flex-1">
+          {/* Inputs */}
+          <div className="grid grid-cols-3 gap-3 mb-5">
+            <div>
+              <label className="block text-[10px] font-bold text-foreground mb-1">
+                Role Name
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Team Lead"
+                value={form.name}
+                onChange={(e) => {
+                  setField("name", e.target.value);
+                  setErrors((prev: any) => ({ ...prev, name: undefined }));
+                }}
+                className={`w-full px-3 py-2 text-[11px] bg-muted/30 border rounded-xl focus:outline-none focus:ring-1 focus:ring-primary ${
+                  errors.name ? "border-red-400" : "border-border"
+                }`}
+              />
+              {errors.name && (
+                <p className="text-[9px] text-red-500 mt-0.5">{errors.name}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold text-foreground mb-1">
+                Description
+              </label>
+              <input
+                type="text"
+                placeholder="Short description"
+                value={form.description}
+                onChange={(e) => setField("description", e.target.value)}
+                className="w-full px-3 py-2 text-[11px] bg-muted/30 border border-border rounded-xl focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold text-foreground mb-1">
+                Level
+              </label>
+              <input
+                type="number"
+                placeholder="e.g. 3"
+                value={form.level}
+                onChange={(e) => setField("level", e.target.value)}
+                className="w-full px-3 py-2 text-[11px] bg-muted/30 border border-border rounded-xl focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+          </div>
+
+          {/* Permission Table */}
+          <div className="overflow-auto border border-border rounded-xl">
+            <table className="w-full text-[11px]">
+              <thead className="bg-muted/20 sticky top-0">
+                <tr>
+                  <th className="text-left px-4 py-2">Module</th>
+                  {ACTIONS.map((a) => (
+                    <th key={a.id} className="px-3 py-2 text-center">
+                      {a.abbr}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {MODULES.map((mod, i) => (
+                  <tr key={mod.id} className={i % 2 ? "bg-muted/5" : ""}>
+                    <td className="px-4 py-2 font-semibold">{mod.label}</td>
+                    {ACTIONS.map((action) => {
+                      const key = `${mod.id}:${action.id}`;
+                      const isNA = (NA_ACTIONS[mod.id] ?? []).includes(
+                        action.id
+                      );
+                      const isOn = localPerms[key] ?? false;
+                      return (
+                        <td key={action.id} className="px-3 py-2 text-center">
+                          {isNA ? (
+                            <span className="text-muted-foreground/30">—</span>
+                          ) : (
+                            <div className="flex justify-center">
+                              <Toggle
+                                on={isOn}
+                                onChange={() => togglePerm(key)}
+                              />
+                            </div>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 py-3 border-t border-border flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="px-3 py-1.5 text-[11px] font-bold border border-border rounded-lg hover:bg-muted"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={isPending}
+            className="px-3 py-1.5 text-[11px] font-bold bg-primary text-white rounded-lg hover:opacity-90 disabled:opacity-50"
+          >
+            {isPending ? "Saving..." : "Save"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ════════════════════════════════════════════  VIEW: ROLES & PERMISSIONS  */
 function RolesView() {
-  const [selectedRole, setSelectedRole] = useState<RoleId>("coder");
-  const [perms, setPerms] =
-    useState<Record<string, Record<string, boolean>>>(buildPermState);
-  const [showAddRole, setShowAddRole] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
-    new Set(["Main", "Operations", "Insights", "Administration"]),
+  const [rolesMeta, setRolesMeta] = useState<any>({});
+  const [selectedRole, setSelectedRole] = useState<string>("");
+  const [perms, setPerms] = useState<Record<string, Record<string, boolean>>>(
+    {}
   );
+  const [showAddRole, setShowAddRole] = useState(false);
+  const [showCloneRole, setShowCloneRole] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
+    new Set(["Main", "Operations", "Insight", "Administration"])
+  );
+
+  const tokenStr = localStorage.getItem("userDetail");
+  const token = tokenStr ? JSON.parse(tokenStr) : null;
+  const uid = token?.user?.organization?.id;
+
+  const { data: rolesList } = useGetApiUserRoles();
+  const { data: roleDetails } = useGetApiUserRolesId(selectedRole, {
+    query: { enabled: !!selectedRole },
+  });
+  const { mutate: updateRole, isPending: isUpdating } =
+    usePatchApiUserRolesId();
+
+  useEffect(() => {
+    if (rolesList?.results) {
+      const mapped: any = {};
+      rolesList.results.forEach((r: any, index: number) => {
+        mapped[r.id] = {
+          label: r.name,
+          color: ["#ef4444", "#8b5cf6", "#2563eb", "#10b981", "#f59e0b"][
+            index % 5
+          ],
+          userCount: r.users,
+          desc: r.description || "",
+          level: 0,
+        };
+      });
+      setRolesMeta(mapped);
+      if (!selectedRole) {
+        setSelectedRole(rolesList.results[0]?.id);
+      }
+    }
+  }, [rolesList]);
+
+  const buildRolePermissionsPayload = (rolePerms: Record<string, boolean>) => {
+    const moduleMap: Record<string, any> = {};
+    MODULES.forEach((mod) => {
+      moduleMap[mod.id] = {
+        module: mod.label,
+        can_view: false,
+        can_edit: false,
+        can_assign: false,
+        can_approve: false,
+        can_reject: false,
+        can_export: false,
+        can_override: false,
+      };
+    });
+    Object.entries(rolePerms).forEach(([key, value]) => {
+      const [moduleId, action] = key.split(":");
+      if (!moduleMap[moduleId]) return;
+      moduleMap[moduleId][`can_${action}`] = value;
+    });
+    return Object.values(moduleMap);
+  };
+  const queryClient = useQueryClient();
+
+  const handleSaveChanges = () => {
+    if (!selectedRole) return;
+    const rolePerms = perms[selectedRole] || {};
+    const payload = {
+      name: rolesMeta[selectedRole]?.label,
+      description: rolesMeta[selectedRole]?.desc,
+      level: rolesMeta[selectedRole]?.level,
+      active: true,
+      role_permissions: buildRolePermissionsPayload(rolePerms),
+    };
+    updateRole(
+      { id: selectedRole, data: payload },
+      {
+        onSuccess: () => {
+          toast.success("Role updated successfully");
+          queryClient.invalidateQueries({
+            queryKey: getApiUserRolesQueryKey(),
+          });
+        },
+        onError: () => toast.error("Failed to update role"),
+      }
+    );
+  };
+
+  const mapApiToPermState = (data: any) => {
+    const result: Record<string, boolean> = {};
+    data?.permissions_all?.forEach((group: any) => {
+      group.modules.forEach((mod: any) => {
+        const moduleId = MODULES.find((m) => m.label === mod.module)?.id;
+        if (!moduleId) return;
+        result[`${moduleId}:view`] = mod.can_view;
+        result[`${moduleId}:edit`] = mod.can_edit;
+        result[`${moduleId}:assign`] = mod.can_assign;
+        result[`${moduleId}:approve`] = mod.can_approve;
+        result[`${moduleId}:reject`] = mod.can_reject;
+        result[`${moduleId}:export`] = mod.can_export;
+        result[`${moduleId}:override`] = mod.can_override;
+      });
+    });
+    return result;
+  };
+
+  useEffect(() => {
+    if (roleDetails && selectedRole) {
+      setPerms((prev) => ({
+        ...prev,
+        [selectedRole]: mapApiToPermState(roleDetails),
+      }));
+      setRolesMeta((prev) => ({
+        ...prev,
+        [selectedRole]: {
+          ...prev[selectedRole],
+          level: roleDetails.level,
+          desc: roleDetails.description,
+          userCount: roleDetails.users_count,
+        },
+      }));
+    }
+  }, [roleDetails]);
 
   const togglePerm = (key: string) => {
     setPerms((prev) => ({
       ...prev,
       [selectedRole]: {
         ...prev[selectedRole],
-        [key]: !prev[selectedRole][key],
+        [key]: !prev[selectedRole]?.[key],
       },
     }));
   };
@@ -1892,16 +2250,36 @@ function RolesView() {
     });
   };
 
-  const countGranted = (roleId: RoleId) =>
+  const countGranted = (roleId: string) =>
     Object.values(perms[roleId] ?? {}).filter(Boolean).length;
 
-  const groups = ["Main", "Operations", "Insights", "Administration"];
-  const rm = ROLE_META[selectedRole];
+  const groups = ["Main", "Operations", "Insight", "Administration"];
+  const rm = rolesMeta[selectedRole] || {};
+
+  const handleAddRole = (
+    roleName: string,
+    newPerms: Record<string, boolean>
+  ) => {
+    const newRoleId = roleName.toLowerCase().replace(/\s+/g, "-");
+    setRolesMeta((prev) => ({
+      ...prev,
+      [newRoleId]: {
+        label: roleName,
+        color: "#6366f1",
+        userCount: 0,
+        desc: "Custom role",
+        level: 99,
+      },
+    }));
+    setPerms((prev) => ({ ...prev, [newRoleId]: newPerms }));
+    setSelectedRole(newRoleId);
+    setShowAddRole(false);
+  };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4 h-full">
+    <div className="flex flex-col lg:flex-row gap-4">
       {/* LEFT: Role List */}
-      <div className="w-full lg:w-64 flex-shrink-0 space-y-2">
+      <div className="lg:w-64 flex-shrink-0 space-y-2">
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs font-black text-foreground">
             System Roles
@@ -1914,8 +2292,9 @@ function RolesView() {
             New
           </button>
         </div>
-        {(Object.keys(ROLE_META) as RoleId[]).map((roleId) => {
-          const m = ROLE_META[roleId];
+
+        {(Object.keys(rolesMeta) as string[]).map((roleId) => {
+          const m = rolesMeta[roleId];
           const granted = countGranted(roleId);
           const active = selectedRole === roleId;
           return (
@@ -1927,9 +2306,12 @@ function RolesView() {
               <div className="flex items-center gap-2.5 mb-1.5">
                 <div
                   className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: m.color + "20" }}
+                  style={{ backgroundColor: (m.color || "#888") + "20" }}
                 >
-                  <UserCog className="w-4 h-4" style={{ color: m.color }} />
+                  <UserCog
+                    className="w-4 h-4"
+                    style={{ color: m.color || "#888" }}
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p
@@ -1950,7 +2332,7 @@ function RolesView() {
                   className="h-full rounded-full transition-all"
                   style={{
                     width: `${(granted / 91) * 100}%`,
-                    backgroundColor: m.color,
+                    backgroundColor: m.color || "#888",
                   }}
                 />
               </div>
@@ -1963,9 +2345,9 @@ function RolesView() {
       </div>
 
       {/* RIGHT: Permission Matrix */}
-      <div className="w-full flex-1 min-w-0 bg-card border border-border rounded-2xl overflow-hidden shadow-sm flex flex-col">
+      <div className="flex-1 min-w-0 bg-card border border-border rounded-2xl overflow-hidden shadow-sm flex flex-col">
         {/* Role header */}
-        <div className="flex items-center gap-4 px-5 py-4 border-b border-border bg-muted/5 flex-shrink-0">
+        <div className="flex flex-col lg:flex-row flex-start lg:items-center gap-4 px-5 py-4 border-b border-border bg-muted/5 flex-shrink-0">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: rm.color + "20" }}
@@ -1973,15 +2355,13 @@ function RolesView() {
             <UserCog className="w-5 h-5" style={{ color: rm.color }} />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-sm font-black text-foreground truncate">
-                {rm.label}
-              </h3>
-              <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-black text-foreground">{rm.label}</h3>
+              <span className="text-[10px] text-muted-foreground">
                 · {rm.userCount} user{rm.userCount !== 1 ? "s" : ""}
               </span>
               <span
-                className="text-[9px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap flex-shrink-0"
+                className="text-[9px] font-bold px-2 py-0.5 rounded-full border"
                 style={{
                   backgroundColor: rm.color + "15",
                   borderColor: rm.color + "40",
@@ -1991,18 +2371,24 @@ function RolesView() {
                 Level {rm.level}
               </span>
             </div>
-            <p className="text-[10px] text-muted-foreground break-words">
+            <p className="text-[10px] text-muted-foreground truncate">
               {rm.desc}
             </p>
           </div>
           <div className="flex gap-2 flex-shrink-0">
-            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold border border-border rounded-lg hover:bg-muted transition-colors whitespace-nowrap">
+            <button
+              onClick={() => setShowCloneRole(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold border border-border rounded-lg hover:bg-muted transition-colors whitespace-nowrap"
+            >
               <Copy className="w-3 h-3" />
               Clone Role
             </button>
-            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold bg-primary text-white rounded-lg hover:opacity-90 transition-opacity whitespace-nowrap">
+            <button
+              onClick={handleSaveChanges}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold bg-primary text-white rounded-lg hover:opacity-90 transition-opacity whitespace-nowrap"
+            >
               <Check className="w-3 h-3" />
-              Save Changes
+              {isUpdating ? "Saving..." : "Save Changes"}
             </button>
           </div>
         </div>
@@ -2048,7 +2434,6 @@ function RolesView() {
               const expanded = expandedGroups.has(group);
               return (
                 <tbody key={group}>
-                  {/* Group Header Row */}
                   <tr
                     className="bg-muted/20 border-y border-border/80 cursor-pointer"
                     onClick={() => toggleGroup(group)}
@@ -2069,7 +2454,6 @@ function RolesView() {
                       </div>
                     </td>
                   </tr>
-                  {/* Module Rows */}
                   {expanded &&
                     groupMods.map((mod, mi) => {
                       const Icon = mod.icon;
@@ -2091,7 +2475,7 @@ function RolesView() {
                           {ACTIONS.map((action) => {
                             const key = `${mod.id}:${action.id}`;
                             const isNA = (NA_ACTIONS[mod.id] ?? []).includes(
-                              action.id,
+                              action.id
                             );
                             const isOn = perms[selectedRole]?.[key] ?? false;
                             return (
@@ -2123,6 +2507,27 @@ function RolesView() {
           </table>
         </div>
       </div>
+
+      {/* Add Role Modal */}
+      <AddRoleModal
+        open={showAddRole}
+        onClose={() => setShowAddRole(false)}
+        onSave={handleAddRole}
+        basePerms={perms[selectedRole] ?? {}}
+      />
+
+      {/* NEW: Clone Role Modal */}
+      <AddRoleModal
+        open={showCloneRole}
+        onClose={() => setShowCloneRole(false)}
+        onSave={handleAddRole}
+        basePerms={perms[selectedRole] ?? {}}
+        baseMeta={{
+          name: rm.label,
+          description: rm.desc,
+          level: rm.level,
+        }}
+      />
     </div>
   );
 }
@@ -2144,7 +2549,7 @@ function ProjectAccessView() {
   const updateAccess = (
     userId: string,
     project: string,
-    level: AccessLevel,
+    level: AccessLevel
   ) => {
     setAccess((prev) => ({
       ...prev,
@@ -2328,7 +2733,7 @@ function ShiftView() {
                   {shift}
                 </span>
               </div>
-            ),
+            )
           )}
         </div>
         <div className="flex-1" />
