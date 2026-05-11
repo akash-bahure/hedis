@@ -34,8 +34,6 @@ async function runMigrations(client, schema) {
       );
   `);
 
- 
-
   await client.query(`
     CREATE TABLE IF NOT EXISTS ${schema}.user_roles (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -144,8 +142,6 @@ async function runMigrations(client, schema) {
       );
     `);
 
-     
-
   await client.query(`
     ALTER TABLE ${schema}.users 
     ADD COLUMN IF NOT EXISTS invite_token TEXT,
@@ -172,6 +168,17 @@ async function runMigrations(client, schema) {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(user_id, project_id)
+    );
+  `);
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.user_shifts (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES ${schema}.users(id) ON DELETE CASCADE,
+      date DATE NOT NULL,
+      shift VARCHAR(20) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, date)
     );
   `);
 }
