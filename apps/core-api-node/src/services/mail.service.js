@@ -23,4 +23,23 @@ const sendInviteEmail = async (toEmail, name, token) => {
   });
 };
 
-module.exports = { sendInviteEmail };
+const sendResetEmail = async (toEmail, name, token) => {
+  // Update this URL to point to your frontend application's reset-password page
+  const resetLink = `http://localhost:3000/reset-password?token=${token}`;
+
+  return transporter.sendMail({
+    from: "no-reply@yourapp.com",
+    to: toEmail,
+    subject: "Password Reset Request",
+    html: `
+        <h2>Hello ${name || "User"},</h2>
+        <p>We received a request to reset your password. Click the link below to set a new password:</p>
+        <a href="${resetLink}">Reset Password</a>
+        <p>This link will expire in 1 hour.</p>
+        <p>If you did not request this, please ignore this email.</p>
+      `,
+  });
+};
+
+module.exports = { sendInviteEmail, sendResetEmail };
+
