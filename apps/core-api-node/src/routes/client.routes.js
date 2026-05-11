@@ -94,103 +94,182 @@ router.post("/", controller.createClient);
  *     summary: Get all clients with filters & pagination
  *     tags: [Clients]
  *     description: Retrieve clients with search, filters, and pagination
+ *
  *     parameters:
+ *
  *       - in: query
  *         name: search
  *         schema:
  *           type: string
- *         description: Search by org_name, email, or short_code
+ *         description: Search by org_name, email, short_code, or client_id
  *         example: ABC
  *
  *       - in: query
  *         name: region
  *         schema:
  *           type: string
- *           enum: [North, South, East, West]
+ *           enum:
+ *             - South
+ *             - West
+ *             - Northeast
+ *             - Southeast
+ *             - Mountain
+ *             - Midwest
  *         description: Filter by region
  *
  *       - in: query
  *         name: status
  *         schema:
  *           type: string
- *           enum: [Onboarding, Active, Inactive]
+ *           enum:
+ *             - Onboarding
+ *             - Active
+ *             - Inactive
+ *             - At Risk
  *         description: Filter by status
  *
  *       - in: query
  *         name: contract_type
  *         schema:
  *           type: string
- *           enum: [HEDIS Hybrid, HEDIS Administrative, HEDIS Electronic, Multi-Measure]
+ *           enum:
+ *             - HEDIS Hybrid
+ *             - HEDIS Administrative
+ *             - HEDIS Electronic
+ *             - Multi-Measure
  *         description: Filter by contract type
  *
  *       - in: query
- *         name: page
+ *         name: page_no
  *         schema:
  *           type: integer
  *           default: 1
- *         description: Page number
+ *         description: Current page number
  *
  *       - in: query
- *         name: limit
+ *         name: page_size
  *         schema:
  *           type: integer
  *           default: 10
  *         description: Number of records per page
  *
  *     responses:
+ *
  *       200:
  *         description: Clients fetched successfully
+ *
  *         content:
  *           application/json:
  *             schema:
  *               type: object
+ *
  *               properties:
- *                 total:
- *                   type: integer
- *                   example: 100
- *                 page:
+ *
+ *                 message:
+ *                   type: string
+ *                   example: Clients fetched successfully
+ *
+ *                 page_no:
  *                   type: integer
  *                   example: 1
- *                 limit:
+ *
+ *                 page_size:
  *                   type: integer
  *                   example: 10
+ *
+ *                 total_count:
+ *                   type: integer
+ *                   example: 100
+ *
  *                 data:
  *                   type: array
+ *
  *                   items:
  *                     type: object
+ *
  *                     properties:
+ *
  *                       id:
  *                         type: string
+ *                         format: uuid
+ *                         example: 550e8400-e29b-41d4-a716-446655440000
+ *
+ *                       client_id:
+ *                         type: string
+ *                         example: CL-001
+ *
  *                       org_name:
  *                         type: string
+ *                         example: ABC Healthcare
+ *
  *                       short_code:
  *                         type: string
+ *                         example: ABC001
+ *
  *                       region:
  *                         type: string
+ *                         example: West
+ *
  *                       plan_tier:
  *                         type: string
+ *                         example: Professional
+ *
  *                       status:
  *                         type: string
+ *                         example: Active
+ *
  *                       contract_type:
  *                         type: string
+ *                         example: HEDIS Hybrid
+ *
  *                       measure_year:
  *                         type: string
+ *                         example: MY2025
+ *
  *                       total_charts:
  *                         type: integer
+ *                         example: 1000
+ *
+ *                       completed_charts:
+ *                         type: integer
+ *                         example: 750
+ *
  *                       start_date:
  *                         type: string
  *                         format: date
+ *                         example: 2026-05-01
+ *
  *                       due_date:
  *                         type: string
  *                         format: date
+ *                         example: 2026-12-31
+ *
  *                       primary_contact_name:
  *                         type: string
+ *                         example: John Doe
+ *
  *                       email:
  *                         type: string
+ *                         example: john@example.com
+ *
  *                       phone:
  *                         type: string
+ *                         example: 9876543210
+ *
  *                       abstractors_assigned:
  *                         type: integer
+ *                         example: 5
+ *
+ *                       created_at:
+ *                         type: string
+ *                         format: date-time
+ *
+ *                       updated_at:
+ *                         type: string
+ *                         format: date-time
+ *
+ *       500:
+ *         description: Internal server error
  */
 router.get("/", controller.getClients);
 

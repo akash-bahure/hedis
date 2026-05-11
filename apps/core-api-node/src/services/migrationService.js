@@ -10,30 +10,86 @@ async function runMigrations(client, schema) {
   // `);
   //
 
-  await client.query(`
-    CREATE TABLE IF NOT EXISTS ${schema}.clients (
-       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-       org_name VARCHAR(200) NOT NULL UNIQUE,
-       short_code VARCHAR(50) NOT NULL UNIQUE,
-       region VARCHAR(50) NOT NULL CHECK (region IN ('North', 'South', 'East', 'West')),
-       plan_tier VARCHAR(50) DEFAULT 'Professional' CHECK (plan_tier IN ('Basic', 'Professional', 'Enterprise')),
-       status VARCHAR(50) DEFAULT 'Onboarding' CHECK (status IN ('Onboarding', 'Active', 'Inactive')),
-       contract_type VARCHAR(100) NOT NULL CHECK (contract_type IN ('HEDIS Hybrid', 'HEDIS Administrative', 'HEDIS Electronic', 'Multi-Measure')),
-       measure_year VARCHAR(50) NOT NULL CHECK (measure_year IN ('MY2024', 'MY2025', 'MY2026', 'MY2027')),
-       total_charts INTEGER NOT NULL,
-       completed_charts INTEGER DEFAULT 0,
-       start_date DATE NOT NULL,
-       due_date DATE NOT NULL,
-       primary_contact_name VARCHAR(150) NOT NULL,
-       email VARCHAR(150) NOT NULL UNIQUE,
-       phone VARCHAR(20),
-       abstractors_assigned INTEGER DEFAULT 0,
-       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-     
-      );
-  `);
+ await client.query(`
+  CREATE TABLE IF NOT EXISTS ${schema}.clients (
 
+      -- Internal UUID
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+      -- Client Display ID
+      client_id VARCHAR(20) UNIQUE NOT NULL,
+
+      org_name VARCHAR(200) NOT NULL UNIQUE,
+
+      short_code VARCHAR(50) NOT NULL UNIQUE,
+
+      region VARCHAR(50) NOT NULL CHECK (
+        region IN (
+          'West',
+          'South',
+          'Northeast',
+          'Southeast',
+          'Midwest',
+          'Mountain'
+        )
+      ),
+
+      plan_tier VARCHAR(50) DEFAULT 'Professional' CHECK (
+        plan_tier IN (
+          'Basic',
+          'Professional',
+          'Enterprise'
+        )
+      ),
+
+      status VARCHAR(50) DEFAULT 'Onboarding' CHECK (
+        status IN (
+          'Active',
+          'Inactive',
+          'Onboarding',
+          'At Risk'
+        )
+      ),
+
+      contract_type VARCHAR(100) NOT NULL CHECK (
+        contract_type IN (
+          'HEDIS Hybrid',
+          'HEDIS Administrative',
+          'HEDIS Electronic',
+          'Multi-Measure'
+        )
+      ),
+
+      measure_year VARCHAR(50) NOT NULL CHECK (
+        measure_year IN (
+          'MY2024',
+          'MY2025',
+          'MY2026',
+          'MY2027'
+        )
+      ),
+
+      total_charts INTEGER NOT NULL,
+
+      completed_charts INTEGER DEFAULT 0,
+
+      start_date DATE NOT NULL,
+
+      due_date DATE NOT NULL,
+
+      primary_contact_name VARCHAR(150) NOT NULL,
+
+      email VARCHAR(150) NOT NULL UNIQUE,
+
+      phone VARCHAR(20),
+
+      abstractors_assigned INTEGER DEFAULT 0,
+
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+`);
  
 
   await client.query(`
@@ -70,6 +126,13 @@ async function runMigrations(client, schema) {
       bio TEXT,
       organization_id UUID,
       user_role_id UUID REFERENCES ${schema}.user_roles(id),
+       role VARCHAR(100) CHECK (
+        role IN (
+          'Operations/Program Manager',
+          'Chart Abstractor',
+          'Quality Analyst'
+        )
+      ),
       shift VARCHAR(20), -- Morning, Afternoon, Night, General, Off
       user_type VARCHAR(20), -- Local, Azure
       send_email BOOLEAN DEFAULT TRUE,
