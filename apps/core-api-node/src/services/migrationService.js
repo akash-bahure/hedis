@@ -125,7 +125,7 @@ async function runMigrations(client, schema) {
       location VARCHAR(255),
       bio TEXT,
       organization_id UUID,
-      user_role_id UUID REFERENCES ${schema}.user_roles(id) ON DELETE SET NULL,,
+      user_role_id UUID REFERENCES ${schema}.user_roles(id) ON DELETE SET NULL,
       shift VARCHAR(20), -- Morning, Afternoon, Night, General, Off
       user_type VARCHAR(20), -- Local, Azure
       send_email BOOLEAN DEFAULT TRUE,
