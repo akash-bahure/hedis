@@ -9,23 +9,18 @@ const authController = require("../controllers/authController");
  *     summary: Register a new user
  *     tags: [Auth]
  *     description: Creates a new user account
- *
  *     requestBody:
  *       required: true
- *
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *
  *             required:
  *               - full_name
  *               - email
  *               - password
- *               - role
- *
+ *               - user_role_id
  *             properties:
- *
  *               full_name:
  *                 type: string
  *                 example: John Doe
@@ -40,41 +35,26 @@ const authController = require("../controllers/authController");
  *                 format: password
  *                 example: Password@123
  *
- *               role:
+ *               user_role_id:
  *                 type: string
- *
- *                 enum:
- *                   - Operations/Program Manager
- *                   - Chart Abstractor
- *                   - Quality Analyst
- *
- *                 example: Operations/Program Manager
+ *                 format: uuid
+ *                 example: 550e8400-e29b-41d4-a716-446655440000
  *
  *     responses:
- *
  *       201:
  *         description: User registered successfully
- * *       400:
- *         description: User already exists
- *       500:
- *         description: Server error
- *
  *         content:
  *           application/json:
  *             schema:
  *               type: object
- *
  *               properties:
- *
  *                 message:
  *                   type: string
  *                   example: User registered successfully
  *
  *                 user:
  *                   type: object
- *
  *                   properties:
- *
  *                     id:
  *                       type: string
  *                       format: uuid
@@ -87,9 +67,17 @@ const authController = require("../controllers/authController");
  *                       type: string
  *                       example: john@email.com
  *
+ *                     user_role_id:
+ *                       type: string
+ *                       format: uuid
+ *
  *                     role:
  *                       type: string
  *                       example: Operations/Program Manager
+ *
+ *                     system_role:
+ *                       type: boolean
+ *                       example: true
  *
  *                     user_status:
  *                       type: string
@@ -98,9 +86,14 @@ const authController = require("../controllers/authController");
  *                     is_active:
  *                       type: boolean
  *                       example: true
+ *
+ *       400:
+ *         description: User already exists
+ *
+ *       500:
+ *         description: Server error
  */
 router.post("/register", authController.register);
-
 
 /**
  * @swagger
@@ -109,21 +102,16 @@ router.post("/register", authController.register);
  *     summary: Login user
  *     tags: [Auth]
  *     description: Authenticate user and return JWT token
- *
  *     requestBody:
  *       required: true
- *
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *
  *             required:
  *               - email
  *               - password
- *
  *             properties:
- *
  *               email:
  *                 type: string
  *                 format: email
@@ -135,17 +123,13 @@ router.post("/register", authController.register);
  *                 example: Password@123
  *
  *     responses:
- *
  *       200:
  *         description: Login successful
- *
  *         content:
  *           application/json:
  *             schema:
  *               type: object
- *
  *               properties:
- *
  *                 message:
  *                   type: string
  *                   example: Login successful
@@ -156,9 +140,7 @@ router.post("/register", authController.register);
  *
  *                 user:
  *                   type: object
- *
  *                   properties:
- *
  *                     id:
  *                       type: string
  *                       format: uuid
@@ -171,15 +153,17 @@ router.post("/register", authController.register);
  *                       type: string
  *                       example: john@email.com
  *
+ *                     user_role_id:
+ *                       type: string
+ *                       format: uuid
+ *
  *                     role:
  *                       type: string
- *
- *                       enum:
- *                         - Operations/Program Manager
- *                         - Chart Abstractor
- *                         - Quality Analyst
- *
  *                       example: Operations/Program Manager
+ *
+ *                     system_role:
+ *                       type: boolean
+ *                       example: true
  *
  *                     user_status:
  *                       type: string
@@ -218,6 +202,7 @@ router.post("/login", authController.login);
  *         schema:
  *           type: string
  *         description: The invite token sent via email
+ *
  *     requestBody:
  *       required: true
  *       content:
@@ -231,16 +216,21 @@ router.post("/login", authController.login);
  *               password:
  *                 type: string
  *                 example: newpassword123
+ *
  *               confirmPassword:
  *                 type: string
  *                 example: newpassword123
+ *
  *     responses:
  *       200:
  *         description: Password set successfully
+ *
  *       400:
  *         description: Invalid input or token expired/used
+ *
  *       404:
  *         description: Token not found
+ *
  *       500:
  *         description: Server error
  */
@@ -253,6 +243,7 @@ router.post("/set-password", authController.setPassword);
  *     summary: Request password reset
  *     tags: [Auth]
  *     description: Sends a password reset link to the user's email
+ *
  *     requestBody:
  *       required: true
  *       content:
@@ -264,12 +255,16 @@ router.post("/set-password", authController.setPassword);
  *             properties:
  *               email:
  *                 type: string
+ *                 format: email
  *                 example: john@email.com
+ *
  *     responses:
  *       200:
- *         description: Success message (sent regardless of email existence for security)
+ *         description: Success message
+ *
  *       400:
  *         description: Invalid input
+ *
  *       500:
  *         description: Server error
  */
@@ -282,6 +277,7 @@ router.post("/forgot-password", authController.forgotPassword);
  *     summary: Reset password
  *     tags: [Auth]
  *     description: Resets the password using a reset token
+ *
  *     requestBody:
  *       required: true
  *       content:
@@ -295,23 +291,30 @@ router.post("/forgot-password", authController.forgotPassword);
  *             properties:
  *               token:
  *                 type: string
+ *
  *               password:
  *                 type: string
+ *                 format: password
  *                 example: newpassword123
+ *
  *               confirmPassword:
  *                 type: string
+ *                 format: password
  *                 example: newpassword123
+ *
  *     responses:
  *       200:
  *         description: Password reset successfully
+ *
  *       400:
  *         description: Invalid input or token expired
+ *
  *       404:
  *         description: Token not found
+ *
  *       500:
  *         description: Server error
  */
 router.post("/reset-password", authController.resetPassword);
 
 module.exports = router;
-

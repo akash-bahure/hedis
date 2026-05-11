@@ -128,6 +128,12 @@ exports.updateUserRole = async (req, res) => {
         await client.query("ROLLBACK");
         return res.status(404).json({ message: "Role not found" });
       }
+
+      if (roleCheck.rows[0].system_role) {
+        return res.status(403).json({
+          message: "System roles cannot be edited"
+        });
+      }
     }
 
     // Update permissions if provided

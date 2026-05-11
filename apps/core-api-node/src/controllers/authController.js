@@ -11,18 +11,21 @@ exports.register = async (req, res) => {
       full_name,
       email,
       password,
-      role
+      user_role_id
     } = req.body;
 
-    // Valid Role list
-    const validRoles = [
-      "Operations/Program Manager",
-      "Chart Abstractor",
-      "Quality Analyst"
-    ];
-
-    // Role validation
-    if (!role || !validRoles.includes(role)) {
+   // Validate role from DB
+    const roleResult = await req.db.query(
+      `
+      SELECT id, name
+      FROM user_roles
+      WHERE id = $1
+      AND active = true
+      `,
+      [user_role_id]
+    );
+    
+    if (roleResult.rows.length === 0) {
       return res.status(400).json({
         message: "Invalid role selected"
       });
@@ -53,7 +56,7 @@ exports.register = async (req, res) => {
         full_name,
         email,
         password,
-        role,
+        user_role_id,
         user_status,
         is_active
       )
@@ -73,9 +76,10 @@ exports.register = async (req, res) => {
         full_name,
         email,
         hashedPassword,
-        role
+        user_role_id,
       ]
     );
+    const roleData = roleResult.rows[0];
 
     const user = result.rows[0];
 
@@ -86,7 +90,8 @@ exports.register = async (req, res) => {
         id: user.id,
         full_name: user.full_name,
         email: user.email,
-        role: user.role,
+        role: roleData.name,
+        user_role_id: user.user_role_id,
         user_status: user.user_status,
         is_active: user.is_active
       }
@@ -110,9 +115,21 @@ exports.login = async (req, res) => {
 
     // Get user
     const result = await req.db.query(
-      "SELECT * FROM users WHERE email = $1",
-      [email]
-    );
+  `
+  SELECT
+    u.*,
+    ur.name as role,
+    ur.system_role
+
+  FROM users u
+
+  LEFT JOIN user_roles ur
+    ON u.user_role_id = ur.id
+
+  WHERE u.email = $1
+  `,
+  [email]
+);
 
     if (result.rows.length === 0) {
 

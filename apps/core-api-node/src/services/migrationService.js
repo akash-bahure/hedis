@@ -125,14 +125,7 @@ async function runMigrations(client, schema) {
       location VARCHAR(255),
       bio TEXT,
       organization_id UUID,
-      user_role_id UUID REFERENCES ${schema}.user_roles(id),
-       role VARCHAR(100) CHECK (
-        role IN (
-          'Operations/Program Manager',
-          'Chart Abstractor',
-          'Quality Analyst'
-        )
-      ),
+      user_role_id UUID REFERENCES ${schema}.user_roles(id) ON DELETE SET NULL,,
       shift VARCHAR(20), -- Morning, Afternoon, Night, General, Off
       user_type VARCHAR(20), -- Local, Azure
       send_email BOOLEAN DEFAULT TRUE,
@@ -157,6 +150,34 @@ async function runMigrations(client, schema) {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
+
+  await client.query(`
+  INSERT INTO ${schema}.user_roles 
+    (name, description, level, system_role, active)
+  VALUES
+    (
+      'Operations/Program Manager',
+      'Default System Role',
+      1,
+      TRUE,
+      TRUE
+    ),
+    (
+      'Chart Abstractor',
+      'Default System Role',
+      2,
+      TRUE,
+      TRUE
+    ),
+    (
+      'Quality Analyst',
+      'Default System Role',
+      3,
+      TRUE,
+      TRUE
+    )
+  ON CONFLICT DO NOTHING;
+`);
 
   // Ensure new fields are added to existing schemas without wiping data
   try {
