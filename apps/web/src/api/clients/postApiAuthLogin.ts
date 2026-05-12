@@ -13,7 +13,6 @@ import type {
   PostApiAuthLoginMutationRequest,
   PostApiAuthLoginMutationResponse,
   PostApiAuthLogin400,
-  PostApiAuthLogin403,
   PostApiAuthLogin500,
 } from "../types/PostApiAuthLogin.ts";
 
@@ -39,9 +38,7 @@ export async function postApiAuthLogin(
 
   const res = await request<
     PostApiAuthLoginMutationResponse,
-    ResponseErrorConfig<
-      PostApiAuthLogin400 | PostApiAuthLogin403 | PostApiAuthLogin500
-    >,
+    ResponseErrorConfig<PostApiAuthLogin400 | PostApiAuthLogin500>,
     PostApiAuthLoginMutationRequest
   >({
     method: "POST",

@@ -18,7 +18,6 @@ import type {
 import type {
   GetApiClientsQueryResponse,
   GetApiClientsQueryParams,
-  GetApiClients500,
 } from "../../types/GetApiClients.ts";
 import {
   infiniteQueryOptions,
@@ -41,7 +40,7 @@ export function getApiClientsSuspenseInfiniteQueryOptions(
   const queryKey = getApiClientsSuspenseInfiniteQueryKey(params);
   return infiniteQueryOptions<
     GetApiClientsQueryResponse,
-    ResponseErrorConfig<GetApiClients500>,
+    ResponseErrorConfig<Error>,
     InfiniteData<GetApiClientsQueryResponse>,
     typeof queryKey,
     NonNullable<GetApiClientsQueryParams["page_no"]>
@@ -75,7 +74,7 @@ export function getApiClientsSuspenseInfiniteQueryOptions(
  */
 export function useGetApiClientsSuspenseInfinite<
   TQueryFnData = GetApiClientsQueryResponse,
-  TError = ResponseErrorConfig<GetApiClients500>,
+  TError = ResponseErrorConfig<Error>,
   TData = InfiniteData<TQueryFnData>,
   TQueryKey extends QueryKey = GetApiClientsSuspenseInfiniteQueryKey,
   TPageParam = NonNullable<GetApiClientsQueryParams["page_no"]>,
