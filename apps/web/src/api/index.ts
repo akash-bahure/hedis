@@ -1,6 +1,7 @@
-export type { PostAdminCreateOrgMutationKey } from "./hooks/AdminHooks/usePostAdminCreateOrg.ts";
+export type { PostApiAuthForgotPasswordMutationKey } from "./hooks/AuthHooks/usePostApiAuthForgotPassword.ts";
 export type { PostApiAuthLoginMutationKey } from "./hooks/AuthHooks/usePostApiAuthLogin.ts";
 export type { PostApiAuthRegisterMutationKey } from "./hooks/AuthHooks/usePostApiAuthRegister.ts";
+export type { PostApiAuthResetPasswordMutationKey } from "./hooks/AuthHooks/usePostApiAuthResetPassword.ts";
 export type { PostApiAuthSetPasswordMutationKey } from "./hooks/AuthHooks/usePostApiAuthSetPassword.ts";
 export type { DeleteApiClientsIdMutationKey } from "./hooks/ClientsHooks/useDeleteApiClientsId.ts";
 export type { GetApiClientsQueryKey } from "./hooks/ClientsHooks/useGetApiClients.ts";
@@ -10,6 +11,7 @@ export type { GetApiClientsExportSuspenseInfiniteQueryKey } from "./hooks/Client
 export type { GetApiClientsIdQueryKey } from "./hooks/ClientsHooks/useGetApiClientsId.ts";
 export type { GetApiClientsIdSuspenseQueryKey } from "./hooks/ClientsHooks/useGetApiClientsIdSuspense.ts";
 export type { GetApiClientsIdSuspenseInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsIdSuspenseInfinite.ts";
+export type { GetApiClientsInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsInfinite.ts";
 export type { GetApiClientsStatsQueryKey } from "./hooks/ClientsHooks/useGetApiClientsStats.ts";
 export type { GetApiClientsStatsSuspenseQueryKey } from "./hooks/ClientsHooks/useGetApiClientsStatsSuspense.ts";
 export type { GetApiClientsStatsSuspenseInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsStatsSuspenseInfinite.ts";
@@ -17,6 +19,13 @@ export type { GetApiClientsSuspenseQueryKey } from "./hooks/ClientsHooks/useGetA
 export type { GetApiClientsSuspenseInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsSuspenseInfinite.ts";
 export type { PatchApiClientsIdMutationKey } from "./hooks/ClientsHooks/usePatchApiClientsId.ts";
 export type { PostApiClientsMutationKey } from "./hooks/ClientsHooks/usePostApiClients.ts";
+export type { DeleteAdminOrgsIdMutationKey } from "./hooks/OrganizationsHooks/useDeleteAdminOrgsId.ts";
+export type { GetAdminOrgsQueryKey } from "./hooks/OrganizationsHooks/useGetAdminOrgs.ts";
+export type { GetAdminOrgsSuspenseQueryKey } from "./hooks/OrganizationsHooks/useGetAdminOrgsSuspense.ts";
+export type { GetAdminOrgsSuspenseInfiniteQueryKey } from "./hooks/OrganizationsHooks/useGetAdminOrgsSuspenseInfinite.ts";
+export type { PatchAdminOrgsIdMutationKey } from "./hooks/OrganizationsHooks/usePatchAdminOrgsId.ts";
+export type { PostAdminOrgsMutationKey } from "./hooks/OrganizationsHooks/usePostAdminOrgs.ts";
+export type { PostAdminOrgsOrgIdTenantAdminsMutationKey } from "./hooks/OrganizationsHooks/usePostAdminOrgsOrgIdTenantAdmins.ts";
 export type { GetApiProfileIdQueryKey } from "./hooks/ProfileHooks/useGetApiProfileId.ts";
 export type { GetApiProfileIdSuspenseQueryKey } from "./hooks/ProfileHooks/useGetApiProfileIdSuspense.ts";
 export type { GetApiProfileIdSuspenseInfiniteQueryKey } from "./hooks/ProfileHooks/useGetApiProfileIdSuspenseInfinite.ts";
@@ -26,13 +35,23 @@ export type { PatchApiProfileIdPreferencesMutationKey } from "./hooks/ProfileHoo
 export type { PatchApiProfileIdSecurityMutationKey } from "./hooks/ProfileHooks/usePatchApiProfileIdSecurity.ts";
 export type { DeleteApiProjectsIdMutationKey } from "./hooks/ProjectsHooks/useDeleteApiProjectsId.ts";
 export type { GetApiProjectsQueryKey } from "./hooks/ProjectsHooks/useGetApiProjects.ts";
+export type { GetApiProjectsAccessAllQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsAccessAll.ts";
+export type { GetApiProjectsAccessAllSuspenseQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsAccessAllSuspense.ts";
+export type { GetApiProjectsAccessAllSuspenseInfiniteQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsAccessAllSuspenseInfinite.ts";
 export type { GetApiProjectsIdQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsId.ts";
 export type { GetApiProjectsIdSuspenseQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsIdSuspense.ts";
 export type { GetApiProjectsIdSuspenseInfiniteQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsIdSuspenseInfinite.ts";
 export type { GetApiProjectsSuspenseQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsSuspense.ts";
 export type { GetApiProjectsSuspenseInfiniteQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsSuspenseInfinite.ts";
 export type { PatchApiProjectsIdMutationKey } from "./hooks/ProjectsHooks/usePatchApiProjectsId.ts";
+export type { PatchApiProjectsIdAccessMutationKey } from "./hooks/ProjectsHooks/usePatchApiProjectsIdAccess.ts";
 export type { PostApiProjectsMutationKey } from "./hooks/ProjectsHooks/usePostApiProjects.ts";
+export type { PostAdminAuthLoginMutationKey } from "./hooks/Super Admin AuthHooks/usePostAdminAuthLogin.ts";
+export type { GetAdminUsersQueryKey } from "./hooks/Super Admin UsersHooks/useGetAdminUsers.ts";
+export type { GetAdminUsersSuspenseQueryKey } from "./hooks/Super Admin UsersHooks/useGetAdminUsersSuspense.ts";
+export type { GetAdminUsersSuspenseInfiniteQueryKey } from "./hooks/Super Admin UsersHooks/useGetAdminUsersSuspenseInfinite.ts";
+export type { PatchAdminUsersIdMutationKey } from "./hooks/Super Admin UsersHooks/usePatchAdminUsersId.ts";
+export type { PostAdminUsersMutationKey } from "./hooks/Super Admin UsersHooks/usePostAdminUsers.ts";
 export type { GetApiUserRolesQueryKey } from "./hooks/User RolesHooks/useGetApiUserRoles.ts";
 export type { GetApiUserRolesIdQueryKey } from "./hooks/User RolesHooks/useGetApiUserRolesId.ts";
 export type { GetApiUserRolesIdSuspenseQueryKey } from "./hooks/User RolesHooks/useGetApiUserRolesIdSuspense.ts";
@@ -46,13 +65,30 @@ export type { GetApiUsersQueryKey } from "./hooks/UsersHooks/useGetApiUsers.ts";
 export type { GetApiUsersExportQueryKey } from "./hooks/UsersHooks/useGetApiUsersExport.ts";
 export type { GetApiUsersExportSuspenseQueryKey } from "./hooks/UsersHooks/useGetApiUsersExportSuspense.ts";
 export type { GetApiUsersExportSuspenseInfiniteQueryKey } from "./hooks/UsersHooks/useGetApiUsersExportSuspenseInfinite.ts";
+export type { GetApiUsersShiftsQueryKey } from "./hooks/UsersHooks/useGetApiUsersShifts.ts";
+export type { GetApiUsersShiftsStatsQueryKey } from "./hooks/UsersHooks/useGetApiUsersShiftsStats.ts";
+export type { GetApiUsersShiftsStatsSuspenseQueryKey } from "./hooks/UsersHooks/useGetApiUsersShiftsStatsSuspense.ts";
+export type { GetApiUsersShiftsStatsSuspenseInfiniteQueryKey } from "./hooks/UsersHooks/useGetApiUsersShiftsStatsSuspenseInfinite.ts";
+export type { GetApiUsersShiftsSuspenseQueryKey } from "./hooks/UsersHooks/useGetApiUsersShiftsSuspense.ts";
+export type { GetApiUsersShiftsSuspenseInfiniteQueryKey } from "./hooks/UsersHooks/useGetApiUsersShiftsSuspenseInfinite.ts";
 export type { GetApiUsersStatsQueryKey } from "./hooks/UsersHooks/useGetApiUsersStats.ts";
 export type { GetApiUsersStatsSuspenseQueryKey } from "./hooks/UsersHooks/useGetApiUsersStatsSuspense.ts";
 export type { GetApiUsersStatsSuspenseInfiniteQueryKey } from "./hooks/UsersHooks/useGetApiUsersStatsSuspenseInfinite.ts";
 export type { GetApiUsersSuspenseQueryKey } from "./hooks/UsersHooks/useGetApiUsersSuspense.ts";
 export type { GetApiUsersSuspenseInfiniteQueryKey } from "./hooks/UsersHooks/useGetApiUsersSuspenseInfinite.ts";
 export type { PatchApiUsersIdMutationKey } from "./hooks/UsersHooks/usePatchApiUsersId.ts";
+export type { PatchApiUsersShiftsMutationKey } from "./hooks/UsersHooks/usePatchApiUsersShifts.ts";
 export type { PostApiUsersMutationKey } from "./hooks/UsersHooks/usePostApiUsers.ts";
+export type {
+  DeleteAdminOrgsId200,
+  DeleteAdminOrgsId401,
+  DeleteAdminOrgsId403,
+  DeleteAdminOrgsId404,
+  DeleteAdminOrgsId500,
+  DeleteAdminOrgsIdMutation,
+  DeleteAdminOrgsIdMutationResponse,
+  DeleteAdminOrgsIdPathParams,
+} from "./types/DeleteAdminOrgsId.ts";
 export type {
   DeleteApiClientsId200,
   DeleteApiClientsIdMutation,
@@ -74,7 +110,21 @@ export type {
   DeleteApiUsersIdPathParams,
 } from "./types/DeleteApiUsersId.ts";
 export type {
+  GetAdminOrgs200,
+  GetAdminOrgs401,
+  GetAdminOrgs403,
+  GetAdminOrgs500,
+  GetAdminOrgsQuery,
+  GetAdminOrgsQueryResponse,
+} from "./types/GetAdminOrgs.ts";
+export type {
+  GetAdminUsers200,
+  GetAdminUsersQuery,
+  GetAdminUsersQueryResponse,
+} from "./types/GetAdminUsers.ts";
+export type {
   GetApiClients200,
+  GetApiClients500,
   GetApiClientsQuery,
   GetApiClientsQueryParams,
   GetApiClientsQueryParamsContractTypeEnumKey,
@@ -115,6 +165,12 @@ export type {
   GetApiProjectsQueryResponse,
 } from "./types/GetApiProjects.ts";
 export type {
+  GetApiProjectsAccessAll200,
+  GetApiProjectsAccessAllQuery,
+  GetApiProjectsAccessAllQueryResponse,
+  ProjectAccessAccessLevelEnumKey,
+} from "./types/GetApiProjectsAccessAll.ts";
+export type {
   GetApiProjectsId200,
   GetApiProjectsId404,
   GetApiProjectsIdPathParams,
@@ -152,11 +208,48 @@ export type {
   GetApiUsersExportQueryResponse,
 } from "./types/GetApiUsersExport.ts";
 export type {
+  GetApiUsersShifts200,
+  GetApiUsersShifts500,
+  GetApiUsersShiftsQuery,
+  GetApiUsersShiftsQueryParams,
+  GetApiUsersShiftsQueryParamsShiftEnumKey,
+  GetApiUsersShiftsQueryParamsUserStatusEnumKey,
+  GetApiUsersShiftsQueryResponse,
+} from "./types/GetApiUsersShifts.ts";
+export type {
+  GetApiUsersShiftsStats200,
+  GetApiUsersShiftsStats500,
+  GetApiUsersShiftsStatsQuery,
+  GetApiUsersShiftsStatsQueryResponse,
+} from "./types/GetApiUsersShiftsStats.ts";
+export type {
   GetApiUsersStats200,
   GetApiUsersStats500,
   GetApiUsersStatsQuery,
   GetApiUsersStatsQueryResponse,
 } from "./types/GetApiUsersStats.ts";
+export type {
+  PatchAdminOrgsId200,
+  PatchAdminOrgsId401,
+  PatchAdminOrgsId403,
+  PatchAdminOrgsId404,
+  PatchAdminOrgsId500,
+  PatchAdminOrgsIdMutation,
+  PatchAdminOrgsIdMutationRequest,
+  PatchAdminOrgsIdMutationResponse,
+  PatchAdminOrgsIdPathParams,
+} from "./types/PatchAdminOrgsId.ts";
+export type {
+  PatchAdminUsersId200,
+  PatchAdminUsersId401,
+  PatchAdminUsersId403,
+  PatchAdminUsersId404,
+  PatchAdminUsersId500,
+  PatchAdminUsersIdMutation,
+  PatchAdminUsersIdMutationRequest,
+  PatchAdminUsersIdMutationResponse,
+  PatchAdminUsersIdPathParams,
+} from "./types/PatchAdminUsersId.ts";
 export type {
   PatchApiClientsId200,
   PatchApiClientsIdMutation,
@@ -199,6 +292,16 @@ export type {
   PatchApiProjectsIdPathParams,
 } from "./types/PatchApiProjectsId.ts";
 export type {
+  PatchApiProjectsIdAccess200,
+  PatchApiProjectsIdAccess400,
+  PatchApiProjectsIdAccess500,
+  PatchApiProjectsIdAccessMutation,
+  PatchApiProjectsIdAccessMutationRequest,
+  PatchApiProjectsIdAccessMutationRequestAccessLevelEnumKey,
+  PatchApiProjectsIdAccessMutationResponse,
+  PatchApiProjectsIdAccessPathParams,
+} from "./types/PatchApiProjectsIdAccess.ts";
+export type {
   PatchApiUserRolesId200,
   PatchApiUserRolesId404,
   PatchApiUserRolesId500,
@@ -221,16 +324,64 @@ export type {
   PatchApiUsersIdPathParams,
 } from "./types/PatchApiUsersId.ts";
 export type {
-  PostAdminCreateOrg201,
-  PostAdminCreateOrg400,
-  PostAdminCreateOrg500,
-  PostAdminCreateOrgMutation,
-  PostAdminCreateOrgMutationRequest,
-  PostAdminCreateOrgMutationResponse,
-} from "./types/PostAdminCreateOrg.ts";
+  PatchApiUsersShifts200,
+  PatchApiUsersShifts400,
+  PatchApiUsersShifts500,
+  PatchApiUsersShiftsMutation,
+  PatchApiUsersShiftsMutationRequest,
+  PatchApiUsersShiftsMutationResponse,
+  SchedulesShiftEnumKey,
+} from "./types/PatchApiUsersShifts.ts";
+export type {
+  PostAdminAuthLogin200,
+  PostAdminAuthLoginMutation,
+  PostAdminAuthLoginMutationRequest,
+  PostAdminAuthLoginMutationResponse,
+} from "./types/PostAdminAuthLogin.ts";
+export type {
+  PostAdminOrgs201,
+  PostAdminOrgs400,
+  PostAdminOrgs401,
+  PostAdminOrgs403,
+  PostAdminOrgs500,
+  PostAdminOrgsMutation,
+  PostAdminOrgsMutationRequest,
+  PostAdminOrgsMutationResponse,
+} from "./types/PostAdminOrgs.ts";
+export type {
+  PostAdminOrgsOrgIdTenantAdmins201,
+  PostAdminOrgsOrgIdTenantAdmins400,
+  PostAdminOrgsOrgIdTenantAdmins401,
+  PostAdminOrgsOrgIdTenantAdmins403,
+  PostAdminOrgsOrgIdTenantAdmins404,
+  PostAdminOrgsOrgIdTenantAdmins500,
+  PostAdminOrgsOrgIdTenantAdminsMutation,
+  PostAdminOrgsOrgIdTenantAdminsMutationRequest,
+  PostAdminOrgsOrgIdTenantAdminsMutationResponse,
+  PostAdminOrgsOrgIdTenantAdminsPathParams,
+} from "./types/PostAdminOrgsOrgIdTenantAdmins.ts";
+export type {
+  PostAdminUsers201,
+  PostAdminUsers400,
+  PostAdminUsers401,
+  PostAdminUsers403,
+  PostAdminUsers500,
+  PostAdminUsersMutation,
+  PostAdminUsersMutationRequest,
+  PostAdminUsersMutationResponse,
+} from "./types/PostAdminUsers.ts";
+export type {
+  PostApiAuthForgotPassword200,
+  PostApiAuthForgotPassword400,
+  PostApiAuthForgotPassword500,
+  PostApiAuthForgotPasswordMutation,
+  PostApiAuthForgotPasswordMutationRequest,
+  PostApiAuthForgotPasswordMutationResponse,
+} from "./types/PostApiAuthForgotPassword.ts";
 export type {
   PostApiAuthLogin200,
   PostApiAuthLogin400,
+  PostApiAuthLogin403,
   PostApiAuthLogin500,
   PostApiAuthLoginMutation,
   PostApiAuthLoginMutationRequest,
@@ -244,6 +395,15 @@ export type {
   PostApiAuthRegisterMutationRequest,
   PostApiAuthRegisterMutationResponse,
 } from "./types/PostApiAuthRegister.ts";
+export type {
+  PostApiAuthResetPassword200,
+  PostApiAuthResetPassword400,
+  PostApiAuthResetPassword404,
+  PostApiAuthResetPassword500,
+  PostApiAuthResetPasswordMutation,
+  PostApiAuthResetPasswordMutationRequest,
+  PostApiAuthResetPasswordMutationResponse,
+} from "./types/PostApiAuthResetPassword.ts";
 export type {
   PostApiAuthSetPassword200,
   PostApiAuthSetPassword400,
@@ -294,47 +454,66 @@ export type {
   PostApiUsersMutationRequestUserTypeEnumKey,
   PostApiUsersMutationResponse,
 } from "./types/PostApiUsers.ts";
+export type { ShiftScheduleMatrix } from "./types/ShiftScheduleMatrix.ts";
 export type { User } from "./types/User.ts";
+export { deleteAdminOrgsId } from "./clients/deleteAdminOrgsId.ts";
 export { deleteApiClientsId } from "./clients/deleteApiClientsId.ts";
 export { deleteApiProjectsId } from "./clients/deleteApiProjectsId.ts";
 export { deleteApiUsersId } from "./clients/deleteApiUsersId.ts";
+export { getAdminOrgs } from "./clients/getAdminOrgs.ts";
+export { getAdminUsers } from "./clients/getAdminUsers.ts";
 export { getApiClients } from "./clients/getApiClients.ts";
 export { getApiClientsExport } from "./clients/getApiClientsExport.ts";
 export { getApiClientsId } from "./clients/getApiClientsId.ts";
 export { getApiClientsStats } from "./clients/getApiClientsStats.ts";
 export { getApiProfileId } from "./clients/getApiProfileId.ts";
 export { getApiProjects } from "./clients/getApiProjects.ts";
+export { getApiProjectsAccessAll } from "./clients/getApiProjectsAccessAll.ts";
 export { getApiProjectsId } from "./clients/getApiProjectsId.ts";
 export { getApiUserRoles } from "./clients/getApiUserRoles.ts";
 export { getApiUserRolesId } from "./clients/getApiUserRolesId.ts";
 export { getApiUsers } from "./clients/getApiUsers.ts";
 export { getApiUsersExport } from "./clients/getApiUsersExport.ts";
+export { getApiUsersShifts } from "./clients/getApiUsersShifts.ts";
+export { getApiUsersShiftsStats } from "./clients/getApiUsersShiftsStats.ts";
 export { getApiUsersStats } from "./clients/getApiUsersStats.ts";
+export { patchAdminOrgsId } from "./clients/patchAdminOrgsId.ts";
+export { patchAdminUsersId } from "./clients/patchAdminUsersId.ts";
 export { patchApiClientsId } from "./clients/patchApiClientsId.ts";
 export { patchApiProfileId } from "./clients/patchApiProfileId.ts";
 export { patchApiProfileIdNotifications } from "./clients/patchApiProfileIdNotifications.ts";
 export { patchApiProfileIdPreferences } from "./clients/patchApiProfileIdPreferences.ts";
 export { patchApiProfileIdSecurity } from "./clients/patchApiProfileIdSecurity.ts";
 export { patchApiProjectsId } from "./clients/patchApiProjectsId.ts";
+export { patchApiProjectsIdAccess } from "./clients/patchApiProjectsIdAccess.ts";
 export { patchApiUserRolesId } from "./clients/patchApiUserRolesId.ts";
 export { patchApiUsersId } from "./clients/patchApiUsersId.ts";
-export { postAdminCreateOrg } from "./clients/postAdminCreateOrg.ts";
+export { patchApiUsersShifts } from "./clients/patchApiUsersShifts.ts";
+export { postAdminAuthLogin } from "./clients/postAdminAuthLogin.ts";
+export { postAdminOrgs } from "./clients/postAdminOrgs.ts";
+export { postAdminOrgsOrgIdTenantAdmins } from "./clients/postAdminOrgsOrgIdTenantAdmins.ts";
+export { postAdminUsers } from "./clients/postAdminUsers.ts";
+export { postApiAuthForgotPassword } from "./clients/postApiAuthForgotPassword.ts";
 export { postApiAuthLogin } from "./clients/postApiAuthLogin.ts";
 export { postApiAuthRegister } from "./clients/postApiAuthRegister.ts";
+export { postApiAuthResetPassword } from "./clients/postApiAuthResetPassword.ts";
 export { postApiAuthSetPassword } from "./clients/postApiAuthSetPassword.ts";
 export { postApiClients } from "./clients/postApiClients.ts";
 export { postApiProjects } from "./clients/postApiProjects.ts";
 export { postApiUserRoles } from "./clients/postApiUserRoles.ts";
 export { postApiUsers } from "./clients/postApiUsers.ts";
-export { postAdminCreateOrgMutationKey } from "./hooks/AdminHooks/usePostAdminCreateOrg.ts";
-export { postAdminCreateOrgMutationOptions } from "./hooks/AdminHooks/usePostAdminCreateOrg.ts";
-export { usePostAdminCreateOrg } from "./hooks/AdminHooks/usePostAdminCreateOrg.ts";
+export { postApiAuthForgotPasswordMutationKey } from "./hooks/AuthHooks/usePostApiAuthForgotPassword.ts";
+export { postApiAuthForgotPasswordMutationOptions } from "./hooks/AuthHooks/usePostApiAuthForgotPassword.ts";
+export { usePostApiAuthForgotPassword } from "./hooks/AuthHooks/usePostApiAuthForgotPassword.ts";
 export { postApiAuthLoginMutationKey } from "./hooks/AuthHooks/usePostApiAuthLogin.ts";
 export { postApiAuthLoginMutationOptions } from "./hooks/AuthHooks/usePostApiAuthLogin.ts";
 export { usePostApiAuthLogin } from "./hooks/AuthHooks/usePostApiAuthLogin.ts";
 export { postApiAuthRegisterMutationKey } from "./hooks/AuthHooks/usePostApiAuthRegister.ts";
 export { postApiAuthRegisterMutationOptions } from "./hooks/AuthHooks/usePostApiAuthRegister.ts";
 export { usePostApiAuthRegister } from "./hooks/AuthHooks/usePostApiAuthRegister.ts";
+export { postApiAuthResetPasswordMutationKey } from "./hooks/AuthHooks/usePostApiAuthResetPassword.ts";
+export { postApiAuthResetPasswordMutationOptions } from "./hooks/AuthHooks/usePostApiAuthResetPassword.ts";
+export { usePostApiAuthResetPassword } from "./hooks/AuthHooks/usePostApiAuthResetPassword.ts";
 export { postApiAuthSetPasswordMutationKey } from "./hooks/AuthHooks/usePostApiAuthSetPassword.ts";
 export { postApiAuthSetPasswordMutationOptions } from "./hooks/AuthHooks/usePostApiAuthSetPassword.ts";
 export { usePostApiAuthSetPassword } from "./hooks/AuthHooks/usePostApiAuthSetPassword.ts";
@@ -362,6 +541,9 @@ export { useGetApiClientsIdSuspense } from "./hooks/ClientsHooks/useGetApiClient
 export { getApiClientsIdSuspenseInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsIdSuspenseInfinite.ts";
 export { getApiClientsIdSuspenseInfiniteQueryOptions } from "./hooks/ClientsHooks/useGetApiClientsIdSuspenseInfinite.ts";
 export { useGetApiClientsIdSuspenseInfinite } from "./hooks/ClientsHooks/useGetApiClientsIdSuspenseInfinite.ts";
+export { getApiClientsInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsInfinite.ts";
+export { getApiClientsInfiniteQueryOptions } from "./hooks/ClientsHooks/useGetApiClientsInfinite.ts";
+export { useGetApiClientsInfinite } from "./hooks/ClientsHooks/useGetApiClientsInfinite.ts";
 export { getApiClientsStatsQueryKey } from "./hooks/ClientsHooks/useGetApiClientsStats.ts";
 export { getApiClientsStatsQueryOptions } from "./hooks/ClientsHooks/useGetApiClientsStats.ts";
 export { useGetApiClientsStats } from "./hooks/ClientsHooks/useGetApiClientsStats.ts";
@@ -383,6 +565,27 @@ export { usePatchApiClientsId } from "./hooks/ClientsHooks/usePatchApiClientsId.
 export { postApiClientsMutationKey } from "./hooks/ClientsHooks/usePostApiClients.ts";
 export { postApiClientsMutationOptions } from "./hooks/ClientsHooks/usePostApiClients.ts";
 export { usePostApiClients } from "./hooks/ClientsHooks/usePostApiClients.ts";
+export { deleteAdminOrgsIdMutationKey } from "./hooks/OrganizationsHooks/useDeleteAdminOrgsId.ts";
+export { deleteAdminOrgsIdMutationOptions } from "./hooks/OrganizationsHooks/useDeleteAdminOrgsId.ts";
+export { useDeleteAdminOrgsId } from "./hooks/OrganizationsHooks/useDeleteAdminOrgsId.ts";
+export { getAdminOrgsQueryKey } from "./hooks/OrganizationsHooks/useGetAdminOrgs.ts";
+export { getAdminOrgsQueryOptions } from "./hooks/OrganizationsHooks/useGetAdminOrgs.ts";
+export { useGetAdminOrgs } from "./hooks/OrganizationsHooks/useGetAdminOrgs.ts";
+export { getAdminOrgsSuspenseQueryKey } from "./hooks/OrganizationsHooks/useGetAdminOrgsSuspense.ts";
+export { getAdminOrgsSuspenseQueryOptions } from "./hooks/OrganizationsHooks/useGetAdminOrgsSuspense.ts";
+export { useGetAdminOrgsSuspense } from "./hooks/OrganizationsHooks/useGetAdminOrgsSuspense.ts";
+export { getAdminOrgsSuspenseInfiniteQueryKey } from "./hooks/OrganizationsHooks/useGetAdminOrgsSuspenseInfinite.ts";
+export { getAdminOrgsSuspenseInfiniteQueryOptions } from "./hooks/OrganizationsHooks/useGetAdminOrgsSuspenseInfinite.ts";
+export { useGetAdminOrgsSuspenseInfinite } from "./hooks/OrganizationsHooks/useGetAdminOrgsSuspenseInfinite.ts";
+export { patchAdminOrgsIdMutationKey } from "./hooks/OrganizationsHooks/usePatchAdminOrgsId.ts";
+export { patchAdminOrgsIdMutationOptions } from "./hooks/OrganizationsHooks/usePatchAdminOrgsId.ts";
+export { usePatchAdminOrgsId } from "./hooks/OrganizationsHooks/usePatchAdminOrgsId.ts";
+export { postAdminOrgsMutationKey } from "./hooks/OrganizationsHooks/usePostAdminOrgs.ts";
+export { postAdminOrgsMutationOptions } from "./hooks/OrganizationsHooks/usePostAdminOrgs.ts";
+export { usePostAdminOrgs } from "./hooks/OrganizationsHooks/usePostAdminOrgs.ts";
+export { postAdminOrgsOrgIdTenantAdminsMutationKey } from "./hooks/OrganizationsHooks/usePostAdminOrgsOrgIdTenantAdmins.ts";
+export { postAdminOrgsOrgIdTenantAdminsMutationOptions } from "./hooks/OrganizationsHooks/usePostAdminOrgsOrgIdTenantAdmins.ts";
+export { usePostAdminOrgsOrgIdTenantAdmins } from "./hooks/OrganizationsHooks/usePostAdminOrgsOrgIdTenantAdmins.ts";
 export { getApiProfileIdQueryKey } from "./hooks/ProfileHooks/useGetApiProfileId.ts";
 export { getApiProfileIdQueryOptions } from "./hooks/ProfileHooks/useGetApiProfileId.ts";
 export { useGetApiProfileId } from "./hooks/ProfileHooks/useGetApiProfileId.ts";
@@ -410,6 +613,15 @@ export { useDeleteApiProjectsId } from "./hooks/ProjectsHooks/useDeleteApiProjec
 export { getApiProjectsQueryKey } from "./hooks/ProjectsHooks/useGetApiProjects.ts";
 export { getApiProjectsQueryOptions } from "./hooks/ProjectsHooks/useGetApiProjects.ts";
 export { useGetApiProjects } from "./hooks/ProjectsHooks/useGetApiProjects.ts";
+export { getApiProjectsAccessAllQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsAccessAll.ts";
+export { getApiProjectsAccessAllQueryOptions } from "./hooks/ProjectsHooks/useGetApiProjectsAccessAll.ts";
+export { useGetApiProjectsAccessAll } from "./hooks/ProjectsHooks/useGetApiProjectsAccessAll.ts";
+export { getApiProjectsAccessAllSuspenseQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsAccessAllSuspense.ts";
+export { getApiProjectsAccessAllSuspenseQueryOptions } from "./hooks/ProjectsHooks/useGetApiProjectsAccessAllSuspense.ts";
+export { useGetApiProjectsAccessAllSuspense } from "./hooks/ProjectsHooks/useGetApiProjectsAccessAllSuspense.ts";
+export { getApiProjectsAccessAllSuspenseInfiniteQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsAccessAllSuspenseInfinite.ts";
+export { getApiProjectsAccessAllSuspenseInfiniteQueryOptions } from "./hooks/ProjectsHooks/useGetApiProjectsAccessAllSuspenseInfinite.ts";
+export { useGetApiProjectsAccessAllSuspenseInfinite } from "./hooks/ProjectsHooks/useGetApiProjectsAccessAllSuspenseInfinite.ts";
 export { getApiProjectsIdQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsId.ts";
 export { getApiProjectsIdQueryOptions } from "./hooks/ProjectsHooks/useGetApiProjectsId.ts";
 export { useGetApiProjectsId } from "./hooks/ProjectsHooks/useGetApiProjectsId.ts";
@@ -428,9 +640,30 @@ export { useGetApiProjectsSuspenseInfinite } from "./hooks/ProjectsHooks/useGetA
 export { patchApiProjectsIdMutationKey } from "./hooks/ProjectsHooks/usePatchApiProjectsId.ts";
 export { patchApiProjectsIdMutationOptions } from "./hooks/ProjectsHooks/usePatchApiProjectsId.ts";
 export { usePatchApiProjectsId } from "./hooks/ProjectsHooks/usePatchApiProjectsId.ts";
+export { patchApiProjectsIdAccessMutationKey } from "./hooks/ProjectsHooks/usePatchApiProjectsIdAccess.ts";
+export { patchApiProjectsIdAccessMutationOptions } from "./hooks/ProjectsHooks/usePatchApiProjectsIdAccess.ts";
+export { usePatchApiProjectsIdAccess } from "./hooks/ProjectsHooks/usePatchApiProjectsIdAccess.ts";
 export { postApiProjectsMutationKey } from "./hooks/ProjectsHooks/usePostApiProjects.ts";
 export { postApiProjectsMutationOptions } from "./hooks/ProjectsHooks/usePostApiProjects.ts";
 export { usePostApiProjects } from "./hooks/ProjectsHooks/usePostApiProjects.ts";
+export { postAdminAuthLoginMutationKey } from "./hooks/Super Admin AuthHooks/usePostAdminAuthLogin.ts";
+export { postAdminAuthLoginMutationOptions } from "./hooks/Super Admin AuthHooks/usePostAdminAuthLogin.ts";
+export { usePostAdminAuthLogin } from "./hooks/Super Admin AuthHooks/usePostAdminAuthLogin.ts";
+export { getAdminUsersQueryKey } from "./hooks/Super Admin UsersHooks/useGetAdminUsers.ts";
+export { getAdminUsersQueryOptions } from "./hooks/Super Admin UsersHooks/useGetAdminUsers.ts";
+export { useGetAdminUsers } from "./hooks/Super Admin UsersHooks/useGetAdminUsers.ts";
+export { getAdminUsersSuspenseQueryKey } from "./hooks/Super Admin UsersHooks/useGetAdminUsersSuspense.ts";
+export { getAdminUsersSuspenseQueryOptions } from "./hooks/Super Admin UsersHooks/useGetAdminUsersSuspense.ts";
+export { useGetAdminUsersSuspense } from "./hooks/Super Admin UsersHooks/useGetAdminUsersSuspense.ts";
+export { getAdminUsersSuspenseInfiniteQueryKey } from "./hooks/Super Admin UsersHooks/useGetAdminUsersSuspenseInfinite.ts";
+export { getAdminUsersSuspenseInfiniteQueryOptions } from "./hooks/Super Admin UsersHooks/useGetAdminUsersSuspenseInfinite.ts";
+export { useGetAdminUsersSuspenseInfinite } from "./hooks/Super Admin UsersHooks/useGetAdminUsersSuspenseInfinite.ts";
+export { patchAdminUsersIdMutationKey } from "./hooks/Super Admin UsersHooks/usePatchAdminUsersId.ts";
+export { patchAdminUsersIdMutationOptions } from "./hooks/Super Admin UsersHooks/usePatchAdminUsersId.ts";
+export { usePatchAdminUsersId } from "./hooks/Super Admin UsersHooks/usePatchAdminUsersId.ts";
+export { postAdminUsersMutationKey } from "./hooks/Super Admin UsersHooks/usePostAdminUsers.ts";
+export { postAdminUsersMutationOptions } from "./hooks/Super Admin UsersHooks/usePostAdminUsers.ts";
+export { usePostAdminUsers } from "./hooks/Super Admin UsersHooks/usePostAdminUsers.ts";
 export { getApiUserRolesQueryKey } from "./hooks/User RolesHooks/useGetApiUserRoles.ts";
 export { getApiUserRolesQueryOptions } from "./hooks/User RolesHooks/useGetApiUserRoles.ts";
 export { useGetApiUserRoles } from "./hooks/User RolesHooks/useGetApiUserRoles.ts";
@@ -470,6 +703,24 @@ export { useGetApiUsersExportSuspense } from "./hooks/UsersHooks/useGetApiUsersE
 export { getApiUsersExportSuspenseInfiniteQueryKey } from "./hooks/UsersHooks/useGetApiUsersExportSuspenseInfinite.ts";
 export { getApiUsersExportSuspenseInfiniteQueryOptions } from "./hooks/UsersHooks/useGetApiUsersExportSuspenseInfinite.ts";
 export { useGetApiUsersExportSuspenseInfinite } from "./hooks/UsersHooks/useGetApiUsersExportSuspenseInfinite.ts";
+export { getApiUsersShiftsQueryKey } from "./hooks/UsersHooks/useGetApiUsersShifts.ts";
+export { getApiUsersShiftsQueryOptions } from "./hooks/UsersHooks/useGetApiUsersShifts.ts";
+export { useGetApiUsersShifts } from "./hooks/UsersHooks/useGetApiUsersShifts.ts";
+export { getApiUsersShiftsStatsQueryKey } from "./hooks/UsersHooks/useGetApiUsersShiftsStats.ts";
+export { getApiUsersShiftsStatsQueryOptions } from "./hooks/UsersHooks/useGetApiUsersShiftsStats.ts";
+export { useGetApiUsersShiftsStats } from "./hooks/UsersHooks/useGetApiUsersShiftsStats.ts";
+export { getApiUsersShiftsStatsSuspenseQueryKey } from "./hooks/UsersHooks/useGetApiUsersShiftsStatsSuspense.ts";
+export { getApiUsersShiftsStatsSuspenseQueryOptions } from "./hooks/UsersHooks/useGetApiUsersShiftsStatsSuspense.ts";
+export { useGetApiUsersShiftsStatsSuspense } from "./hooks/UsersHooks/useGetApiUsersShiftsStatsSuspense.ts";
+export { getApiUsersShiftsStatsSuspenseInfiniteQueryKey } from "./hooks/UsersHooks/useGetApiUsersShiftsStatsSuspenseInfinite.ts";
+export { getApiUsersShiftsStatsSuspenseInfiniteQueryOptions } from "./hooks/UsersHooks/useGetApiUsersShiftsStatsSuspenseInfinite.ts";
+export { useGetApiUsersShiftsStatsSuspenseInfinite } from "./hooks/UsersHooks/useGetApiUsersShiftsStatsSuspenseInfinite.ts";
+export { getApiUsersShiftsSuspenseQueryKey } from "./hooks/UsersHooks/useGetApiUsersShiftsSuspense.ts";
+export { getApiUsersShiftsSuspenseQueryOptions } from "./hooks/UsersHooks/useGetApiUsersShiftsSuspense.ts";
+export { useGetApiUsersShiftsSuspense } from "./hooks/UsersHooks/useGetApiUsersShiftsSuspense.ts";
+export { getApiUsersShiftsSuspenseInfiniteQueryKey } from "./hooks/UsersHooks/useGetApiUsersShiftsSuspenseInfinite.ts";
+export { getApiUsersShiftsSuspenseInfiniteQueryOptions } from "./hooks/UsersHooks/useGetApiUsersShiftsSuspenseInfinite.ts";
+export { useGetApiUsersShiftsSuspenseInfinite } from "./hooks/UsersHooks/useGetApiUsersShiftsSuspenseInfinite.ts";
 export { getApiUsersStatsQueryKey } from "./hooks/UsersHooks/useGetApiUsersStats.ts";
 export { getApiUsersStatsQueryOptions } from "./hooks/UsersHooks/useGetApiUsersStats.ts";
 export { useGetApiUsersStats } from "./hooks/UsersHooks/useGetApiUsersStats.ts";
@@ -488,6 +739,9 @@ export { useGetApiUsersSuspenseInfinite } from "./hooks/UsersHooks/useGetApiUser
 export { patchApiUsersIdMutationKey } from "./hooks/UsersHooks/usePatchApiUsersId.ts";
 export { patchApiUsersIdMutationOptions } from "./hooks/UsersHooks/usePatchApiUsersId.ts";
 export { usePatchApiUsersId } from "./hooks/UsersHooks/usePatchApiUsersId.ts";
+export { patchApiUsersShiftsMutationKey } from "./hooks/UsersHooks/usePatchApiUsersShifts.ts";
+export { patchApiUsersShiftsMutationOptions } from "./hooks/UsersHooks/usePatchApiUsersShifts.ts";
+export { usePatchApiUsersShifts } from "./hooks/UsersHooks/usePatchApiUsersShifts.ts";
 export { postApiUsersMutationKey } from "./hooks/UsersHooks/usePostApiUsers.ts";
 export { postApiUsersMutationOptions } from "./hooks/UsersHooks/usePostApiUsers.ts";
 export { usePostApiUsers } from "./hooks/UsersHooks/usePostApiUsers.ts";
@@ -495,11 +749,16 @@ export { getApiClientsQueryParamsContractTypeEnum } from "./types/GetApiClients.
 export { getApiClientsQueryParamsRegionEnum } from "./types/GetApiClients.ts";
 export { getApiClientsQueryParamsStatusEnum } from "./types/GetApiClients.ts";
 export { getApiClientsExportQueryParamsFormatEnum } from "./types/GetApiClientsExport.ts";
+export { projectAccessAccessLevelEnum } from "./types/GetApiProjectsAccessAll.ts";
 export { getApiUsersQueryParamsUserStatusEnum } from "./types/GetApiUsers.ts";
 export { getApiUsersExportQueryParamsFormatEnum } from "./types/GetApiUsersExport.ts";
+export { getApiUsersShiftsQueryParamsShiftEnum } from "./types/GetApiUsersShifts.ts";
+export { getApiUsersShiftsQueryParamsUserStatusEnum } from "./types/GetApiUsersShifts.ts";
+export { patchApiProjectsIdAccessMutationRequestAccessLevelEnum } from "./types/PatchApiProjectsIdAccess.ts";
 export { patchApiUsersIdMutationRequestShiftEnum } from "./types/PatchApiUsersId.ts";
 export { patchApiUsersIdMutationRequestUserStatusEnum } from "./types/PatchApiUsersId.ts";
 export { patchApiUsersIdMutationRequestUserTypeEnum } from "./types/PatchApiUsersId.ts";
+export { schedulesShiftEnum } from "./types/PatchApiUsersShifts.ts";
 export { postApiClientsMutationRequestContractTypeEnum } from "./types/PostApiClients.ts";
 export { postApiClientsMutationRequestMeasureYearEnum } from "./types/PostApiClients.ts";
 export { postApiClientsMutationRequestPlanTierEnum } from "./types/PostApiClients.ts";
@@ -510,15 +769,16 @@ export { rolePermissionsModuleEnum } from "./types/PostApiUserRoles.ts";
 export { postApiUsersMutationRequestShiftEnum } from "./types/PostApiUsers.ts";
 export { postApiUsersMutationRequestUserTypeEnum } from "./types/PostApiUsers.ts";
 export {
-  postAdminCreateOrg201Schema,
-  postAdminCreateOrg400Schema,
-  postAdminCreateOrg500Schema,
-  postAdminCreateOrgMutationRequestSchema,
-  postAdminCreateOrgMutationResponseSchema,
-} from "./zod/AdminSchemas/postAdminCreateOrgSchema.ts";
+  postApiAuthForgotPassword200Schema,
+  postApiAuthForgotPassword400Schema,
+  postApiAuthForgotPassword500Schema,
+  postApiAuthForgotPasswordMutationRequestSchema,
+  postApiAuthForgotPasswordMutationResponseSchema,
+} from "./zod/AuthSchemas/postApiAuthForgotPasswordSchema.ts";
 export {
   postApiAuthLogin200Schema,
   postApiAuthLogin400Schema,
+  postApiAuthLogin403Schema,
   postApiAuthLogin500Schema,
   postApiAuthLoginMutationRequestSchema,
   postApiAuthLoginMutationResponseSchema,
@@ -530,6 +790,14 @@ export {
   postApiAuthRegisterMutationRequestSchema,
   postApiAuthRegisterMutationResponseSchema,
 } from "./zod/AuthSchemas/postApiAuthRegisterSchema.ts";
+export {
+  postApiAuthResetPassword200Schema,
+  postApiAuthResetPassword400Schema,
+  postApiAuthResetPassword404Schema,
+  postApiAuthResetPassword500Schema,
+  postApiAuthResetPasswordMutationRequestSchema,
+  postApiAuthResetPasswordMutationResponseSchema,
+} from "./zod/AuthSchemas/postApiAuthResetPasswordSchema.ts";
 export {
   postApiAuthSetPassword200Schema,
   postApiAuthSetPassword400Schema,
@@ -557,6 +825,7 @@ export {
 } from "./zod/ClientsSchemas/getApiClientsIdSchema.ts";
 export {
   getApiClients200Schema,
+  getApiClients500Schema,
   getApiClientsQueryParamsSchema,
   getApiClientsQueryResponseSchema,
 } from "./zod/ClientsSchemas/getApiClientsSchema.ts";
@@ -575,6 +844,52 @@ export {
   postApiClientsMutationRequestSchema,
   postApiClientsMutationResponseSchema,
 } from "./zod/ClientsSchemas/postApiClientsSchema.ts";
+export {
+  deleteAdminOrgsId200Schema,
+  deleteAdminOrgsId401Schema,
+  deleteAdminOrgsId403Schema,
+  deleteAdminOrgsId404Schema,
+  deleteAdminOrgsId500Schema,
+  deleteAdminOrgsIdMutationResponseSchema,
+  deleteAdminOrgsIdPathParamsSchema,
+} from "./zod/OrganizationsSchemas/deleteAdminOrgsIdSchema.ts";
+export {
+  getAdminOrgs200Schema,
+  getAdminOrgs401Schema,
+  getAdminOrgs403Schema,
+  getAdminOrgs500Schema,
+  getAdminOrgsQueryResponseSchema,
+} from "./zod/OrganizationsSchemas/getAdminOrgsSchema.ts";
+export {
+  patchAdminOrgsId200Schema,
+  patchAdminOrgsId401Schema,
+  patchAdminOrgsId403Schema,
+  patchAdminOrgsId404Schema,
+  patchAdminOrgsId500Schema,
+  patchAdminOrgsIdMutationRequestSchema,
+  patchAdminOrgsIdMutationResponseSchema,
+  patchAdminOrgsIdPathParamsSchema,
+} from "./zod/OrganizationsSchemas/patchAdminOrgsIdSchema.ts";
+export {
+  postAdminOrgsOrgIdTenantAdmins201Schema,
+  postAdminOrgsOrgIdTenantAdmins400Schema,
+  postAdminOrgsOrgIdTenantAdmins401Schema,
+  postAdminOrgsOrgIdTenantAdmins403Schema,
+  postAdminOrgsOrgIdTenantAdmins404Schema,
+  postAdminOrgsOrgIdTenantAdmins500Schema,
+  postAdminOrgsOrgIdTenantAdminsMutationRequestSchema,
+  postAdminOrgsOrgIdTenantAdminsMutationResponseSchema,
+  postAdminOrgsOrgIdTenantAdminsPathParamsSchema,
+} from "./zod/OrganizationsSchemas/postAdminOrgsOrgIdTenantAdminsSchema.ts";
+export {
+  postAdminOrgs201Schema,
+  postAdminOrgs400Schema,
+  postAdminOrgs401Schema,
+  postAdminOrgs403Schema,
+  postAdminOrgs500Schema,
+  postAdminOrgsMutationRequestSchema,
+  postAdminOrgsMutationResponseSchema,
+} from "./zod/OrganizationsSchemas/postAdminOrgsSchema.ts";
 export {
   getApiProfileId200Schema,
   getApiProfileId404Schema,
@@ -612,6 +927,10 @@ export {
   deleteApiProjectsIdPathParamsSchema,
 } from "./zod/ProjectsSchemas/deleteApiProjectsIdSchema.ts";
 export {
+  getApiProjectsAccessAll200Schema,
+  getApiProjectsAccessAllQueryResponseSchema,
+} from "./zod/ProjectsSchemas/getApiProjectsAccessAllSchema.ts";
+export {
   getApiProjectsId200Schema,
   getApiProjectsId404Schema,
   getApiProjectsIdPathParamsSchema,
@@ -622,6 +941,14 @@ export {
   getApiProjectsQueryParamsSchema,
   getApiProjectsQueryResponseSchema,
 } from "./zod/ProjectsSchemas/getApiProjectsSchema.ts";
+export {
+  patchApiProjectsIdAccess200Schema,
+  patchApiProjectsIdAccess400Schema,
+  patchApiProjectsIdAccess500Schema,
+  patchApiProjectsIdAccessMutationRequestSchema,
+  patchApiProjectsIdAccessMutationResponseSchema,
+  patchApiProjectsIdAccessPathParamsSchema,
+} from "./zod/ProjectsSchemas/patchApiProjectsIdAccessSchema.ts";
 export {
   patchApiProjectsId200Schema,
   patchApiProjectsIdMutationResponseSchema,
@@ -634,6 +961,34 @@ export {
   postApiProjectsMutationRequestSchema,
   postApiProjectsMutationResponseSchema,
 } from "./zod/ProjectsSchemas/postApiProjectsSchema.ts";
+export {
+  postAdminAuthLogin200Schema,
+  postAdminAuthLoginMutationRequestSchema,
+  postAdminAuthLoginMutationResponseSchema,
+} from "./zod/Super Admin AuthSchemas/postAdminAuthLoginSchema.ts";
+export {
+  getAdminUsers200Schema,
+  getAdminUsersQueryResponseSchema,
+} from "./zod/Super Admin UsersSchemas/getAdminUsersSchema.ts";
+export {
+  patchAdminUsersId200Schema,
+  patchAdminUsersId401Schema,
+  patchAdminUsersId403Schema,
+  patchAdminUsersId404Schema,
+  patchAdminUsersId500Schema,
+  patchAdminUsersIdMutationRequestSchema,
+  patchAdminUsersIdMutationResponseSchema,
+  patchAdminUsersIdPathParamsSchema,
+} from "./zod/Super Admin UsersSchemas/patchAdminUsersIdSchema.ts";
+export {
+  postAdminUsers201Schema,
+  postAdminUsers400Schema,
+  postAdminUsers401Schema,
+  postAdminUsers403Schema,
+  postAdminUsers500Schema,
+  postAdminUsersMutationRequestSchema,
+  postAdminUsersMutationResponseSchema,
+} from "./zod/Super Admin UsersSchemas/postAdminUsersSchema.ts";
 export {
   getApiUserRolesId200Schema,
   getApiUserRolesId404Schema,
@@ -681,6 +1036,17 @@ export {
   getApiUsersQueryResponseSchema,
 } from "./zod/UsersSchemas/getApiUsersSchema.ts";
 export {
+  getApiUsersShifts200Schema,
+  getApiUsersShifts500Schema,
+  getApiUsersShiftsQueryParamsSchema,
+  getApiUsersShiftsQueryResponseSchema,
+} from "./zod/UsersSchemas/getApiUsersShiftsSchema.ts";
+export {
+  getApiUsersShiftsStats200Schema,
+  getApiUsersShiftsStats500Schema,
+  getApiUsersShiftsStatsQueryResponseSchema,
+} from "./zod/UsersSchemas/getApiUsersShiftsStatsSchema.ts";
+export {
   getApiUsersStats200Schema,
   getApiUsersStats500Schema,
   getApiUsersStatsQueryResponseSchema,
@@ -695,10 +1061,18 @@ export {
   patchApiUsersIdPathParamsSchema,
 } from "./zod/UsersSchemas/patchApiUsersIdSchema.ts";
 export {
+  patchApiUsersShifts200Schema,
+  patchApiUsersShifts400Schema,
+  patchApiUsersShifts500Schema,
+  patchApiUsersShiftsMutationRequestSchema,
+  patchApiUsersShiftsMutationResponseSchema,
+} from "./zod/UsersSchemas/patchApiUsersShiftsSchema.ts";
+export {
   postApiUsers201Schema,
   postApiUsers400Schema,
   postApiUsers500Schema,
   postApiUsersMutationRequestSchema,
   postApiUsersMutationResponseSchema,
 } from "./zod/UsersSchemas/postApiUsersSchema.ts";
+export { shiftScheduleMatrixSchema } from "./zod/shiftScheduleMatrixSchema.ts";
 export { userSchema } from "./zod/userSchema.ts";

@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "full_name": { "type": "string" },
+    "initials": { "type": "string" },
+    "role": { "type": "string" },
+    "default_shift": { "type": "string" },
+    "schedule": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": { "type": "string" },
+          "day": { "type": "string" },
+          "shift": { "type": "string" }
+        }
+      }
+    }
+  },
+  "x-readme-ref-name": "ShiftScheduleMatrix"
+}
