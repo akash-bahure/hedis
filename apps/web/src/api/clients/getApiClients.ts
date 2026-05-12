@@ -12,6 +12,7 @@ import type {
 import type {
   GetApiClientsQueryResponse,
   GetApiClientsQueryParams,
+  GetApiClients500,
 } from "../types/GetApiClients.ts";
 
 function getGetApiClientsUrl() {
@@ -32,7 +33,7 @@ export async function getApiClients(
 
   const res = await request<
     GetApiClientsQueryResponse,
-    ResponseErrorConfig<Error>,
+    ResponseErrorConfig<GetApiClients500>,
     unknown
   >({
     method: "GET",

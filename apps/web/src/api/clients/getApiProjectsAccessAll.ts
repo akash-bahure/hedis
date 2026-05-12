@@ -9,10 +9,7 @@ import type {
   RequestConfig,
   ResponseErrorConfig,
 } from "../../../utils/client.ts";
-import type {
-  GetApiProjectsAccessAllQueryResponse,
-  GetApiProjectsAccessAllQueryParams,
-} from "../types/GetApiProjectsAccessAll.ts";
+import type { GetApiProjectsAccessAllQueryResponse } from "../types/GetApiProjectsAccessAll.ts";
 
 function getGetApiProjectsAccessAllUrl() {
   const res = { method: "GET", url: `/api/projects/access/all` as const };
@@ -25,7 +22,6 @@ function getGetApiProjectsAccessAllUrl() {
  * {@link /api/projects/access/all}
  */
 export async function getApiProjectsAccessAll(
-  params?: GetApiProjectsAccessAllQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
   const { client: request = fetch, ...requestConfig } = config;
@@ -37,7 +33,6 @@ export async function getApiProjectsAccessAll(
   >({
     method: "GET",
     url: getGetApiProjectsAccessAllUrl().url.toString(),
-    params,
     ...requestConfig,
   });
   return res.data;

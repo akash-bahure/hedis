@@ -7,19 +7,24 @@ import * as z from "zod";
 import type { ToZod } from "../../.kubb/ToZod.ts";
 import type {
   GetApiClients200,
+  GetApiClients500,
   GetApiClientsQueryParams,
   GetApiClientsQueryResponse,
 } from "../../types/GetApiClients.ts";
 
 export const getApiClientsQueryParamsSchema = z.object({
   search: z.optional(
-    z.string().describe("Search by org_name, email, or short_code"),
+    z.string().describe("Search by org_name, email, short_code, or client_id"),
   ),
   region: z.optional(
-    z.enum(["North", "South", "East", "West"]).describe("Filter by region"),
+    z
+      .enum(["South", "West", "Northeast", "Southeast", "Mountain", "Midwest"])
+      .describe("Filter by region"),
   ),
   status: z.optional(
-    z.enum(["Onboarding", "Active", "Inactive"]).describe("Filter by status"),
+    z
+      .enum(["Onboarding", "Active", "Inactive", "At Risk"])
+      .describe("Filter by status"),
   ),
   contract_type: z.optional(
     z
@@ -31,8 +36,8 @@ export const getApiClientsQueryParamsSchema = z.object({
       ])
       .describe("Filter by contract type"),
   ),
-  page: z.coerce.number().int().default(1).describe("Page number"),
-  limit: z.coerce
+  page_no: z.coerce.number().int().default(1).describe("Current page number"),
+  page_size: z.coerce
     .number()
     .int()
     .default(10)
@@ -43,13 +48,15 @@ export const getApiClientsQueryParamsSchema = z.object({
  * @description Clients fetched successfully
  */
 export const getApiClients200Schema = z.object({
-  total: z.optional(z.number().int()),
-  page: z.optional(z.number().int()),
-  limit: z.optional(z.number().int()),
+  message: z.optional(z.string()),
+  page_no: z.optional(z.number().int()),
+  page_size: z.optional(z.number().int()),
+  total_count: z.optional(z.number().int()),
   data: z.optional(
     z.array(
       z.object({
-        id: z.optional(z.string()),
+        id: z.optional(z.string().uuid()),
+        client_id: z.optional(z.string()),
         org_name: z.optional(z.string()),
         short_code: z.optional(z.string()),
         region: z.optional(z.string()),
@@ -58,16 +65,25 @@ export const getApiClients200Schema = z.object({
         contract_type: z.optional(z.string()),
         measure_year: z.optional(z.string()),
         total_charts: z.optional(z.number().int()),
+        completed_charts: z.optional(z.number().int()),
         start_date: z.optional(z.string().date()),
         due_date: z.optional(z.string().date()),
         primary_contact_name: z.optional(z.string()),
         email: z.optional(z.string()),
         phone: z.optional(z.string()),
         abstractors_assigned: z.optional(z.number().int()),
+        created_at: z.optional(z.string().datetime({ offset: true })),
+        updated_at: z.optional(z.string().datetime({ offset: true })),
       }),
     ),
   ),
 }) as unknown as ToZod<GetApiClients200>;
+
+/**
+ * @description Internal server error
+ */
+export const getApiClients500Schema =
+  z.unknown() as unknown as ToZod<GetApiClients500>;
 
 export const getApiClientsQueryResponseSchema = z.lazy(
   () => getApiClients200Schema,

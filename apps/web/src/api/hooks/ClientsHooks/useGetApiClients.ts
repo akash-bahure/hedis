@@ -17,6 +17,7 @@ import type {
 import type {
   GetApiClientsQueryResponse,
   GetApiClientsQueryParams,
+  GetApiClients500,
 } from "../../types/GetApiClients.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { getApiClients } from "../../clients/getApiClients.ts";
@@ -33,7 +34,7 @@ export function getApiClientsQueryOptions(
   const queryKey = getApiClientsQueryKey(params);
   return queryOptions<
     GetApiClientsQueryResponse,
-    ResponseErrorConfig<Error>,
+    ResponseErrorConfig<GetApiClients500>,
     GetApiClientsQueryResponse,
     typeof queryKey
   >({
@@ -62,7 +63,7 @@ export function useGetApiClients<
     query?: Partial<
       QueryObserverOptions<
         GetApiClientsQueryResponse,
-        ResponseErrorConfig<Error>,
+        ResponseErrorConfig<GetApiClients500>,
         TData,
         TQueryData,
         TQueryKey
@@ -82,7 +83,7 @@ export function useGetApiClients<
       queryKey,
     } as unknown as QueryObserverOptions,
     queryClient,
-  ) as UseQueryResult<TData, ResponseErrorConfig<Error>> & {
+  ) as UseQueryResult<TData, ResponseErrorConfig<GetApiClients500>> & {
     queryKey: TQueryKey;
   };
 

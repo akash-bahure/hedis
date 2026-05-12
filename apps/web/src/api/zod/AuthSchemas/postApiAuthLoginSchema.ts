@@ -8,6 +8,7 @@ import type { ToZod } from "../../.kubb/ToZod.ts";
 import type {
   PostApiAuthLogin200,
   PostApiAuthLogin400,
+  PostApiAuthLogin403,
   PostApiAuthLogin500,
   PostApiAuthLoginMutationRequest,
   PostApiAuthLoginMutationResponse,
@@ -16,8 +17,23 @@ import type {
 /**
  * @description Login successful
  */
-export const postApiAuthLogin200Schema =
-  z.unknown() as unknown as ToZod<PostApiAuthLogin200>;
+export const postApiAuthLogin200Schema = z.object({
+  message: z.optional(z.string()),
+  token: z.optional(z.string()),
+  user: z.optional(
+    z.object({
+      id: z.optional(z.string().uuid()),
+      full_name: z.optional(z.string()),
+      email: z.optional(z.string()),
+      user_role_id: z.optional(z.string().uuid()),
+      role: z.optional(z.string()),
+      system_role: z.optional(z.boolean()),
+      user_status: z.optional(z.string()),
+      is_active: z.optional(z.boolean()),
+      last_login: z.optional(z.string().datetime({ offset: true })),
+    }),
+  ),
+}) as unknown as ToZod<PostApiAuthLogin200>;
 
 /**
  * @description Invalid credentials
@@ -26,13 +42,19 @@ export const postApiAuthLogin400Schema =
   z.unknown() as unknown as ToZod<PostApiAuthLogin400>;
 
 /**
+ * @description User account is inactive
+ */
+export const postApiAuthLogin403Schema =
+  z.unknown() as unknown as ToZod<PostApiAuthLogin403>;
+
+/**
  * @description Server error
  */
 export const postApiAuthLogin500Schema =
   z.unknown() as unknown as ToZod<PostApiAuthLogin500>;
 
 export const postApiAuthLoginMutationRequestSchema = z.object({
-  email: z.string(),
+  email: z.string().email(),
   password: z.string(),
 }) as unknown as ToZod<PostApiAuthLoginMutationRequest>;
 

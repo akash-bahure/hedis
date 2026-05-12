@@ -74,9 +74,9 @@ export type PatchApiUsersIdMutationRequest = {
    */
   phone?: string;
   /**
-   * @type string | undefined, uuid
+   * @type string | undefined
    */
-  department_id?: string;
+  department?: string;
   /**
    * @type string | undefined
    */

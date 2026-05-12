@@ -17,6 +17,7 @@ import type {
 import type {
   GetApiClientsQueryResponse,
   GetApiClientsQueryParams,
+  GetApiClients500,
 } from "../../types/GetApiClients.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { getApiClients } from "../../clients/getApiClients.ts";
@@ -36,7 +37,7 @@ export function getApiClientsSuspenseQueryOptions(
   const queryKey = getApiClientsSuspenseQueryKey(params);
   return queryOptions<
     GetApiClientsQueryResponse,
-    ResponseErrorConfig<Error>,
+    ResponseErrorConfig<GetApiClients500>,
     GetApiClientsQueryResponse,
     typeof queryKey
   >({
@@ -64,7 +65,7 @@ export function useGetApiClientsSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<
         GetApiClientsQueryResponse,
-        ResponseErrorConfig<Error>,
+        ResponseErrorConfig<GetApiClients500>,
         TData,
         TQueryKey
       >
@@ -84,7 +85,7 @@ export function useGetApiClientsSuspense<
       queryKey,
     } as unknown as UseSuspenseQueryOptions,
     queryClient,
-  ) as UseSuspenseQueryResult<TData, ResponseErrorConfig<Error>> & {
+  ) as UseSuspenseQueryResult<TData, ResponseErrorConfig<GetApiClients500>> & {
     queryKey: TQueryKey;
   };
 

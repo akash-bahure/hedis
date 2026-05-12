@@ -50,6 +50,10 @@ export type PostAdminOrgsOrgIdTenantAdminsMutationRequest = {
    * @type string
    */
   email: string;
+  /**
+   * @type string | undefined
+   */
+  role?: string;
 };
 
 export type PostAdminOrgsOrgIdTenantAdminsMutationResponse =
