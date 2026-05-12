@@ -47,6 +47,16 @@ async function runMigrations(client, schema) {
     );
   `);
 
+  // Create departments table
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.departments (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      name VARCHAR(255) NOT NULL UNIQUE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
   // Create users  table with extensive fields and UUID
   await client.query(`
     CREATE TABLE IF NOT EXISTS ${schema}.users  (
@@ -56,7 +66,7 @@ async function runMigrations(client, schema) {
       email VARCHAR(254) UNIQUE NOT NULL,
       phone VARCHAR(20),
       mobile_phone VARCHAR(20),
-      department VARCHAR(75),
+      department_id UUID REFERENCES ${schema}.departments(id) ON DELETE SET NULL,
       job_title VARCHAR(150),
       address_line_1 TEXT,
       address_line_2 TEXT,
@@ -152,7 +162,6 @@ async function runMigrations(client, schema) {
     ADD COLUMN IF NOT EXISTS reset_token TEXT,
     ADD COLUMN IF NOT EXISTS reset_token_expiry TIMESTAMP;
   `);
-
 
   await client.query(`
     CREATE TABLE IF NOT EXISTS ${schema}.user_projects (
