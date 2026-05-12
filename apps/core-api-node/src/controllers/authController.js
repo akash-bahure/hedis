@@ -147,24 +147,58 @@ exports.login = async (req, res) => {
     // Get user
     const result = await req.db.query(
     `
-     SELECT
-       u.id,
-       u.full_name,
-       u.email,
-       u.user_role_id,
-       u.password,
-       u.user_status,
-       u.is_active,
-       u.last_login,
-       ur.name as role,
-       ur.system_role
-     FROM users u
-     LEFT JOIN user_roles ur
-       ON u.user_role_id = ur.id
-     WHERE u.email = $1
-     `,
-     [email]
-  );
+    SELECT
+    u.id,
+    u.full_name,
+    u.credentials,
+    u.email,
+    u.phone,
+    u.mobile_phone,
+    u.department_id,
+    u.job_title,
+    u.address_line_1,
+    u.address_line_2,
+    u.country,
+    u.city,
+    u.state,
+    u.zip_code,
+    u.location,
+    u.bio,
+    u.organization_id,
+    u.user_role_id,
+    u.shift,
+    u.user_type,
+    u.send_email,
+    u.two_fa_auth,
+    u.user_status,
+    u.last_login,
+    u.is_superuser,
+    u.is_staff,
+    u.is_active,
+    u.last_password_changed,
+    u.employee_id,
+    u.is_super_administrator,
+    u.project_access,
+    u.preferences,
+    u.certifications,
+    u.notifications,
+    u.security,
+    u.created_at,
+    u.updated_at,
+    u.password,
+
+    ur.name AS role,
+    ur.system_role
+
+    FROM users u
+
+    LEFT JOIN user_roles ur
+    ON u.user_role_id = ur.id
+
+    WHERE u.email = $1
+  `,
+  [email]
+);
 
     if (result.rows.length === 0) {
 
@@ -234,27 +268,28 @@ exports.login = async (req, res) => {
     );
 
     // Remove sensitive fields
-    const {
-      password: _password,
-      invite_token,
-      invite_token_expiry,
-      invite_used,
-      ...safeUser
-    } = user;
+   const {
+    password: _password,
+    reset_token,
+    reset_token_expiry,
+    ...safeUser
+  } = user;
 
     res.status(200).json({
-
-      message: "Login successful",
-
-      token,
-
-      user: {
-        ...safeUser,
-        role: user.role,
-        last_login: new Date()
-      }
-
-    });
+    message: "Login successful",
+  
+    token,
+  
+    user: {
+      ...safeUser,
+  
+      role: user.role,
+  
+      system_role: user.system_role,
+  
+      last_login: new Date()
+    }
+  });
 
   } catch (error) {
 

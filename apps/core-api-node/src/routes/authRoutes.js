@@ -102,16 +102,20 @@ router.post("/register", authController.register);
  *     summary: Login user
  *     tags: [Auth]
  *     description: Authenticate user and return JWT token
+ *
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *
  *             required:
  *               - email
  *               - password
+ *
  *             properties:
+ *
  *               email:
  *                 type: string
  *                 format: email
@@ -123,13 +127,17 @@ router.post("/register", authController.register);
  *                 example: Password@123
  *
  *     responses:
+ *
  *       200:
  *         description: Login successful
+ *
  *         content:
  *           application/json:
  *             schema:
  *               type: object
+ *
  *               properties:
+ *
  *                 message:
  *                   type: string
  *                   example: Login successful
@@ -140,7 +148,9 @@ router.post("/register", authController.register);
  *
  *                 user:
  *                   type: object
+ *
  *                   properties:
+ *
  *                     id:
  *                       type: string
  *                       format: uuid
@@ -149,9 +159,65 @@ router.post("/register", authController.register);
  *                       type: string
  *                       example: John Doe
  *
+ *                     credentials:
+ *                       type: string
+ *                       example: MD
+ *
  *                     email:
  *                       type: string
  *                       example: john@email.com
+ *
+ *                     phone:
+ *                       type: string
+ *                       example: 9876543210
+ *
+ *                     mobile_phone:
+ *                       type: string
+ *                       example: 9999999999
+ *
+ *                     department_id:
+ *                       type: string
+ *                       format: uuid
+ *
+ *                     job_title:
+ *                       type: string
+ *                       example: Operations Manager
+ *
+ *                     address_line_1:
+ *                       type: string
+ *                       example: 221B Baker Street
+ *
+ *                     address_line_2:
+ *                       type: string
+ *                       example: Building A
+ *
+ *                     country:
+ *                       type: string
+ *                       example: USA
+ *
+ *                     city:
+ *                       type: string
+ *                       example: New York
+ *
+ *                     state:
+ *                       type: string
+ *                       example: NY
+ *
+ *                     zip_code:
+ *                       type: string
+ *                       example: 10001
+ *
+ *                     location:
+ *                       type: string
+ *                       example: Headquarters
+ *
+ *                     bio:
+ *                       type: string
+ *                       example: Senior healthcare manager
+ *
+ *                     organization_id:
+ *                       type: string
+ *                       format: uuid
  *
  *                     user_role_id:
  *                       type: string
@@ -165,15 +231,84 @@ router.post("/register", authController.register);
  *                       type: boolean
  *                       example: true
  *
+ *                     shift:
+ *                       type: string
+ *                       example: Morning
+ *
+ *                     user_type:
+ *                       type: string
+ *                       example: Local
+ *
+ *                     send_email:
+ *                       type: boolean
+ *                       example: true
+ *
+ *                     two_fa_auth:
+ *                       type: boolean
+ *                       example: false
+ *
  *                     user_status:
  *                       type: string
  *                       example: Active
+ *
+ *                     is_superuser:
+ *                       type: boolean
+ *                       example: false
+ *
+ *                     is_staff:
+ *                       type: boolean
+ *                       example: false
  *
  *                     is_active:
  *                       type: boolean
  *                       example: true
  *
+ *                     is_super_administrator:
+ *                       type: boolean
+ *                       example: false
+ *
+ *                     employee_id:
+ *                       type: string
+ *                       example: EMP001
+ *
+ *                     project_access:
+ *                       type: array
+ *
+ *                       items:
+ *                         type: string
+ *                         format: uuid
+ *
+ *                     preferences:
+ *                       type: object
+ *                       example: {}
+ *
+ *                     certifications:
+ *                       type: array
+ *
+ *                       items:
+ *                         type: object
+ *
+ *                     notifications:
+ *                       type: object
+ *                       example: {}
+ *
+ *                     security:
+ *                       type: object
+ *                       example: {}
+ *
+ *                     last_password_changed:
+ *                       type: string
+ *                       format: date
+ *
  *                     last_login:
+ *                       type: string
+ *                       format: date-time
+ *
+ *                     created_at:
+ *                       type: string
+ *                       format: date-time
+ *
+ *                     updated_at:
  *                       type: string
  *                       format: date-time
  *
