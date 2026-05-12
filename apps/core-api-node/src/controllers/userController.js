@@ -6,7 +6,7 @@ const userSchema = z.object({
   full_name: z.string().max(255).optional(),
   email: z.string().email().max(254),
   phone: z.string().max(15).optional(),
-  department: z.string().max(75).optional(),
+  department_id: z.string().uuid().nullable().optional(),
   job_title: z.string().max(150).optional(),
   address: z
     .object({
@@ -27,7 +27,7 @@ const userSchema = z.object({
     .enum(["Pending", "Active", "Inactive", "Suspended"])
     .optional(),
   phone: z.string().max(15).optional(),
-  department: z.string().max(75).optional(),
+  department_id: z.string().uuid().nullable().optional(),
   job_title: z.string().max(150).optional(),
   bio: z.string().optional(),
   employee_id: z.string().max(100).optional(),
@@ -50,7 +50,7 @@ exports.createUser = async (req, res) => {
       full_name,
       email,
       phone,
-      department,
+      department_id,
       job_title,
       address,
       bio,
@@ -100,7 +100,7 @@ exports.createUser = async (req, res) => {
 
     const query = `
     INSERT INTO users (
-      full_name, email, phone, department, job_title,
+      full_name, email, phone, department_id, job_title,
       address_line_1, address_line_2, country, city, state, zip_code,
       bio, organization_id, user_role_id, shift, user_type, user_status,
       employee_id, send_email, two_fa_auth, is_superuser, is_staff,
@@ -117,7 +117,7 @@ exports.createUser = async (req, res) => {
       full_name,
       email,
       phone,
-      department,
+      department_id,
       job_title,
       address_line_1,
       address_line_2,
@@ -176,7 +176,7 @@ exports.createUser = async (req, res) => {
 exports.getUsers = async (req, res) => {
   const client = req.db;
   try {
-    const { page = 1, limit = 10, search, user_role, user_status } = req.query;
+    const { page = 1, limit = 10, search, user_role, user_status, department_id } = req.query;
     const offset = (page - 1) * Number(limit);
 
     let whereClause = "WHERE 1=1";
@@ -198,10 +198,16 @@ exports.getUsers = async (req, res) => {
       values.push(user_status);
       paramIndex++;
     }
+    if (department_id) {
+      whereClause += ` AND u.department_id = $${paramIndex}`;
+      values.push(department_id);
+      paramIndex++;
+    }
 
     const query = `
       SELECT
         u.*,
+        d.name as department_name,
         json_build_object(
           'id', ur.id,
           'name', ur.name,
@@ -230,6 +236,7 @@ exports.getUsers = async (req, res) => {
         ) as projects
       FROM users u
       LEFT JOIN user_roles ur ON u.user_role_id = ur.id
+      LEFT JOIN departments d ON u.department_id = d.id
       ${whereClause}
       ORDER BY u.created_at DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
@@ -412,13 +419,14 @@ exports.exportUsers = async (req, res) => {
         u.full_name,
         u.email,
         u.phone,
-        u.department,
+        d.name as department,
         u.job_title,
         u.user_status,
         u.created_at,
         ur.name as role_name
       FROM users u
       LEFT JOIN user_roles ur ON u.user_role_id = ur.id
+      LEFT JOIN departments d ON u.department_id = d.id
       ORDER BY u.created_at DESC
     `);
 

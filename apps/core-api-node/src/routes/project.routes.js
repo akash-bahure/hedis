@@ -186,6 +186,13 @@ router.delete("/:id", controller.deleteProject);
  *     summary: Get all project access levels for all users
  *     tags: [Projects]
  *     description: Returns a grid of users and their access levels for each project.
+ *     parameters:
+ *       - in: query
+ *         name: department_id
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filter users by department ID
  *     responses:
  *       200:
  *         description: Project access grid fetched successfully
