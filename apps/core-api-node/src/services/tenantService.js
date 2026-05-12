@@ -1,6 +1,24 @@
 const pool = require("../config/db");
 const { runMigrations } = require("./migrationService");
 
+async function createDefaultSystemRoles(client, schema) {
+  const roles = ["Org Admin", "Chart Abstractor", "QA"];
+
+  for (const role of roles) {
+    await client.query(
+      `
+      INSERT INTO ${schema}.user_roles
+      (
+        name,
+        system_role
+      )
+      VALUES ($1, $2)
+      `,
+      [role, true]
+    );
+  }
+}
+
 async function createTenant({ name, subdomain }) {
   const client = await pool.connect();
 
@@ -13,7 +31,6 @@ async function createTenant({ name, subdomain }) {
     if (!/^[a-zA-Z0-9_]+$/.test(schema)) {
       throw new Error("Invalid schema name");
     }
-
     // Create schema
     await client.query(`CREATE SCHEMA ${schema}`);
 

@@ -15,21 +15,53 @@ exports.register = async (req, res) => {
     } = req.body;
 
    // Validate role from DB
-    const roleResult = await req.db.query(
+   let finalRoleId = user_role_id;
+
+   // If role is passed
+   if (finalRoleId) {
+
+  const roleResult = await req.db.query(
+    `
+    SELECT id, name
+    FROM user_roles
+    WHERE id = $1
+    AND active = true
+    LIMIT 1
+    `,
+    [finalRoleId]
+  );
+
+  if (roleResult.rows.length === 0) {
+    return res.status(400).json({
+      message: "Invalid role selected"
+    });
+  }
+
+  roleData = roleResult.rows[0];
+
+} else {
+
+  // Default Role
+    const defaultRoleResult = await req.db.query(
       `
       SELECT id, name
       FROM user_roles
-      WHERE id = $1
+      WHERE name = 'Chart Abstractor'
+      AND system_role = true
       AND active = true
-      `,
-      [user_role_id]
+      LIMIT 1
+      `
     );
-    
-    if (roleResult.rows.length === 0) {
-      return res.status(400).json({
-        message: "Invalid role selected"
+  
+    if (defaultRoleResult.rows.length === 0) {
+      return res.status(404).json({
+        message: "Default role not found"
       });
     }
+  
+    roleData = defaultRoleResult.rows[0];
+    finalRoleId = roleData.id;
+  }
 
     // Check if user exists
     const userCheck = await req.db.query(
@@ -76,10 +108,9 @@ exports.register = async (req, res) => {
         full_name,
         email,
         hashedPassword,
-        user_role_id,
+        finalRoleId,
       ]
     );
-    const roleData = roleResult.rows[0];
 
     const user = result.rows[0];
 
@@ -91,7 +122,7 @@ exports.register = async (req, res) => {
         full_name: user.full_name,
         email: user.email,
         role: roleData.name,
-        user_role_id: user.user_role_id,
+        user_role_id: finalRoleId,
         user_status: user.user_status,
         is_active: user.is_active
       }
@@ -115,21 +146,25 @@ exports.login = async (req, res) => {
 
     // Get user
     const result = await req.db.query(
-  `
-  SELECT
-    u.*,
-    ur.name as role,
-    ur.system_role
-
-  FROM users u
-
-  LEFT JOIN user_roles ur
-    ON u.user_role_id = ur.id
-
-  WHERE u.email = $1
-  `,
-  [email]
-);
+    `
+     SELECT
+       u.id,
+       u.full_name,
+       u.email,
+       u.user_role_id,
+       u.password,
+       u.user_status,
+       u.is_active,
+       u.last_login,
+       ur.name as role,
+       ur.system_role
+     FROM users u
+     LEFT JOIN user_roles ur
+       ON u.user_role_id = ur.id
+     WHERE u.email = $1
+     `,
+     [email]
+  );
 
     if (result.rows.length === 0) {
 

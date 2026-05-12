@@ -126,7 +126,7 @@ exports.createTenantAdmin = async (req, res) => {
   try {
     const { org_id } = req.params;
 
-    const { name, email } = req.body;
+    const { name, email, role } = req.body;
 
     // 1. Get tenant
     const tenantResult = await client.query(
@@ -164,29 +164,95 @@ exports.createTenantAdmin = async (req, res) => {
       [email]
     );
 
+    /**
+     * 4. Get role UUID
+     * If role is not passed, default to Org Admin
+     */
     if (existingUser.rows.length > 0) {
       return res.status(400).json({
         message: "User already exists",
       });
     }
 
-    const result = await client.query(
+    const roleName = role || "Org Admin";
+
+    const roleResult = await client.query(
       `
-      INSERT INTO users
-      (
-        full_name,
-        email
-      )
-      VALUES ($1, $2)
-      RETURNING
-        id,
-        full_name,
-        email,
-        is_active,
-        created_at
+      SELECT id, name
+      FROM user_roles
+      WHERE name = $1
+      AND system_role = true
+      LIMIT 1
       `,
-      [name, email]
+      [roleName]
     );
+
+    if (roleResult.rows.length === 0) {
+      return res.status(404).json({
+        message: "Role not found",
+      });
+    }
+
+    const roleId = roleResult.rows[0].id;
+
+    // const result = await client.query(
+    //   `
+    //   INSERT INTO users
+    //   (
+    //     full_name,
+    //     email
+    //     role_id
+    //   )
+    //   VALUES ($1, $2)
+    //   RETURNING
+    //     id,
+    //     full_name,
+    //     email,
+    //     user_role_id,
+    //     is_active,
+    //     created_at
+    //   `,
+    //   [name, email]
+    // );
+    const result = await client.query(
+  `
+  INSERT INTO users
+  (
+    full_name,
+    email,
+    user_role_id,
+    is_active,
+    user_status,
+    invite_token,
+    invite_token_expiry
+  )
+
+  VALUES
+  (
+    $1,
+    $2,
+    $3,
+    false,
+    'Pending',
+    $4,
+    NOW() + INTERVAL '24 hours'
+  )
+
+  RETURNING
+    id,
+    full_name,
+    email,
+    user_role_id,
+    is_active,
+    created_at
+  `,
+  [
+    name,
+    email,
+    roleId,
+    inviteToken
+  ]
+);
     const createdUser = result.rows[0];
 
     try {
