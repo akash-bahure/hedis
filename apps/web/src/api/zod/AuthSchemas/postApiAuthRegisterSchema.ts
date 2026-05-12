@@ -16,8 +16,21 @@ import type {
 /**
  * @description User registered successfully
  */
-export const postApiAuthRegister201Schema =
-  z.unknown() as unknown as ToZod<PostApiAuthRegister201>;
+export const postApiAuthRegister201Schema = z.object({
+  message: z.optional(z.string()),
+  user: z.optional(
+    z.object({
+      id: z.optional(z.string().uuid()),
+      full_name: z.optional(z.string()),
+      email: z.optional(z.string()),
+      user_role_id: z.optional(z.string().uuid()),
+      role: z.optional(z.string()),
+      system_role: z.optional(z.boolean()),
+      user_status: z.optional(z.string()),
+      is_active: z.optional(z.boolean()),
+    }),
+  ),
+}) as unknown as ToZod<PostApiAuthRegister201>;
 
 /**
  * @description User already exists
@@ -32,9 +45,10 @@ export const postApiAuthRegister500Schema =
   z.unknown() as unknown as ToZod<PostApiAuthRegister500>;
 
 export const postApiAuthRegisterMutationRequestSchema = z.object({
-  full_name: z.optional(z.string()),
-  email: z.string(),
+  full_name: z.string(),
+  email: z.string().email(),
   password: z.string(),
+  user_role_id: z.string().uuid(),
 }) as unknown as ToZod<PostApiAuthRegisterMutationRequest>;
 
 export const postApiAuthRegisterMutationResponseSchema = z.lazy(

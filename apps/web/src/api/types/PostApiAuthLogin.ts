@@ -6,12 +6,67 @@
 /**
  * @description Login successful
  */
-export type PostApiAuthLogin200 = any;
+export type PostApiAuthLogin200 = {
+  /**
+   * @type string | undefined
+   */
+  message?: string;
+  /**
+   * @type string | undefined
+   */
+  token?: string;
+  /**
+   * @type object | undefined
+   */
+  user?: {
+    /**
+     * @type string | undefined, uuid
+     */
+    id?: string;
+    /**
+     * @type string | undefined
+     */
+    full_name?: string;
+    /**
+     * @type string | undefined
+     */
+    email?: string;
+    /**
+     * @type string | undefined, uuid
+     */
+    user_role_id?: string;
+    /**
+     * @type string | undefined
+     */
+    role?: string;
+    /**
+     * @type boolean | undefined
+     */
+    system_role?: boolean;
+    /**
+     * @type string | undefined
+     */
+    user_status?: string;
+    /**
+     * @type boolean | undefined
+     */
+    is_active?: boolean;
+    /**
+     * @type string | undefined, date-time
+     */
+    last_login?: string;
+  };
+};
 
 /**
  * @description Invalid credentials
  */
 export type PostApiAuthLogin400 = any;
+
+/**
+ * @description User account is inactive
+ */
+export type PostApiAuthLogin403 = any;
 
 /**
  * @description Server error
@@ -20,11 +75,11 @@ export type PostApiAuthLogin500 = any;
 
 export type PostApiAuthLoginMutationRequest = {
   /**
-   * @type string
+   * @type string, email
    */
   email: string;
   /**
-   * @type string
+   * @type string, password
    */
   password: string;
 };
@@ -34,5 +89,5 @@ export type PostApiAuthLoginMutationResponse = PostApiAuthLogin200;
 export type PostApiAuthLoginMutation = {
   Response: PostApiAuthLogin200;
   Request: PostApiAuthLoginMutationRequest;
-  Errors: PostApiAuthLogin400 | PostApiAuthLogin500;
+  Errors: PostApiAuthLogin400 | PostApiAuthLogin403 | PostApiAuthLogin500;
 };

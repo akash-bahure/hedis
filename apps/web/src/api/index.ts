@@ -11,6 +11,7 @@ export type { GetApiClientsExportSuspenseInfiniteQueryKey } from "./hooks/Client
 export type { GetApiClientsIdQueryKey } from "./hooks/ClientsHooks/useGetApiClientsId.ts";
 export type { GetApiClientsIdSuspenseQueryKey } from "./hooks/ClientsHooks/useGetApiClientsIdSuspense.ts";
 export type { GetApiClientsIdSuspenseInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsIdSuspenseInfinite.ts";
+export type { GetApiClientsInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsInfinite.ts";
 export type { GetApiClientsStatsQueryKey } from "./hooks/ClientsHooks/useGetApiClientsStats.ts";
 export type { GetApiClientsStatsSuspenseQueryKey } from "./hooks/ClientsHooks/useGetApiClientsStatsSuspense.ts";
 export type { GetApiClientsStatsSuspenseInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsStatsSuspenseInfinite.ts";
@@ -18,10 +19,6 @@ export type { GetApiClientsSuspenseQueryKey } from "./hooks/ClientsHooks/useGetA
 export type { GetApiClientsSuspenseInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsSuspenseInfinite.ts";
 export type { PatchApiClientsIdMutationKey } from "./hooks/ClientsHooks/usePatchApiClientsId.ts";
 export type { PostApiClientsMutationKey } from "./hooks/ClientsHooks/usePostApiClients.ts";
-export type { GetApiDepartmentsQueryKey } from "./hooks/DepartmentsHooks/useGetApiDepartments.ts";
-export type { GetApiDepartmentsSuspenseQueryKey } from "./hooks/DepartmentsHooks/useGetApiDepartmentsSuspense.ts";
-export type { GetApiDepartmentsSuspenseInfiniteQueryKey } from "./hooks/DepartmentsHooks/useGetApiDepartmentsSuspenseInfinite.ts";
-export type { PostApiDepartmentsMutationKey } from "./hooks/DepartmentsHooks/usePostApiDepartments.ts";
 export type { DeleteAdminOrgsIdMutationKey } from "./hooks/OrganizationsHooks/useDeleteAdminOrgsId.ts";
 export type { GetAdminOrgsQueryKey } from "./hooks/OrganizationsHooks/useGetAdminOrgs.ts";
 export type { GetAdminOrgsSuspenseQueryKey } from "./hooks/OrganizationsHooks/useGetAdminOrgsSuspense.ts";
@@ -127,6 +124,7 @@ export type {
 } from "./types/GetAdminUsers.ts";
 export type {
   GetApiClients200,
+  GetApiClients500,
   GetApiClientsQuery,
   GetApiClientsQueryParams,
   GetApiClientsQueryParamsContractTypeEnumKey,
@@ -154,13 +152,6 @@ export type {
   GetApiClientsStatsQueryResponse,
 } from "./types/GetApiClientsStats.ts";
 export type {
-  GetApiDepartments200,
-  GetApiDepartments500,
-  GetApiDepartmentsQuery,
-  GetApiDepartmentsQueryParams,
-  GetApiDepartmentsQueryResponse,
-} from "./types/GetApiDepartments.ts";
-export type {
   GetApiProfileId200,
   GetApiProfileId404,
   GetApiProfileIdPathParams,
@@ -176,7 +167,6 @@ export type {
 export type {
   GetApiProjectsAccessAll200,
   GetApiProjectsAccessAllQuery,
-  GetApiProjectsAccessAllQueryParams,
   GetApiProjectsAccessAllQueryResponse,
   ProjectAccessAccessLevelEnumKey,
 } from "./types/GetApiProjectsAccessAll.ts";
@@ -391,6 +381,7 @@ export type {
 export type {
   PostApiAuthLogin200,
   PostApiAuthLogin400,
+  PostApiAuthLogin403,
   PostApiAuthLogin500,
   PostApiAuthLoginMutation,
   PostApiAuthLoginMutationRequest,
@@ -436,14 +427,6 @@ export type {
   PostApiClientsMutationResponse,
 } from "./types/PostApiClients.ts";
 export type {
-  PostApiDepartments201,
-  PostApiDepartments400,
-  PostApiDepartments500,
-  PostApiDepartmentsMutation,
-  PostApiDepartmentsMutationRequest,
-  PostApiDepartmentsMutationResponse,
-} from "./types/PostApiDepartments.ts";
-export type {
   PostApiProjects201,
   PostApiProjects400,
   PostApiProjects500,
@@ -483,7 +466,6 @@ export { getApiClients } from "./clients/getApiClients.ts";
 export { getApiClientsExport } from "./clients/getApiClientsExport.ts";
 export { getApiClientsId } from "./clients/getApiClientsId.ts";
 export { getApiClientsStats } from "./clients/getApiClientsStats.ts";
-export { getApiDepartments } from "./clients/getApiDepartments.ts";
 export { getApiProfileId } from "./clients/getApiProfileId.ts";
 export { getApiProjects } from "./clients/getApiProjects.ts";
 export { getApiProjectsAccessAll } from "./clients/getApiProjectsAccessAll.ts";
@@ -517,7 +499,6 @@ export { postApiAuthRegister } from "./clients/postApiAuthRegister.ts";
 export { postApiAuthResetPassword } from "./clients/postApiAuthResetPassword.ts";
 export { postApiAuthSetPassword } from "./clients/postApiAuthSetPassword.ts";
 export { postApiClients } from "./clients/postApiClients.ts";
-export { postApiDepartments } from "./clients/postApiDepartments.ts";
 export { postApiProjects } from "./clients/postApiProjects.ts";
 export { postApiUserRoles } from "./clients/postApiUserRoles.ts";
 export { postApiUsers } from "./clients/postApiUsers.ts";
@@ -560,6 +541,9 @@ export { useGetApiClientsIdSuspense } from "./hooks/ClientsHooks/useGetApiClient
 export { getApiClientsIdSuspenseInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsIdSuspenseInfinite.ts";
 export { getApiClientsIdSuspenseInfiniteQueryOptions } from "./hooks/ClientsHooks/useGetApiClientsIdSuspenseInfinite.ts";
 export { useGetApiClientsIdSuspenseInfinite } from "./hooks/ClientsHooks/useGetApiClientsIdSuspenseInfinite.ts";
+export { getApiClientsInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsInfinite.ts";
+export { getApiClientsInfiniteQueryOptions } from "./hooks/ClientsHooks/useGetApiClientsInfinite.ts";
+export { useGetApiClientsInfinite } from "./hooks/ClientsHooks/useGetApiClientsInfinite.ts";
 export { getApiClientsStatsQueryKey } from "./hooks/ClientsHooks/useGetApiClientsStats.ts";
 export { getApiClientsStatsQueryOptions } from "./hooks/ClientsHooks/useGetApiClientsStats.ts";
 export { useGetApiClientsStats } from "./hooks/ClientsHooks/useGetApiClientsStats.ts";
@@ -581,18 +565,6 @@ export { usePatchApiClientsId } from "./hooks/ClientsHooks/usePatchApiClientsId.
 export { postApiClientsMutationKey } from "./hooks/ClientsHooks/usePostApiClients.ts";
 export { postApiClientsMutationOptions } from "./hooks/ClientsHooks/usePostApiClients.ts";
 export { usePostApiClients } from "./hooks/ClientsHooks/usePostApiClients.ts";
-export { getApiDepartmentsQueryKey } from "./hooks/DepartmentsHooks/useGetApiDepartments.ts";
-export { getApiDepartmentsQueryOptions } from "./hooks/DepartmentsHooks/useGetApiDepartments.ts";
-export { useGetApiDepartments } from "./hooks/DepartmentsHooks/useGetApiDepartments.ts";
-export { getApiDepartmentsSuspenseQueryKey } from "./hooks/DepartmentsHooks/useGetApiDepartmentsSuspense.ts";
-export { getApiDepartmentsSuspenseQueryOptions } from "./hooks/DepartmentsHooks/useGetApiDepartmentsSuspense.ts";
-export { useGetApiDepartmentsSuspense } from "./hooks/DepartmentsHooks/useGetApiDepartmentsSuspense.ts";
-export { getApiDepartmentsSuspenseInfiniteQueryKey } from "./hooks/DepartmentsHooks/useGetApiDepartmentsSuspenseInfinite.ts";
-export { getApiDepartmentsSuspenseInfiniteQueryOptions } from "./hooks/DepartmentsHooks/useGetApiDepartmentsSuspenseInfinite.ts";
-export { useGetApiDepartmentsSuspenseInfinite } from "./hooks/DepartmentsHooks/useGetApiDepartmentsSuspenseInfinite.ts";
-export { postApiDepartmentsMutationKey } from "./hooks/DepartmentsHooks/usePostApiDepartments.ts";
-export { postApiDepartmentsMutationOptions } from "./hooks/DepartmentsHooks/usePostApiDepartments.ts";
-export { usePostApiDepartments } from "./hooks/DepartmentsHooks/usePostApiDepartments.ts";
 export { deleteAdminOrgsIdMutationKey } from "./hooks/OrganizationsHooks/useDeleteAdminOrgsId.ts";
 export { deleteAdminOrgsIdMutationOptions } from "./hooks/OrganizationsHooks/useDeleteAdminOrgsId.ts";
 export { useDeleteAdminOrgsId } from "./hooks/OrganizationsHooks/useDeleteAdminOrgsId.ts";
@@ -806,6 +778,7 @@ export {
 export {
   postApiAuthLogin200Schema,
   postApiAuthLogin400Schema,
+  postApiAuthLogin403Schema,
   postApiAuthLogin500Schema,
   postApiAuthLoginMutationRequestSchema,
   postApiAuthLoginMutationResponseSchema,
@@ -852,6 +825,7 @@ export {
 } from "./zod/ClientsSchemas/getApiClientsIdSchema.ts";
 export {
   getApiClients200Schema,
+  getApiClients500Schema,
   getApiClientsQueryParamsSchema,
   getApiClientsQueryResponseSchema,
 } from "./zod/ClientsSchemas/getApiClientsSchema.ts";
@@ -870,19 +844,6 @@ export {
   postApiClientsMutationRequestSchema,
   postApiClientsMutationResponseSchema,
 } from "./zod/ClientsSchemas/postApiClientsSchema.ts";
-export {
-  getApiDepartments200Schema,
-  getApiDepartments500Schema,
-  getApiDepartmentsQueryParamsSchema,
-  getApiDepartmentsQueryResponseSchema,
-} from "./zod/DepartmentsSchemas/getApiDepartmentsSchema.ts";
-export {
-  postApiDepartments201Schema,
-  postApiDepartments400Schema,
-  postApiDepartments500Schema,
-  postApiDepartmentsMutationRequestSchema,
-  postApiDepartmentsMutationResponseSchema,
-} from "./zod/DepartmentsSchemas/postApiDepartmentsSchema.ts";
 export {
   deleteAdminOrgsId200Schema,
   deleteAdminOrgsId401Schema,
@@ -967,7 +928,6 @@ export {
 } from "./zod/ProjectsSchemas/deleteApiProjectsIdSchema.ts";
 export {
   getApiProjectsAccessAll200Schema,
-  getApiProjectsAccessAllQueryParamsSchema,
   getApiProjectsAccessAllQueryResponseSchema,
 } from "./zod/ProjectsSchemas/getApiProjectsAccessAllSchema.ts";
 export {

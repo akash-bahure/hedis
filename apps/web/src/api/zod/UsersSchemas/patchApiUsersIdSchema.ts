@@ -47,7 +47,7 @@ export const patchApiUsersIdMutationRequestSchema = z.object({
   full_name: z.optional(z.string()),
   email: z.optional(z.string().email()),
   phone: z.optional(z.string()),
-  department_id: z.optional(z.string().uuid()),
+  department: z.optional(z.string()),
   job_title: z.optional(z.string()),
   shift: z.optional(
     z.enum(["Morning", "Afternoon", "Night", "General", "Off"]),

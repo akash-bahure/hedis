@@ -43,11 +43,6 @@ export type GetApiUsersQueryParams = {
    * @type string | undefined
    */
   user_status?: GetApiUsersQueryParamsUserStatusEnumKey;
-  /**
-   * @description Filter by department ID
-   * @type string | undefined, uuid
-   */
-  department_id?: string;
 };
 
 /**

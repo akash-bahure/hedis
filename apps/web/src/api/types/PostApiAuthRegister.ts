@@ -6,7 +6,49 @@
 /**
  * @description User registered successfully
  */
-export type PostApiAuthRegister201 = any;
+export type PostApiAuthRegister201 = {
+  /**
+   * @type string | undefined
+   */
+  message?: string;
+  /**
+   * @type object | undefined
+   */
+  user?: {
+    /**
+     * @type string | undefined, uuid
+     */
+    id?: string;
+    /**
+     * @type string | undefined
+     */
+    full_name?: string;
+    /**
+     * @type string | undefined
+     */
+    email?: string;
+    /**
+     * @type string | undefined, uuid
+     */
+    user_role_id?: string;
+    /**
+     * @type string | undefined
+     */
+    role?: string;
+    /**
+     * @type boolean | undefined
+     */
+    system_role?: boolean;
+    /**
+     * @type string | undefined
+     */
+    user_status?: string;
+    /**
+     * @type boolean | undefined
+     */
+    is_active?: boolean;
+  };
+};
 
 /**
  * @description User already exists
@@ -20,17 +62,21 @@ export type PostApiAuthRegister500 = any;
 
 export type PostApiAuthRegisterMutationRequest = {
   /**
-   * @type string | undefined
-   */
-  full_name?: string;
-  /**
    * @type string
+   */
+  full_name: string;
+  /**
+   * @type string, email
    */
   email: string;
   /**
-   * @type string
+   * @type string, password
    */
   password: string;
+  /**
+   * @type string, uuid
+   */
+  user_role_id: string;
 };
 
 export type PostApiAuthRegisterMutationResponse = PostApiAuthRegister201;

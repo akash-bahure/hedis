@@ -29,11 +29,11 @@ export type PostApiAuthResetPasswordMutationRequest = {
    */
   token: string;
   /**
-   * @type string
+   * @type string, password
    */
   password: string;
   /**
-   * @type string
+   * @type string, password
    */
   confirmPassword: string;
 };

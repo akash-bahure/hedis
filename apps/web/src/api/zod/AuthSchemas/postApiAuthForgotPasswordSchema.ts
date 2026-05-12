@@ -14,7 +14,7 @@ import type {
 } from "../../types/PostApiAuthForgotPassword.ts";
 
 /**
- * @description Success message (sent regardless of email existence for security)
+ * @description Success message
  */
 export const postApiAuthForgotPassword200Schema =
   z.unknown() as unknown as ToZod<PostApiAuthForgotPassword200>;
@@ -32,7 +32,7 @@ export const postApiAuthForgotPassword500Schema =
   z.unknown() as unknown as ToZod<PostApiAuthForgotPassword500>;
 
 export const postApiAuthForgotPasswordMutationRequestSchema = z.object({
-  email: z.string(),
+  email: z.string().email(),
 }) as unknown as ToZod<PostApiAuthForgotPasswordMutationRequest>;
 
 export const postApiAuthForgotPasswordMutationResponseSchema = z.lazy(

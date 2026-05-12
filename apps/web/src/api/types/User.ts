@@ -21,13 +21,9 @@ export type User = {
    */
   phone?: string;
   /**
-   * @type string | undefined, uuid
-   */
-  department_id?: string;
-  /**
    * @type string | undefined
    */
-  department_name?: string;
+  department?: string;
   /**
    * @type string | undefined
    */

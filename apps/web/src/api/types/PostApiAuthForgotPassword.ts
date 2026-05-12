@@ -4,7 +4,7 @@
  */
 
 /**
- * @description Success message (sent regardless of email existence for security)
+ * @description Success message
  */
 export type PostApiAuthForgotPassword200 = any;
 
@@ -20,7 +20,7 @@ export type PostApiAuthForgotPassword500 = any;
 
 export type PostApiAuthForgotPasswordMutationRequest = {
   /**
-   * @type string
+   * @type string, email
    */
   email: string;
 };
