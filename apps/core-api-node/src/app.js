@@ -76,6 +76,8 @@ app.use("/admin/orgs", require("./routes/orgRoutes"));
 // Tenant & Authentication
 app.use(tenantMiddleware);
 app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/user-roles", require("./routes/userRoleRoutes"));
+
 
 // Protected Routes
 app.use(authMiddleware);
@@ -85,7 +87,7 @@ app.use("/api/clients", clientRoutes);
 const projectRoutes = require("./routes/project.routes");
 app.use("/api/projects", projectRoutes);
 app.use("/api/departments", require("./routes/department.routes"));
-app.use("/api/user-roles", require("./routes/userRoleRoutes"));
+// app.use("/api/user-roles", require("./routes/userRoleRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/profile", require("./routes/profile.routes"));
 

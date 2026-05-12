@@ -279,6 +279,9 @@ router.delete("/:id", superAdminAuth, orgController.archiveOrg);
  *               email:
  *                 type: string
  *                 example: admin@acme.com
+ *               role:
+ *                 type: string
+ *                 example: Org Admin
  *     responses:
  *       201:
  *         description: Tenant admin created successfully

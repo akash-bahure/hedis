@@ -16,24 +16,80 @@ const authController = require("../controllers/authController");
  *           schema:
  *             type: object
  *             required:
- *               - name
+ *               - full_name
  *               - email
  *               - password
+ *               - user_role_id
  *             properties:
  *               full_name:
  *                 type: string
  *                 example: John Doe
+ *
  *               email:
  *                 type: string
+ *                 format: email
  *                 example: john@email.com
+ *
  *               password:
  *                 type: string
- *                 example: password123
+ *                 format: password
+ *                 example: Password@123
+ *
+ *               user_role_id:
+ *                 type: string
+ *                 format: uuid
+ *                 example: 550e8400-e29b-41d4-a716-446655440000
+ *
  *     responses:
  *       201:
  *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User registered successfully
+ *
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *
+ *                     full_name:
+ *                       type: string
+ *                       example: John Doe
+ *
+ *                     email:
+ *                       type: string
+ *                       example: john@email.com
+ *
+ *                     user_role_id:
+ *                       type: string
+ *                       format: uuid
+ *
+ *                     role:
+ *                       type: string
+ *                       example: Operations/Program Manager
+ *
+ *                     system_role:
+ *                       type: boolean
+ *                       example: true
+ *
+ *                     user_status:
+ *                       type: string
+ *                       example: Active
+ *
+ *                     is_active:
+ *                       type: boolean
+ *                       example: true
+ *
  *       400:
  *         description: User already exists
+ *
  *       500:
  *         description: Server error
  */
@@ -58,15 +114,75 @@ router.post("/register", authController.register);
  *             properties:
  *               email:
  *                 type: string
+ *                 format: email
  *                 example: john@email.com
+ *
  *               password:
  *                 type: string
- *                 example: password123
+ *                 format: password
+ *                 example: Password@123
+ *
  *     responses:
  *       200:
  *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Login successful
+ *
+ *                 token:
+ *                   type: string
+ *                   example: jwt_token_here
+ *
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *
+ *                     full_name:
+ *                       type: string
+ *                       example: John Doe
+ *
+ *                     email:
+ *                       type: string
+ *                       example: john@email.com
+ *
+ *                     user_role_id:
+ *                       type: string
+ *                       format: uuid
+ *
+ *                     role:
+ *                       type: string
+ *                       example: Operations/Program Manager
+ *
+ *                     system_role:
+ *                       type: boolean
+ *                       example: true
+ *
+ *                     user_status:
+ *                       type: string
+ *                       example: Active
+ *
+ *                     is_active:
+ *                       type: boolean
+ *                       example: true
+ *
+ *                     last_login:
+ *                       type: string
+ *                       format: date-time
+ *
  *       400:
  *         description: Invalid credentials
+ *
+ *       403:
+ *         description: User account is inactive
+ *
  *       500:
  *         description: Server error
  */
@@ -86,6 +202,7 @@ router.post("/login", authController.login);
  *         schema:
  *           type: string
  *         description: The invite token sent via email
+ *
  *     requestBody:
  *       required: true
  *       content:
@@ -99,16 +216,21 @@ router.post("/login", authController.login);
  *               password:
  *                 type: string
  *                 example: newpassword123
+ *
  *               confirmPassword:
  *                 type: string
  *                 example: newpassword123
+ *
  *     responses:
  *       200:
  *         description: Password set successfully
+ *
  *       400:
  *         description: Invalid input or token expired/used
+ *
  *       404:
  *         description: Token not found
+ *
  *       500:
  *         description: Server error
  */
@@ -121,6 +243,7 @@ router.post("/set-password", authController.setPassword);
  *     summary: Request password reset
  *     tags: [Auth]
  *     description: Sends a password reset link to the user's email
+ *
  *     requestBody:
  *       required: true
  *       content:
@@ -132,12 +255,16 @@ router.post("/set-password", authController.setPassword);
  *             properties:
  *               email:
  *                 type: string
+ *                 format: email
  *                 example: john@email.com
+ *
  *     responses:
  *       200:
- *         description: Success message (sent regardless of email existence for security)
+ *         description: Success message
+ *
  *       400:
  *         description: Invalid input
+ *
  *       500:
  *         description: Server error
  */
@@ -150,6 +277,7 @@ router.post("/forgot-password", authController.forgotPassword);
  *     summary: Reset password
  *     tags: [Auth]
  *     description: Resets the password using a reset token
+ *
  *     requestBody:
  *       required: true
  *       content:
@@ -163,23 +291,30 @@ router.post("/forgot-password", authController.forgotPassword);
  *             properties:
  *               token:
  *                 type: string
+ *
  *               password:
  *                 type: string
+ *                 format: password
  *                 example: newpassword123
+ *
  *               confirmPassword:
  *                 type: string
+ *                 format: password
  *                 example: newpassword123
+ *
  *     responses:
  *       200:
  *         description: Password reset successfully
+ *
  *       400:
  *         description: Invalid input or token expired
+ *
  *       404:
  *         description: Token not found
+ *
  *       500:
  *         description: Server error
  */
 router.post("/reset-password", authController.resetPassword);
 
 module.exports = router;
-
