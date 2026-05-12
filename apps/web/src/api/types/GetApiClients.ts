@@ -4,12 +4,10 @@
  */
 
 export const getApiClientsQueryParamsRegionEnum = {
+  North: "North",
   South: "South",
+  East: "East",
   West: "West",
-  Northeast: "Northeast",
-  Southeast: "Southeast",
-  Mountain: "Mountain",
-  Midwest: "Midwest",
 } as const;
 
 export type GetApiClientsQueryParamsRegionEnumKey =
@@ -19,7 +17,6 @@ export const getApiClientsQueryParamsStatusEnum = {
   Onboarding: "Onboarding",
   Active: "Active",
   Inactive: "Inactive",
-  "At Risk": "At Risk",
 } as const;
 
 export type GetApiClientsQueryParamsStatusEnumKey =
@@ -37,7 +34,7 @@ export type GetApiClientsQueryParamsContractTypeEnumKey =
 
 export type GetApiClientsQueryParams = {
   /**
-   * @description Search by org_name, email, short_code, or client_id
+   * @description Search by org_name, email, or short_code
    * @type string | undefined
    */
   search?: string;
@@ -57,17 +54,17 @@ export type GetApiClientsQueryParams = {
    */
   contract_type?: GetApiClientsQueryParamsContractTypeEnumKey;
   /**
-   * @description Current page number
+   * @description Page number
    * @default 1
    * @type integer | undefined
    */
-  page_no?: number;
+  page?: number;
   /**
    * @description Number of records per page
    * @default 10
    * @type integer | undefined
    */
-  page_size?: number;
+  limit?: number;
 };
 
 /**
@@ -75,33 +72,25 @@ export type GetApiClientsQueryParams = {
  */
 export type GetApiClients200 = {
   /**
-   * @type string | undefined
+   * @type integer | undefined
    */
-  message?: string;
+  total?: number;
   /**
    * @type integer | undefined
    */
-  page_no?: number;
+  page?: number;
   /**
    * @type integer | undefined
    */
-  page_size?: number;
-  /**
-   * @type integer | undefined
-   */
-  total_count?: number;
+  limit?: number;
   /**
    * @type array | undefined
    */
   data?: {
     /**
-     * @type string | undefined, uuid
-     */
-    id?: string;
-    /**
      * @type string | undefined
      */
-    client_id?: string;
+    id?: string;
     /**
      * @type string | undefined
      */
@@ -135,10 +124,6 @@ export type GetApiClients200 = {
      */
     total_charts?: number;
     /**
-     * @type integer | undefined
-     */
-    completed_charts?: number;
-    /**
      * @type string | undefined, date
      */
     start_date?: string;
@@ -162,26 +147,13 @@ export type GetApiClients200 = {
      * @type integer | undefined
      */
     abstractors_assigned?: number;
-    /**
-     * @type string | undefined, date-time
-     */
-    created_at?: string;
-    /**
-     * @type string | undefined, date-time
-     */
-    updated_at?: string;
   }[];
 };
-
-/**
- * @description Internal server error
- */
-export type GetApiClients500 = any;
 
 export type GetApiClientsQueryResponse = GetApiClients200;
 
 export type GetApiClientsQuery = {
   Response: GetApiClients200;
   QueryParams: GetApiClientsQueryParams;
-  Errors: GetApiClients500;
+  Errors: any;
 };

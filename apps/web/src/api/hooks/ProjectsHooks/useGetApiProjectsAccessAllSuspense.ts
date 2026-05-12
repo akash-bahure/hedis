@@ -14,21 +14,27 @@ import type {
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
-import type { GetApiProjectsAccessAllQueryResponse } from "../../types/GetApiProjectsAccessAll.ts";
+import type {
+  GetApiProjectsAccessAllQueryResponse,
+  GetApiProjectsAccessAllQueryParams,
+} from "../../types/GetApiProjectsAccessAll.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { getApiProjectsAccessAll } from "../../clients/getApiProjectsAccessAll.ts";
 
-export const getApiProjectsAccessAllSuspenseQueryKey = () =>
-  [{ url: "/api/projects/access/all" }] as const;
+export const getApiProjectsAccessAllSuspenseQueryKey = (
+  params?: GetApiProjectsAccessAllQueryParams,
+) =>
+  [{ url: "/api/projects/access/all" }, ...(params ? [params] : [])] as const;
 
 export type GetApiProjectsAccessAllSuspenseQueryKey = ReturnType<
   typeof getApiProjectsAccessAllSuspenseQueryKey
 >;
 
 export function getApiProjectsAccessAllSuspenseQueryOptions(
+  params?: GetApiProjectsAccessAllQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
-  const queryKey = getApiProjectsAccessAllSuspenseQueryKey();
+  const queryKey = getApiProjectsAccessAllSuspenseQueryKey(params);
   return queryOptions<
     GetApiProjectsAccessAllQueryResponse,
     ResponseErrorConfig<Error>,
@@ -37,7 +43,7 @@ export function getApiProjectsAccessAllSuspenseQueryOptions(
   >({
     queryKey,
     queryFn: async ({ signal }) => {
-      return getApiProjectsAccessAll({
+      return getApiProjectsAccessAll(params, {
         ...config,
         signal: config.signal ?? signal,
       });
@@ -54,6 +60,7 @@ export function useGetApiProjectsAccessAllSuspense<
   TData = GetApiProjectsAccessAllQueryResponse,
   TQueryKey extends QueryKey = GetApiProjectsAccessAllSuspenseQueryKey,
 >(
+  params?: GetApiProjectsAccessAllQueryParams,
   options: {
     query?: Partial<
       UseSuspenseQueryOptions<
@@ -69,11 +76,12 @@ export function useGetApiProjectsAccessAllSuspense<
   const { query: queryConfig = {}, client: config = {} } = options ?? {};
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
-    resolvedOptions?.queryKey ?? getApiProjectsAccessAllSuspenseQueryKey();
+    resolvedOptions?.queryKey ??
+    getApiProjectsAccessAllSuspenseQueryKey(params);
 
   const query = useSuspenseQuery(
     {
-      ...getApiProjectsAccessAllSuspenseQueryOptions(config),
+      ...getApiProjectsAccessAllSuspenseQueryOptions(params, config),
       ...resolvedOptions,
       queryKey,
     } as unknown as UseSuspenseQueryOptions,

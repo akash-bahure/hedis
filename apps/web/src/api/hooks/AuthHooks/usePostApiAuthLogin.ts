@@ -17,7 +17,6 @@ import type {
   PostApiAuthLoginMutationRequest,
   PostApiAuthLoginMutationResponse,
   PostApiAuthLogin400,
-  PostApiAuthLogin403,
   PostApiAuthLogin500,
 } from "../../types/PostApiAuthLogin.ts";
 import { mutationOptions, useMutation } from "@tanstack/react-query";
@@ -38,9 +37,7 @@ export function postApiAuthLoginMutationOptions<TContext = unknown>(
   const mutationKey = postApiAuthLoginMutationKey();
   return mutationOptions<
     PostApiAuthLoginMutationResponse,
-    ResponseErrorConfig<
-      PostApiAuthLogin400 | PostApiAuthLogin403 | PostApiAuthLogin500
-    >,
+    ResponseErrorConfig<PostApiAuthLogin400 | PostApiAuthLogin500>,
     { data: PostApiAuthLoginMutationRequest },
     TContext
   >({
@@ -60,9 +57,7 @@ export function usePostApiAuthLogin<TContext>(
   options: {
     mutation?: UseMutationOptions<
       PostApiAuthLoginMutationResponse,
-      ResponseErrorConfig<
-        PostApiAuthLogin400 | PostApiAuthLogin403 | PostApiAuthLogin500
-      >,
+      ResponseErrorConfig<PostApiAuthLogin400 | PostApiAuthLogin500>,
       { data: PostApiAuthLoginMutationRequest },
       TContext
     > & { client?: QueryClient };
@@ -80,18 +75,14 @@ export function usePostApiAuthLogin<TContext>(
     config,
   ) as UseMutationOptions<
     PostApiAuthLoginMutationResponse,
-    ResponseErrorConfig<
-      PostApiAuthLogin400 | PostApiAuthLogin403 | PostApiAuthLogin500
-    >,
+    ResponseErrorConfig<PostApiAuthLogin400 | PostApiAuthLogin500>,
     { data: PostApiAuthLoginMutationRequest },
     TContext
   >;
 
   return useMutation<
     PostApiAuthLoginMutationResponse,
-    ResponseErrorConfig<
-      PostApiAuthLogin400 | PostApiAuthLogin403 | PostApiAuthLogin500
-    >,
+    ResponseErrorConfig<PostApiAuthLogin400 | PostApiAuthLogin500>,
     { data: PostApiAuthLoginMutationRequest },
     TContext
   >(
@@ -103,9 +94,7 @@ export function usePostApiAuthLogin<TContext>(
     queryClient,
   ) as UseMutationResult<
     PostApiAuthLoginMutationResponse,
-    ResponseErrorConfig<
-      PostApiAuthLogin400 | PostApiAuthLogin403 | PostApiAuthLogin500
-    >,
+    ResponseErrorConfig<PostApiAuthLogin400 | PostApiAuthLogin500>,
     { data: PostApiAuthLoginMutationRequest },
     TContext
   >;
