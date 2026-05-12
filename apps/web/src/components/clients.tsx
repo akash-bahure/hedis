@@ -38,6 +38,7 @@ import {
   PostApiClientsMutationRequestPlanTierEnumKey,
   PostApiClientsMutationRequestRegionEnumKey,
   PostApiClientsMutationRequestStatusEnumKey,
+  useGetApiClients,
   useGetApiClientsStats,
   usePostApiClients,
 } from "@/api";
@@ -1777,13 +1778,15 @@ function AddClientModal({
     <>
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 overflow-y-auto"
         onClick={onClose}
       >
         {/* Modal */}
         <div
-          className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden"
-          style={{ maxHeight: "90vh" }}
+          className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden my-6"
+          style={{
+            maxHeight: "calc(100vh - 48px)",
+          }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* ── Header ── */}
@@ -2247,11 +2250,12 @@ export function Clients() {
   const [view, setView] = useState<"table" | "grid">("table");
   const [showAddModal, setShowAddModal] = useState(false);
   const [clientList, setClientList] = useState<Client[]>(CLIENTS);
+  const [page, setPage] = useState(1);
 
-  const regions = [
-    "all",
-    ...Array.from(new Set(clientList.map((c) => c.region))),
-  ];
+  // const regions = [
+  //   "all",
+  //   ...Array.from(new Set(clientList.map((c) => c.region))),
+  // ];
 
   const filtered = clientList.filter((c) => {
     const q = search.toLowerCase();
@@ -2265,11 +2269,62 @@ export function Clients() {
     const matchRegion = regionFilter === "all" || c.region === regionFilter;
     return matchSearch && matchStatus && matchRegion;
   });
+
+  const { data: clientsData, isLoading: isClientListLoading } =
+    useGetApiClients(
+      {
+        search: search || undefined,
+        region: regionFilter !== "all" ? regionFilter : undefined,
+        status:
+          statusFilter === "all"
+            ? undefined
+            : statusFilter === "at-risk"
+              ? "At Risk"
+              : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1),
+        page_no: page,
+        page_size: 10,
+      },
+      {
+        query: {
+          keepPreviousData: true,
+        },
+      },
+    );
+
+  const clients =
+    clientsData?.data?.map((client) => ({
+      id: client.id || "",
+      clientId: client.client_id || "",
+      name: client.org_name || "",
+      shortCode: client.short_code || "",
+      region: client.region || "",
+      status: (client.status || "").toLowerCase(),
+      contractType: client.contract_type || "",
+      measureYear: client.measure_year || "",
+      chartsTotal: client.total_charts || 0,
+      chartsCompleted: client.completed_charts || 0,
+      chartsPending:
+        (client.total_charts || 0) - (client.completed_charts || 0),
+      dueDate: client.due_date || "",
+      startDate: client.start_date || "",
+      contactName: client.primary_contact_name || "",
+      email: client.email || "",
+      phone: client.phone || "",
+      abstractorsAssigned: client.abstractors_assigned || 0,
+
+      complianceScore:
+        client.total_charts && client.completed_charts
+          ? Math.round((client.completed_charts / client.total_charts) * 100)
+          : 0,
+    })) || [];
+
   const { data: statsData, isLoading: statsLoading } = useGetApiClientsStats({
     query: {
       refetchOnWindowFocus: false,
     },
   });
+
+  const regions = ["all", ...Array.from(new Set(clients.map((c) => c.region)))];
   const totalClients = statsData?.total_clients ?? 0;
 
   const activeClients = statsData?.active_clients ?? 0;
@@ -2420,13 +2475,15 @@ export function Clients() {
           className="w-full sm:w-auto text-muted-foreground text-center sm:text-left"
           style={{ fontSize: 12 }}
         >
-          {filtered.length} of {CLIENTS.length}
+          {clients.length} of {clientsData?.total_count || 0}
         </span>
       </div>
 
       {/* ── Content ──────────────────────────────── */}
       <div className="flex-1 overflow-y-auto px-6 py-4">
-        {view === "table" ? (
+        {isClientListLoading ? (
+          <div className="py-20 text-center">Loading clients...</div>
+        ) : view === "table" ? (
           /* TABLE VIEW */
           <div className="rounded-xl border border-border bg-card shadow-sm">
             <div className="w-full overflow-x-auto">
@@ -2459,7 +2516,7 @@ export function Clients() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((client, i) => {
+                  {clients.map((client, i) => {
                     const comp = pct(
                       client.chartsCompleted,
                       client.chartsTotal,
@@ -2492,7 +2549,7 @@ export function Clients() {
                                 className="text-muted-foreground"
                                 style={{ fontSize: 11 }}
                               >
-                                {client.id} · {client.measureYear}
+                                {client.clientId} · {client.measureYear}
                               </p>
                             </div>
                           </div>
@@ -2592,7 +2649,7 @@ export function Clients() {
                 </tbody>
               </table>
 
-              {filtered.length === 0 && (
+              {clients.length === 0 && (
                 <div className="py-16 text-center text-muted-foreground">
                   <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
                   <p style={{ fontSize: 14 }}>No clients match your filters.</p>
@@ -2633,7 +2690,7 @@ export function Clients() {
                           className="text-muted-foreground"
                           style={{ fontSize: 11 }}
                         >
-                          {client.id} · {client.contractType}
+                          {client.client_id} · {client.contractType}
                         </p>
                       </div>
                     </div>
@@ -2754,7 +2811,9 @@ export function Clients() {
       {showAddModal && (
         <AddClientModal
           onClose={() => setShowAddModal(false)}
-          onAdd={(c) => setClientList((prev) => [c, ...prev])}
+          onAdd={() => {
+            setShowAddModal(false);
+          }}
         />
       )}
     </div>
