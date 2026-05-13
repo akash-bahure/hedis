@@ -54,6 +54,7 @@ import {
   Lock,
   Star,
   Eye,
+  X,
 } from "lucide-react";
 
 /* ─── Types ─────────────────────────────────────────────────── */
@@ -303,6 +304,29 @@ const TEAM_MEMBERS = {
     "Dr. Sunita Roy",
     "Dr. Anil Chopra",
     "Dr. Fiona DSilva",
+  ],
+};
+
+const AUDIT_MEMBERS = {
+  L1: [
+    "Dr. Priya Nair",
+    "Dr. Ramesh Babu",
+    "Dr. Sunita Roy",
+    "Dr. Anil Chopra",
+    "Dr. Fiona DSilva",
+  ],
+  L2: [
+    "Dr. Kavitha Menon",
+    "Dr. Suresh Pillai",
+    "Dr. Rekha Sharma",
+    "Dr. Anand Kulkarni",
+    "Dr. Nisha Patel",
+  ],
+  L3: [
+    "Dr. Rajesh Iyer",
+    "Dr. Meera Krishnan",
+    "Dr. Vivek Bose",
+    "Dr. Shalini Gupta",
   ],
 };
 
@@ -2385,8 +2409,443 @@ function ProjectDetail({
   );
 }
 
-/* ─── PROJECT LIST VIEW ───────────────────────────────────────── */
+/* ─── NEW PROJECT MODAL ───────────────────────────────────────── */
+const PROJECT_TYPES = [
+  "Inpatient",
+  "Outpatient",
+  "HCC",
+  "ED Visit",
+  "Observation",
+  "Telehealth",
+];
+const SPECIALTIES = [
+  "Multi-Specialty",
+  "Cardiology",
+  "Orthopedics",
+  "Emergency Med.",
+  "Radiology",
+  "Oncology",
+  "Cardiothoracic",
+  "Pediatrics",
+  "Neurology",
+  "Gastroenterology",
+];
+const PRIORITIES = ["High", "Medium", "Low"] as const;
+const TEAMS = [
+  "Team Alpha",
+  "Team Beta",
+  "Team Gamma",
+  "Team Delta",
+  "Team Epsilon",
+  "Team Zeta",
+  "Team Eta",
+];
+
+function NewProjectModal({ onClose }: { onClose: () => void }) {
+  const [done, setDone] = useState(false);
+  const [step, setStep] = useState<1 | 2>(1);
+  const [form, setForm] = useState({
+    name: "",
+    client: "",
+    type: "Inpatient",
+    specialty: "Multi-Specialty",
+    pm: TEAM_MEMBERS.pms[0],
+    team: TEAMS[0],
+    startDate: "",
+    endDate: "",
+    priority: "High" as "High" | "Medium" | "Low",
+    coders: "",
+    auditors: "",
+    notes: "",
+  });
+  const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  type AssignRole = "coders" | "auditL1" | "auditL2" | "auditL3";
+  const [assigns, setAssigns] = useState<Record<AssignRole, string[]>>({
+    coders: [],
+    auditL1: [],
+    auditL2: [],
+    auditL3: [],
+  });
+  const toggleAssign = (role: AssignRole, name: string) =>
+    setAssigns((a) => ({
+      ...a,
+      [role]: a[role].includes(name)
+        ? a[role].filter((n) => n !== name)
+        : [...a[role], name],
+    }));
+  const [openRole, setOpenRole] = useState<AssignRole | null>(null);
+
+  const step1Valid = form.name.trim() !== "" && form.client.trim() !== "";
+  const step2Valid = form.startDate !== "" && form.endDate !== "";
+
+  const handleCreate = () => {
+    if (!step2Valid) return;
+    setDone(true);
+  };
+
+  const priorityStyle: Record<string, string> = {
+    High: "border-red-400 bg-red-50 text-red-700",
+    Medium: "border-amber-400 bg-amber-50 text-amber-700",
+    Low: "border-slate-300 bg-slate-50 text-slate-600",
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+        {!done ? (
+          <>
+            {/* Header */}
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-border">
+              <div className="w-9 h-9 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center flex-shrink-0">
+                <FolderKanban className="w-4 h-4 text-sky-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-bold text-foreground">
+                  New Coding Project
+                </h3>
+                <p className="text-[11px] text-muted-foreground">
+                  Step {step} of 2 —{" "}
+                  {step === 1 ? "Project Details" : "Team & Timeline"}
+                </p>
+              </div>
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded hover:bg-muted transition-colors"
+              >
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+
+            {/* Step indicator */}
+            <div className="flex gap-0 border-b border-border">
+              {([1, 2] as const).map((s) => (
+                <div
+                  key={s}
+                  className={`flex-1 h-1 transition-colors ${step >= s ? "bg-primary" : "bg-border"}`}
+                />
+              ))}
+            </div>
+
+            {/* Step 1 — Project Details */}
+            {step === 1 && (
+              <div className="px-5 py-4 space-y-3.5">
+                <div>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide block mb-1.5">
+                    Project Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    autoFocus
+                    value={form.name}
+                    onChange={(e) => set("name", e.target.value)}
+                    placeholder="e.g. Apollo Inpatient Coding FY26"
+                    className="w-full text-xs border border-border rounded-lg px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide block mb-1.5">
+                    Client / Hospital <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={form.client}
+                      onChange={(e) => set("client", e.target.value)}
+                      className="w-full text-xs border border-border rounded-lg px-3 py-2 pr-8 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none cursor-pointer"
+                    >
+                      <option value="">— Select Client / Hospital —</option>
+                      <option>Apollo Hospitals – Delhi</option>
+                      <option>Fortis Healthcare – Gurugram</option>
+                      <option>Manipal Hospitals – Bangalore</option>
+                      <option>Max Healthcare – Saket</option>
+                      <option>Medanta – The Medicity</option>
+                      <option>Narayana Health – Bangalore</option>
+                      <option>Aster DM Health – Kerala</option>
+                      <option>Rainbow Children's Hospital</option>
+                    </select>
+                    <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide block mb-1.5">
+                      Project Type
+                    </label>
+                    <select
+                      value={form.type}
+                      onChange={(e) => set("type", e.target.value)}
+                      className="w-full text-xs border border-border rounded-lg px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    >
+                      {PROJECT_TYPES.map((t) => (
+                        <option key={t}>{t}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide block mb-1.5">
+                      Specialty
+                    </label>
+                    <select
+                      value={form.specialty}
+                      onChange={(e) => set("specialty", e.target.value)}
+                      className="w-full text-xs border border-border rounded-lg px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    >
+                      {SPECIALTIES.map((s) => (
+                        <option key={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide block mb-1.5">
+                    Priority
+                  </label>
+                  <div className="flex gap-2">
+                    {PRIORITIES.map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => set("priority", p)}
+                        className={`flex-1 py-1.5 text-[11px] font-bold rounded-lg border transition-colors ${form.priority === p ? priorityStyle[p] : "border-border text-muted-foreground hover:bg-muted"}`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide block mb-1.5">
+                    Notes{" "}
+                    <span className="text-muted-foreground/50 normal-case font-normal">
+                      (optional)
+                    </span>
+                  </label>
+                  <textarea
+                    value={form.notes}
+                    onChange={(e) => set("notes", e.target.value)}
+                    rows={2}
+                    placeholder="Scope notes, special instructions…"
+                    className="w-full text-xs border border-border rounded-lg px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+                  />
+                </div>
+                <div className="flex gap-2 pt-0.5">
+                  <button
+                    onClick={onClose}
+                    className="flex-1 py-2 text-xs font-semibold border border-border rounded-xl text-muted-foreground hover:bg-muted transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => setStep(2)}
+                    disabled={!step1Valid}
+                    className="flex-1 py-2 text-xs font-bold rounded-xl text-white bg-primary hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5"
+                  >
+                    Next — Team & Timeline{" "}
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2 — Team & Timeline */}
+            {step === 2 && (
+              <div className="px-5 py-4 space-y-3.5">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide block mb-1.5">
+                      Start Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      autoFocus
+                      type="date"
+                      value={form.startDate}
+                      onChange={(e) => set("startDate", e.target.value)}
+                      className="w-full text-xs border border-border rounded-lg px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide block mb-1.5">
+                      End Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={form.endDate}
+                      onChange={(e) => set("endDate", e.target.value)}
+                      className="w-full text-xs border border-border rounded-lg px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide block mb-1.5">
+                    Project Manager
+                  </label>
+                  <select
+                    value={form.pm}
+                    onChange={(e) => set("pm", e.target.value)}
+                    className="w-full text-xs border border-border rounded-lg px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  >
+                    {TEAM_MEMBERS.pms.map((p) => (
+                      <option key={p}>{p}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Assign Team */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide block">
+                    Assign Team Members
+                  </label>
+                  {(
+                    [
+                      {
+                        role: "coders" as const,
+                        label: "Coder",
+                        members: TEAM_MEMBERS.coders,
+                        accent: "bg-sky-50 text-sky-700 border-sky-200",
+                      },
+                      {
+                        role: "auditL1" as const,
+                        label: "Audit L1",
+                        members: AUDIT_MEMBERS.L1,
+                        accent:
+                          "bg-violet-50 text-violet-700 border-violet-200",
+                      },
+                      {
+                        role: "auditL2" as const,
+                        label: "Audit L2",
+                        members: AUDIT_MEMBERS.L2,
+                        accent: "bg-teal-50 text-teal-700 border-teal-200",
+                      },
+                      {
+                        role: "auditL3" as const,
+                        label: "Audit L3",
+                        members: AUDIT_MEMBERS.L3,
+                        accent: "bg-amber-50 text-amber-700 border-amber-200",
+                      },
+                    ] as {
+                      role: "coders" | "auditL1" | "auditL2" | "auditL3";
+                      label: string;
+                      members: string[];
+                      accent: string;
+                    }[]
+                  ).map(({ role, label, members, accent }) => (
+                    <div
+                      key={role}
+                      className="border border-border rounded-lg overflow-hidden"
+                    >
+                      {/* Role header / toggle */}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenRole(openRole === role ? null : role)
+                        }
+                        className="w-full flex items-center justify-between px-3 py-2 bg-muted/30 hover:bg-muted/60 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-semibold text-foreground">
+                            {label}
+                          </span>
+                          {assigns[role].length > 0 && (
+                            <span className="px-1.5 py-0.5 rounded-full bg-primary text-white text-[10px] font-bold leading-none">
+                              {assigns[role].length}
+                            </span>
+                          )}
+                        </div>
+                        <ChevronDown
+                          className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-150 ${openRole === role ? "rotate-180" : ""}`}
+                        />
+                      </button>
+                      {/* Checkbox list */}
+                      {openRole === role && (
+                        <div className="px-3 py-2 space-y-1.5 max-h-32 overflow-y-auto border-t border-border bg-background">
+                          {members.map((m) => (
+                            <label
+                              key={m}
+                              className="flex items-center gap-2 cursor-pointer group"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={assigns[role].includes(m)}
+                                onChange={() => toggleAssign(role, m)}
+                                className="w-3.5 h-3.5 accent-primary rounded"
+                              />
+                              <span className="text-[11px] text-foreground group-hover:text-primary transition-colors">
+                                {m}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                      {/* Selected chips */}
+                      {assigns[role].length > 0 && (
+                        <div className="px-3 py-2 flex flex-wrap gap-1 border-t border-border bg-background">
+                          {assigns[role].map((m) => (
+                            <span
+                              key={m}
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold ${accent}`}
+                            >
+                              {m}
+                              <button
+                                type="button"
+                                onClick={() => toggleAssign(role, m)}
+                                className="hover:opacity-60 transition-opacity ml-0.5"
+                              >
+                                <X className="w-2.5 h-2.5" />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Summary preview */}
+
+                <div className="flex gap-2 pt-0.5">
+                  <button
+                    onClick={() => setStep(1)}
+                    className="flex-1 py-2 text-xs font-semibold border border-border rounded-xl text-muted-foreground hover:bg-muted transition-colors"
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    onClick={handleCreate}
+                    disabled={!step2Valid}
+                    className="flex-1 py-2 text-xs font-bold rounded-xl text-white bg-primary hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Create Project
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="py-14 flex flex-col items-center gap-3">
+            <CheckCircle2 className="w-12 h-12 text-emerald-500" />
+            <p className="text-sm font-bold text-foreground">
+              Project Created!
+            </p>
+            <p className="text-[11px] text-muted-foreground text-center px-8">
+              <span className="font-semibold text-foreground">{form.name}</span>{" "}
+              has been added as a Draft project and is ready for team
+              assignment.
+            </p>
+            <button
+              onClick={onClose}
+              className="mt-2 px-5 py-2 text-xs font-bold rounded-xl border border-border text-muted-foreground hover:bg-muted transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── PROJECT LIST VIEW ──────────────���────────────────────────── */
 function ProjectList({ onSelect }: { onSelect: (p: Project) => void }) {
+  const [showNewProjectModal, setShowNewProjectModal] = useState(false);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("All");
   const [filterSpec, setFilterSpec] = useState("All");
@@ -2462,7 +2921,10 @@ function ProjectList({ onSelect }: { onSelect: (p: Project) => void }) {
             Manage coding projects, clients, and team assignments
           </p>
         </div>
-        <button className="inline-flex items-center gap-2 whitespace-nowrap px-3.5 py-2 text-xs bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-semibold">
+        <button
+          onClick={() => setShowNewProjectModal(true)}
+          className="inline-flex items-center gap-2 whitespace-nowrap px-3.5 py-2 text-xs bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-semibold"
+        >
           <Plus className="w-3.5 h-3.5" />
           New Project
         </button>
@@ -2670,6 +3132,10 @@ function ProjectList({ onSelect }: { onSelect: (p: Project) => void }) {
           </table>
         </div>
       </Card>
+
+      {showNewProjectModal && (
+        <NewProjectModal onClose={() => setShowNewProjectModal(false)} />
+      )}
     </div>
   );
 }

@@ -18,6 +18,7 @@ import {
   Star,
   User,
   Users,
+  FolderKanban,
 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -62,6 +63,12 @@ const PRIMARY_NAV: NavItem[] = [
     badge: { count: 24, variant: "blue" },
   },
   { id: "clients", label: "Clients", icon: Users, roles: ["program-manager"] },
+  {
+    id: "projects",
+    label: "Projects",
+    icon: FolderKanban,
+    roles: ["program-manager"],
+  },
   {
     id: "audit-sampling",
     label: "Audit & Sampling",

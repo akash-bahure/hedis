@@ -15,6 +15,7 @@ import { Route as AuthIndexRouteImport } from './routes/auth/index'
 import { Route as AppLayoutWorkQueueIndexRouteImport } from './routes/_appLayout/work-queue/index'
 import { Route as AppLayoutSystemLogsIndexRouteImport } from './routes/_appLayout/system-logs/index'
 import { Route as AppLayoutReportsIndexRouteImport } from './routes/_appLayout/reports/index'
+import { Route as AppLayoutProjectsIndexRouteImport } from './routes/_appLayout/projects/index'
 import { Route as AppLayoutMeasureLibraryIndexRouteImport } from './routes/_appLayout/measure-library/index'
 import { Route as AppLayoutDashboardIndexRouteImport } from './routes/_appLayout/dashboard/index'
 import { Route as AppLayoutClientsIndexRouteImport } from './routes/_appLayout/clients/index'
@@ -51,6 +52,11 @@ const AppLayoutSystemLogsIndexRoute =
 const AppLayoutReportsIndexRoute = AppLayoutReportsIndexRouteImport.update({
   id: '/reports/',
   path: '/reports/',
+  getParentRoute: () => AppLayoutRoute,
+} as any)
+const AppLayoutProjectsIndexRoute = AppLayoutProjectsIndexRouteImport.update({
+  id: '/projects/',
+  path: '/projects/',
   getParentRoute: () => AppLayoutRoute,
 } as any)
 const AppLayoutMeasureLibraryIndexRoute =
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/clients/': typeof AppLayoutClientsIndexRoute
   '/dashboard/': typeof AppLayoutDashboardIndexRoute
   '/measure-library/': typeof AppLayoutMeasureLibraryIndexRoute
+  '/projects/': typeof AppLayoutProjectsIndexRoute
   '/reports/': typeof AppLayoutReportsIndexRoute
   '/system-logs/': typeof AppLayoutSystemLogsIndexRoute
   '/work-queue/': typeof AppLayoutWorkQueueIndexRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/clients': typeof AppLayoutClientsIndexRoute
   '/dashboard': typeof AppLayoutDashboardIndexRoute
   '/measure-library': typeof AppLayoutMeasureLibraryIndexRoute
+  '/projects': typeof AppLayoutProjectsIndexRoute
   '/reports': typeof AppLayoutReportsIndexRoute
   '/system-logs': typeof AppLayoutSystemLogsIndexRoute
   '/work-queue': typeof AppLayoutWorkQueueIndexRoute
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/_appLayout/clients/': typeof AppLayoutClientsIndexRoute
   '/_appLayout/dashboard/': typeof AppLayoutDashboardIndexRoute
   '/_appLayout/measure-library/': typeof AppLayoutMeasureLibraryIndexRoute
+  '/_appLayout/projects/': typeof AppLayoutProjectsIndexRoute
   '/_appLayout/reports/': typeof AppLayoutReportsIndexRoute
   '/_appLayout/system-logs/': typeof AppLayoutSystemLogsIndexRoute
   '/_appLayout/work-queue/': typeof AppLayoutWorkQueueIndexRoute
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/clients/'
     | '/dashboard/'
     | '/measure-library/'
+    | '/projects/'
     | '/reports/'
     | '/system-logs/'
     | '/work-queue/'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/clients'
     | '/dashboard'
     | '/measure-library'
+    | '/projects'
     | '/reports'
     | '/system-logs'
     | '/work-queue'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/_appLayout/clients/'
     | '/_appLayout/dashboard/'
     | '/_appLayout/measure-library/'
+    | '/_appLayout/projects/'
     | '/_appLayout/reports/'
     | '/_appLayout/system-logs/'
     | '/_appLayout/work-queue/'
@@ -231,6 +243,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports/'
       preLoaderRoute: typeof AppLayoutReportsIndexRouteImport
+      parentRoute: typeof AppLayoutRoute
+    }
+    '/_appLayout/projects/': {
+      id: '/_appLayout/projects/'
+      path: '/projects'
+      fullPath: '/projects/'
+      preLoaderRoute: typeof AppLayoutProjectsIndexRouteImport
       parentRoute: typeof AppLayoutRoute
     }
     '/_appLayout/measure-library/': {
@@ -291,6 +310,7 @@ interface AppLayoutRouteChildren {
   AppLayoutClientsIndexRoute: typeof AppLayoutClientsIndexRoute
   AppLayoutDashboardIndexRoute: typeof AppLayoutDashboardIndexRoute
   AppLayoutMeasureLibraryIndexRoute: typeof AppLayoutMeasureLibraryIndexRoute
+  AppLayoutProjectsIndexRoute: typeof AppLayoutProjectsIndexRoute
   AppLayoutReportsIndexRoute: typeof AppLayoutReportsIndexRoute
   AppLayoutSystemLogsIndexRoute: typeof AppLayoutSystemLogsIndexRoute
   AppLayoutWorkQueueIndexRoute: typeof AppLayoutWorkQueueIndexRoute
@@ -302,6 +322,7 @@ const AppLayoutRouteChildren: AppLayoutRouteChildren = {
   AppLayoutClientsIndexRoute: AppLayoutClientsIndexRoute,
   AppLayoutDashboardIndexRoute: AppLayoutDashboardIndexRoute,
   AppLayoutMeasureLibraryIndexRoute: AppLayoutMeasureLibraryIndexRoute,
+  AppLayoutProjectsIndexRoute: AppLayoutProjectsIndexRoute,
   AppLayoutReportsIndexRoute: AppLayoutReportsIndexRoute,
   AppLayoutSystemLogsIndexRoute: AppLayoutSystemLogsIndexRoute,
   AppLayoutWorkQueueIndexRoute: AppLayoutWorkQueueIndexRoute,
