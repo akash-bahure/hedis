@@ -84,10 +84,34 @@ exports.getUserRoles = async (req, res) => {
 exports.updateUserRole = async (req, res) => {
   const { id } = req.params;
   const client = req.db;
+
   try {
     const { name, description, level, active, role_permissions } = req.body;
 
     await client.query("BEGIN");
+
+    // Check if role exists
+    const roleCheck = await client.query(
+      "SELECT * FROM user_roles WHERE id = $1",
+      [id]
+    );
+
+    if (roleCheck.rows.length === 0) {
+      await client.query("ROLLBACK");
+
+      return res.status(404).json({
+        message: "Role not found",
+      });
+    }
+
+    // Prevent editing system roles
+    if (roleCheck.rows[0].system_role) {
+      await client.query("ROLLBACK");
+
+      return res.status(403).json({
+        message: "System roles cannot be edited",
+      });
+    }
 
     // Build update fields dynamically
     const fields = [];
@@ -98,14 +122,17 @@ exports.updateUserRole = async (req, res) => {
       fields.push(`name = $${index++}`);
       values.push(name);
     }
+
     if (description !== undefined) {
       fields.push(`description = $${index++}`);
       values.push(description);
     }
+
     if (level !== undefined) {
       fields.push(`level = $${index++}`);
       values.push(level);
     }
+
     if (active !== undefined) {
       fields.push(`active = $${index++}`);
       values.push(active);
@@ -113,40 +140,60 @@ exports.updateUserRole = async (req, res) => {
 
     if (fields.length === 0 && !role_permissions) {
       await client.query("ROLLBACK");
-      return res.status(400).json({ message: "No fields to update" });
+
+      return res.status(400).json({
+        message: "No fields to update",
+      });
     }
 
     let roleResult = null;
+
+    // Update role details
     if (fields.length > 0) {
-      const query = `UPDATE user_roles SET ${fields.join(
-        ", "
-      )}, updated_at = CURRENT_TIMESTAMP WHERE id = $${index} RETURNING *`;
+      const query = `
+        UPDATE user_roles 
+        SET ${fields.join(", ")},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = $${index}
+        RETURNING *
+      `;
+
       values.push(id);
+
       roleResult = await client.query(query, values);
 
       if (roleResult.rows.length === 0) {
         await client.query("ROLLBACK");
-        return res.status(404).json({ message: "Role not found" });
-      }
 
-      if (roleCheck.rows[0].system_role) {
-        return res.status(403).json({
-          message: "System roles cannot be edited"
+        return res.status(404).json({
+          message: "Role not found",
         });
       }
     }
 
     // Update permissions if provided
     if (role_permissions && Array.isArray(role_permissions)) {
+      // Delete old permissions
       await client.query("DELETE FROM role_permissions WHERE role_id = $1", [
         id,
       ]);
 
+      // Insert updated permissions
       for (const permission of role_permissions) {
         await client.query(
           `INSERT INTO role_permissions 
-          (role_id, module, can_view, can_edit, can_assign, can_approve, can_reject, can_export, can_override) 
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+          (
+            role_id,
+            module,
+            can_view,
+            can_edit,
+            can_assign,
+            can_approve,
+            can_reject,
+            can_export,
+            can_override
+          ) 
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
           [
             id,
             permission.module,
@@ -174,9 +221,12 @@ exports.updateUserRole = async (req, res) => {
     });
   } catch (error) {
     await client.query("ROLLBACK");
-    res.status(500).json({ error: error.message });
-  } finally {
-    client.release();
+
+    console.error("Update User Role Error:", error);
+
+    res.status(500).json({
+      error: error.message,
+    });
   }
 };
 

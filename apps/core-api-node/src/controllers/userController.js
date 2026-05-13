@@ -39,6 +39,10 @@ const userSchema = z.object({
   is_super_administrator: z.boolean().optional(),
   project_access: z.array(z.string().uuid()).optional(),
 });
+const deactivateUsersSchema = z.object({
+  user_ids: z.array(z.string().uuid()),
+});
+
 const generateInviteToken = () => crypto.randomBytes(32).toString("hex");
 // CREATE USER
 exports.createUser = async (req, res) => {
@@ -176,7 +180,14 @@ exports.createUser = async (req, res) => {
 exports.getUsers = async (req, res) => {
   const client = req.db;
   try {
-    const { page = 1, limit = 10, search, user_role, user_status, department_id } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      user_role,
+      user_status,
+      department_id,
+    } = req.query;
     const offset = (page - 1) * Number(limit);
 
     let whereClause = "WHERE 1=1";
@@ -281,8 +292,23 @@ exports.updateUser = async (req, res) => {
 
   try {
     const validatedData = userSchema.partial().parse(req.body);
+
     if (Object.keys(validatedData).length === 0) {
-      return res.status(400).json({ message: "No fields to update" });
+      return res.status(400).json({
+        message: "No fields to update",
+      });
+    }
+
+    // Sync user_status with is_active
+    if (validatedData.user_status === "Active") {
+      validatedData.is_active = true;
+    }
+
+    if (
+      validatedData.user_status === "Inactive" ||
+      validatedData.user_status === "Suspended"
+    ) {
+      validatedData.is_active = false;
     }
 
     const {
@@ -294,33 +320,42 @@ exports.updateUser = async (req, res) => {
       ...otherFields
     } = validatedData;
 
-    // Existence check
+    // Check if user exists
     const userCheck = await client.query("SELECT id FROM users WHERE id = $1", [
       id,
     ]);
+
     if (userCheck.rows.length === 0) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({
+        message: "User not found",
+      });
     }
 
-    // Email uniqueness
+    // Check email uniqueness
     if (email) {
       const existing = await client.query(
         "SELECT id FROM users WHERE email = $1 AND id != $2",
         [email, id]
       );
+
       if (existing.rows.length > 0) {
-        return res.status(400).json({ message: "Email already exists" });
+        return res.status(400).json({
+          message: "Email already exists",
+        });
       }
     }
 
-    // Role validation
+    // Validate role
     if (user_role) {
       const roleCheck = await client.query(
         "SELECT id FROM user_roles WHERE id = $1",
         [user_role]
       );
+
       if (roleCheck.rows.length === 0) {
-        return res.status(400).json({ message: "Invalid user role ID" });
+        return res.status(400).json({
+          message: "Invalid user role ID",
+        });
       }
     }
 
@@ -334,31 +369,39 @@ exports.updateUser = async (req, res) => {
       values.push(value);
     }
 
+    // Email
     if (email) {
       fields.push(`email = $${index++}`);
       values.push(email);
     }
+
+    // User role
     if (user_role) {
       fields.push(`user_role_id = $${index++}`);
       values.push(user_role);
     }
+
+    // Address fields
     if (address) {
       for (const [key, value] of Object.entries(address)) {
         fields.push(`${key} = $${index++}`);
         values.push(value);
       }
     }
+
+    // Project access
     if (project_access !== undefined) {
       fields.push(`project_access = $${index++}`);
-      values.push(project_access || []); // Direct array
+      values.push(project_access || []);
     }
 
+    // Updated timestamp
     fields.push(`updated_at = CURRENT_TIMESTAMP`);
 
     const query = `
-      UPDATE users 
-      SET ${fields.join(", ")} 
-      WHERE id = $${index} 
+      UPDATE users
+      SET ${fields.join(", ")}
+      WHERE id = $${index}
       RETURNING *
     `;
 
@@ -372,9 +415,16 @@ exports.updateUser = async (req, res) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ errors: error.errors });
+      return res.status(400).json({
+        errors: error.errors,
+      });
     }
-    res.status(500).json({ error: error.message });
+
+    console.error("Update User Error:", error);
+
+    res.status(500).json({
+      error: error.message,
+    });
   }
 };
 
@@ -845,6 +895,40 @@ exports.getShiftStats = async (req, res) => {
     res.json(stats);
   } catch (error) {
     console.error("Get Shift Stats Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// DEACTIVATE USERS
+exports.deactivateUsers = async (req, res) => {
+  const client = req.db;
+  try {
+    const { user_ids } = deactivateUsersSchema.parse(req.body);
+
+    if (!user_ids || user_ids.length === 0) {
+      return res.status(400).json({ message: "No user IDs provided" });
+    }
+
+    const query = `
+      UPDATE users 
+      SET is_active = false, 
+          user_status = 'Inactive',
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ANY($1)
+      RETURNING id
+    `;
+
+    const result = await client.query(query, [user_ids]);
+
+    res.json({
+      message: `${result.rowCount} user(s) deactivated successfully`,
+      deactivated_user_ids: result.rows.map((r) => r.id),
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ errors: error.errors });
+    }
+    console.error("Deactivate Users Error:", error);
     res.status(500).json({ error: error.message });
   }
 };
