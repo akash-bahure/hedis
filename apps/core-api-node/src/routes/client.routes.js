@@ -42,13 +42,13 @@ const controller = require("../controllers/client.controller");
  *                 example: ABC001
  *               region:
  *                 type: string
- *                 enum: [North, South, East, West]
+ *                 enum: [West, South, Northeast, Southeast, Mountain, Midwest, Southwest]
  *               plan_tier:
  *                 type: string
  *                 enum: [Basic, Professional, Enterprise]
  *               status:
  *                 type: string
- *                 enum: [Onboarding, Active, Inactive]
+ *                 enum: [Onboarding, Active, Inactive, At Risk]
  *
  *               contract_type:
  *                 type: string
@@ -65,7 +65,6 @@ const controller = require("../controllers/client.controller");
  *               due_date:
  *                 type: string
  *                 format: date
- *
  *               primary_contact_name:
  *                 type: string
  *                 example: John Doe
@@ -115,6 +114,7 @@ router.post("/", controller.createClient);
  *             - Southeast
  *             - Mountain
  *             - Midwest
+ *             - Southwest
  *         description: Filter by region
  *
  *       - in: query

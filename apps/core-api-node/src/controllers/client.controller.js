@@ -7,6 +7,7 @@ exports.createClient = async (req, res) => {
       "org_name",
       "short_code",
       "region",
+      "status",
       "contract_type",
       "measure_year",
       "total_charts",

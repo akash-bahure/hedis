@@ -10,7 +10,7 @@ module.exports = async function tenantMiddleware(req, res, next) {
     const subdomain = hostname.split(".")[0];
 
     const result = await client.query(
-      "SELECT * FROM tenants WHERE subdomain = $1",
+      "SELECT * FROM public.tenants WHERE subdomain = $1",
       [subdomain]
     );
 
@@ -30,7 +30,7 @@ module.exports = async function tenantMiddleware(req, res, next) {
     if (!/^[a-zA-Z0-9_]+$/.test(tenant.schema_name)) {
       throw new Error("Invalid schema");
     }
-    await client.query(`SET search_path TO ${tenant.schema_name}`);
+    await client.query(`SET search_path TO ${tenant.schema_name}, public`);
 
     req.db = client;
     req.tenant = tenant;
