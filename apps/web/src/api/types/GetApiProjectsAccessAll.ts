@@ -3,6 +3,14 @@
  * Do not edit manually.
  */
 
+export type GetApiProjectsAccessAllQueryParams = {
+  /**
+   * @description Filter users by department ID
+   * @type string | undefined, uuid
+   */
+  department_id?: string;
+};
+
 export const projectAccessAccessLevelEnum = {
   Full: "Full",
   Edit: "Edit",
@@ -22,5 +30,6 @@ export type GetApiProjectsAccessAllQueryResponse = GetApiProjectsAccessAll200;
 
 export type GetApiProjectsAccessAllQuery = {
   Response: GetApiProjectsAccessAll200;
+  QueryParams: GetApiProjectsAccessAllQueryParams;
   Errors: any;
 };

@@ -75,6 +75,19 @@ export {
   postApiClientsMutationResponseSchema,
 } from "./ClientsSchemas/postApiClientsSchema.ts";
 export {
+  getApiDepartments200Schema,
+  getApiDepartments500Schema,
+  getApiDepartmentsQueryParamsSchema,
+  getApiDepartmentsQueryResponseSchema,
+} from "./DepartmentsSchemas/getApiDepartmentsSchema.ts";
+export {
+  postApiDepartments201Schema,
+  postApiDepartments400Schema,
+  postApiDepartments500Schema,
+  postApiDepartmentsMutationRequestSchema,
+  postApiDepartmentsMutationResponseSchema,
+} from "./DepartmentsSchemas/postApiDepartmentsSchema.ts";
+export {
   deleteAdminOrgsId200Schema,
   deleteAdminOrgsId401Schema,
   deleteAdminOrgsId403Schema,
@@ -158,6 +171,7 @@ export {
 } from "./ProjectsSchemas/deleteApiProjectsIdSchema.ts";
 export {
   getApiProjectsAccessAll200Schema,
+  getApiProjectsAccessAllQueryParamsSchema,
   getApiProjectsAccessAllQueryResponseSchema,
 } from "./ProjectsSchemas/getApiProjectsAccessAllSchema.ts";
 export {

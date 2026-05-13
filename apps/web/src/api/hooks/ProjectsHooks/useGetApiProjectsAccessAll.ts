@@ -14,21 +14,27 @@ import type {
   QueryObserverOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
-import type { GetApiProjectsAccessAllQueryResponse } from "../../types/GetApiProjectsAccessAll.ts";
+import type {
+  GetApiProjectsAccessAllQueryResponse,
+  GetApiProjectsAccessAllQueryParams,
+} from "../../types/GetApiProjectsAccessAll.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { getApiProjectsAccessAll } from "../../clients/getApiProjectsAccessAll.ts";
 
-export const getApiProjectsAccessAllQueryKey = () =>
-  [{ url: "/api/projects/access/all" }] as const;
+export const getApiProjectsAccessAllQueryKey = (
+  params?: GetApiProjectsAccessAllQueryParams,
+) =>
+  [{ url: "/api/projects/access/all" }, ...(params ? [params] : [])] as const;
 
 export type GetApiProjectsAccessAllQueryKey = ReturnType<
   typeof getApiProjectsAccessAllQueryKey
 >;
 
 export function getApiProjectsAccessAllQueryOptions(
+  params?: GetApiProjectsAccessAllQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
-  const queryKey = getApiProjectsAccessAllQueryKey();
+  const queryKey = getApiProjectsAccessAllQueryKey(params);
   return queryOptions<
     GetApiProjectsAccessAllQueryResponse,
     ResponseErrorConfig<Error>,
@@ -37,7 +43,7 @@ export function getApiProjectsAccessAllQueryOptions(
   >({
     queryKey,
     queryFn: async ({ signal }) => {
-      return getApiProjectsAccessAll({
+      return getApiProjectsAccessAll(params, {
         ...config,
         signal: config.signal ?? signal,
       });
@@ -55,6 +61,7 @@ export function useGetApiProjectsAccessAll<
   TQueryData = GetApiProjectsAccessAllQueryResponse,
   TQueryKey extends QueryKey = GetApiProjectsAccessAllQueryKey,
 >(
+  params?: GetApiProjectsAccessAllQueryParams,
   options: {
     query?: Partial<
       QueryObserverOptions<
@@ -71,11 +78,11 @@ export function useGetApiProjectsAccessAll<
   const { query: queryConfig = {}, client: config = {} } = options ?? {};
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
-    resolvedOptions?.queryKey ?? getApiProjectsAccessAllQueryKey();
+    resolvedOptions?.queryKey ?? getApiProjectsAccessAllQueryKey(params);
 
   const query = useQuery(
     {
-      ...getApiProjectsAccessAllQueryOptions(config),
+      ...getApiProjectsAccessAllQueryOptions(params, config),
       ...resolvedOptions,
       queryKey,
     } as unknown as QueryObserverOptions,

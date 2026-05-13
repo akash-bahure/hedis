@@ -7,8 +7,17 @@ import * as z from "zod";
 import type { ToZod } from "../../.kubb/ToZod.ts";
 import type {
   GetApiProjectsAccessAll200,
+  GetApiProjectsAccessAllQueryParams,
   GetApiProjectsAccessAllQueryResponse,
 } from "../../types/GetApiProjectsAccessAll.ts";
+
+export const getApiProjectsAccessAllQueryParamsSchema = z
+  .object({
+    department_id: z.optional(
+      z.string().uuid().describe("Filter users by department ID"),
+    ),
+  })
+  .optional() as unknown as ToZod<GetApiProjectsAccessAllQueryParams>;
 
 /**
  * @description Project access grid fetched successfully
