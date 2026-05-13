@@ -64,6 +64,19 @@ import {
   useGetApiUserRolesId,
   getApiUserRolesQueryKey,
 } from "@/api";
+import {
+  usePostApiUsers,
+  useGetApiUsers,
+  usePatchApiUsersId,
+  useGetApiProjects,
+  getApiUsersQueryKey,
+  useGetApiUsersExport,
+  useGetApiUsersStats,
+  usePostApiDepartments,
+  useGetApiDepartments,
+} from "@/api";
+import { getApiUsersExport } from "@/api";
+
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -867,8 +880,10 @@ const initShiftSchedule = (): Record<string, Record<WeekDay, ShiftType>> => {
 };
 
 /* ════════════════════════════════════════════  SMALL COMPONENTS  */
-function StatusBadge({ status }: { status: StatusVal }) {
-  const cfg = {
+function StatusBadge({ status }: { status: string }) {
+  const key = status?.toLowerCase(); //  fix
+
+  const config = {
     active: {
       bg: "bg-emerald-50",
       border: "border-emerald-200",
@@ -887,13 +902,31 @@ function StatusBadge({ status }: { status: StatusVal }) {
       text: "text-red-700",
       dot: "bg-red-500",
     },
-  }[status];
+    pending: {
+      bg: "bg-yellow-50",
+      border: "border-yellow-200",
+      text: "text-yellow-700",
+      dot: "bg-yellow-500",
+    },
+  };
+
+  const cfg = config[key as keyof typeof config];
+
+  //  fallback to prevent crash
+  if (!cfg) {
+    return (
+      <span className="px-2 py-0.5 text-[10px] rounded-full border text-gray-500">
+        {status}
+      </span>
+    );
+  }
+
   return (
     <span
       className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold rounded-full border ${cfg.bg} ${cfg.border} ${cfg.text}`}
     >
       <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+      {status}
     </span>
   );
 }
@@ -908,9 +941,9 @@ function RoleBadge({
   const m = ROLE_META[roleId];
   return (
     <span
-      className={`inline-flex items-center font-bold rounded-full border ${m.bg} ${m.border} ${m.textColor} ${small ? "px-1.5 py-0 text-[9px]" : "px-2 py-0.5 text-[10px]"}`}
+      className={`inline-flex items-center font-bold rounded-full border px-2 py-0.5 text-[10px] bg-muted text-muted-foreground`}
     >
-      {m.label}
+      {roleId}
     </span>
   );
 }
@@ -1070,38 +1103,18 @@ function AccessChip({
 }
 
 /* ════════════════════════════════════════════  USER PROFILE SLIDE-OVER  */
+/* ════════════════════════════════════════════  USER PROFILE SLIDE-OVER  */
 function UserProfile({
   user,
   onClose,
   onEditRole,
 }: {
-  user: User;
+  user: any; // Now receives enhanced object
   onClose: () => void;
   onEditRole?: () => void;
 }) {
-  const [showActivity, setShowActivity] = useState(false);
-  const [localTwoFA, setLocalTwoFA] = useState(user.twoFA);
-  const [localSso, setLocalSso] = useState(user.sso);
-  const rm = ROLE_META[user.role];
-  const activity = [
-    { action: "Logged in via SSO", time: "20 Feb 2026, 09:42", icon: LogIn },
-    {
-      action: "Coded chart CHT-78421 (Apollo)",
-      time: "20 Feb 2026, 09:55",
-      icon: Code2,
-    },
-    {
-      action: "AI suggestion accepted ×14",
-      time: "20 Feb 2026, 10:11",
-      icon: Sparkles,
-    },
-    {
-      action: "Chart CHT-78399 submitted",
-      time: "19 Feb 2026, 16:48",
-      icon: CheckCircle2,
-    },
-    { action: "Password changed", time: "14 Feb 2026, 11:05", icon: Key },
-  ];
+  const [localTwoFA, setLocalTwoFA] = useState(user.two_fa_auth ?? false);
+  const [localSso, setLocalSso] = useState(false);
 
   return (
     <div className="fixed inset-0 z-50 flex">
@@ -1115,21 +1128,27 @@ function UserProfile({
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
               <Avatar
-                initials={user.initials}
+                initials={
+                  user.full_name
+                    ?.split(" ")
+                    .map((n: string) => n[0])
+                    .join("")
+                    .toUpperCase() || "??"
+                }
                 color="bg-primary/15"
                 textColor="text-primary"
                 size={12}
               />
               <div>
                 <h3 className="text-sm font-black text-foreground">
-                  {user.name}
+                  {user.full_name}
                 </h3>
                 <p className="text-[11px] text-muted-foreground">
                   {user.email}
                 </p>
                 <div className="flex items-center gap-2 mt-1">
-                  <RoleBadge roleId={user.role} />
-                  <StatusBadge status={user.status} />
+                  <RoleBadge roleId={user.roleName || user.user_role?.name} />
+                  <StatusBadge status={user.status || user.user_status} />
                 </div>
               </div>
             </div>
@@ -1140,11 +1159,16 @@ function UserProfile({
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
+
+          {/* Quick Info Cards */}
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: "Employee ID", value: user.employeeId },
-              { label: "Department", value: user.department.split(" ")[0] },
-              { label: "Location", value: user.location },
+              { label: "Employee ID", value: user.employeeId || "N/A" },
+              {
+                label: "Department",
+                value: user.department_name || "Not Assigned",
+              },
+              { label: "Shift", value: user.shift || "Not Assigned" },
             ].map((s) => (
               <div
                 key={s.label}
@@ -1161,29 +1185,41 @@ function UserProfile({
           </div>
         </div>
 
-        {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-1">
-          {/* Account Info */}
+        {/* Scrollable Body */}
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+          {/* Account Information */}
           <SectionBlock title="Account Information">
             <div className="bg-muted/20 rounded-xl px-3 py-1 border border-border/50">
               <InfoRow icon={Mail} label="Email" value={user.email} />
-              <InfoRow icon={Phone} label="Phone" value={user.phone} />
+              <InfoRow icon={Phone} label="Phone" value={user.phone || "N/A"} />
               <InfoRow
                 icon={Building2}
                 label="Department"
-                value={user.department}
+                value={user.department_name || "Not Assigned"}
               />
-              <InfoRow icon={UserCheck} label="Manager" value={user.manager} />
-              <InfoRow icon={MapPin} label="Location" value={user.location} />
+              <InfoRow
+                icon={UserCheck}
+                label="Job Title"
+                value={user.job_title || "Not Specified"}
+              />
+              <InfoRow
+                icon={MapPin}
+                label="Location"
+                value={user.location || "N/A"}
+              />
               <InfoRow
                 icon={Calendar}
                 label="Member Since"
-                value={user.created}
+                value={
+                  user.created_at
+                    ? new Date(user.created_at).toLocaleDateString()
+                    : "N/A"
+                }
               />
               <InfoRow
                 icon={Tag}
                 label="Employee ID"
-                value={user.employeeId}
+                value={user.employeeId || "N/A"}
                 mono
               />
             </div>
@@ -1192,62 +1228,33 @@ function UserProfile({
           {/* Role & Permissions */}
           <SectionBlock title="Role & Permissions">
             <div className="flex items-center gap-3 p-3 rounded-xl border border-border bg-muted/10 mb-2">
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: rm.color + "20" }}
-              >
-                <UserCog className="w-4 h-4" style={{ color: rm.color }} />
-              </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-black text-foreground">
-                    {rm.label}
-                  </span>
-                  <span className="text-[9px] text-muted-foreground">
-                    Level {rm.level}
+                    {user.roleName || user.user_role_full?.name || "No Role"}
                   </span>
                 </div>
-                <p className="text-[10px] text-muted-foreground leading-tight truncate">
-                  {rm.desc}
+                <p className="text-[10px] text-muted-foreground leading-tight">
+                  {user.user_role_full?.description ||
+                    "No description available"}
                 </p>
               </div>
             </div>
+
             <div className="grid grid-cols-4 gap-2">
               {[
                 { label: "View", on: true },
-                {
-                  label: "Edit",
-                  on: [
-                    "admin",
-                    "super-admin",
-                    "project-manager",
-                    "senior-coder",
-                  ].includes(user.role),
-                },
-                {
-                  label: "Approve",
-                  on: [
-                    "admin",
-                    "super-admin",
-                    "senior-coder",
-                    "senior-auditor",
-                    "auditor",
-                  ].includes(user.role),
-                },
-                {
-                  label: "Export",
-                  on: [
-                    "admin",
-                    "super-admin",
-                    "project-manager",
-                    "senior-coder",
-                    "senior-auditor",
-                  ].includes(user.role),
-                },
+                { label: "Edit", on: true },
+                { label: "Approve", on: false },
+                { label: "Export", on: true },
               ].map((p) => (
                 <div
                   key={p.label}
-                  className={`flex flex-col items-center gap-1 px-2 py-2 rounded-lg border text-[9px] font-bold ${p.on ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-muted border-border text-muted-foreground"}`}
+                  className={`flex flex-col items-center gap-1 px-2 py-2 rounded-lg border text-[9px] font-bold ${
+                    p.on
+                      ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                      : "bg-muted border-border text-muted-foreground"
+                  }`}
                 >
                   {p.on ? (
                     <CheckCircle2 className="w-3.5 h-3.5" />
@@ -1263,50 +1270,32 @@ function UserProfile({
           {/* Project Access */}
           <SectionBlock title="Project Access">
             <div className="space-y-1.5">
-              {PROJECTS_LIST.map((p) => {
-                const hasAccess =
-                  user.projects.includes("All Projects") ||
-                  user.projects.includes(p);
-                return (
+              {user.projects && user.projects.length > 0 ? (
+                user.projects.map((p: any) => (
                   <div
-                    key={p}
-                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border ${hasAccess ? "bg-card border-border" : "bg-muted/10 border-border/50"}`}
+                    key={p.id}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-lg border bg-card border-border"
                   >
-                    <div
-                      className={`w-2 h-2 rounded-full flex-shrink-0 ${hasAccess ? "bg-emerald-500" : "bg-slate-300"}`}
-                    />
-                    <span
-                      className={`text-[11px] font-semibold flex-1 ${hasAccess ? "text-foreground" : "text-muted-foreground"}`}
-                    >
-                      {p}
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
+                    <span className="text-[11px] font-semibold flex-1">
+                      {p.project_name}
                     </span>
-                    {hasAccess ? (
-                      <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">
-                        {["admin", "super-admin"].includes(user.role)
-                          ? "Full"
-                          : [
-                                "project-manager",
-                                "senior-coder",
-                                "senior-auditor",
-                              ].includes(user.role)
-                            ? "Edit"
-                            : "View"}
-                      </span>
-                    ) : (
-                      <span className="text-[9px] text-muted-foreground">
-                        No Access
-                      </span>
-                    )}
+                    <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">
+                      Access
+                    </span>
                   </div>
-                );
-              })}
+                ))
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No projects assigned
+                </div>
+              )}
             </div>
           </SectionBlock>
 
           {/* Login & Security */}
           <SectionBlock title="Login & Security">
             <div className="space-y-2">
-              {/* 2FA */}
               <div className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-border bg-muted/10">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
@@ -1348,29 +1337,29 @@ function UserProfile({
                   size="md"
                 />
               </div>
-              {/* Session info */}
+
               <div className="grid grid-cols-2 gap-2">
                 <div className="px-3 py-2 rounded-xl border border-border bg-muted/10">
                   <div className="text-[9px] text-muted-foreground">
                     Last Login
                   </div>
                   <div className="text-[10px] font-semibold text-foreground mt-0.5">
-                    {user.lastLogin}
+                    {user.last_login
+                      ? new Date(user.last_login).toLocaleString()
+                      : "Never"}
                   </div>
                 </div>
                 <div className="px-3 py-2 rounded-xl border border-border bg-muted/10">
-                  <div className="text-[9px] text-muted-foreground">
-                    Session Timeout
-                  </div>
+                  <div className="text-[9px] text-muted-foreground">Status</div>
                   <div className="text-[10px] font-semibold text-foreground mt-0.5">
-                    {user.sessionTimeout} min
+                    {user.status || user.user_status}
                   </div>
                 </div>
               </div>
             </div>
           </SectionBlock>
 
-          {/* Shift */}
+          {/* Shift Assignment */}
           <SectionBlock title="Shift Assignment">
             <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border bg-muted/10">
               <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
@@ -1378,49 +1367,45 @@ function UserProfile({
               </div>
               <div>
                 <p className="text-[11px] font-bold text-foreground">
-                  {user.shift} Shift
-                </p>
-                <p className="text-[9px] text-muted-foreground">
-                  {user.shiftHours} · Mon–Fri
+                  {user.shift || "Not Assigned"} Shift
                 </p>
               </div>
               <ShiftChip shift={user.shift} />
             </div>
           </SectionBlock>
 
-          {/* Activity Log */}
+          {/* Recent Activity */}
           <SectionBlock title="Recent Activity">
             <div className="space-y-1.5">
-              {activity.map((a, i) => {
-                const Icon = a.icon;
-                return (
-                  <div
-                    key={i}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-muted/20 transition-colors"
-                  >
-                    <div className="w-6 h-6 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-3 h-3 text-muted-foreground" />
-                    </div>
-                    <span className="text-[10px] text-foreground flex-1">
-                      {a.action}
-                    </span>
-                    <span className="text-[9px] text-muted-foreground whitespace-nowrap">
-                      {a.time.split(",")[0]}
-                    </span>
-                  </div>
-                );
-              })}
+              <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-muted/20 transition-colors">
+                <div className="w-6 h-6 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                  <LogIn className="w-3 h-3 text-muted-foreground" />
+                </div>
+                <span className="text-[10px] text-foreground flex-1">
+                  Account Created
+                </span>
+                <span className="text-[9px] text-muted-foreground">
+                  {user.created_at
+                    ? new Date(user.created_at).toLocaleDateString()
+                    : "-"}
+                </span>
+              </div>
             </div>
           </SectionBlock>
         </div>
 
-        {/* Footer Actions */}
+        {/* Footer */}
         <div className="border-t border-border px-5 py-3.5 flex gap-2 bg-muted/5 flex-shrink-0">
-          <button className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-[11px] font-bold bg-primary text-white rounded-xl hover:opacity-90 transition-opacity whitespace-nowrap">
+          <button
+            onClick={() => {
+              /* Open edit modal logic here */
+            }}
+            className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-[11px] font-bold bg-primary text-white rounded-xl hover:opacity-90"
+          >
             <Edit2 className="w-3.5 h-3.5" />
             Edit User
           </button>
-          <button className="inline-flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold border border-border rounded-xl hover:bg-muted text-foreground transition-colors whitespace-nowrap">
+          <button className="inline-flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold border border-border rounded-xl hover:bg-muted">
             <Key className="w-3.5 h-3.5" />
             Reset Password
           </button>
@@ -1433,19 +1418,166 @@ function UserProfile({
     </div>
   );
 }
-
 /* ════════════════════════════════════════════  INVITE USER MODAL  */
-function InviteUserModal({ onClose }: { onClose: () => void }) {
+function InviteUserModal({
+  onClose,
+  onAdd,
+  editUser,
+}: {
+  onClose: () => void;
+  editUser?: User;
+  onAdd: (u: User) => void;
+}) {
+  const queryClient = useQueryClient();
+
+  // Form State
   const [form, setForm] = useState({
     name: "",
     email: "",
-    role: "coder" as RoleId,
-    department: "",
-    projects: [] as string[],
-    shift: "Morning" as ShiftType,
+    role: "",
+    shift: "Morning",
     require2FA: true,
     sendEmail: true,
+    projects: [] as string[],
+    departmentId: "",
   });
+
+  const [deptSearch, setDeptSearch] = useState("");
+  const [showCreateDept, setShowCreateDept] = useState(false);
+  const [newDeptName, setNewDeptName] = useState("");
+
+  // Fetch departments
+  const searchTerm = deptSearch?.trim() || undefined;
+  const { data: departmentsData } = useGetApiDepartments({
+    search: searchTerm,
+  });
+  const departments = Array.isArray(departmentsData) ? departmentsData : [];
+
+  // ==================== POPULATE FORM ON EDIT ====================
+  useEffect(() => {
+    if (editUser) {
+      const cleanProjects = Array.isArray(editUser.project_access)
+        ? editUser.project_access.filter(
+            (id): id is string => typeof id === "string" && id.length > 0
+          )
+        : [];
+
+      setForm({
+        name: editUser.full_name || "",
+        email: editUser.email || "",
+        role: editUser.user_role || "",
+        shift: editUser.shift || "Morning",
+        require2FA: editUser.two_fa_auth ?? true,
+        sendEmail: editUser.send_email ?? true,
+        projects: cleanProjects,
+        departmentId: editUser.department_id || "",
+      });
+
+      setDeptSearch(editUser.department_name || "");
+    } else {
+      // Reset for new user
+      setForm({
+        name: "",
+        email: "",
+        role: "",
+        shift: "Morning",
+        require2FA: true,
+        sendEmail: true,
+        projects: [],
+        departmentId: "",
+      });
+      setDeptSearch("");
+    }
+  }, [editUser]);
+
+  // Mutations
+  const { mutate: updateUser } = usePatchApiUsersId({
+    mutation: { onSuccess: () => onClose() },
+  });
+
+  const { mutate: createDepartment, isLoading: isCreatingDept } =
+    usePostApiDepartments({
+      mutation: {
+        onSuccess: (newDept: any) => {
+          toast.success("Department created successfully");
+          setShowCreateDept(false);
+          setNewDeptName("");
+          setField("departmentId", newDept.id);
+          setDeptSearch(newDept.name || "");
+        },
+        onError: () => toast.error("Failed to create department"),
+      },
+    });
+
+  const { mutate, isLoading } = usePostApiUsers({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getApiUsersQueryKey() });
+        toast.success("User Created Successfully");
+        onClose();
+      },
+    },
+  });
+
+  const [errors, setErrors] = useState<{ name?: string; email?: string }>({});
+
+  const setField = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
+    setForm((prev) => ({ ...prev, [k]: v }));
+
+  const toggleProject = (p: string) =>
+    setForm((prev) => ({
+      ...prev,
+      projects: prev.projects.includes(p)
+        ? prev.projects.filter((x) => x !== p)
+        : [...prev.projects, p],
+    }));
+
+  const handleSubmit = () => {
+    const errs: { name?: string; email?: string } = {};
+    if (!form.name.trim()) errs.name = "Full name is required";
+    if (!form.email.trim()) errs.email = "Email is required";
+
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
+
+    // Clean arrays before sending
+    const cleanProjects = form.projects.filter(
+      (id): id is string => typeof id === "string" && id.length > 0
+    );
+
+    const payload = {
+      full_name: form.name.trim(),
+      email: form.email.trim(),
+      user_role: form.role || undefined,
+      project_access: cleanProjects,
+      send_email: form.sendEmail,
+      two_fa_auth: form.require2FA,
+      shift: form.shift,
+      department_id: form.departmentId || undefined,
+    };
+
+    if (editUser) {
+      updateUser(
+        { id: editUser.id, data: payload },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: getApiUsersQueryKey() });
+            toast.success("User Updated Successfully");
+            onClose();
+          },
+          onError: () => toast.error("Failed to Update User"),
+        }
+      );
+    } else {
+      mutate({ data: payload });
+    }
+  };
+
+  const { data: projectsData } = useGetApiProjects();
+  const { data: rolesdata } = useGetApiUserRoles();
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div
@@ -1458,7 +1590,8 @@ function InviteUserModal({ onClose }: { onClose: () => void }) {
             <UserPlus className="w-4 h-4 text-primary" />
           </div>
           <h3 className="text-sm font-black text-foreground">
-            Invite New User
+            {" "}
+            {editUser ? "Update User" : "Invite New User "}
           </h3>
           <button
             onClick={onClose}
@@ -1469,31 +1602,58 @@ function InviteUserModal({ onClose }: { onClose: () => void }) {
         </div>
         <div className="px-6 py-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            {[
-              ["Full Name", "name", "text", "e.g. Priya Sharma"],
-              ["Email Address", "email", "email", "user@healthsys.com"],
-            ].map(([label, key, type, ph]) => (
-              <div key={key} className={key === "name" ? "" : ""}>
-                <label className="block text-[10px] font-bold text-foreground mb-1">
-                  {label}
-                </label>
-                <input
-                  type={type}
-                  placeholder={ph}
-                  className="w-full px-3 py-2 text-[11px] bg-muted/30 border border-border rounded-xl focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-              </div>
-            ))}
+            <div>
+              <label className="block text-[10px] font-bold text-foreground mb-1">
+                Full Name
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Priya Sharma"
+                value={form.name}
+                onChange={(e) => {
+                  setField("name", e.target.value);
+                  setErrors((prev) => ({ ...prev, name: undefined }));
+                }}
+                className={`w-full px-3 py-2 text-[11px] bg-muted/30 border rounded-xl focus:outline-none focus:ring-1 focus:ring-primary ${errors.name ? "border-red-400" : "border-border"}`}
+              />
+              {errors.name && (
+                <p className="text-[9px] text-red-500 mt-0.5">{errors.name}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-foreground mb-1">
+                Email Address
+              </label>
+              <input
+                type="email"
+                placeholder="user@healthsys.com"
+                value={form.email}
+                onChange={(e) => {
+                  setField("email", e.target.value);
+                  setErrors((prev) => ({ ...prev, email: undefined }));
+                }}
+                className={`w-full px-3 py-2 text-[11px] bg-muted/30 border rounded-xl focus:outline-none focus:ring-1 focus:ring-primary ${errors.email ? "border-red-400" : "border-border"}`}
+              />
+              {errors.email && (
+                <p className="text-[9px] text-red-500 mt-0.5">{errors.email}</p>
+              )}
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[10px] font-bold text-foreground mb-1">
                 Role
               </label>
-              <select className="w-full px-3 py-2 text-[11px] bg-muted/30 border border-border rounded-xl focus:outline-none appearance-none">
-                {Object.entries(ROLE_META).map(([id, m]) => (
-                  <option key={id} value={id}>
-                    {m.label}
+              <select
+                value={form.role}
+                onChange={(e) => setField("role", e.target.value)}
+                className="w-full px-3 py-2 text-[11px] bg-muted/30 border border-border rounded-xl focus:outline-none appearance-none"
+              >
+                <option value="">Select role</option>
+
+                {rolesdata?.results?.map((role) => (
+                  <option key={role.id} value={role.id}>
+                    {role.name}
                   </option>
                 ))}
               </select>
@@ -1502,51 +1662,127 @@ function InviteUserModal({ onClose }: { onClose: () => void }) {
               <label className="block text-[10px] font-bold text-foreground mb-1">
                 Shift
               </label>
-              <select className="w-full px-3 py-2 text-[11px] bg-muted/30 border border-border rounded-xl focus:outline-none appearance-none">
+              <select
+                value={form.shift}
+                onChange={(e) => setField("shift", e.target.value as ShiftType)}
+                className="w-full px-3 py-2 text-[11px] bg-muted/30 border border-border rounded-xl focus:outline-none appearance-none"
+              >
                 {SHIFTS_LIST.map((s) => (
                   <option key={s}>{s}</option>
                 ))}
               </select>
             </div>
           </div>
+
+          {/* ==================== DEPARTMENT FIELD ==================== */}
+          <div>
+            <label className="block text-[10px] font-bold text-foreground mb-1">
+              Department
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search department..."
+                value={deptSearch}
+                onChange={(e) => {
+                  setDeptSearch(e.target.value);
+                  if (form.departmentId) setField("departmentId", "");
+                }}
+                className="w-full px-3 py-2 text-[11px] bg-muted/30 border border-border rounded-xl focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+
+              {(deptSearch?.length ?? 0) > 0 && (
+                <div className="absolute z-20 w-full mt-1 bg-card border border-border rounded-xl shadow-lg py-1 max-h-60 overflow-auto">
+                  {departments.length > 0 ? (
+                    departments.map((dept: any) => (
+                      <div
+                        key={dept.id}
+                        onClick={() => {
+                          setField("departmentId", dept.id);
+                          setDeptSearch(dept.name || "");
+                        }}
+                        className="px-4 py-2 text-[11px] hover:bg-muted/50 cursor-pointer"
+                      >
+                        {dept.name}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-4 py-3 text-center">
+                      <p className="text-[11px] text-muted-foreground mb-2">
+                        No department found
+                      </p>
+                      <button
+                        onClick={() => setShowCreateDept(true)}
+                        className="text-xs bg-primary text-white px-4 py-1.5 rounded-lg hover:bg-primary/90"
+                      >
+                        + Create "{deptSearch}"
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Show Selected Department */}
+              {form.departmentId && (
+                <div className="mt-1 text-[11px] text-green-600 font-medium">
+                  ✓ Selected:{" "}
+                  {editUser?.department_name ||
+                    departments.find((d: any) => d.id === form.departmentId)
+                      ?.name}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ==================== PROJECT ACCESS ==================== */}
           <div>
             <label className="block text-[10px] font-bold text-foreground mb-1.5">
               Project Access
             </label>
-            <div className="space-y-1">
-              {PROJECTS_LIST.map((p) => (
-                <label
-                  key={p}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-muted/20 cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    className="accent-primary w-3.5 h-3.5"
-                  />
-                  <span className="text-[11px] text-foreground">{p}</span>
-                </label>
-              ))}
+            <div className="space-y-1 max-h-60 overflow-y-auto">
+              {projectsData?.data?.map(
+                (project: { id: string; project_name: string }) => (
+                  <label
+                    key={project.id}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-muted/20 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={form.projects.includes(project.id)}
+                      onChange={() => toggleProject(project.id)}
+                      className="accent-primary w-3.5 h-3.5"
+                    />
+                    <span className="text-[11px] text-foreground">
+                      {project.project_name}
+                    </span>
+                  </label>
+                )
+              )}
             </div>
           </div>
           <div className="space-y-2 pt-2 border-t border-border">
-            {[
-              ["Require 2FA on first login", "require2FA"],
-              ["Send invitation email", "sendEmail"],
-            ].map(([label, key]) => (
-              <label
-                key={key}
-                className="flex items-center justify-between px-3 py-2 rounded-xl bg-muted/20 cursor-pointer"
-              >
-                <span className="text-[11px] font-semibold text-foreground">
-                  {label}
-                </span>
-                <input
-                  type="checkbox"
-                  defaultChecked
-                  className="accent-primary w-3.5 h-3.5"
-                />
-              </label>
-            ))}
+            <label className="flex items-center justify-between px-3 py-2 rounded-xl bg-muted/20 cursor-pointer">
+              <span className="text-[11px] font-semibold text-foreground">
+                Require 2FA on first login
+              </span>
+              <input
+                type="checkbox"
+                checked={form.require2FA}
+                onChange={(e) => setField("require2FA", e.target.checked)}
+                className="accent-primary w-3.5 h-3.5"
+              />
+            </label>
+            <label className="flex items-center justify-between px-3 py-2 rounded-xl bg-muted/20 cursor-pointer">
+              <span className="text-[11px] font-semibold text-foreground">
+                Send invitation email
+              </span>
+              <input
+                type="checkbox"
+                checked={form.sendEmail}
+                onChange={(e) => setField("sendEmail", e.target.checked)}
+                className="accent-primary w-3.5 h-3.5"
+              />
+            </label>
           </div>
         </div>
         <div className="flex gap-2 px-6 py-4 border-t border-border bg-muted/5">
@@ -1556,40 +1792,171 @@ function InviteUserModal({ onClose }: { onClose: () => void }) {
           >
             Cancel
           </button>
-          <button className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 text-[11px] font-bold bg-primary text-white rounded-xl hover:opacity-90 transition-opacity whitespace-nowrap">
-            <Mail className="w-3.5 h-3.5" />
-            Send Invitation
+          <button
+            onClick={handleSubmit}
+            className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 text-[11px] font-bold bg-primary text-white rounded-xl hover:opacity-90 transition-opacity whitespace-nowrap"
+          >
+            {editUser ? "Update User" : "Add User"}
           </button>
         </div>
       </div>
+      {/* ==================== CREATE DEPARTMENT MODAL ==================== */}
+      {showCreateDept && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
+          <div className="bg-card rounded-2xl w-full max-w-xs p-6 border border-border">
+            <h4 className="font-bold text-sm mb-4">Create New Department</h4>
+
+            <input
+              type="text"
+              placeholder="Department name"
+              value={newDeptName}
+              onChange={(e) => setNewDeptName(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-border rounded-xl mb-4"
+            />
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setShowCreateDept(false);
+                  setNewDeptName("");
+                }}
+                className="flex-1 py-2 text-sm border border-border rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (newDeptName.trim()) {
+                    createDepartment({ data: { name: newDeptName.trim() } });
+                  }
+                }}
+                disabled={!newDeptName.trim() || isCreatingDept}
+                className="flex-1 py-2 text-sm bg-primary text-white rounded-xl disabled:opacity-50"
+              >
+                {isCreatingDept ? "Creating..." : "Create"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 /* ════════════════════════════════════════════  VIEW: USERS  */
 function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
+  const [users, setUsers] = useState<User[]>();
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [showInvite, setShowInvite] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [editUser, setEditUser] = useState<User | null>(null);
+
+  const { data, isLoading } = useGetApiUsers({
+    search: search || undefined,
+    user_status: filterStatus !== "all" ? filterStatus : undefined,
+    user_role: filterRole !== "all" ? filterRole : undefined,
+    page_no: 1,
+    page_size: 10,
+  });
+
+  const userslist = useMemo(() => {
+    return (
+      data?.results?.map((u: any) => ({
+        id: u.id,
+        uid: u.id,
+        full_name: u.full_name,
+        email: u.email,
+        user_role: u.user_role?.id, // for form/edit
+        shift: u.shift,
+        two_fa_auth: u.two_fa_auth,
+        send_email: u.send_email,
+        project_access: u.projects?.map((p: any) => p.project_id) || [],
+
+        // UI fields for table
+        name: u.full_name,
+        roleName: u.user_role?.name,
+        status: u.user_status,
+        lastLogin: u.last_login ? new Date(u.last_login).toLocaleString() : "-",
+        initials: u.full_name
+          ?.split(" ")
+          .map((n: string) => n[0])
+          .join("")
+          .toUpperCase(),
+        employeeId: u.employee_id,
+
+        // ← NEW: Full data for Profile
+        department_name: u.department_name,
+        user_role_full: u.user_role, // full role object
+        projects: u.projects || [],
+        phone: u.phone || u.mobile_phone,
+        job_title: u.job_title,
+        location: u.location,
+        created_at: u.created_at,
+        last_login: u.last_login,
+        user_status: u.user_status,
+        department_id: u.department_id,
+      })) || []
+    );
+  }, [data]);
+
+  const handleExport = async () => {
+    try {
+      toast.loading("Preparing export...", { id: "export-toast" });
+
+      const blob = await getApiUsersExport(
+        { format: "csv" }, // ← Explicitly request CSV
+        {
+          responseType: "blob", // Important for file download
+        }
+      );
+
+      // Create downloadable link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = `users_export_${new Date().toISOString().slice(0, 10)}.csv`; // Nice filename
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Export downloaded successfully", { id: "export-toast" });
+    } catch (err: any) {
+      console.error("Export failed:", err);
+      toast.error("Failed to export users. Please try again.", {
+        id: "export-toast",
+      });
+    }
+  };
+
+  const handleAddUser = (newUser: User) => {
+    setUsers((prev) => [newUser, ...prev]);
+  };
 
   const filtered = useMemo(
     () =>
-      USERS_DATA.filter((u) => {
+      userslist.filter((u) => {
         const q = search.toLowerCase();
         if (
           q &&
-          !u.name.toLowerCase().includes(q) &&
-          !u.email.toLowerCase().includes(q) &&
-          !u.roleName.toLowerCase().includes(q)
+          !u.name?.toLowerCase().includes(q) &&
+          !u.email?.toLowerCase().includes(q) &&
+          !u.roleName?.toLowerCase().includes(q)
         )
           return false;
-        if (filterRole !== "all" && u.role !== filterRole) return false;
+
+        // Fix filter comparison
+        if (filterRole !== "all" && u.user_role !== filterRole) return false;
         if (filterStatus !== "all" && u.status !== filterStatus) return false;
+
         return true;
       }),
-    [search, filterRole, filterStatus]
+    [userslist, search, filterRole, filterStatus] // ← Fixed
   );
 
   const toggleSelect = (id: string) =>
@@ -1599,43 +1966,49 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
       return n;
     });
 
+  const { data: userOverview } = useGetApiUsersStats();
+
+  const statsData = userOverview?.stats;
+
   const stats = [
     {
       label: "Total Users",
-      value: USERS_DATA.length,
+      value: statsData?.total_users ?? 0,
       icon: Users,
       color: "text-blue-600",
       bg: "bg-blue-50",
     },
     {
       label: "Active",
-      value: USERS_DATA.filter((u) => u.status === "active").length,
+      value: statsData?.active_users ?? 0,
       icon: CheckCircle2,
       color: "text-emerald-600",
       bg: "bg-emerald-50",
     },
     {
       label: "Inactive",
-      value: USERS_DATA.filter((u) => u.status === "inactive").length,
+      value: statsData?.inactive_users ?? 0,
       icon: XCircle,
       color: "text-slate-500",
       bg: "bg-slate-100",
     },
     {
       label: "2FA Enabled",
-      value: USERS_DATA.filter((u) => u.twoFA).length,
+      value: statsData?.two_fa_enabled ?? 0,
       icon: Smartphone,
       color: "text-violet-600",
       bg: "bg-violet-50",
     },
     {
       label: "SSO Users",
-      value: USERS_DATA.filter((u) => u.sso).length,
+      value: statsData?.sso_users ?? 0,
       icon: Globe,
       color: "text-teal-600",
       bg: "bg-teal-50",
     },
   ];
+
+  const { data: rolesdata } = useGetApiUserRoles();
 
   return (
     <div className="space-y-4">
@@ -1682,10 +2055,10 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
           onChange={(e) => setFilterRole(e.target.value)}
           className="px-3 py-2 text-[11px] bg-card border border-border rounded-xl focus:outline-none appearance-none"
         >
-          <option value="all">All Roles</option>
-          {Object.entries(ROLE_META).map(([id, m]) => (
-            <option key={id} value={id}>
-              {m.label}
+          <option value="">All Roles</option>
+          {rolesdata?.results?.map((role) => (
+            <option key={role.id} value={role.id}>
+              {role.name}
             </option>
           ))}
         </select>
@@ -1694,10 +2067,11 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
           onChange={(e) => setFilterStatus(e.target.value)}
           className="px-3 py-2 text-[11px] bg-card border border-border rounded-xl focus:outline-none appearance-none"
         >
-          <option value="all">All Status</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-          <option value="suspended">Suspended</option>
+          <option value="">All Status</option>
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+          <option value="Suspended">Suspended</option>
+          <option value="Pending">Pending</option>
         </select>
         {selected.size > 0 && (
           <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-xl">
@@ -1713,16 +2087,22 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
           </div>
         )}
         <div className="flex-1" />
-        <button className="inline-flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold border border-border rounded-xl text-muted-foreground hover:bg-muted transition-colors whitespace-nowrap">
+        <button
+          onClick={handleExport}
+          className="inline-flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold border border-border rounded-xl text-muted-foreground hover:bg-muted transition-colors whitespace-nowrap"
+        >
           <Download className="w-3.5 h-3.5" />
           Export
         </button>
         <button
-          onClick={() => setShowInvite(true)}
-          className="inline-flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold bg-primary text-white rounded-xl hover:opacity-90 transition-opacity whitespace-nowrap"
+          onClick={() => {
+            setEditUser(null);
+            setShowInvite(true);
+          }}
+          className="inline-flex items-center gap-2 px-6 py-2 text-[11px] font-black rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all uppercase tracking-widest shadow-sm whitespace-nowrap"
         >
           <UserPlus className="w-3.5 h-3.5" />
-          Invite User
+          Add User
         </button>
       </div>
 
@@ -1758,7 +2138,7 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filtered.map((u) => (
+              {userslist.map((u) => (
                 <tr
                   key={u.id}
                   className={`hover:bg-muted/10 transition-colors ${selected.has(u.id) ? "bg-primary/5" : ""}`}
@@ -1793,16 +2173,16 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
                     </span>
                   </td>
                   <td className="px-3 py-3.5">
-                    <RoleBadge roleId={u.role} />
+                    <RoleBadge roleId={u.roleName} />
                   </td>
                   <td className="px-3 py-3.5">
                     <div className="flex flex-wrap gap-1 max-w-[160px]">
                       {u.projects.slice(0, 2).map((p) => (
                         <span
-                          key={p}
+                          key={p.project_id}
                           className="text-[9px] font-semibold px-1.5 py-0.5 bg-muted rounded-md text-muted-foreground"
                         >
-                          {p.split(" ")[0]}
+                          {p.project_name.split(" ")[0]}
                         </span>
                       ))}
                       {u.projects.length > 2 && (
@@ -1841,7 +2221,13 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
                         <Eye className="w-3 h-3" />
                         View
                       </button>
-                      <button className="inline-flex items-center gap-1 px-2 py-1 text-[9px] font-bold border border-border rounded-lg hover:bg-muted transition-colors text-muted-foreground whitespace-nowrap">
+                      <button
+                        onClick={() => {
+                          setEditUser(u);
+                          setShowInvite(true);
+                        }}
+                        className="inline-flex items-center gap-1 px-2 py-1 text-[9px] font-bold border border-border rounded-lg hover:bg-muted transition-colors text-muted-foreground whitespace-nowrap"
+                      >
                         <Edit2 className="w-3 h-3" />
                         Edit
                       </button>
@@ -1854,7 +2240,7 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
         </div>
         <div className="flex items-center justify-between px-4 py-2.5 border-t border-border bg-muted/5">
           <span className="text-[10px] text-muted-foreground">
-            Showing {filtered.length} of {USERS_DATA.length} users
+            Showing {filtered.length} of {userslist.length} users{" "}
           </span>
           <div className="flex items-center gap-1">
             {[1].map((p) => (
@@ -1868,11 +2254,19 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
           </div>
         </div>
       </div>
-      {showInvite && <InviteUserModal onClose={() => setShowInvite(false)} />}
+      {showInvite && (
+        <InviteUserModal
+          onClose={() => {
+            setShowInvite(false);
+            setEditUser(null);
+          }}
+          onAdd={handleAddUser}
+          editUser={editUser}
+        />
+      )}
     </div>
   );
 }
-
 interface AddRoleModalProps {
   open: boolean;
   onClose: () => void;
