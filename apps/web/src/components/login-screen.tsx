@@ -145,13 +145,12 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
       onSuccess: (response: any) => {
         console.log("Login Success:", response);
 
-        if (response?.token) {
-          localStorage.setItem("token", response.token);
-        }
+        const userData = {
+          ...response.user,
+          accessToken: response.token,
+        };
 
-        if (response?.user) {
-          localStorage.setItem("user", JSON.stringify(response.user));
-        }
+        localStorage.setItem("userDetail", JSON.stringify(userData));
 
         localStorage.setItem("role", selectedRole);
 
