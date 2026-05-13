@@ -15,34 +15,45 @@ import type {
   UseSuspenseInfiniteQueryOptions,
   UseSuspenseInfiniteQueryResult,
 } from "@tanstack/react-query";
-import type { GetApiProjectsAccessAllQueryResponse } from "../../types/GetApiProjectsAccessAll.ts";
+import type {
+  GetApiProjectsAccessAllQueryResponse,
+  GetApiProjectsAccessAllQueryParams,
+} from "../../types/GetApiProjectsAccessAll.ts";
 import {
   infiniteQueryOptions,
   useSuspenseInfiniteQuery,
 } from "@tanstack/react-query";
 import { getApiProjectsAccessAll } from "../../clients/getApiProjectsAccessAll.ts";
 
-export const getApiProjectsAccessAllSuspenseInfiniteQueryKey = () =>
-  [{ url: "/api/projects/access/all" }] as const;
+export const getApiProjectsAccessAllSuspenseInfiniteQueryKey = (
+  params?: GetApiProjectsAccessAllQueryParams,
+) =>
+  [{ url: "/api/projects/access/all" }, ...(params ? [params] : [])] as const;
 
 export type GetApiProjectsAccessAllSuspenseInfiniteQueryKey = ReturnType<
   typeof getApiProjectsAccessAllSuspenseInfiniteQueryKey
 >;
 
 export function getApiProjectsAccessAllSuspenseInfiniteQueryOptions(
+  params?: GetApiProjectsAccessAllQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
-  const queryKey = getApiProjectsAccessAllSuspenseInfiniteQueryKey();
+  const queryKey = getApiProjectsAccessAllSuspenseInfiniteQueryKey(params);
   return infiniteQueryOptions<
     GetApiProjectsAccessAllQueryResponse,
     ResponseErrorConfig<Error>,
     InfiniteData<GetApiProjectsAccessAllQueryResponse>,
     typeof queryKey,
-    number
+    NonNullable<GetApiProjectsAccessAllQueryParams["page_no"]>
   >({
     queryKey,
-    queryFn: async ({ signal }) => {
-      return getApiProjectsAccessAll({
+    queryFn: async ({ signal, pageParam }) => {
+      params = {
+        ...(params ?? {}),
+        ["page_no"]:
+          pageParam as unknown as GetApiProjectsAccessAllQueryParams["page_no"],
+      } as GetApiProjectsAccessAllQueryParams;
+      return getApiProjectsAccessAll(params, {
         ...config,
         signal: config.signal ?? signal,
       });
@@ -67,8 +78,9 @@ export function useGetApiProjectsAccessAllSuspenseInfinite<
   TError = ResponseErrorConfig<Error>,
   TData = InfiniteData<TQueryFnData>,
   TQueryKey extends QueryKey = GetApiProjectsAccessAllSuspenseInfiniteQueryKey,
-  TPageParam = number,
+  TPageParam = NonNullable<GetApiProjectsAccessAllQueryParams["page_no"]>,
 >(
+  params?: GetApiProjectsAccessAllQueryParams,
   options: {
     query?: Partial<
       UseSuspenseInfiniteQueryOptions<
@@ -86,11 +98,11 @@ export function useGetApiProjectsAccessAllSuspenseInfinite<
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
     resolvedOptions?.queryKey ??
-    getApiProjectsAccessAllSuspenseInfiniteQueryKey();
+    getApiProjectsAccessAllSuspenseInfiniteQueryKey(params);
 
   const query = useSuspenseInfiniteQuery(
     {
-      ...getApiProjectsAccessAllSuspenseInfiniteQueryOptions(config),
+      ...getApiProjectsAccessAllSuspenseInfiniteQueryOptions(params, config),
       ...resolvedOptions,
       queryKey,
     } as unknown as UseSuspenseInfiniteQueryOptions<

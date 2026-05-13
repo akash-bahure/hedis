@@ -27,6 +27,9 @@ export const getApiUsersQueryParamsSchema = z.object({
       .enum(["Pending", "Active", "Inactive", "Suspended"])
       .describe("Filter by user status"),
   ),
+  department_id: z.optional(
+    z.string().uuid().describe("Filter by department ID"),
+  ),
 }) as unknown as ToZod<GetApiUsersQueryParams>;
 
 /**
