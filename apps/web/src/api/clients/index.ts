@@ -46,3 +46,4 @@ export { postApiDepartments } from "./postApiDepartments.ts";
 export { postApiProjects } from "./postApiProjects.ts";
 export { postApiUserRoles } from "./postApiUserRoles.ts";
 export { postApiUsers } from "./postApiUsers.ts";
+export { postApiUsersDeactivate } from "./postApiUsersDeactivate.ts";

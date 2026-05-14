@@ -10,6 +10,7 @@ export const getApiClientsQueryParamsRegionEnum = {
   Southeast: "Southeast",
   Mountain: "Mountain",
   Midwest: "Midwest",
+  Southwest: "Southwest",
 } as const;
 
 export type GetApiClientsQueryParamsRegionEnumKey =

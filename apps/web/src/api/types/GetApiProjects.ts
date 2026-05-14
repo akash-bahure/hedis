@@ -3,6 +3,41 @@
  * Do not edit manually.
  */
 
+export const getApiProjectsQueryParamsStatusEnum = {
+  Active: "Active",
+  Completed: "Completed",
+  "At Risk": "At Risk",
+  "On Hold": "On Hold",
+  Draft: "Draft",
+} as const;
+
+export type GetApiProjectsQueryParamsStatusEnumKey =
+  (typeof getApiProjectsQueryParamsStatusEnum)[keyof typeof getApiProjectsQueryParamsStatusEnum];
+
+export const getApiProjectsQueryParamsProjectTypeEnum = {
+  Inpatient: "Inpatient",
+  Outpatient: "Outpatient",
+  "ED Visit": "ED Visit",
+  HCC: "HCC",
+} as const;
+
+export type GetApiProjectsQueryParamsProjectTypeEnumKey =
+  (typeof getApiProjectsQueryParamsProjectTypeEnum)[keyof typeof getApiProjectsQueryParamsProjectTypeEnum];
+
+export const getApiProjectsQueryParamsSpecialtyEnum = {
+  "Multi-Speciality": "Multi-Speciality",
+  Cardiology: "Cardiology",
+  Orthopedics: "Orthopedics",
+  "Emergency Med.": "Emergency Med.",
+  Radiology: "Radiology",
+  Oncology: "Oncology",
+  Cardiothoracic: "Cardiothoracic",
+  Pediatrics: "Pediatrics",
+} as const;
+
+export type GetApiProjectsQueryParamsSpecialtyEnumKey =
+  (typeof getApiProjectsQueryParamsSpecialtyEnum)[keyof typeof getApiProjectsQueryParamsSpecialtyEnum];
+
 export type GetApiProjectsQueryParams = {
   /**
    * @description Search by project name
@@ -15,17 +50,32 @@ export type GetApiProjectsQueryParams = {
    */
   client_id?: string;
   /**
+   * @description Filter by project status
+   * @type string | undefined
+   */
+  status?: GetApiProjectsQueryParamsStatusEnumKey;
+  /**
+   * @description Filter by project type
+   * @type string | undefined
+   */
+  project_type?: GetApiProjectsQueryParamsProjectTypeEnumKey;
+  /**
+   * @description Filter by specialty
+   * @type string | undefined
+   */
+  specialty?: GetApiProjectsQueryParamsSpecialtyEnumKey;
+  /**
    * @description Page number
    * @default 1
    * @type integer | undefined
    */
-  page?: number;
+  page_no?: number;
   /**
    * @description Number of records per page
    * @default 10
    * @type integer | undefined
    */
-  limit?: number;
+  page_size?: number;
 };
 
 /**
