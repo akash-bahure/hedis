@@ -45,6 +45,7 @@ export type { GetApiProjectsAccessAllSuspenseInfiniteQueryKey } from "./Projects
 export type { GetApiProjectsIdQueryKey } from "./ProjectsHooks/useGetApiProjectsId.ts";
 export type { GetApiProjectsIdSuspenseQueryKey } from "./ProjectsHooks/useGetApiProjectsIdSuspense.ts";
 export type { GetApiProjectsIdSuspenseInfiniteQueryKey } from "./ProjectsHooks/useGetApiProjectsIdSuspenseInfinite.ts";
+export type { GetApiProjectsInfiniteQueryKey } from "./ProjectsHooks/useGetApiProjectsInfinite.ts";
 export type { GetApiProjectsSuspenseQueryKey } from "./ProjectsHooks/useGetApiProjectsSuspense.ts";
 export type { GetApiProjectsSuspenseInfiniteQueryKey } from "./ProjectsHooks/useGetApiProjectsSuspenseInfinite.ts";
 export type { PatchApiProjectsIdMutationKey } from "./ProjectsHooks/usePatchApiProjectsId.ts";
@@ -83,6 +84,7 @@ export type { GetApiUsersSuspenseInfiniteQueryKey } from "./UsersHooks/useGetApi
 export type { PatchApiUsersIdMutationKey } from "./UsersHooks/usePatchApiUsersId.ts";
 export type { PatchApiUsersShiftsMutationKey } from "./UsersHooks/usePatchApiUsersShifts.ts";
 export type { PostApiUsersMutationKey } from "./UsersHooks/usePostApiUsers.ts";
+export type { PostApiUsersDeactivateMutationKey } from "./UsersHooks/usePostApiUsersDeactivate.ts";
 export { postApiAuthForgotPasswordMutationKey } from "./AuthHooks/usePostApiAuthForgotPassword.ts";
 export { postApiAuthForgotPasswordMutationOptions } from "./AuthHooks/usePostApiAuthForgotPassword.ts";
 export { usePostApiAuthForgotPassword } from "./AuthHooks/usePostApiAuthForgotPassword.ts";
@@ -224,6 +226,9 @@ export { useGetApiProjectsIdSuspense } from "./ProjectsHooks/useGetApiProjectsId
 export { getApiProjectsIdSuspenseInfiniteQueryKey } from "./ProjectsHooks/useGetApiProjectsIdSuspenseInfinite.ts";
 export { getApiProjectsIdSuspenseInfiniteQueryOptions } from "./ProjectsHooks/useGetApiProjectsIdSuspenseInfinite.ts";
 export { useGetApiProjectsIdSuspenseInfinite } from "./ProjectsHooks/useGetApiProjectsIdSuspenseInfinite.ts";
+export { getApiProjectsInfiniteQueryKey } from "./ProjectsHooks/useGetApiProjectsInfinite.ts";
+export { getApiProjectsInfiniteQueryOptions } from "./ProjectsHooks/useGetApiProjectsInfinite.ts";
+export { useGetApiProjectsInfinite } from "./ProjectsHooks/useGetApiProjectsInfinite.ts";
 export { getApiProjectsSuspenseQueryKey } from "./ProjectsHooks/useGetApiProjectsSuspense.ts";
 export { getApiProjectsSuspenseQueryOptions } from "./ProjectsHooks/useGetApiProjectsSuspense.ts";
 export { useGetApiProjectsSuspense } from "./ProjectsHooks/useGetApiProjectsSuspense.ts";
@@ -338,3 +343,6 @@ export { usePatchApiUsersShifts } from "./UsersHooks/usePatchApiUsersShifts.ts";
 export { postApiUsersMutationKey } from "./UsersHooks/usePostApiUsers.ts";
 export { postApiUsersMutationOptions } from "./UsersHooks/usePostApiUsers.ts";
 export { usePostApiUsers } from "./UsersHooks/usePostApiUsers.ts";
+export { postApiUsersDeactivateMutationKey } from "./UsersHooks/usePostApiUsersDeactivate.ts";
+export { postApiUsersDeactivateMutationOptions } from "./UsersHooks/usePostApiUsersDeactivate.ts";
+export { usePostApiUsersDeactivate } from "./UsersHooks/usePostApiUsersDeactivate.ts";
