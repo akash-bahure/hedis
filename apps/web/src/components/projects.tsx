@@ -55,7 +55,10 @@ import {
   Star,
   Eye,
   X,
+  Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
+import { useGetApiClients, usePostApiProjects } from "@/api";
 
 /* ─── Types ─────────────────────────────────────────────────── */
 type ProjectStatus = "Active" | "On Hold" | "Completed" | "Draft" | "At Risk";
@@ -2449,40 +2452,79 @@ function NewProjectModal({ onClose }: { onClose: () => void }) {
     client: "",
     type: "Inpatient",
     specialty: "Multi-Specialty",
-    pm: TEAM_MEMBERS.pms[0],
-    team: TEAMS[0],
     startDate: "",
     endDate: "",
     priority: "High" as "High" | "Medium" | "Low",
-    coders: "",
-    auditors: "",
     notes: "",
   });
+
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
-  type AssignRole = "coders" | "auditL1" | "auditL2" | "auditL3";
-  const [assigns, setAssigns] = useState<Record<AssignRole, string[]>>({
-    coders: [],
-    auditL1: [],
-    auditL2: [],
-    auditL3: [],
+  // type AssignRole = "coders" | "auditL1" | "auditL2" | "auditL3";
+  // const [assigns, setAssigns] = useState<Record<AssignRole, string[]>>({
+  //   coders: [],
+  //   auditL1: [],
+  //   auditL2: [],
+  //   auditL3: [],
+  // });
+  // const toggleAssign = (role: AssignRole, name: string) =>
+  //   setAssigns((a) => ({
+  //     ...a,
+  //     [role]: a[role].includes(name)
+  //       ? a[role].filter((n) => n !== name)
+  //       : [...a[role], name],
+  //   }));
+  // const [openRole, setOpenRole] = useState<AssignRole | null>(null);
+
+  const { mutate: createProject, isPending } = usePostApiProjects({
+    mutation: {
+      onSuccess: () => {
+        toast.success("Project created successfully.");
+
+        setDone(true);
+
+        setTimeout(() => {
+          onClose();
+        }, 1500);
+      },
+
+      onError: (error: any) => {
+        const errorMessage =
+          error?.response?.data?.message || "Failed to create project.";
+
+        toast.error(errorMessage);
+      },
+    },
   });
-  const toggleAssign = (role: AssignRole, name: string) =>
-    setAssigns((a) => ({
-      ...a,
-      [role]: a[role].includes(name)
-        ? a[role].filter((n) => n !== name)
-        : [...a[role], name],
-    }));
-  const [openRole, setOpenRole] = useState<AssignRole | null>(null);
 
   const step1Valid = form.name.trim() !== "" && form.client.trim() !== "";
+
   const step2Valid = form.startDate !== "" && form.endDate !== "";
 
   const handleCreate = () => {
-    if (!step2Valid) return;
-    setDone(true);
+    if (!step2Valid) {
+      toast.error("Please fill all required fields.");
+      return;
+    }
+
+    createProject({
+      data: {
+        project_name: form.name,
+        client_id: form.client,
+        project_type: form.type,
+        specialty: form.specialty,
+        priority: form.priority,
+        notes: form.notes,
+        start_date: form.startDate,
+        end_date: form.endDate,
+      },
+    });
   };
+
+  const { data: clientsResponse, isLoading: clientsLoading } =
+    useGetApiClients();
+
+  const clients = clientsResponse?.data ?? [];
 
   const priorityStyle: Record<string, string> = {
     High: "border-red-400 bg-red-50 text-red-700",
@@ -2502,7 +2544,7 @@ function NewProjectModal({ onClose }: { onClose: () => void }) {
               </div>
               <div className="flex-1">
                 <h3 className="text-sm font-bold text-foreground">
-                  New Coding Project
+                  New Project
                 </h3>
                 <p className="text-[11px] text-muted-foreground">
                   Step {step} of 2 —{" "}
@@ -2550,17 +2592,23 @@ function NewProjectModal({ onClose }: { onClose: () => void }) {
                     <select
                       value={form.client}
                       onChange={(e) => set("client", e.target.value)}
-                      className="w-full text-xs border border-border rounded-lg px-3 py-2 pr-8 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none cursor-pointer"
+                      disabled={clientsLoading}
+                      className="w-full text-xs border border-border rounded-lg px-3 py-2 pr-8 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none cursor-pointer disabled:opacity-60"
                     >
-                      <option value="">— Select Client / Hospital —</option>
-                      <option>Apollo Hospitals – Delhi</option>
-                      <option>Fortis Healthcare – Gurugram</option>
-                      <option>Manipal Hospitals – Bangalore</option>
-                      <option>Max Healthcare – Saket</option>
-                      <option>Medanta – The Medicity</option>
-                      <option>Narayana Health – Bangalore</option>
-                      <option>Aster DM Health – Kerala</option>
-                      <option>Rainbow Children's Hospital</option>
+                      <option value="">
+                        {clientsLoading
+                          ? "Loading Clients..."
+                          : "— Select Client / Hospital —"}
+                      </option>
+
+                      {clients.map((client) => (
+                        <option
+                          key={client.id}
+                          value={client.id} // UUID goes to backend
+                        >
+                          {client.org_name}
+                        </option>
+                      ))}
                     </select>
                     <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
                   </div>
@@ -2689,7 +2737,7 @@ function NewProjectModal({ onClose }: { onClose: () => void }) {
                 </div>
 
                 {/* Assign Team */}
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide block">
                     Assign Team Members
                   </label>
@@ -2730,9 +2778,9 @@ function NewProjectModal({ onClose }: { onClose: () => void }) {
                     <div
                       key={role}
                       className="border border-border rounded-lg overflow-hidden"
-                    >
-                      {/* Role header / toggle */}
-                      <button
+                    > */}
+                {/* Role header / toggle */}
+                {/* <button
                         type="button"
                         onClick={() =>
                           setOpenRole(openRole === role ? null : role)
@@ -2752,9 +2800,9 @@ function NewProjectModal({ onClose }: { onClose: () => void }) {
                         <ChevronDown
                           className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-150 ${openRole === role ? "rotate-180" : ""}`}
                         />
-                      </button>
-                      {/* Checkbox list */}
-                      {openRole === role && (
+                      </button> */}
+                {/* Checkbox list */}
+                {/* {openRole === role && (
                         <div className="px-3 py-2 space-y-1.5 max-h-32 overflow-y-auto border-t border-border bg-background">
                           {members.map((m) => (
                             <label
@@ -2773,9 +2821,9 @@ function NewProjectModal({ onClose }: { onClose: () => void }) {
                             </label>
                           ))}
                         </div>
-                      )}
-                      {/* Selected chips */}
-                      {assigns[role].length > 0 && (
+                      )} */}
+                {/* Selected chips */}
+                {/* {assigns[role].length > 0 && (
                         <div className="px-3 py-2 flex flex-wrap gap-1 border-t border-border bg-background">
                           {assigns[role].map((m) => (
                             <span
@@ -2796,7 +2844,7 @@ function NewProjectModal({ onClose }: { onClose: () => void }) {
                       )}
                     </div>
                   ))}
-                </div>
+                </div> */}
 
                 {/* Summary preview */}
 
@@ -2809,11 +2857,20 @@ function NewProjectModal({ onClose }: { onClose: () => void }) {
                   </button>
                   <button
                     onClick={handleCreate}
-                    disabled={!step2Valid}
+                    disabled={isPending || !step2Valid}
                     className="flex-1 py-2 text-xs font-bold rounded-xl text-white bg-primary hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5"
                   >
-                    <Plus className="w-3.5 h-3.5" />
-                    Create Project
+                    {isPending ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-3.5 h-3.5" />
+                        Create Project
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
