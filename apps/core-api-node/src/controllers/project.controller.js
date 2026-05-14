@@ -6,6 +6,9 @@ exports.createProject = async (req, res) => {
       project_type,
       specialty,
       priority,
+      status,
+      assigned_charts,
+      completed_charts,
       notes,
       start_date,
       end_date,
@@ -15,23 +18,44 @@ exports.createProject = async (req, res) => {
     // Required Fields Validation
     if (!project_name || !client_id || !start_date || !end_date) {
       return res.status(400).json({
-        error: "Missing required fields: project_name, client_id, start_date, end_date are required.",
+        error:
+          "Missing required fields: project_name, client_id, start_date, end_date",
       });
     }
 
-    const query = `
+    const pending_charts =
+      (total_charts || 0) - (completed_charts || 0);
+
+   const query = `
       INSERT INTO projects (
-        project_name, client_id, project_type, specialty, priority, notes, start_date, end_date,
+        project_name,
+        client_id,
+        project_type,
+        specialty,
+        priority,
+        status,
+        assigned_charts,
+        completed_charts,
+        notes,
+        start_date,
+        end_date,
         project_manager_id
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      )
+      VALUES (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12
+      )
       RETURNING *;
     `;
+
     const values = [
       project_name,
       client_id,
       project_type || null,
       specialty || null,
-      priority || 'High',
+      priority || "High",
+      status || "Draft",
+      assigned_charts || 0,
+      completed_charts || 0,
       notes || null,
       start_date,
       end_date,
@@ -39,51 +63,156 @@ exports.createProject = async (req, res) => {
     ];
 
     const result = await req.db.query(query, values);
-    res.status(201).json({ message: "Project created successfully", data: result.rows[0] });
+
+    res.status(201).json({
+      message: "Project created successfully",
+      data: result.rows[0],
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: err.message,
+    });
   }
 };
 
 exports.getProjects = async (req, res) => {
   try {
-    const { search, client_id, page = 1, limit = 10 } = req.query;
-    const offset = (page - 1) * limit;
+    const {
+      search,
+      client_id,
+      priority,
+      status,
+      project_type,
+      specialty,
+      page_no = 1,
+      page_size = 10,
+    } = req.query;
 
-    let query = "SELECT * FROM projects WHERE 1=1";
+    const offset = (page_no - 1) * page_size;
+
+    let query = `
+      SELECT
+        p.id,
+        p.project_name,
+        p.project_type,
+        p.specialty,
+        p.priority,
+        p.status,
+        p.start_date,
+        p.end_date,
+        p.assigned_charts,
+        p.completed_charts,
+
+        (p.assigned_charts - p.completed_charts) AS pending_charts,
+
+        CASE
+          WHEN p.assigned_charts = 0 THEN 0
+          ELSE ROUND(
+            (p.completed_charts::decimal / p.assigned_charts) * 100,
+            0
+          )
+        END AS completion_percentage,
+
+        c.id as client_uuid,
+        c.client_id,
+        c.org_name,
+        c.short_code,
+        c.region,
+        c.contract_type
+
+      FROM projects p
+      LEFT JOIN clients c
+        ON p.client_id = c.id
+
+      WHERE 1=1
+    `;
+
     const values = [];
 
+    // Search Project Name
     if (search) {
       values.push(`%${search}%`);
-      query += ` AND project_name ILIKE $${values.length}`;
+
+      query += `
+        AND (
+          p.project_name ILIKE $${values.length}
+        )
+      `;
     }
 
+    // Client Filter
     if (client_id) {
       values.push(client_id);
-      query += ` AND client_id = $${values.length}`;
+
+      query += `
+        AND p.client_id = $${values.length}
+      `;
     }
 
-    // Count query
-    const countQuery = `SELECT COUNT(*) FROM (${query}) AS temp`;
+    // Status Filter
+    if (status) {
+      values.push(status);
+
+      query += `
+        AND p.status = $${values.length}
+      `;
+    }
+
+    // Project Type Filter
+    if (project_type) {
+      values.push(project_type);
+
+      query += `
+        AND p.project_type = $${values.length}
+      `;
+    }
+
+    // Total Count
+    const countQuery = `
+      SELECT COUNT(*) FROM (
+        ${query}
+      ) AS total_projects
+    `;
+
     const countResult = await req.db.query(countQuery, values);
+
     const total = parseInt(countResult.rows[0].count, 10);
 
-    // Add pagination
-    values.push(limit);
-    query += ` ORDER BY created_at DESC LIMIT $${values.length}`;
+    // Pagination
+     values.push(page_size);
+
+    query += `
+      ORDER BY p.created_at DESC
+      LIMIT $${values.length}
+    `;
+
     values.push(offset);
-    query += ` OFFSET $${values.length}`;
+
+    query += `
+      OFFSET $${values.length}
+    `;
 
     const result = await req.db.query(query, values);
 
     res.json({
+      message: "Projects fetched successfully",
+
       total,
-      page: parseInt(page, 10),
-      limit: parseInt(limit, 10),
+
+      page_no: parseInt(page_no, 10),
+
+      page_size: parseInt(page_size, 10),
+
+      total_pages: Math.ceil(total / page_size),
+
       data: result.rows,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+
+    res.status(500).json({
+      error: err.message,
+    });
   }
 };
 

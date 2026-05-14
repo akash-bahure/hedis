@@ -69,19 +69,51 @@ router.post("/", controller.createProject);
  *         schema:
  *           type: string
  *         description: Search by project name
+ *
  *       - in: query
  *         name: client_id
  *         schema:
  *           type: string
  *         description: Filter by client
+ *
  *       - in: query
- *         name: page
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [Active, Completed, At Risk, On Hold, Draft]
+ *         description: Filter by project status
+ *
+ *       - in: query
+ *         name: project_type
+ *         schema:
+ *           type: string
+ *           enum: [Inpatient, Outpatient, ED Visit, HCC]
+ *         description: Filter by project type
+ *
+ *       - in: query
+ *         name: specialty
+ *         schema:
+ *           type: string
+ *           enum:
+ *             - Multi-Speciality
+ *             - Cardiology
+ *             - Orthopedics
+ *             - Emergency Med.
+ *             - Radiology
+ *             - Oncology
+ *             - Cardiothoracic
+ *             - Pediatrics
+ *         description: Filter by specialty
+ *
+ *       - in: query
+ *         name: page_no
  *         schema:
  *           type: integer
  *           default: 1
  *         description: Page number
+ *
  *       - in: query
- *         name: limit
+ *         name: page_size
  *         schema:
  *           type: integer
  *           default: 10

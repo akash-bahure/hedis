@@ -210,13 +210,43 @@ async function runMigrations(client, schema) {
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       project_name VARCHAR(255) NOT NULL,
       client_id UUID REFERENCES ${schema}.clients(id) ON DELETE CASCADE,
-      project_type VARCHAR(100),
-      specialty VARCHAR(100),
+      project_type VARCHAR(100) CHECK (
+        project_type IN (
+          'Inpatient',
+          'Outpatient',
+          'ED Visit',
+          'HCC'
+        )
+      ),
+      specialty VARCHAR(100) CHECK (
+        specialty IN (
+          'Multi-Speciality',
+          'Cardiology',
+          'Orthopedics',
+          'Emergency Med.',
+          'Radiology',
+          'Oncology',
+          'Cardiothoracic',
+          'Pediatrics'
+        )
+      ),
       priority VARCHAR(50) DEFAULT 'High' CHECK (priority IN ('High', 'Medium', 'Low')),
       notes TEXT,
+      status VARCHAR(50) DEFAULT 'Draft' CHECK (
+        status IN (
+          'Active',
+          'Completed',
+          'At Risk',
+          'On Hold',
+          'Draft'
+        )
+      ),
       start_date DATE NOT NULL,
       end_date DATE NOT NULL,
       project_manager_id UUID REFERENCES ${schema}.users(id) ON DELETE SET NULL,
+      total_charts INTEGER DEFAULT 0,
+      completed_charts INTEGER DEFAULT 0,
+      pending_charts INTEGER DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
