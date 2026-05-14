@@ -75,6 +75,12 @@ import {
   useGetApiUsersStats,
   usePostApiDepartments,
   useGetApiDepartments,
+  usePostApiUsersDeactivate,
+} from "@/api";
+import {
+  useGetApiProjectsAccessAll,
+  getApiProjectsAccessAllQueryKey,
+  usePatchApiProjectsIdAccess,
 } from "@/api";
 import { getApiUsersExport } from "@/api";
 
@@ -1116,6 +1122,7 @@ function UserProfile({
 }) {
   const [localTwoFA, setLocalTwoFA] = useState(user.two_fa_auth ?? false);
   const [localSso, setLocalSso] = useState(false);
+  const queryClient = useQueryClient();
 
   const { mutate: forgotPasswordApi, isPending: isResetting } =
     usePostApiAuthForgotPassword({
@@ -1147,29 +1154,30 @@ function UserProfile({
     });
   };
 
-  // const { mutate: deactivateUsers, isPending: isDeactivating } =
-  //   useGetApiUsersDeactivate({
-  //     mutation: {
-  //       onSuccess: () => {
-  //         toast.success("User deactivated successfully");
-  //         onClose();
-  //       },
-  //       onError: (error: any) => {
-  //         toast.error(
-  //           error?.response?.data?.message ||
-  //             error?.message ||
-  //             "Failed to deactivate user"
-  //         );
-  //       },
-  //     },
-  //   });
-  // const handleDeactivateUser = () => {
-  //   deactivateUsers({
-  //     data: {
-  //       user_ids: [user.id],
-  //     },
-  //   });
-  // };
+  const { mutate: deactivateUsers, isPending: isDeactivating } =
+    usePostApiUsersDeactivate({
+      mutation: {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getApiUsersQueryKey() });
+          toast.success("User deactivated successfully");
+          onClose();
+        },
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.message ||
+              error?.message ||
+              "Failed to deactivate user"
+          );
+        },
+      },
+    });
+  const handleDeactivateUser = () => {
+    deactivateUsers({
+      data: {
+        user_ids: [user.id],
+      },
+    });
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex">
@@ -1472,14 +1480,14 @@ function UserProfile({
             )}
             {isResetting ? "Sending..." : "Reset Password"}
           </button>
-          {/* <button
+          <button
             onClick={handleDeactivateUser}
             disabled={isDeactivating}
             className="inline-flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold border border-red-200 rounded-xl hover:bg-red-50 text-red-600 transition-colors whitespace-nowrap disabled:opacity-50"
           >
             <UserX className="w-3.5 h-3.5" />
             {isDeactivating ? "Deactivating..." : "Deactivate"}
-          </button> */}
+          </button>
         </div>
       </div>
     </div>
@@ -1508,7 +1516,7 @@ function InviteUserModal({
     projects: [] as string[],
     departmentId: "",
   });
-
+  const [showDeptDropdown, setShowDeptDropdown] = useState(false);
   const [deptSearch, setDeptSearch] = useState("");
   const [showCreateDept, setShowCreateDept] = useState(false);
   const [newDeptName, setNewDeptName] = useState("");
@@ -1565,14 +1573,31 @@ function InviteUserModal({
   const { mutate: createDepartment, isLoading: isCreatingDept } =
     usePostApiDepartments({
       mutation: {
-        onSuccess: (newDept: any) => {
+        onSuccess: (response: any) => {
+          const createdDept = response?.data || response;
+
           toast.success("Department created successfully");
+
           setShowCreateDept(false);
           setNewDeptName("");
-          setField("departmentId", newDept.id);
-          setDeptSearch(newDept.name || "");
+
+          // auto select created department
+          setField("departmentId", createdDept.id || "");
+
+          // show selected department in input
+          setDeptSearch(createdDept.name || "");
+
+          // close dropdown
+          setShowDeptDropdown(false);
         },
-        onError: () => toast.error("Failed to create department"),
+        onError: (error: any) => {
+          const message =
+            error?.response?.data?.message ||
+            error?.response?.data?.error ||
+            "Failed to create department";
+
+          toast.error(message);
+        },
       },
     });
 
@@ -1582,6 +1607,15 @@ function InviteUserModal({
         queryClient.invalidateQueries({ queryKey: getApiUsersQueryKey() });
         toast.success("User Created Successfully");
         onClose();
+      },
+
+      onError: (error: any) => {
+        const message =
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          "Failed to create User";
+
+        toast.error(message);
       },
     },
   });
@@ -1598,6 +1632,13 @@ function InviteUserModal({
         ? prev.projects.filter((x) => x !== p)
         : [...prev.projects, p],
     }));
+
+  // ==================== VALIDATION ====================
+  const isFormValid =
+    form.name.trim() &&
+    form.email.trim() &&
+    form.role.trim() &&
+    form.departmentId.trim();
 
   const handleSubmit = () => {
     const errs: { name?: string; email?: string } = {};
@@ -1634,7 +1675,12 @@ function InviteUserModal({
             toast.success("User Updated Successfully");
             onClose();
           },
-          onError: () => toast.error("Failed to Update User"),
+          onError: (error: any) => {
+            const message =
+              error?.response?.data?.message || "Failed to Update User";
+
+            toast.error(message);
+          },
         }
       );
     } else {
@@ -1751,14 +1797,19 @@ function InviteUserModal({
                 type="text"
                 placeholder="Search department..."
                 value={deptSearch}
+                onFocus={() => setShowDeptDropdown(true)}
                 onChange={(e) => {
                   setDeptSearch(e.target.value);
-                  if (form.departmentId) setField("departmentId", "");
+                  setShowDeptDropdown(true);
+
+                  if (form.departmentId) {
+                    setField("departmentId", "");
+                  }
                 }}
                 className="w-full px-3 py-2 text-[11px] bg-muted/30 border border-border rounded-xl focus:outline-none focus:ring-1 focus:ring-primary"
               />
 
-              {(deptSearch?.length ?? 0) > 0 && (
+              {showDeptDropdown && (deptSearch?.length ?? 0) > 0 && (
                 <div className="absolute z-20 w-full mt-1 bg-card border border-border rounded-xl shadow-lg py-1 max-h-60 overflow-auto">
                   {departments.length > 0 ? (
                     departments.map((dept: any) => (
@@ -1767,6 +1818,7 @@ function InviteUserModal({
                         onClick={() => {
                           setField("departmentId", dept.id);
                           setDeptSearch(dept.name || "");
+                          setShowDeptDropdown(false);
                         }}
                         className="px-4 py-2 text-[11px] hover:bg-muted/50 cursor-pointer"
                       >
@@ -1782,20 +1834,10 @@ function InviteUserModal({
                         onClick={() => setShowCreateDept(true)}
                         className="text-xs bg-primary text-white px-4 py-1.5 rounded-lg hover:bg-primary/90"
                       >
-                        + Create "{deptSearch}"
+                        + Create
                       </button>
                     </div>
                   )}
-                </div>
-              )}
-
-              {/* Show Selected Department */}
-              {form.departmentId && (
-                <div className="mt-1 text-[11px] text-green-600 font-medium">
-                  ✓ Selected:{" "}
-                  {editUser?.department_name ||
-                    departments.find((d: any) => d.id === form.departmentId)
-                      ?.name}
                 </div>
               )}
             </div>
@@ -1861,9 +1903,20 @@ function InviteUserModal({
           </button>
           <button
             onClick={handleSubmit}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 text-[11px] font-bold bg-primary text-white rounded-xl hover:opacity-90 transition-opacity whitespace-nowrap"
+            disabled={!isFormValid || isLoading}
+            className={`flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 text-[11px] font-bold rounded-xl transition-opacity whitespace-nowrap
+    ${
+      !isFormValid || isLoading
+        ? "bg-primary/50 cursor-not-allowed text-white"
+        : "bg-primary text-white hover:opacity-90"
+    }
+  `}
           >
-            {editUser ? "Update User" : "Add User"}
+            {isLoading
+              ? "Submitting..."
+              : editUser
+                ? "Update User"
+                : "Add User"}
           </button>
         </div>
       </div>
@@ -2074,37 +2127,39 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
       bg: "bg-teal-50",
     },
   ];
+  const queryClient = useQueryClient();
 
   const { data: rolesdata } = useGetApiUserRoles();
 
-  // const { mutate: deactivateUsers, isPending: isBulkDeactivating } =
-  //   useGetApiUsersDeactivate({
-  //     mutation: {
-  //       onSuccess: () => {
-  //         toast.success("Selected users deactivated successfully");
-  //         setSelected(new Set());
-  //       },
-  //       onError: (error: any) => {
-  //         toast.error(
-  //           error?.response?.data?.message ||
-  //             error?.message ||
-  //             "Failed to deactivate users"
-  //         );
-  //       },
-  //     },
-  //   });
-  // const handleBulkDeactivate = () => {
-  //   if (selected.size === 0) {
-  //     toast.error("Please select users");
-  //     return;
-  //   }
+  const { mutate: deactivateUsers, isPending: isBulkDeactivating } =
+    usePostApiUsersDeactivate({
+      mutation: {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getApiUsersQueryKey() });
+          toast.success("Selected users deactivated successfully");
+          setSelected(new Set());
+        },
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.message ||
+              error?.message ||
+              "Failed to deactivate users"
+          );
+        },
+      },
+    });
+  const handleBulkDeactivate = () => {
+    if (selected.size === 0) {
+      toast.error("Please select users");
+      return;
+    }
 
-  //   deactivateUsers({
-  //     data: {
-  //       user_ids: Array.from(selected),
-  //     },
-  //   });
-  // };
+    deactivateUsers({
+      data: {
+        user_ids: Array.from(selected),
+      },
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -2177,13 +2232,13 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
             <button className="text-[10px] text-primary font-bold hover:underline">
               Assign Role
             </button>
-            {/* <button
+            <button
               onClick={handleBulkDeactivate}
               disabled={isBulkDeactivating}
               className="text-[10px] text-red-600 font-bold hover:underline disabled:opacity-50"
             >
               {isBulkDeactivating ? "Deactivating..." : "Deactivate"}
-            </button> */}
+            </button>
           </div>
         )}
         <div className="flex-1" />
@@ -2608,7 +2663,7 @@ function RolesView() {
   const [showAddRole, setShowAddRole] = useState(false);
   const [showCloneRole, setShowCloneRole] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
-    new Set(["Main", "Operations", "Insight", "Administration"])
+    new Set(["Main", "Operations", "Insights", "Administration"])
   );
 
   const tokenStr = localStorage.getItem("userDetail");
@@ -2747,7 +2802,7 @@ function RolesView() {
   const countGranted = (roleId: string) =>
     Object.values(perms[roleId] ?? {}).filter(Boolean).length;
 
-  const groups = ["Main", "Operations", "Insight", "Administration"];
+  const groups = ["Main", "Operations", "Insights", "Administration"];
   const rm = rolesMeta[selectedRole] || {};
 
   const handleAddRole = (
@@ -3028,35 +3083,148 @@ function RolesView() {
 
 /* ════════════════════════════════════════════  VIEW: PROJECT ACCESS  */
 function ProjectAccessView() {
-  const [access, setAccess] = useState(initProjectAccess);
-  const [filterDept, setFilterDept] = useState("all");
+  const [filterDeptId, setFilterDeptId] = useState<string>("all"); // Now using ID
+  const [access, setAccess] = useState<
+    Record<string, Record<string, AccessLevel>>
+  >({});
 
-  const depts = [
-    "all",
-    ...Array.from(new Set(USERS_DATA.map((u) => u.department))),
-  ];
-  const filtered =
-    filterDept === "all"
-      ? USERS_DATA
-      : USERS_DATA.filter((u) => u.department === filterDept);
+  const { data: departmentsData, isLoading: deptsLoading } =
+    useGetApiDepartments();
+  //  API call
+  const { data, isLoading, isError, refetch } = useGetApiProjectsAccessAll({
+    department_id: filterDeptId === "all" ? undefined : filterDeptId,
+  });
+  const queryClient = useQueryClient();
 
+  //  PATCH mutation
+  const { mutate } = usePatchApiProjectsIdAccess({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: getApiProjectsAccessAllQueryKey(),
+        });
+      },
+      onError: (err) => {
+        console.error("Update failed", err);
+      },
+    },
+  });
+
+  // Transform departments for filter
+  const departments = useMemo(() => {
+    if (!departmentsData) return [];
+    return departmentsData.map((dept: any) => ({
+      id: dept.id || dept.department_id,
+      name: dept.name || dept.department_name || dept.title,
+    }));
+  }, [departmentsData]);
+
+  //  Transform users
+  const users = useMemo(() => {
+    if (!data) return [];
+
+    return data.map((u: any) => ({
+      id: u.uid,
+      name: u.full_name,
+      role: u.role,
+      department: u.department,
+      initials:
+        u.full_name
+          ?.split(" ")
+          .map((n: string) => n[0])
+          .join("") || "",
+    }));
+  }, [data]);
+
+  //  Extract projects (keep UI as name, but store id mapping)
+  const projects = useMemo(() => {
+    if (!data?.[0]?.project_access) return [];
+    return data[0].project_access.map((p: any) => ({
+      id: p.project_id,
+      name: p.project_name,
+    }));
+  }, [data]);
+  //  name -> id map (for UI compatibility)
+  const projectNameToIdMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    projects.forEach((p) => {
+      map[p.name] = p.id;
+    });
+    return map;
+  }, [projects]);
+
+  //  Convert access map (store by project_id internally)
+  const accessMap = useMemo(() => {
+    if (!data) return {};
+
+    const map: Record<string, Record<string, AccessLevel>> = {};
+
+    data.forEach((user: any) => {
+      map[user.uid] = {};
+      user.project_access.forEach((p: any) => {
+        const level = p.access_level.toLowerCase() as AccessLevel;
+        map[user.uid][p.project_id] = level;
+      });
+    });
+
+    return map;
+  }, [data]);
+
+  //  Sync API → state
+  useEffect(() => {
+    if (accessMap) {
+      setAccess(accessMap);
+    }
+  }, [accessMap]);
+
+  // Filter options
+  const depts = useMemo(() => {
+    return [{ id: "all", name: "All Departments" }, ...departments];
+  }, [departments]);
+
+  const filteredUsers = users;
+
+  //  Update access (UI uses project name, internally convert to id)
   const updateAccess = (
     userId: string,
-    project: string,
+    projectName: string,
     level: AccessLevel
   ) => {
+    const projectId = projectNameToIdMap[projectName];
+    if (!projectId) return;
+
+    // Convert to backend format
+    const backendLevel = level.charAt(0).toUpperCase() + level.slice(1);
+
+    // Optimistic update (keep lowercase internally)
     setAccess((prev) => ({
       ...prev,
-      [userId]: { ...prev[userId], [project]: level },
+      [userId]: {
+        ...prev[userId],
+        [projectId]: level,
+      },
     }));
-  };
 
+    //  FIXED PAYLOAD
+    mutate({
+      id: projectId,
+      data: {
+        user_id: userId, // ← NOT user_uid
+        access_level: backendLevel, // "Edit", "Full", etc.
+      },
+    });
+  };
   const levelColor: Record<AccessLevel, string> = {
     full: "bg-emerald-500",
     edit: "bg-blue-500",
     view: "bg-slate-300",
     none: "bg-red-200",
   };
+
+  // Loading / Error
+  if (isLoading) return <div className="p-4 text-sm">Loading...</div>;
+  if (isError)
+    return <div className="p-4 text-sm text-red-500">Failed to load data</div>;
 
   return (
     <div className="space-y-4">
@@ -3077,14 +3245,15 @@ function ProjectAccessView() {
           ))}
         </div>
         <div className="flex-1" />
+        {/* Department Filter */}
         <select
-          value={filterDept}
-          onChange={(e) => setFilterDept(e.target.value)}
+          value={filterDeptId}
+          onChange={(e) => setFilterDeptId(e.target.value)}
           className="px-3 py-1.5 text-[11px] bg-card border border-border rounded-xl focus:outline-none appearance-none"
         >
           {depts.map((d) => (
-            <option key={d} value={d}>
-              {d === "all" ? "All Departments" : d}
+            <option key={d.id} value={d.id}>
+              {d.name}
             </option>
           ))}
         </select>
@@ -3092,38 +3261,41 @@ function ProjectAccessView() {
 
       {/* Matrix Table */}
       <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto relative">
-          <table className="w-full min-w-max">
+        <div className="overflow-x-auto">
+          <table className="w-full">
             <thead>
-              <tr className="border-b border-border bg-muted">
-                <th className="px-5 py-3 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-wide sticky left-0 z-40 bg-muted min-w-[180px]">
+              <tr className="border-b border-border bg-muted/10">
+                <th className="px-5 py-3 text-left text-[10px] font-black text-muted-foreground uppercase tracking-wide lg:sticky left-0 bg-muted/10 min-w-[180px]">
                   User
                 </th>
                 <th className="px-4 py-3 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-wide min-w-[100px]">
                   Role
                 </th>
-                {PROJECTS_LIST.map((p) => (
+                {projects.map((p) => (
                   <th
-                    key={p}
+                    key={p.id}
                     className="px-4 py-3 text-center text-[10px] font-bold text-muted-foreground min-w-[140px]"
                   >
                     <div className="leading-tight">
-                      {p.split(" ").slice(0, 2).join(" ")}
+                      {p.name.split(" ").slice(0, 2).join(" ")}
                     </div>
                     <div className="text-[8px] opacity-60">
-                      {p.split(" ").slice(2).join(" ")}
+                      {p.name.split(" ").slice(2).join(" ")}
                     </div>
                   </th>
                 ))}
               </tr>
             </thead>
+
             <tbody className="divide-y divide-border">
-              {filtered.map((u, ri) => (
+              {filteredUsers.map((u: any, ri: number) => (
                 <tr
                   key={u.id}
-                  className={`hover:bg-muted/10 transition-colors ${ri % 2 === 0 ? "" : "bg-muted/5"}`}
+                  className={`hover:bg-muted/10 transition-colors ${
+                    ri % 2 === 0 ? "" : "bg-muted/5"
+                  }`}
                 >
-                  <td className="px-5 py-3 sticky left-0 z-30 bg-card shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                  <td className="px-5 py-3 lg:sticky left-0 bg-card">
                     <div className="flex items-center gap-2">
                       <Avatar initials={u.initials} size={7} />
                       <div>
@@ -3136,13 +3308,17 @@ function ProjectAccessView() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 z-10">
+
+                  <td className="px-4 py-3">
                     <RoleBadge roleId={u.role} small />
                   </td>
-                  {PROJECTS_LIST.map((p) => {
-                    const level = access[u.id]?.[p] ?? "none";
+
+                  {projects.map((p) => {
+                    const level = (access[u.id]?.[p.id] ??
+                      "none") as AccessLevel;
+
                     return (
-                      <td key={p} className="px-4 py-3 text-center">
+                      <td key={p.id} className="px-4 py-3 text-center">
                         <div className="flex flex-col items-center gap-1.5">
                           <div className="w-full max-w-[100px] h-1.5 bg-muted rounded-full overflow-hidden mx-auto">
                             <div
@@ -3161,7 +3337,7 @@ function ProjectAccessView() {
                           </div>
                           <AccessChip
                             level={level}
-                            onChange={(lv) => updateAccess(u.id, p, lv)}
+                            onChange={(lv) => updateAccess(u.id, p.name, lv)}
                           />
                         </div>
                       </td>
@@ -3172,6 +3348,7 @@ function ProjectAccessView() {
             </tbody>
           </table>
         </div>
+
         <div className="px-5 py-2.5 border-t border-border bg-muted/5">
           <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
             <Info className="w-3.5 h-3.5" />
@@ -3397,16 +3574,53 @@ export function UsersRoles() {
   const [view, setView] = useState<ViewTab>("users");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
+  // APIs
+  const { data: usersData } = useGetApiUsers({
+    user_status: "Active",
+  });
+
+  const { data: allUsersData } = useGetApiUsers();
+
+  const { data: rolesData } = useGetApiUserRoles();
+
+  const { data: projectsData } = useGetApiProjects();
+
+  // Counts
+  const activeUsers = usersData?.count ?? 0;
+
+  const totalUsers = allUsersData?.count ?? 0;
+
+  const totalRoles = rolesData?.count ?? 0;
+
+  const totalProjects = projectsData?.total ?? 0;
+
   const TABS: {
     id: ViewTab;
     label: string;
     icon: React.ElementType;
     count?: number;
   }[] = [
-    { id: "users", label: "Users", icon: Users, count: USERS_DATA.length },
-    { id: "roles", label: "Roles & Permissions", icon: Shield },
-    { id: "projects", label: "Project Access", icon: FolderKanban },
-    { id: "shifts", label: "Shift Management", icon: Clock },
+    {
+      id: "users",
+      label: "Users",
+      icon: Users,
+      count: totalUsers,
+    },
+    {
+      id: "roles",
+      label: "Roles & Permissions",
+      icon: Shield,
+    },
+    {
+      id: "projects",
+      label: "Project Access",
+      icon: FolderKanban,
+    },
+    {
+      id: "shifts",
+      label: "Shift Management",
+      icon: Clock,
+    },
   ];
 
   return (
@@ -3417,23 +3631,29 @@ export function UsersRoles() {
           <h2 className="text-xl font-black text-foreground tracking-tight">
             Users & Role Management
           </h2>
+
           <p className="text-[11px] text-muted-foreground mt-0.5">
             Manage user accounts · role assignments · permission matrix ·
             project access · shift scheduling
           </p>
         </div>
+
         <div className="flex-1" />
+
         <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <strong className="text-foreground">
-              {USERS_DATA.filter((u) => u.status === "active").length} Active
-            </strong>
+
+            <strong className="text-foreground">{activeUsers} Active</strong>
           </span>
+
           <span>·</span>
-          <span>{Object.keys(ROLE_META).length} Roles</span>
+
+          <span>{totalRoles} Roles</span>
+
           <span>·</span>
-          <span>{PROJECTS_LIST.length} Projects</span>
+
+          <span>{totalProjects} Projects</span>
         </div>
       </div>
 
@@ -3441,7 +3661,9 @@ export function UsersRoles() {
       <div className="flex items-center gap-0.5 bg-card border border-border rounded-2xl p-1.5 shadow-sm overflow-x-auto flex-shrink-0">
         {TABS.map((t) => {
           const Icon = t.icon;
+
           const active = view === t.id;
+
           return (
             <button
               key={t.id}
@@ -3453,10 +3675,16 @@ export function UsersRoles() {
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
+
               {t.label}
+
               {t.count !== undefined && (
                 <span
-                  className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${active ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"}`}
+                  className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${
+                    active
+                      ? "bg-white/20 text-white"
+                      : "bg-muted text-muted-foreground"
+                  }`}
                 >
                   {t.count}
                 </span>
@@ -3464,9 +3692,12 @@ export function UsersRoles() {
             </button>
           );
         })}
+
         <div className="flex-1" />
+
         <div className="flex items-center gap-1.5 pr-1 text-[10px] text-muted-foreground flex-shrink-0">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+
           <span>HIPAA-compliant access control</span>
         </div>
       </div>
@@ -3476,8 +3707,11 @@ export function UsersRoles() {
         {view === "users" && (
           <UsersView onSelectUser={(u) => setSelectedUser(u)} />
         )}
+
         {view === "roles" && <RolesView />}
+
         {view === "projects" && <ProjectAccessView />}
+
         {view === "shifts" && <ShiftView />}
       </div>
 
