@@ -32,6 +32,11 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import {
+  getApiClientsQueryKey,
+  getApiClientsQueryParamsRegionEnum,
+  GetApiClientsQueryParamsRegionEnumKey,
+  GetApiClientsQueryParamsStatusEnumKey,
+  getApiClientsStatsQueryKey,
   PostApiClientsMutationRequest,
   PostApiClientsMutationRequestContractTypeEnumKey,
   PostApiClientsMutationRequestMeasureYearEnumKey,
@@ -43,6 +48,7 @@ import {
   usePostApiClients,
 } from "@/api";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 /* ─── Types ─────────────────────────────────────────────── */
 type ClientStatus = "active" | "onboarding" | "at-risk" | "inactive";
@@ -1359,7 +1365,7 @@ function ClientPanel({
                     className="text-muted-foreground"
                     style={{ fontSize: 11 }}
                   >
-                    {client.id}
+                    {client.clientId}
                   </span>
                   <span className="text-muted-foreground">·</span>
                   <StatusBadge status={client.status} />
@@ -1469,10 +1475,10 @@ function ClientPanel({
                 { label: "Measure Year", value: client.measureYear },
                 { label: "Start Date", value: client.startDate },
                 { label: "Due Date", value: client.dueDate },
-                { label: "Plan", value: client.plan },
+                { label: "Plan", value: client.plan_tier },
                 {
                   label: "Abstractors",
-                  value: `${client.abstractors} assigned`,
+                  value: `${client.abstractors_assigned} assigned`,
                 },
               ].map((row, i) => (
                 <div
@@ -1516,8 +1522,8 @@ function ClientPanel({
                 </span>
               </div>
               {[
-                { icon: Mail, val: client.contactEmail },
-                { icon: Phone, val: client.contactPhone },
+                { icon: Mail, val: client.email },
+                { icon: Phone, val: client.phone },
               ].map((row) => (
                 <div
                   key={row.val}
@@ -1679,10 +1685,20 @@ function AddClientModal({
     Partial<Record<keyof AddClientForm, string>>
   >({});
 
+  const queryClient = useQueryClient();
+
   const { mutate: createClient, isPending } = usePostApiClients({
     mutation: {
       onSuccess: (response) => {
         toast.success("Client created successfully");
+
+        queryClient.invalidateQueries({
+          queryKey: getApiClientsQueryKey(),
+        });
+
+        queryClient.invalidateQueries({
+          queryKey: getApiClientsStatsQueryKey(),
+        });
 
         if (response?.data) {
           onAdd(response.data);
@@ -2249,67 +2265,71 @@ export function Clients() {
   const [selectedClient, setSelected] = useState<Client | null>(null);
   const [view, setView] = useState<"table" | "grid">("table");
   const [showAddModal, setShowAddModal] = useState(false);
-  const [clientList, setClientList] = useState<Client[]>(CLIENTS);
   const [page, setPage] = useState(1);
-
-  // const regions = [
-  //   "all",
-  //   ...Array.from(new Set(clientList.map((c) => c.region))),
-  // ];
-
-  const filtered = clientList.filter((c) => {
-    const q = search.toLowerCase();
-    const matchSearch =
-      !q ||
-      c.name.toLowerCase().includes(q) ||
-      c.id.toLowerCase().includes(q) ||
-      c.region.toLowerCase().includes(q) ||
-      c.contactName.toLowerCase().includes(q);
-    const matchStatus = statusFilter === "all" || c.status === statusFilter;
-    const matchRegion = regionFilter === "all" || c.region === regionFilter;
-    return matchSearch && matchStatus && matchRegion;
-  });
 
   const { data: clientsData, isLoading: isClientListLoading } =
     useGetApiClients(
       {
-        search: search || undefined,
-        region: regionFilter !== "all" ? regionFilter : undefined,
+        search: search.trim() || undefined,
+        region:
+          regionFilter !== "all"
+            ? (regionFilter as GetApiClientsQueryParamsRegionEnumKey)
+            : undefined,
         status:
-          statusFilter === "all"
-            ? undefined
-            : statusFilter === "at-risk"
-              ? "At Risk"
-              : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1),
+          statusFilter !== "all"
+            ? ({
+                active: "Active",
+                onboarding: "Onboarding",
+                inactive: "Inactive",
+                "at-risk": "At Risk",
+              }[statusFilter] as GetApiClientsQueryParamsStatusEnumKey)
+            : undefined,
         page_no: page,
         page_size: 10,
       },
       {
         query: {
           keepPreviousData: true,
+          refetchOnWindowFocus: false,
         },
       },
     );
 
-  const clients =
+  const clients: Client[] =
     clientsData?.data?.map((client) => ({
       id: client.id || "",
+
       clientId: client.client_id || "",
+
       name: client.org_name || "",
+
       shortCode: client.short_code || "",
+
       region: client.region || "",
-      status: (client.status || "").toLowerCase(),
+
+      status: (client.status || "inactive").toLowerCase() as ClientStatus,
+
       contractType: client.contract_type || "",
+
       measureYear: client.measure_year || "",
+
       chartsTotal: client.total_charts || 0,
+
       chartsCompleted: client.completed_charts || 0,
+
       chartsPending:
         (client.total_charts || 0) - (client.completed_charts || 0),
+
       dueDate: client.due_date || "",
+
       startDate: client.start_date || "",
+
       contactName: client.primary_contact_name || "",
+
       email: client.email || "",
+
       phone: client.phone || "",
+
       abstractorsAssigned: client.abstractors_assigned || 0,
 
       complianceScore:
@@ -2324,7 +2344,7 @@ export function Clients() {
     },
   });
 
-  const regions = ["all", ...Array.from(new Set(clients.map((c) => c.region)))];
+  const regions = ["all", ...Object.values(getApiClientsQueryParamsRegionEnum)];
   const totalClients = statsData?.total_clients ?? 0;
 
   const activeClients = statsData?.active_clients ?? 0;
@@ -2413,7 +2433,10 @@ export function Clients() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
           <input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
             placeholder="Search clients…"
             className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
             style={{ fontSize: 13 }}
@@ -2424,7 +2447,11 @@ export function Clients() {
         <div className="relative w-full sm:w-auto">
           <select
             value={statusFilter}
-            onChange={(e) => setStatus(e.target.value as ClientStatus | "all")}
+            onChange={(e) => {
+              setStatus(e.target.value as ClientStatus | "all");
+
+              setPage(1);
+            }}
             className="appearance-none pl-3 pr-7 py-1.5 rounded-lg border border-border bg-background text-foreground outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
             style={{ fontSize: 13 }}
           >
@@ -2441,7 +2468,10 @@ export function Clients() {
         <div className="relative w-full sm:w-auto">
           <select
             value={regionFilter}
-            onChange={(e) => setRegion(e.target.value)}
+            onChange={(e) => {
+              setRegion(e.target.value);
+              setPage(1);
+            }}
             className="appearance-none pl-3 pr-7 py-1.5 rounded-lg border border-border bg-background text-foreground outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
             style={{ fontSize: 13 }}
           >
@@ -2475,7 +2505,7 @@ export function Clients() {
           className="w-full sm:w-auto text-muted-foreground text-center sm:text-left"
           style={{ fontSize: 12 }}
         >
-          {clients.length} of {clientsData?.total_count || 0}
+          Showing {clients.length} of {clientsData?.total_count || 0}
         </span>
       </div>
 
@@ -2660,7 +2690,7 @@ export function Clients() {
         ) : (
           /* GRID / CARD VIEW */
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {filtered.map((client) => {
+            {clients.map((client) => {
               const comp = pct(client.chartsCompleted, client.chartsTotal);
               return (
                 <div
@@ -2690,7 +2720,7 @@ export function Clients() {
                           className="text-muted-foreground"
                           style={{ fontSize: 11 }}
                         >
-                          {client.client_id} · {client.contractType}
+                          {client.clientId} · {client.contractType}
                         </p>
                       </div>
                     </div>
@@ -2789,7 +2819,7 @@ export function Clients() {
               );
             })}
 
-            {filtered.length === 0 && (
+            {!isClientListLoading && clients.length === 0 && (
               <div className="col-span-full py-16 text-center text-muted-foreground">
                 <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
                 <p style={{ fontSize: 14 }}>No clients match your filters.</p>
