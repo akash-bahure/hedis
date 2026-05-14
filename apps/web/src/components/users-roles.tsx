@@ -63,6 +63,7 @@ import {
   useGetApiUserRoles,
   useGetApiUserRolesId,
   getApiUserRolesQueryKey,
+  usePostApiAuthForgotPassword,
 } from "@/api";
 import {
   usePostApiUsers,
@@ -1116,6 +1117,60 @@ function UserProfile({
   const [localTwoFA, setLocalTwoFA] = useState(user.two_fa_auth ?? false);
   const [localSso, setLocalSso] = useState(false);
 
+  const { mutate: forgotPasswordApi, isPending: isResetting } =
+    usePostApiAuthForgotPassword({
+      mutation: {
+        onSuccess: (response: any) => {
+          toast.success(
+            response?.message || "Password reset link sent successfully."
+          );
+        },
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.message ||
+              error?.message ||
+              "Failed to send reset link."
+          );
+        },
+      },
+    });
+
+  const handleResetPassword = () => {
+    if (!user.email) {
+      toast.error("User email not found.");
+      return;
+    }
+    forgotPasswordApi({
+      data: {
+        email: user.email,
+      },
+    });
+  };
+
+  // const { mutate: deactivateUsers, isPending: isDeactivating } =
+  //   useGetApiUsersDeactivate({
+  //     mutation: {
+  //       onSuccess: () => {
+  //         toast.success("User deactivated successfully");
+  //         onClose();
+  //       },
+  //       onError: (error: any) => {
+  //         toast.error(
+  //           error?.response?.data?.message ||
+  //             error?.message ||
+  //             "Failed to deactivate user"
+  //         );
+  //       },
+  //     },
+  //   });
+  // const handleDeactivateUser = () => {
+  //   deactivateUsers({
+  //     data: {
+  //       user_ids: [user.id],
+  //     },
+  //   });
+  // };
+
   return (
     <div className="fixed inset-0 z-50 flex">
       <div
@@ -1405,14 +1460,26 @@ function UserProfile({
             <Edit2 className="w-3.5 h-3.5" />
             Edit User
           </button>
-          <button className="inline-flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold border border-border rounded-xl hover:bg-muted">
-            <Key className="w-3.5 h-3.5" />
-            Reset Password
+          <button
+            onClick={handleResetPassword}
+            disabled={isResetting}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold border border-border rounded-xl hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isResetting ? (
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Key className="w-3.5 h-3.5" />
+            )}
+            {isResetting ? "Sending..." : "Reset Password"}
           </button>
-          <button className="inline-flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold border border-red-200 rounded-xl hover:bg-red-50 text-red-600 transition-colors whitespace-nowrap">
+          {/* <button
+            onClick={handleDeactivateUser}
+            disabled={isDeactivating}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold border border-red-200 rounded-xl hover:bg-red-50 text-red-600 transition-colors whitespace-nowrap disabled:opacity-50"
+          >
             <UserX className="w-3.5 h-3.5" />
-            Deactivate
-          </button>
+            {isDeactivating ? "Deactivating..." : "Deactivate"}
+          </button> */}
         </div>
       </div>
     </div>
@@ -2010,6 +2077,35 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
 
   const { data: rolesdata } = useGetApiUserRoles();
 
+  // const { mutate: deactivateUsers, isPending: isBulkDeactivating } =
+  //   useGetApiUsersDeactivate({
+  //     mutation: {
+  //       onSuccess: () => {
+  //         toast.success("Selected users deactivated successfully");
+  //         setSelected(new Set());
+  //       },
+  //       onError: (error: any) => {
+  //         toast.error(
+  //           error?.response?.data?.message ||
+  //             error?.message ||
+  //             "Failed to deactivate users"
+  //         );
+  //       },
+  //     },
+  //   });
+  // const handleBulkDeactivate = () => {
+  //   if (selected.size === 0) {
+  //     toast.error("Please select users");
+  //     return;
+  //   }
+
+  //   deactivateUsers({
+  //     data: {
+  //       user_ids: Array.from(selected),
+  //     },
+  //   });
+  // };
+
   return (
     <div className="space-y-4">
       {/* Stat strip */}
@@ -2081,9 +2177,13 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
             <button className="text-[10px] text-primary font-bold hover:underline">
               Assign Role
             </button>
-            <button className="text-[10px] text-red-600 font-bold hover:underline">
-              Deactivate
-            </button>
+            {/* <button
+              onClick={handleBulkDeactivate}
+              disabled={isBulkDeactivating}
+              className="text-[10px] text-red-600 font-bold hover:underline disabled:opacity-50"
+            >
+              {isBulkDeactivating ? "Deactivating..." : "Deactivate"}
+            </button> */}
           </div>
         )}
         <div className="flex-1" />

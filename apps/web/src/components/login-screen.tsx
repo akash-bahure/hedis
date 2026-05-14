@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePostApiAuthLogin } from "@/api";
+import { Link } from "@tanstack/react-router";
 
 interface LoginScreenProps {
   onLogin: (roleId: RoleId) => void;
@@ -556,13 +557,13 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 >
                   Password
                 </label>
-                <button
-                  type="button"
+                <Link
+                  to="/auth/forgot-password"
                   className="text-primary hover:underline transition-colors"
                   style={{ fontSize: "11px" }}
                 >
                   Forgot password?
-                </button>
+                </Link>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
