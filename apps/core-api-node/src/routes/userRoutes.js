@@ -182,6 +182,50 @@ router.get("/export", userController.exportUsers);
 
 /**
  * @swagger
+ * /api/users/deactivate:
+ *   post:
+ *     summary: Deactivate multiple users
+ *     tags: [Users]
+ *     description: Sets the status of multiple users to 'Inactive' and disables their ability to log in.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - user_ids
+ *             properties:
+ *               user_ids:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: uuid
+ *                 example: ["550e8400-e29b-41d4-a716-446655440000", "660e8400-e29b-41d4-a716-446655440011"]
+ *     responses:
+ *       200:
+ *         description: Users deactivated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 deactivated_user_ids:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                     format: uuid
+ *       400:
+ *         description: Invalid input or no user IDs provided
+ *       500:
+ *         description: Server error
+ */
+router.post("/deactivate", userController.deactivateUsers);
+
+/**
+ * @swagger
  * /api/users/stats:
  *   get:
  *     summary: Get user statistics
