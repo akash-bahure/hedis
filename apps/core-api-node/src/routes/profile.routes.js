@@ -1,26 +1,24 @@
 const express = require("express");
 const router = express.Router();
 const controller = require("../controllers/profile.controller");
+const authMiddleware = require("../middlewares/authMiddleware");
 
 /**
  * @swagger
- * /api/profile/{id}:
+ * /api/profile/me:
  *   get:
- *     summary: Get user profile by ID
+ *     summary: Get logged in user profile
  *     tags: [Profile]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: User profile data fetched successfully
  *       404:
  *         description: Profile not found
  */
-router.get("/:id", controller.getProfile);
+router.get("/me", authMiddleware, controller.getProfile);
+router.get("/me", authMiddleware, controller.getProfile);
 
 /**
  * @swagger

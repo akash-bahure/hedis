@@ -275,8 +275,8 @@ router.post("/", controller.createProject);
  *                         format: uuid
  * 
  *                       project_id:
- *                       type: string
- *                       example: "PR-001"
+ *                         type: string
+ *                         example: "PR-001"
  *
  *                       project_name:
  *                         type: string
@@ -372,6 +372,7 @@ router.post("/", controller.createProject);
  *       500:
  *         description: Internal server error
  */
+router.get("/", controller.getProjects);
 
 /**
  * @swagger

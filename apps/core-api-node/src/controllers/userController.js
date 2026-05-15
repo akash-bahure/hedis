@@ -234,7 +234,7 @@ exports.getUsers = async (req, res) => {
               'id', p.id,
               'project_name', p.project_name,
               'project_type', p.project_type,
-              'specialty', p.specialty,
+              'speciality', p.speciality,
               'priority', p.priority,
               'start_date', p.start_date,
               'end_date', p.end_date,
