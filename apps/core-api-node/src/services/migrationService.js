@@ -209,6 +209,7 @@ async function runMigrations(client, schema) {
    CREATE TABLE IF NOT EXISTS ${schema}.projects (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       project_name VARCHAR(255) NOT NULL,
+      project_id VARCHAR(50) UNIQUE NOT NULL,
       client_id UUID REFERENCES ${schema}.clients(id) ON DELETE CASCADE,
       project_type VARCHAR(100) CHECK (
         project_type IN (
