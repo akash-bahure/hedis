@@ -22,33 +22,130 @@ const controller = require("../controllers/project.controller");
  *             properties:
  *               project_name:
  *                 type: string
- *                 example: "Medical Coding Project A"
+ *                 example: "Apollo HCC Audit FY26"
+ *
  *               client_id:
  *                 type: string
+ *                 format: uuid
  *                 example: "550e8400-e29b-41d4-a716-446655440000"
+ *
  *               project_type:
  *                 type: string
- *                 example: "Outpatient"
+ *                 enum:
+ *                   - Inpatient
+ *                   - Outpatient
+ *                   - ED Visit
+ *                   - HCC
+ *                 example: "HCC"
+ *
  *               specialty:
  *                 type: string
- *                 example: "Multi-Specialty"
+ *                 enum:
+ *                   - Multi-Speciality
+ *                   - Cardiology
+ *                   - Orthopedics
+ *                   - Emergency Med.
+ *                   - Radiology
+ *                   - Oncology
+ *                   - Cardiothoracic
+ *                   - Pediatrics
+ *                 example: "Cardiology"
+ *
  *               priority:
  *                 type: string
- *                 enum: ["High", "Medium", "Low"]
+ *                 enum:
+ *                   - High
+ *                   - Medium
+ *                   - Low
+ *                 example: "High"
+ *
+ *               status:
+ *                 type: string
+ *                 enum:
+ *                   - Active
+ *                   - Completed
+ *                   - At Risk
+ *                   - On Hold
+ *                   - Draft
+ *                 example: "Draft"
+ *
+ *               total_charts:
+ *                 type: integer
+ *                 example: 1200
+ *
+ *               completed_charts:
+ *                 type: integer
+ *                 example: 300
+ *
  *               notes:
  *                 type: string
- *                 example: "Urgent"
+ *                 example: "Priority project for Q2 delivery"
+ *
  *               start_date:
  *                 type: string
  *                 format: date
+ *                 example: "2026-05-01"
+ *
  *               end_date:
  *                 type: string
  *                 format: date
+ *                 example: "2026-07-31"
+ *
  *               project_manager_id:
- *                 type: integer
+ *                 type: string
+ *                 format: uuid
+ *                 nullable: true
+ *                 example: "34176070-7443-4eb7-b960-e4a45a515482"
  *     responses:
  *       201:
  *         description: Project created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Project created successfully"
+ *
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *
+ *                     project_name:
+ *                       type: string
+ *
+ *                     project_type:
+ *                       type: string
+ *
+ *                     specialty:
+ *                       type: string
+ *
+ *                     priority:
+ *                       type: string
+ *
+ *                     status:
+ *                       type: string
+ *
+ *                     total_charts:
+ *                       type: integer
+ *
+ *                     completed_charts:
+ *                       type: integer
+ *
+ *                     pending_charts:
+ *                       type: integer
+ *
+ *                     start_date:
+ *                       type: string
+ *                       format: date
+ *
+ *                     end_date:
+ *                       type: string
+ *                       format: date
  *       400:
  *         description: Validation error
  *       500:
@@ -62,32 +159,53 @@ router.post("/", controller.createProject);
  *   get:
  *     summary: Get all projects
  *     tags: [Projects]
- *     description: Retrieve projects with search, filters, and pagination
+ *     description: Retrieve projects with filters, search, charts progress, client details, and pagination
+ *
  *     parameters:
  *       - in: query
  *         name: search
  *         schema:
  *           type: string
- *         description: Search by project name
+ *         description: Search by project name or client name
  *
  *       - in: query
  *         name: client_id
  *         schema:
  *           type: string
- *         description: Filter by client
+ *           format: uuid
+ *         description: Filter by client UUID
+ *
+ *       - in: query
+ *         name: priority
+ *         schema:
+ *           type: string
+ *           enum:
+ *             - High
+ *             - Medium
+ *             - Low
+ *         description: Filter by project priority
  *
  *       - in: query
  *         name: status
  *         schema:
  *           type: string
- *           enum: [Active, Completed, At Risk, On Hold, Draft]
+ *           enum:
+ *             - Active
+ *             - Completed
+ *             - At Risk
+ *             - On Hold
+ *             - Draft
  *         description: Filter by project status
  *
  *       - in: query
  *         name: project_type
  *         schema:
  *           type: string
- *           enum: [Inpatient, Outpatient, ED Visit, HCC]
+ *           enum:
+ *             - Inpatient
+ *             - Outpatient
+ *             - ED Visit
+ *             - HCC
  *         description: Filter by project type
  *
  *       - in: query
@@ -110,7 +228,7 @@ router.post("/", controller.createProject);
  *         schema:
  *           type: integer
  *           default: 1
- *         description: Page number
+ *         description: Current page number
  *
  *       - in: query
  *         name: page_size
@@ -118,6 +236,7 @@ router.post("/", controller.createProject);
  *           type: integer
  *           default: 10
  *         description: Number of records per page
+ *
  *     responses:
  *       200:
  *         description: Projects fetched successfully
@@ -126,15 +245,26 @@ router.post("/", controller.createProject);
  *             schema:
  *               type: object
  *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Projects fetched successfully"
+ *
  *                 total:
  *                   type: integer
- *                   example: 100
- *                 page:
+ *                   example: 50
+ *
+ *                 page_no:
  *                   type: integer
  *                   example: 1
- *                 limit:
+ *
+ *                 page_size:
  *                   type: integer
  *                   example: 10
+ *
+ *                 total_pages:
+ *                   type: integer
+ *                   example: 5
+ *
  *                 data:
  *                   type: array
  *                   items:
@@ -142,18 +272,106 @@ router.post("/", controller.createProject);
  *                     properties:
  *                       id:
  *                         type: string
+ *                         format: uuid
+ * 
+ *                       project_id:
+ *                       type: string
+ *                       example: "PR-001"
+ *
  *                       project_name:
  *                         type: string
- *                       client_id:
+ *                         example: "Apollo HCC Audit FY26"
+ *
+ *                       project_type:
  *                         type: string
+ *                         example: "HCC"
+ *
+ *                       specialty:
+ *                         type: string
+ *                         example: "Cardiology"
+ *
+ *                       priority:
+ *                         type: string
+ *                         example: "High"
+ *
+ *                       status:
+ *                         type: string
+ *                         example: "Active"
+ *
+ *                       notes:
+ *                         type: string
+ *
  *                       start_date:
  *                         type: string
  *                         format: date
+ *
  *                       end_date:
  *                         type: string
  *                         format: date
+ *
+ *                       total_charts:
+ *                         type: integer
+ *                         example: 1200
+ *
+ *                       completed_charts:
+ *                         type: integer
+ *                         example: 760
+ *
+ *                       pending_charts:
+ *                         type: integer
+ *                         example: 440
+ *
+ *                       completion_percentage:
+ *                         type: integer
+ *                         example: 63
+ *
+ *                       client_uuid:
+ *                         type: string
+ *                         format: uuid
+ *
+ *                       client_id:
+ *                         type: string
+ *                         example: "CL-1001"
+ *
+ *                       org_name:
+ *                         type: string
+ *                         example: "Apollo Hospitals"
+ *
+ *                       short_code:
+ *                         type: string
+ *                         example: "APH"
+ *
+ *                       region:
+ *                         type: string
+ *                         example: "South"
+ *
+ *                       contract_type:
+ *                         type: string
+ *                         example: "HEDIS Hybrid"
+ *
+ *                       client_status:
+ *                         type: string
+ *                         example: "Active"
+ *
+ *                       project_manager_uuid:
+ *                         type: string
+ *                         format: uuid
+ *
+ *                       project_manager_name:
+ *                         type: string
+ *                         example: "Rahul Sharma"
+ *
+ *                       created_at:
+ *                         type: string
+ *                         format: date-time
+ *
+ *                       updated_at:
+ *                         type: string
+ *                         format: date-time
+ *
+ *       500:
+ *         description: Internal server error
  */
-router.get("/", controller.getProjects);
 
 /**
  * @swagger

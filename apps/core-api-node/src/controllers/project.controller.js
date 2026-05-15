@@ -1,13 +1,13 @@
 exports.createProject = async (req, res) => {
   try {
-    const {
+   const {
       project_name,
       client_id,
       project_type,
       specialty,
       priority,
       status,
-      assigned_charts,
+      total_charts,
       completed_charts,
       notes,
       start_date,
@@ -16,60 +16,102 @@ exports.createProject = async (req, res) => {
     } = req.body;
 
     // Required Fields Validation
-    if (!project_name || !client_id || !start_date || !end_date) {
+   if (!project_name || !client_id || !start_date || !end_date) {
       return res.status(400).json({
         error:
           "Missing required fields: project_name, client_id, start_date, end_date",
       });
     }
 
-    const pending_charts =
-      (total_charts || 0) - (completed_charts || 0);
+
+    // Generate Sequential Project ID
+    const projectCountResult = await req.db.query(`
+      SELECT COUNT(*) FROM projects
+    `);
+    
+    const projectCount =
+      Number(projectCountResult.rows[0].count) + 1;
+    
+    const project_id = `PR-${String(projectCount).padStart(3, "0")}`;
+    let validProjectManagerId = null;
+
+    if (
+    project_manager_id &&
+    project_manager_id.trim() !== ""
+    ){
+    const managerExists = await req.db.query(
+      `SELECT id FROM users WHERE id = $1`,
+      [project_manager_id]
+    );
+  
+    if (managerExists.rows.length === 0) {
+      return res.status(400).json({
+        error: "Invalid project_manager_id. User not found.",
+      });
+    }
+  }
+
+    // Charts Calculation
+    const totalCharts = Number(total_charts || 0);
+    const completedCharts = Number(completed_charts || 0);
+
+    const pending_charts = Math.max(
+      totalCharts - completedCharts,
+      0
+    );
 
    const query = `
-      INSERT INTO projects (
-        project_name,
-        client_id,
-        project_type,
-        specialty,
-        priority,
-        status,
-        assigned_charts,
-        completed_charts,
-        notes,
-        start_date,
-        end_date,
-        project_manager_id
-      )
-      VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12
-      )
-      RETURNING *;
-    `;
-
-    const values = [
+    INSERT INTO projects (
+      project_id,
       project_name,
       client_id,
-      project_type || null,
-      specialty || null,
-      priority || "High",
-      status || "Draft",
-      assigned_charts || 0,
-      completed_charts || 0,
-      notes || null,
+      project_type,
+      specialty,
+      priority,
+      status,
+      total_charts,
+      completed_charts,
+      pending_charts,
+      notes,
       start_date,
       end_date,
-      project_manager_id || null,
-    ];
+      project_manager_id
+    )
+    VALUES (
+      $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14
+    )
+    RETURNING *;
+  `;
+
+    const values = [
+    project_id,
+    project_name,
+    client_id,
+    project_type || null,
+    specialty || null,
+    priority || "High",
+    status || "Draft",
+    totalCharts,
+    completedCharts,
+    pending_charts,
+    notes || null,
+    start_date,
+    end_date,
+    project_manager_id && project_manager_id.trim() !== ""
+    ? project_manager_id
+    : null,
+  ];
 
     const result = await req.db.query(query, values);
 
-    res.status(201).json({
+    return res.status(201).json({
       message: "Project created successfully",
       data: result.rows[0],
     });
   } catch (err) {
-    res.status(500).json({
+    console.error("Create Project Error:", err);
+
+    return res.status(500).json({
       error: err.message,
     });
   }
@@ -88,41 +130,54 @@ exports.getProjects = async (req, res) => {
       page_size = 10,
     } = req.query;
 
-    const offset = (page_no - 1) * page_size;
+    const page = Number(page_no);
+    const limit = Number(page_size);
+    const offset = (page - 1) * limit;
 
     let query = `
-      SELECT
-        p.id,
-        p.project_name,
-        p.project_type,
-        p.specialty,
-        p.priority,
-        p.status,
-        p.start_date,
-        p.end_date,
-        p.assigned_charts,
-        p.completed_charts,
-
-        (p.assigned_charts - p.completed_charts) AS pending_charts,
-
-        CASE
-          WHEN p.assigned_charts = 0 THEN 0
-          ELSE ROUND(
-            (p.completed_charts::decimal / p.assigned_charts) * 100,
-            0
-          )
-        END AS completion_percentage,
-
-        c.id as client_uuid,
-        c.client_id,
-        c.org_name,
-        c.short_code,
-        c.region,
-        c.contract_type
+    SELECT
+      p.id,
+      p.project_id,
+      p.project_name,
+      p.project_type,
+      p.specialty,
+      p.priority,
+      p.status,
+      p.notes,
+      p.start_date,
+      p.end_date,
+      p.total_charts,
+      p.completed_charts,
+      p.pending_charts,
+      p.created_at,
+      p.updated_at,
+    
+      CASE
+        WHEN p.total_charts = 0 THEN 0
+        ELSE ROUND(
+          (p.completed_charts::decimal / p.total_charts) * 100,
+          0
+        )
+      END AS completion_percentage,
+    
+      c.id AS client_uuid,
+      c.client_id,
+      c.org_name,
+      c.short_code,
+      c.region,
+      c.contract_type,
+      c.status AS client_status,
+    
+      u.id AS project_manager_uuid,
+      u.full_name AS project_manager_name
 
       FROM projects p
+
       LEFT JOIN clients c
         ON p.client_id = c.id
+
+      LEFT JOIN users u
+        ON p.project_manager_id = u.id
 
       WHERE 1=1
     `;
@@ -176,10 +231,10 @@ exports.getProjects = async (req, res) => {
 
     const countResult = await req.db.query(countQuery, values);
 
-    const total = parseInt(countResult.rows[0].count, 10);
+    const total = Number(countResult.rows[0].count);
 
     // Pagination
-     values.push(page_size);
+    values.push(limit);
 
     query += `
       ORDER BY p.created_at DESC
@@ -194,16 +249,16 @@ exports.getProjects = async (req, res) => {
 
     const result = await req.db.query(query, values);
 
-    res.json({
+    return res.status(200).json({
       message: "Projects fetched successfully",
 
       total,
 
-      page_no: parseInt(page_no, 10),
+      page_no: page,
 
-      page_size: parseInt(page_size, 10),
+      page_size: limit,
 
-      total_pages: Math.ceil(total / page_size),
+      total_pages: Math.ceil(total / limit),
 
       data: result.rows,
     });
