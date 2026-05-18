@@ -17,6 +17,7 @@ import type {
 import type {
   GetApiProjectsQueryResponse,
   GetApiProjectsQueryParams,
+  GetApiProjects500,
 } from "../../types/GetApiProjects.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { getApiProjects } from "../../clients/getApiProjects.ts";
@@ -33,7 +34,7 @@ export function getApiProjectsQueryOptions(
   const queryKey = getApiProjectsQueryKey(params);
   return queryOptions<
     GetApiProjectsQueryResponse,
-    ResponseErrorConfig<Error>,
+    ResponseErrorConfig<GetApiProjects500>,
     GetApiProjectsQueryResponse,
     typeof queryKey
   >({
@@ -48,7 +49,7 @@ export function getApiProjectsQueryOptions(
 }
 
 /**
- * @description Retrieve projects with search, filters, and pagination
+ * @description Retrieve projects with filters, search, charts progress, client details, and pagination
  * @summary Get all projects
  * {@link /api/projects}
  */
@@ -62,7 +63,7 @@ export function useGetApiProjects<
     query?: Partial<
       QueryObserverOptions<
         GetApiProjectsQueryResponse,
-        ResponseErrorConfig<Error>,
+        ResponseErrorConfig<GetApiProjects500>,
         TData,
         TQueryData,
         TQueryKey
@@ -82,7 +83,7 @@ export function useGetApiProjects<
       queryKey,
     } as unknown as QueryObserverOptions,
     queryClient,
-  ) as UseQueryResult<TData, ResponseErrorConfig<Error>> & {
+  ) as UseQueryResult<TData, ResponseErrorConfig<GetApiProjects500>> & {
     queryKey: TQueryKey;
   };
 

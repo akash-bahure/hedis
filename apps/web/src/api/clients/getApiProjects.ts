@@ -12,6 +12,7 @@ import type {
 import type {
   GetApiProjectsQueryResponse,
   GetApiProjectsQueryParams,
+  GetApiProjects500,
 } from "../types/GetApiProjects.ts";
 
 function getGetApiProjectsUrl() {
@@ -20,7 +21,7 @@ function getGetApiProjectsUrl() {
 }
 
 /**
- * @description Retrieve projects with search, filters, and pagination
+ * @description Retrieve projects with filters, search, charts progress, client details, and pagination
  * @summary Get all projects
  * {@link /api/projects}
  */
@@ -32,7 +33,7 @@ export async function getApiProjects(
 
   const res = await request<
     GetApiProjectsQueryResponse,
-    ResponseErrorConfig<Error>,
+    ResponseErrorConfig<GetApiProjects500>,
     unknown
   >({
     method: "GET",

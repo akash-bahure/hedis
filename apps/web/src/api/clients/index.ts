@@ -9,7 +9,7 @@ export { getApiClientsExport } from "./getApiClientsExport.ts";
 export { getApiClientsId } from "./getApiClientsId.ts";
 export { getApiClientsStats } from "./getApiClientsStats.ts";
 export { getApiDepartments } from "./getApiDepartments.ts";
-export { getApiProfileId } from "./getApiProfileId.ts";
+export { getApiProfileMe } from "./getApiProfileMe.ts";
 export { getApiProjects } from "./getApiProjects.ts";
 export { getApiProjectsAccessAll } from "./getApiProjectsAccessAll.ts";
 export { getApiProjectsId } from "./getApiProjectsId.ts";
