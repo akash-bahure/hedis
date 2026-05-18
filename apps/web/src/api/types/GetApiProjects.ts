@@ -3,6 +3,15 @@
  * Do not edit manually.
  */
 
+export const getApiProjectsQueryParamsPriorityEnum = {
+  High: "High",
+  Medium: "Medium",
+  Low: "Low",
+} as const;
+
+export type GetApiProjectsQueryParamsPriorityEnumKey =
+  (typeof getApiProjectsQueryParamsPriorityEnum)[keyof typeof getApiProjectsQueryParamsPriorityEnum];
+
 export const getApiProjectsQueryParamsStatusEnum = {
   Active: "Active",
   Completed: "Completed",
@@ -40,15 +49,20 @@ export type GetApiProjectsQueryParamsSpecialtyEnumKey =
 
 export type GetApiProjectsQueryParams = {
   /**
-   * @description Search by project name
+   * @description Search by project name or client name
    * @type string | undefined
    */
   search?: string;
   /**
-   * @description Filter by client
-   * @type string | undefined
+   * @description Filter by client UUID
+   * @type string | undefined, uuid
    */
   client_id?: string;
+  /**
+   * @description Filter by project priority
+   * @type string | undefined
+   */
+  priority?: GetApiProjectsQueryParamsPriorityEnumKey;
   /**
    * @description Filter by project status
    * @type string | undefined
@@ -65,7 +79,7 @@ export type GetApiProjectsQueryParams = {
    */
   specialty?: GetApiProjectsQueryParamsSpecialtyEnumKey;
   /**
-   * @description Page number
+   * @description Current page number
    * @default 1
    * @type integer | undefined
    */
@@ -83,25 +97,37 @@ export type GetApiProjectsQueryParams = {
  */
 export type GetApiProjects200 = {
   /**
+   * @type string | undefined
+   */
+  message?: string;
+  /**
    * @type integer | undefined
    */
   total?: number;
   /**
    * @type integer | undefined
    */
-  page?: number;
+  page_no?: number;
   /**
    * @type integer | undefined
    */
-  limit?: number;
+  page_size?: number;
+  /**
+   * @type integer | undefined
+   */
+  total_pages?: number;
   /**
    * @type array | undefined
    */
   data?: {
     /**
-     * @type string | undefined
+     * @type string | undefined, uuid
      */
     id?: string;
+    /**
+     * @type string | undefined
+     */
+    project_id?: string;
     /**
      * @type string | undefined
      */
@@ -109,7 +135,23 @@ export type GetApiProjects200 = {
     /**
      * @type string | undefined
      */
-    client_id?: string;
+    project_type?: string;
+    /**
+     * @type string | undefined
+     */
+    specialty?: string;
+    /**
+     * @type string | undefined
+     */
+    priority?: string;
+    /**
+     * @type string | undefined
+     */
+    status?: string;
+    /**
+     * @type string | undefined
+     */
+    notes?: string;
     /**
      * @type string | undefined, date
      */
@@ -118,13 +160,78 @@ export type GetApiProjects200 = {
      * @type string | undefined, date
      */
     end_date?: string;
+    /**
+     * @type integer | undefined
+     */
+    total_charts?: number;
+    /**
+     * @type integer | undefined
+     */
+    completed_charts?: number;
+    /**
+     * @type integer | undefined
+     */
+    pending_charts?: number;
+    /**
+     * @type integer | undefined
+     */
+    completion_percentage?: number;
+    /**
+     * @type string | undefined, uuid
+     */
+    client_uuid?: string;
+    /**
+     * @type string | undefined
+     */
+    client_id?: string;
+    /**
+     * @type string | undefined
+     */
+    org_name?: string;
+    /**
+     * @type string | undefined
+     */
+    short_code?: string;
+    /**
+     * @type string | undefined
+     */
+    region?: string;
+    /**
+     * @type string | undefined
+     */
+    contract_type?: string;
+    /**
+     * @type string | undefined
+     */
+    client_status?: string;
+    /**
+     * @type string | undefined, uuid
+     */
+    project_manager_uuid?: string;
+    /**
+     * @type string | undefined
+     */
+    project_manager_name?: string;
+    /**
+     * @type string | undefined, date-time
+     */
+    created_at?: string;
+    /**
+     * @type string | undefined, date-time
+     */
+    updated_at?: string;
   }[];
 };
+
+/**
+ * @description Internal server error
+ */
+export type GetApiProjects500 = any;
 
 export type GetApiProjectsQueryResponse = GetApiProjects200;
 
 export type GetApiProjectsQuery = {
   Response: GetApiProjects200;
   QueryParams: GetApiProjectsQueryParams;
-  Errors: any;
+  Errors: GetApiProjects500;
 };
