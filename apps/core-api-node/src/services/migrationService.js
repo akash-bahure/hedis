@@ -228,7 +228,9 @@ async function runMigrations(client, schema) {
           'Radiology',
           'Oncology',
           'Cardiothoracic',
-          'Pediatrics'
+          'Pediatrics',
+          'Neurology',
+          'Gastroenterology'
         )
       ),
       priority VARCHAR(50) DEFAULT 'High' CHECK (priority IN ('High', 'Medium', 'Low')),

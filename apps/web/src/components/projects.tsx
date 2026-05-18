@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -58,8 +58,8 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useGetApiClients, usePostApiProjects } from "@/api";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useGetApiClients, useGetApiProjects, usePostApiProjects } from "@/api";
 
 /* ─── Types ─────────────────────────────────────────────────── */
 type ProjectStatus = "Active" | "On Hold" | "Completed" | "Draft" | "At Risk";
@@ -79,7 +79,7 @@ interface Project {
   name: string;
   client: string;
   type: string;
-  specialty: string;
+  speciality: string;
   team: string;
   slaCompliance: number;
   totalCharts: number;
@@ -508,25 +508,25 @@ function OverviewTab({ p }: { p: Project }) {
   const stats = [
     {
       label: "Total Charts",
-      value: p.totalCharts.toLocaleString(),
+      value: p.totalCharts?.toLocaleString(),
       color: C.primary,
       icon: FileText,
     },
     {
       label: "Completed",
-      value: p.completedCharts.toLocaleString(),
+      value: p.completedCharts?.toLocaleString(),
       color: C.emerald,
       icon: CheckCircle2,
     },
     {
       label: "In Progress (WIP)",
-      value: p.wipCharts.toLocaleString(),
+      value: p.wipCharts?.toLocaleString(),
       color: C.cyan,
       icon: Activity,
     },
     {
       label: "Pending",
-      value: p.pendingCharts.toLocaleString(),
+      value: p.pendingCharts?.toLocaleString(),
       color: C.amber,
       icon: Clock,
     },
@@ -565,10 +565,10 @@ function OverviewTab({ p }: { p: Project }) {
           </h4>
           <div className="grid grid-cols-2 gap-x-8 gap-y-3">
             {[
-              { label: "Project ID", value: p.id },
+              { label: "Project ID", value: p.project_id },
               { label: "Client", value: p.client },
               { label: "Project Type", value: p.type },
-              { label: "Specialty", value: p.specialty },
+              { label: "Speciality", value: p.speciality },
               { label: "Start Date", value: p.startDate },
               { label: "End Date", value: p.endDate },
               { label: "Project Manager", value: p.pm },
@@ -1343,10 +1343,10 @@ function SLATab() {
 function TeamTab({ p }: { p: Project }) {
   const [pm, setPm] = useState(p.pm);
   const [selectedCoders, setSelectedCoders] = useState(
-    TEAM_MEMBERS.coders.slice(0, p.coders),
+    TEAM_MEMBERS.coders.slice(0, p.coders)
   );
   const [selectedAuditors, setSelectedAuditors] = useState(
-    TEAM_MEMBERS.auditors.slice(0, p.auditors),
+    TEAM_MEMBERS.auditors.slice(0, p.auditors)
   );
 
   const initials = (name: string) =>
@@ -2346,7 +2346,7 @@ function ProjectDetail({
           <div>
             <div className="flex items-center gap-2.5 mb-1">
               <span className="text-[11px] font-mono text-muted-foreground">
-                {project.id}
+                {project.project_id}
               </span>
               <StatusBadge status={project.status} />
               <PriorityBadge p={project.priority} />
@@ -2427,7 +2427,7 @@ const PROJECT_TYPES = [
   "Telehealth",
 ];
 const SPECIALTIES = [
-  "Multi-Specialty",
+  "Multi-Speciality",
   "Cardiology",
   "Orthopedics",
   "Emergency Med.",
@@ -2456,7 +2456,7 @@ function NewProjectModal({ onClose }: { onClose: () => void }) {
     name: "",
     client: "",
     type: "Inpatient",
-    specialty: "Multi-Specialty",
+    speciality: "Multi-Speciality",
     startDate: "",
     endDate: "",
     priority: "High" as "High" | "Medium" | "Low",
@@ -2517,7 +2517,7 @@ function NewProjectModal({ onClose }: { onClose: () => void }) {
         project_name: form.name,
         client_id: form.client,
         project_type: form.type,
-        specialty: form.specialty,
+        speciality: form.speciality,
         priority: form.priority,
         notes: form.notes,
         start_date: form.startDate,
@@ -2862,7 +2862,11 @@ function NewProjectModal({ onClose }: { onClose: () => void }) {
                   </button>
                   <button
                     onClick={handleCreate}
-                    disabled={isPending || !step2Valid || !usePermissions().hasPermission("Projects", "can_edit")}
+                    disabled={
+                      isPending ||
+                      !step2Valid ||
+                      !usePermissions().hasPermission("Projects", "can_edit")
+                    }
                     className="flex-1 py-2 text-xs font-bold rounded-xl text-white bg-primary hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5"
                   >
                     {isPending ? (
@@ -2933,41 +2937,83 @@ function ProjectList({ onSelect }: { onSelect: (p: Project) => void }) {
     "On Hold",
     "Draft",
   ];
-
-  const filtered = PROJECTS.filter((p) => {
-    const q = search.toLowerCase();
-    return (
-      (p.name.toLowerCase().includes(q) ||
-        p.client.toLowerCase().includes(q) ||
-        p.id.toLowerCase().includes(q)) &&
-      (filterType === "All" || p.type === filterType) &&
-      (filterSpec === "All" || p.specialty === filterSpec) &&
-      (filterStatus === "All" || p.status === filterStatus)
-    );
+  const {
+    data: projectsResponse,
+    isLoading: projectsLoading,
+    isError,
+  } = useGetApiProjects({
+    search: search || undefined,
+    status: filterStatus !== "All" ? (filterStatus as any) : undefined,
+    project_type: filterType !== "All" ? (filterType as any) : undefined,
+    specialty: filterSpec !== "All" ? (filterSpec as any) : undefined,
+    page_no: 1,
+    page_size: 10,
   });
+
+  const projects: Project[] = useMemo(() => {
+    return (
+      projectsResponse?.data?.map((p) => ({
+        id: p.id || "",
+
+        project_id: p.project_id || "",
+
+        name: p.project_name || "",
+
+        client: p.org_name || "",
+
+        type: p.project_type || "",
+
+        speciality: p.speciality || "",
+
+        priority: p.priority || "",
+
+        status: p.status || "",
+
+        totalCharts: p.total_charts || 0,
+
+        completedCharts: p.completed_charts || 0,
+
+        pendingCharts: p.pending_charts || 0,
+
+        completionPercentage: Number(p.completion_percentage) || 0,
+
+        startDate: p.start_date || "",
+
+        endDate: p.end_date || "",
+
+        notes: p.notes || "",
+
+        pm: p.project_manager_name || "",
+
+        projectManagerId: p.project_manager_uuid || "",
+
+        clientStatus: p.client_status || "",
+      })) || []
+    );
+  }, [projectsResponse]);
 
   const stats = [
     {
       label: "Total Projects",
-      value: PROJECTS.length,
+      value: projects.length,
       color: C.primary,
       bg: "bg-sky-50",
     },
     {
       label: "Active",
-      value: PROJECTS.filter((p) => p.status === "Active").length,
+      value: projects.filter((p) => p.status === "Active").length,
       color: C.emerald,
       bg: "bg-emerald-50",
     },
     {
       label: "At Risk",
-      value: PROJECTS.filter((p) => p.status === "At Risk").length,
+      value: projects.filter((p) => p.status === "At Risk").length,
       color: C.red,
       bg: "bg-red-50",
     },
     {
       label: "Completed",
-      value: PROJECTS.filter((p) => p.status === "Completed").length,
+      value: projects.filter((p) => p.status === "Completed").length,
       color: C.slate,
       bg: "bg-slate-50",
     },
@@ -3071,130 +3117,151 @@ function ProjectList({ onSelect }: { onSelect: (p: Project) => void }) {
           ))}
 
           <span className="text-[11px] text-muted-foreground ml-auto">
-            {filtered.length} project{filtered.length !== 1 ? "s" : ""} shown
+            {projects.length} project{projects.length !== 1 ? "s" : ""} shown
           </span>
         </div>
       </Card>
 
       {/* Project Table */}
       <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="bg-muted/30 border-b border-border">
-                {[
-                  "Project",
-                  "Client",
-                  "Type",
-                  "Specialty",
-                  "Team",
-                  "SLA",
-                  "Progress",
-                  "Charts",
-                  "Status",
-                  "",
-                ].map((h) => (
-                  <th
-                    key={h}
-                    className="text-left py-3 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-wide whitespace-nowrap"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((p) => {
-                const completionPct =
-                  p.totalCharts > 0
-                    ? Math.round((p.completedCharts / p.totalCharts) * 100)
-                    : 0;
-                return (
-                  <tr
-                    key={p.id}
-                    onClick={() => onSelect(p)}
-                    className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors cursor-pointer group"
-                  >
-                    <td className="py-3 px-4">
-                      <div className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                        {p.name}
-                      </div>
-                      <div className="text-[10px] text-muted-foreground font-mono mt-0.5">
-                        {p.id}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-1.5">
-                        <Building2 className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                        <span className="text-foreground">{p.client}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="text-[11px] font-semibold px-2 py-0.5 bg-secondary text-secondary-foreground rounded">
-                        {p.type}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-muted-foreground">
-                      {p.specialty}
-                    </td>
-                    <td className="py-3 px-4">
+        {projectsLoading ? (
+          <div className="p-10 text-center">
+            <div className="text-sm font-semibold text-muted-foreground">
+              Loading projects...
+            </div>
+          </div>
+        ) : isError ? (
+          <div className="p-10 text-center">
+            <div className="text-sm font-semibold text-red-500">
+              Failed to load projects
+            </div>
+
+            <div className="text-xs text-muted-foreground mt-2">
+              {(isError as any)?.message || "Something went wrong"}
+            </div>
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="p-10 text-center">
+            <div className="text-sm font-semibold text-muted-foreground">
+              No projects found
+            </div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-muted/30 border-b border-border">
+                  {[
+                    "Project",
+                    "Client",
+                    "Type",
+                    "Specialty",
+                    // "Team",
+                    // "SLA",
+                    "Progress",
+                    "Charts",
+                    "Status",
+                    "",
+                  ].map((h) => (
+                    <th
+                      key={h}
+                      className="text-left py-3 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-wide whitespace-nowrap"
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {projects.map((p) => {
+                  const completionPct = p.completionPercentage || 0;
+                  return (
+                    <tr
+                      key={p.id}
+                      onClick={() => onSelect(p)}
+                      className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors cursor-pointer group"
+                    >
+                      <td className="py-3 px-4">
+                        <div className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                          {p.name}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                          {p.project_id}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-1.5">
+                          <Building2 className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                          <span className="text-foreground">{p.client}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="text-[11px] font-semibold px-2 py-0.5 bg-secondary text-secondary-foreground rounded">
+                          {p.type}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-muted-foreground">
+                        {p.specialty}
+                      </td>
+                      {/* <td className="py-3 px-4">
                       <div className="text-foreground font-semibold">
                         {p.team}
                       </div>
                       <div className="text-[10px] text-muted-foreground">
                         {p.pm}
                       </div>
-                    </td>
-                    <td className="py-3 px-4">
+                    </td> */}
+                      {/* <td className="py-3 px-4">
                       <SlaRing pct={p.slaCompliance} />
-                    </td>
-                    <td className="py-3 px-4 w-32">
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1">
-                          <ProgressBar
-                            pct={completionPct}
-                            color={
-                              completionPct >= 90
-                                ? C.emerald
-                                : completionPct >= 60
-                                  ? C.primary
-                                  : C.amber
-                            }
-                          />
+                    </td> */}
+                      <td className="py-3 px-4 w-32">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1">
+                            <ProgressBar
+                              pct={completionPct}
+                              color={
+                                completionPct >= 90
+                                  ? C.emerald
+                                  : completionPct >= 60
+                                    ? C.primary
+                                    : C.amber
+                              }
+                            />
+                          </div>
+                          <span className="text-[10px] font-bold text-muted-foreground w-8">
+                            {completionPct}%
+                          </span>
                         </div>
-                        <span className="text-[10px] font-bold text-muted-foreground w-8">
-                          {completionPct}%
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="text-foreground font-bold">
-                        {p.totalCharts.toLocaleString()}
-                      </div>
-                      <div className="text-[10px] text-muted-foreground">
-                        {p.pendingCharts} pending
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <StatusBadge status={p.status} />
-                    </td>
-                    <td className="py-3 px-4">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSelect(p);
-                        }}
-                        className="p-1.5 rounded-lg border border-transparent hover:border-border hover:bg-muted transition-colors"
-                      >
-                        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="text-foreground font-bold">
+                          {p.totalCharts.toLocaleString()}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground">
+                          {p.pendingCharts} pending
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <StatusBadge status={p.status} />
+                      </td>
+                      <td className="py-3 px-4">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelect(p);
+                          }}
+                          className="p-1.5 rounded-lg border border-transparent hover:border-border hover:bg-muted transition-colors"
+                        >
+                          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Card>
 
       {showNewProjectModal && (
