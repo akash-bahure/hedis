@@ -1,24 +1,53 @@
 const getProfile = async (req, res) => {
   try {
-    const { id } = req.params;
-    const result = await req.db.query("SELECT * FROM users WHERE id = $1", [
-      id,
-    ]);
+    const id = req.user.id;
+
+    const result = await req.db.query(
+      `
+      SELECT
+        id,
+        full_name,
+        email,
+        credentials,
+        phone,
+        mobile_phone,
+        department_id,
+        job_title,
+        location,
+        bio,
+        certifications,
+        preferences,
+        notifications,
+        security,
+        created_at,
+        updated_at
+      FROM users
+      WHERE id = $1
+      `,
+      [id]
+    );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Profile not found" });
+      return res.status(404).json({
+        error: "Profile not found",
+      });
     }
 
     const userData = result.rows[0];
-    
-    // Split full_name for the UI
+
     const nameParts = (userData.full_name || "").split(" ");
+
     userData.first_name = nameParts[0] || "";
     userData.last_name = nameParts.slice(1).join(" ") || "";
 
-    res.json({ message: "Profile fetched successfully", data: userData });
+    return res.json({
+      message: "Profile fetched successfully",
+      data: userData,
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({
+      error: err.message,
+    });
   }
 };
 
@@ -32,7 +61,7 @@ const updateProfile = async (req, res) => {
       email,
       phone,
       mobile_phone,
-      department,
+      department_id,
       job_title,
       location,
       bio,
@@ -53,7 +82,7 @@ const updateProfile = async (req, res) => {
         email = COALESCE($3, email),
         phone = COALESCE($4, phone),
         mobile_phone = COALESCE($5, mobile_phone),
-        department = COALESCE($6, department),
+        department_id = COALESCE($6, department),
         job_title = COALESCE($7, job_title),
         location = COALESCE($8, location),
         bio = COALESCE($9, bio),
@@ -69,7 +98,7 @@ const updateProfile = async (req, res) => {
       email,
       phone,
       mobile_phone,
-      department,
+      department_id,
       job_title,
       location,
       bio,
