@@ -18,7 +18,6 @@ const authMiddleware = require("../middlewares/authMiddleware");
  *         description: Profile not found
  */
 router.get("/me", authMiddleware, controller.getProfile);
-router.get("/me", authMiddleware, controller.getProfile);
 
 /**
  * @swagger
