@@ -59,13 +59,28 @@ exports.createUserRole = async (req, res) => {
 exports.getUserRoles = async (req, res) => {
   try {
     const rolesQuery = `
-  SELECT 
-    ur.*, 
-    (SELECT COUNT(*)::int FROM role_permissions rp WHERE rp.role_id = ur.id) as permissions_count,
-    (SELECT COUNT(*)::int FROM users u WHERE u.user_role_id = ur.id) as users_count
-  FROM user_roles ur
-  ORDER BY ur.created_at DESC
-`;
+    SELECT 
+      ur.*, 
+  
+      (
+        SELECT COALESCE(SUM(
+          (CASE WHEN rp.can_view THEN 1 ELSE 0 END) +
+          (CASE WHEN rp.can_edit THEN 1 ELSE 0 END) +
+          (CASE WHEN rp.can_assign THEN 1 ELSE 0 END) +
+          (CASE WHEN rp.can_approve THEN 1 ELSE 0 END) +
+          (CASE WHEN rp.can_reject THEN 1 ELSE 0 END) +
+          (CASE WHEN rp.can_export THEN 1 ELSE 0 END) +
+          (CASE WHEN rp.can_override THEN 1 ELSE 0 END)
+        ), 0)::int
+        FROM role_permissions rp
+        WHERE rp.role_id = ur.id
+      ) as permissions_count,
+  
+      (SELECT COUNT(*)::int FROM users u WHERE u.user_role_id = ur.id) as users_count
+  
+    FROM user_roles ur
+    ORDER BY ur.created_at DESC
+  `;
 
     const result = await req.db.query(rolesQuery);
 
@@ -273,30 +288,68 @@ exports.getUserRoleById = async (req, res) => {
     );
 
     const permissions = permissionsResult.rows;
+    const isAdminRole = ["admin", "super admin"].includes(
+      role.name?.toLowerCase()
+    );
 
     // Group permissions
     const groupedPermissions = [];
     const groups = {};
 
-    permissions.forEach((p) => {
-      const groupName = MODULE_GROUP_MAPPING[p.module] || "Other";
-      if (!groups[groupName]) {
-        groups[groupName] = { group: groupName, modules: [] };
-        groupedPermissions.push(groups[groupName]);
-      }
-      groups[groupName].modules.push({
-        id: p.id,
-        module: p.module,
-        module_group: groupName,
-        can_view: p.can_view,
-        can_edit: p.can_edit,
-        can_assign: p.can_assign,
-        can_approve: p.can_approve,
-        can_reject: p.can_reject,
-        can_export: p.can_export,
-        can_override: p.can_override,
+    if (isAdminRole) {
+      // Force all modules for Admin/Super Admin
+      Object.keys(MODULE_GROUP_MAPPING).forEach((moduleName) => {
+        const groupName = MODULE_GROUP_MAPPING[moduleName];
+        if (!groups[groupName]) {
+          groups[groupName] = { group: groupName, modules: [] };
+          groupedPermissions.push(groups[groupName]);
+        }
+        groups[groupName].modules.push({
+          id: null,
+          module: moduleName,
+          module_group: groupName,
+          can_view: true,
+          can_edit: true,
+          can_assign: true,
+          can_approve: true,
+          can_reject: true,
+          can_export: true,
+          can_override: true,
+        });
       });
-    });
+    } else {
+      permissions.forEach((p) => {
+        const groupName = MODULE_GROUP_MAPPING[p.module] || "Other";
+        if (!groups[groupName]) {
+          groups[groupName] = { group: groupName, modules: [] };
+          groupedPermissions.push(groups[groupName]);
+        }
+        groups[groupName].modules.push({
+          id: p.id,
+          module: p.module,
+          module_group: groupName,
+          can_view: p.can_view,
+          can_edit: p.can_edit,
+          can_assign: p.can_assign,
+          can_approve: p.can_approve,
+          can_reject: p.can_reject,
+          can_export: p.can_export,
+          can_override: p.can_override,
+        });
+      });
+    }
+    const permissionsCount = permissions.reduce((total, p) => {
+      return (
+        total +
+        (p.can_view ? 1 : 0) +
+        (p.can_edit ? 1 : 0) +
+        (p.can_assign ? 1 : 0) +
+        (p.can_approve ? 1 : 0) +
+        (p.can_reject ? 1 : 0) +
+        (p.can_export ? 1 : 0) +
+        (p.can_override ? 1 : 0)
+      );
+    }, 0);
 
     res.json({
       id: role.id,
@@ -305,7 +358,11 @@ exports.getUserRoleById = async (req, res) => {
       level: role.level,
       active: role.active,
       users_count: usersCount,
-      permissions_count: permissions.length,
+
+      permissions_count: isAdminRole
+        ? Object.keys(MODULE_GROUP_MAPPING).length * 7
+        : permissionsCount,
+
       permissions_all: groupedPermissions,
     });
   } catch (error) {
