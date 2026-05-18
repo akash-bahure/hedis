@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   AreaChart,
   Area,
@@ -2079,12 +2080,14 @@ function AuditLogsTab() {
             </div>
           );
         })}
-        <div className="flex-1" />
-        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold border border-border rounded-xl hover:bg-muted transition-colors whitespace-nowrap">
-          <Download className="w-3.5 h-3.5" />
-          Export Logs
-        </button>
-      </div>
+          <div className="flex-1" />
+          {hasPermission("Security & Compliance", "export") && (
+            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold border border-border rounded-xl hover:bg-muted transition-colors whitespace-nowrap">
+              <Download className="w-3.5 h-3.5" />
+              Export Logs
+            </button>
+          )}
+        </div>
 
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
@@ -3123,6 +3126,7 @@ type SecTab = "dashboard" | "audit" | "access" | "compliance" | "alerts";
 
 export function SecurityCompliance() {
   const [tab, setTab] = useState<SecTab>("dashboard");
+  const { canEdit, hasPermission } = usePermissions();
 
   const TABS: {
     id: SecTab;

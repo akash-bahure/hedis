@@ -59,6 +59,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useGetApiClients, usePostApiProjects } from "@/api";
+import { usePermissions } from "@/hooks/usePermissions";
 
 /* ─── Types ─────────────────────────────────────────────────── */
 type ProjectStatus = "Active" | "On Hold" | "Completed" | "Draft" | "At Risk";
@@ -2370,14 +2371,18 @@ function ProjectDetail({
             <RefreshCw className="w-3.5 h-3.5" />
             Refresh
           </button>
-          <button className="inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 text-xs border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors">
-            <Edit3 className="w-3.5 h-3.5" />
-            Edit
-          </button>
-          <button className="inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 text-xs bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
-            <Save className="w-3.5 h-3.5" />
-            Save Changes
-          </button>
+          {usePermissions().hasPermission("Projects", "can_edit") && (
+            <>
+              <button className="inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 text-xs border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors">
+                <Edit3 className="w-3.5 h-3.5" />
+                Edit
+              </button>
+              <button className="inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 text-xs bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                <Save className="w-3.5 h-3.5" />
+                Save Changes
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -2857,7 +2862,7 @@ function NewProjectModal({ onClose }: { onClose: () => void }) {
                   </button>
                   <button
                     onClick={handleCreate}
-                    disabled={isPending || !step2Valid}
+                    disabled={isPending || !step2Valid || !usePermissions().hasPermission("Projects", "can_edit")}
                     className="flex-1 py-2 text-xs font-bold rounded-xl text-white bg-primary hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5"
                   >
                     {isPending ? (
@@ -2978,13 +2983,15 @@ function ProjectList({ onSelect }: { onSelect: (p: Project) => void }) {
             Manage coding projects, clients, and team assignments
           </p>
         </div>
-        <button
-          onClick={() => setShowNewProjectModal(true)}
-          className="inline-flex items-center gap-2 whitespace-nowrap px-3.5 py-2 text-xs bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-semibold"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          New Project
-        </button>
+        {usePermissions().hasPermission("Projects", "can_edit") && (
+          <button
+            onClick={() => setShowNewProjectModal(true)}
+            className="inline-flex items-center gap-2 whitespace-nowrap px-3.5 py-2 text-xs bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-semibold"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            New Project
+          </button>
+        )}
       </div>
 
       {/* Summary Stats */}
