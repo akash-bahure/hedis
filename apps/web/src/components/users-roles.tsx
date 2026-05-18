@@ -82,6 +82,12 @@ import {
   getApiProjectsAccessAllQueryKey,
   usePatchApiProjectsIdAccess,
 } from "@/api";
+import {
+  useGetApiUsersShifts,
+  getApiUsersShiftsQueryKey,
+  useGetApiUsersShiftsStats,
+  usePatchApiUsersShifts,
+} from "@/api";
 import { getApiUsersExport } from "@/api";
 
 import { useQueryClient } from "@tanstack/react-query";
@@ -3365,14 +3371,126 @@ function ProjectAccessView() {
 
 /* ════════════════════════════════════════════  VIEW: SHIFT MANAGEMENT  */
 function ShiftView() {
-  const [schedule, setSchedule] = useState(initShiftSchedule);
   const [filterShift, setFilterShift] = useState<ShiftType | "all">("all");
+  const [schedule, setSchedule] = useState<
+    Record<string, Record<string, ShiftType>>
+  >({});
+  const [weekOffset, setWeekOffset] = useState(0);
+  const { data, isLoading, isError } = useGetApiUsersShifts({
+    ...(filterShift !== "all" && {
+      shift: filterShift,
+    }),
 
-  const updateShift = (userId: string, day: WeekDay, shift: ShiftType) => {
+    week: weekOffset,
+  });
+
+  const queryClient = useQueryClient();
+
+  const { mutate } = usePatchApiUsersShifts({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: getApiUsersShiftsQueryKey(),
+        });
+      },
+      onError: (err) => {
+        console.error("Update failed", err);
+      },
+    },
+  });
+
+  // USERS
+  const users = useMemo(() => {
+    return (
+      data?.users?.map((u) => ({
+        id: String(u.id),
+        name: u.full_name,
+        role: u.role,
+        initials: u.initials,
+        shift: u.default_shift as ShiftType,
+      })) || []
+    );
+  }, [data]);
+
+  //  WEEK DAYS (replace WEEK_DAYS)
+  const weekDays = useMemo(() => {
+    return data?.dates?.map((d) => d.day) || [];
+  }, [data]);
+
+  // DATE MAP (day → date)
+  const dayToDateMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    data?.dates?.forEach((d) => {
+      map[d.day] = d.date;
+    });
+    return map;
+  }, [data]);
+
+  //  schedule map
+  const scheduleMap = useMemo(() => {
+    if (!data) return {};
+
+    const map: Record<string, Record<string, ShiftType>> = {};
+
+    data.users.forEach((user) => {
+      map[user.id] = {};
+
+      user.schedule.forEach((s) => {
+        map[user.id][s.day] = s.shift as ShiftType;
+      });
+    });
+
+    return map;
+  }, [data]);
+
+  // sync state
+  useEffect(() => {
+    if (scheduleMap) {
+      setSchedule(scheduleMap);
+    }
+  }, [scheduleMap]);
+
+  //  update UI only
+  const updateShift = (userId: string, day: string, shift: ShiftType) => {
     setSchedule((prev) => ({
       ...prev,
-      [userId]: { ...prev[userId], [day]: shift },
+      [userId]: {
+        ...prev[userId],
+        [day]: shift,
+      },
     }));
+  };
+
+  const { data: overviewData, isLoading: overviewLoading } =
+    useGetApiUsersShiftsStats();
+
+  const overviewMap = useMemo(() => {
+    const map: Record<string, { count: number; time: string }> = {};
+
+    overviewData?.forEach((item) => {
+      map[item.shift] = {
+        count: item.count,
+        time: item.time,
+      };
+    });
+
+    return map;
+  }, [overviewData]);
+
+  const handleSave = () => {
+    const payload = Object.entries(schedule).map(([userId, days]) => ({
+      user_id: userId,
+      schedules: Object.entries(days).map(([day, shift]) => ({
+        date: dayToDateMap[day],
+        shift,
+      })),
+    }));
+
+    console.log(payload);
+
+    mutate({
+      data: payload,
+    });
   };
 
   const shiftColors: Record<ShiftType, string> = {
@@ -3385,8 +3503,13 @@ function ShiftView() {
 
   const filteredUsers =
     filterShift === "all"
-      ? USERS_DATA
-      : USERS_DATA.filter((u) => u.shift === filterShift);
+      ? users
+      : users.filter((u) => u.shift === filterShift);
+
+  //  Loading/Error
+  if (isLoading) return <div className="p-4 text-sm">Loading...</div>;
+  if (isError)
+    return <div className="p-4 text-sm text-red-500">Failed to load data</div>;
 
   return (
     <div className="space-y-4">
@@ -3407,7 +3530,9 @@ function ShiftView() {
             )
           )}
         </div>
+
         <div className="flex-1" />
+
         <div className="flex items-center gap-2">
           <span className="text-[10px] text-muted-foreground font-bold">
             Filter shift:
@@ -3417,14 +3542,22 @@ function ShiftView() {
               <button
                 key={s}
                 onClick={() => setFilterShift(s as ShiftType | "all")}
-                className={`px-2 py-1 text-[10px] font-bold rounded-lg border transition-colors ${filterShift === s ? "bg-primary text-white border-primary" : "border-border text-muted-foreground hover:bg-muted"}`}
+                className={`px-2 py-1 text-[10px] font-bold rounded-lg border transition-colors ${
+                  filterShift === s
+                    ? "bg-primary text-white border-primary"
+                    : "border-border text-muted-foreground hover:bg-muted"
+                }`}
               >
                 {s === "all" ? "All" : s}
               </button>
             ))}
           </div>
         </div>
-        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold bg-primary text-white rounded-xl hover:opacity-90 transition-opacity whitespace-nowrap">
+
+        <button
+          onClick={handleSave}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold bg-primary text-white rounded-xl hover:opacity-90 transition-opacity whitespace-nowrap"
+        >
           <Check className="w-3.5 h-3.5" />
           Save Schedule
         </button>
@@ -3436,50 +3569,69 @@ function ShiftView() {
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-primary" />
             <span className="text-xs font-black text-foreground">
-              Week of Feb 16–22, 2026
+              {data?.week || "Week Schedule"}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <button className="px-3 py-1 text-[10px] font-bold border border-border rounded-lg hover:bg-muted transition-colors">
+            <button
+              onClick={() => setWeekOffset((prev) => prev - 1)}
+              className="px-3 py-1 text-[10px] font-bold border border-border rounded-lg hover:bg-muted transition-colors"
+            >
               ← Prev Week
             </button>
-            <span className="text-[10px] text-muted-foreground">
-              Current Week
+
+            <span className="text-[10px] text-muted-foreground font-semibold">
+              {weekOffset === 0
+                ? "Current Week"
+                : weekOffset > 0
+                  ? `${weekOffset} Week Ahead`
+                  : `${Math.abs(weekOffset)} Week Back`}
             </span>
-            <button className="px-3 py-1 text-[10px] font-bold border border-border rounded-lg hover:bg-muted transition-colors">
+
+            <button
+              onClick={() => setWeekOffset((prev) => prev + 1)}
+              className="px-3 py-1 text-[10px] font-bold border border-border rounded-lg hover:bg-muted transition-colors"
+            >
               Next Week →
             </button>
           </div>
         </div>
 
-        <div className="overflow-x-auto relative">
-          <table className="w-full min-w-max">
+        <div className="overflow-x-auto">
+          <table className="w-full">
             <thead>
-              <tr className="border-b border-border bg-muted">
-                <th className="px-5 py-2.5 text-left text-[10px] font-black text-muted-foreground uppercase tracking-wide min-w-[180px] sticky left-0 z-40 bg-muted border-r border-border">
+              <tr className="border-b border-border bg-muted/10">
+                <th className="px-5 py-2.5 text-left text-[10px] font-black text-muted-foreground uppercase tracking-wide min-w-[180px] lg:sticky left-0 bg-muted/10">
                   Coder / Auditor
                 </th>
-                {WEEK_DAYS.map((d, i) => (
+
+                {data?.dates?.map((d, i) => (
                   <th
-                    key={d}
-                    className={`px-3 py-2.5 text-center text-[10px] font-bold text-muted-foreground min-w-[110px] ${i >= 5 ? "opacity-50" : ""}`}
+                    key={d.date}
+                    className={`px-3 py-2.5 text-center text-[10px] font-bold text-muted-foreground min-w-[110px] ${
+                      i >= 5 ? "opacity-50" : ""
+                    }`}
                   >
-                    <div>{d}</div>
-                    <div className="text-[8px] font-normal">{`Feb ${16 + i}`}</div>
+                    <div>{d.day}</div>
+                    <div className="text-[8px] font-normal">{d.day_num}</div>
                   </th>
                 ))}
+
                 <th className="px-3 py-2.5 text-center text-[10px] font-bold text-muted-foreground">
                   Default
                 </th>
               </tr>
             </thead>
+
             <tbody className="divide-y divide-border">
-              {filteredUsers.map((u, ri) => (
+              {users.map((u, ri) => (
                 <tr
                   key={u.id}
-                  className={`hover:bg-muted/10 transition-colors ${ri % 2 === 0 ? "" : "bg-muted/5"}`}
+                  className={`hover:bg-muted/10 transition-colors ${
+                    ri % 2 === 0 ? "" : "bg-muted/5"
+                  }`}
                 >
-                  <td className="px-5 py-3 sticky left-0 z-30 bg-card border-r border-border shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                  <td className="px-5 py-3 lg:sticky left-0 bg-card">
                     <div className="flex items-center gap-2.5">
                       <Avatar initials={u.initials} size={7} />
                       <div>
@@ -3490,13 +3642,12 @@ function ShiftView() {
                       </div>
                     </div>
                   </td>
-                  {WEEK_DAYS.map((d, di) => {
+
+                  {weekDays.map((d) => {
                     const sh = schedule[u.id]?.[d] ?? "Off";
+
                     return (
-                      <td
-                        key={d}
-                        className="px-3 py-3 text-center relative z-10"
-                      >
+                      <td key={d} className="px-3 py-3 text-center">
                         <select
                           value={sh}
                           onChange={(e) =>
@@ -3513,7 +3664,8 @@ function ShiftView() {
                       </td>
                     );
                   })}
-                  <td className="px-3 py-3 text-center relative z-10">
+
+                  <td className="px-3 py-3 text-center">
                     <ShiftChip shift={u.shift} />
                   </td>
                 </tr>
@@ -3521,45 +3673,37 @@ function ShiftView() {
             </tbody>
           </table>
         </div>
-        <div className="px-5 py-2.5 border-t border-border bg-muted/5 flex items-center justify-between">
+
+        <div className="px-5 py-2.5 border-t border-border bg-muted/5">
           <span className="text-[10px] text-muted-foreground">
-            Showing {filteredUsers.length} of {USERS_DATA.length} users
+            {/* Showing {filteredUsers.length} of {users.length} users */}
+            Showing {users.length} users
           </span>
-          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-            <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
-            <span>
-              2 users have overlapping shift gaps this week — review recommended
-            </span>
-          </div>
         </div>
       </div>
 
       {/* Shift Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {SHIFTS_LIST.map((s) => {
-          const count = USERS_DATA.filter((u) => u.shift === s).length;
+          const count = overviewMap[s]?.count ?? 0;
+          const time = overviewMap[s]?.time ?? "—";
           const cls = shiftColors[s];
+
           return (
             <div
               key={s}
               className={`rounded-xl border p-3 text-center ${cls.split(" ")[0]} ${cls.split(" ")[2]}`}
             >
               <div className={`text-2xl font-black ${cls.split(" ")[1]}`}>
-                {count}
+                {overviewLoading ? "..." : count}
               </div>
+
               <div className={`text-[10px] font-bold ${cls.split(" ")[1]}`}>
                 {s}
               </div>
+
               <div className="text-[9px] text-muted-foreground mt-0.5">
-                {s === "Morning"
-                  ? "08:00–16:00"
-                  : s === "Afternoon"
-                    ? "14:00–22:00"
-                    : s === "Night"
-                      ? "22:00–06:00"
-                      : s === "General"
-                        ? "09:00–18:00"
-                        : "—"}
+                {time}
               </div>
             </div>
           );
