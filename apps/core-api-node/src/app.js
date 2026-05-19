@@ -68,6 +68,10 @@ app.get("/api-docs.json", (req, res) => {
   res.send(swaggerSpec);
 });
 
+const manualChartAbstractionRoutes = require(
+  "./routes/manualChartAbstractionRoutes"
+);
+
 // Admin routes
 app.use("/admin/auth", require("./routes/adminAuthRoutes"));
 app.use("/admin/users", require("./routes/adminUserRoutes"));
@@ -78,7 +82,8 @@ app.use(tenantMiddleware);
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/user-roles", require("./routes/userRoleRoutes"));
 
-
+app.use("/api/users", require("./routes/userRoutes"));
+app.use("/api/departments", require("./routes/department.routes"));
 // Protected Routes
 app.use(authMiddleware);
 
@@ -86,10 +91,13 @@ const clientRoutes = require("./routes/client.routes");
 app.use("/api/clients", clientRoutes);
 const projectRoutes = require("./routes/project.routes");
 app.use("/api/projects", projectRoutes);
-app.use("/api/departments", require("./routes/department.routes"));
-// app.use("/api/user-roles", require("./routes/userRoleRoutes"));
-app.use("/api/users", require("./routes/userRoutes"));
-app.use("/api/profile", require("./routes/profile.routes"));
 
+// app.use("/api/user-roles", require("./routes/userRoleRoutes"));
+
+app.use("/api/profile", require("./routes/profile.routes"));
+app.use(
+  "/api/manual-chart-abstraction",
+  manualChartAbstractionRoutes
+);
 module.exports = app;
 
