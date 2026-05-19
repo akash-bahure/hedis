@@ -65,6 +65,7 @@ import {
   getApiUserRolesQueryKey,
   usePostApiAuthForgotPassword,
 } from "@/api";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   usePostApiUsers,
   useGetApiUsers,
@@ -1126,6 +1127,7 @@ function UserProfile({
   onClose: () => void;
   onEditRole?: () => void;
 }) {
+  const { canEdit } = usePermissions();
   const [localTwoFA, setLocalTwoFA] = useState(user.two_fa_auth ?? false);
   const [localSso, setLocalSso] = useState(false);
   const queryClient = useQueryClient();
@@ -1465,35 +1467,39 @@ function UserProfile({
 
         {/* Footer */}
         <div className="border-t border-border px-5 py-3.5 flex gap-2 bg-muted/5 flex-shrink-0">
-          <button
-            onClick={() => {
-              /* Open edit modal logic here */
-            }}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-[11px] font-bold bg-primary text-white rounded-xl hover:opacity-90"
-          >
-            <Edit2 className="w-3.5 h-3.5" />
-            Edit User
-          </button>
-          <button
-            onClick={handleResetPassword}
-            disabled={isResetting}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold border border-border rounded-xl hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isResetting ? (
-              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Key className="w-3.5 h-3.5" />
-            )}
-            {isResetting ? "Sending..." : "Reset Password"}
-          </button>
-          <button
-            onClick={handleDeactivateUser}
-            disabled={isDeactivating}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold border border-red-200 rounded-xl hover:bg-red-50 text-red-600 transition-colors whitespace-nowrap disabled:opacity-50"
-          >
-            <UserX className="w-3.5 h-3.5" />
-            {isDeactivating ? "Deactivating..." : "Deactivate"}
-          </button>
+          {canEdit("Users & Roles") && (
+            <>
+              <button
+                onClick={() => {
+                  /* Open edit modal logic here */
+                }}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-[11px] font-bold bg-primary text-white rounded-xl hover:opacity-90"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+                Edit User
+              </button>
+              <button
+                onClick={handleResetPassword}
+                disabled={isResetting}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold border border-border rounded-xl hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isResetting ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Key className="w-3.5 h-3.5" />
+                )}
+                {isResetting ? "Sending..." : "Reset Password"}
+              </button>
+              <button
+                onClick={handleDeactivateUser}
+                disabled={isDeactivating}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold border border-red-200 rounded-xl hover:bg-red-50 text-red-600 transition-colors whitespace-nowrap disabled:opacity-50"
+              >
+                <UserX className="w-3.5 h-3.5" />
+                {isDeactivating ? "Deactivating..." : "Deactivate"}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -1978,6 +1984,7 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
   const [showInvite, setShowInvite] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [editUser, setEditUser] = useState<User | null>(null);
+  const { canEdit, hasPermission } = usePermissions();
 
   const { data, isLoading } = useGetApiUsers({
     search: search || undefined,
@@ -2255,16 +2262,18 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
           <Download className="w-3.5 h-3.5" />
           Export
         </button>
-        <button
-          onClick={() => {
-            setEditUser(null);
-            setShowInvite(true);
-          }}
-          className="inline-flex items-center gap-2 px-6 py-2 text-[11px] font-black rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all uppercase tracking-widest shadow-sm whitespace-nowrap"
-        >
-          <UserPlus className="w-3.5 h-3.5" />
-          Add User
-        </button>
+        {canEdit("Users & Roles") && (
+          <button
+            onClick={() => {
+              setEditUser(null);
+              setShowInvite(true);
+            }}
+            className="inline-flex items-center gap-2 px-6 py-2 text-[11px] font-black rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all uppercase tracking-widest shadow-sm whitespace-nowrap"
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            Add User
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -2382,16 +2391,18 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
                         <Eye className="w-3 h-3" />
                         View
                       </button>
-                      <button
-                        onClick={() => {
-                          setEditUser(u);
-                          setShowInvite(true);
-                        }}
-                        className="inline-flex items-center gap-1 px-2 py-1 text-[9px] font-bold border border-border rounded-lg hover:bg-muted transition-colors text-muted-foreground whitespace-nowrap"
-                      >
-                        <Edit2 className="w-3 h-3" />
-                        Edit
-                      </button>
+                      {canEdit("Users & Roles") && (
+                        <button
+                          onClick={() => {
+                            setEditUser(u);
+                            setShowInvite(true);
+                          }}
+                          className="inline-flex items-center gap-1 px-2 py-1 text-[9px] font-bold border border-border rounded-lg hover:bg-muted transition-colors text-muted-foreground whitespace-nowrap"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                          Edit
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -2663,14 +2674,14 @@ function AddRoleModal({
 function RolesView() {
   const [rolesMeta, setRolesMeta] = useState<any>({});
   const [selectedRole, setSelectedRole] = useState<string>("");
-  const [perms, setPerms] = useState<Record<string, Record<string, boolean>>>(
-    {}
-  );
+  const [perms, setPerms] =
+    useState<Record<string, Record<string, boolean>>>(buildPermState());
   const [showAddRole, setShowAddRole] = useState(false);
   const [showCloneRole, setShowCloneRole] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
     new Set(["Main", "Operations", "Insights", "Administration"])
   );
+  const { canEdit } = usePermissions();
 
   const tokenStr = localStorage.getItem("userDetail");
   const token = tokenStr ? JSON.parse(tokenStr) : null;
@@ -2686,20 +2697,23 @@ function RolesView() {
   useEffect(() => {
     if (rolesList?.results) {
       const mapped: any = {};
+
       rolesList.results.forEach((r: any, index: number) => {
         mapped[r.id] = {
           label: r.name,
           color: ["#ef4444", "#8b5cf6", "#2563eb", "#10b981", "#f59e0b"][
             index % 5
           ],
-          userCount: r.users,
+          userCount: r.users_count || r.users || 0,
           desc: r.description || "",
-          level: 0,
+          level: r.level || 0,
         };
       });
+
       setRolesMeta(mapped);
-      if (!selectedRole) {
-        setSelectedRole(rolesList.results[0]?.id);
+
+      if (!selectedRole && rolesList.results.length > 0) {
+        setSelectedRole(rolesList.results[0].id);
       }
     }
   }, [rolesList]);
@@ -2746,7 +2760,20 @@ function RolesView() {
             queryKey: getApiUserRolesQueryKey(),
           });
         },
-        onError: () => toast.error("Failed to update role"),
+        onError: (error: any) => {
+          let errorMessage = "Failed to update role";
+
+          // Extract message from your API response
+          if (error?.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error?.response?.data?.error) {
+            errorMessage = error.response.data.error;
+          } else if (error?.message) {
+            errorMessage = error.message;
+          }
+
+          toast.error(errorMessage);
+        },
       }
     );
   };
@@ -2806,7 +2833,7 @@ function RolesView() {
   };
 
   const countGranted = (roleId: string) =>
-    Object.values(perms[roleId] ?? {}).filter(Boolean).length;
+    Object.values(perms?.[roleId] || {}).filter(Boolean).length;
 
   const groups = ["Main", "Operations", "Insights", "Administration"];
   const rm = rolesMeta[selectedRole] || {};
@@ -2839,13 +2866,15 @@ function RolesView() {
           <span className="text-xs font-black text-foreground">
             System Roles
           </span>
-          <button
-            onClick={() => setShowAddRole(true)}
-            className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors whitespace-nowrap"
-          >
-            <Plus className="w-3 h-3" />
-            New
-          </button>
+          {canEdit("Users & Roles") && (
+            <button
+              onClick={() => setShowAddRole(true)}
+              className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors whitespace-nowrap"
+            >
+              <Plus className="w-3 h-3" />
+              New
+            </button>
+          )}
         </div>
 
         {(Object.keys(rolesMeta) as string[]).map((roleId) => {
@@ -2931,20 +2960,24 @@ function RolesView() {
             </p>
           </div>
           <div className="flex gap-2 flex-shrink-0">
-            <button
-              onClick={() => setShowCloneRole(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold border border-border rounded-lg hover:bg-muted transition-colors whitespace-nowrap"
-            >
-              <Copy className="w-3 h-3" />
-              Clone Role
-            </button>
-            <button
-              onClick={handleSaveChanges}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold bg-primary text-white rounded-lg hover:opacity-90 transition-opacity whitespace-nowrap"
-            >
-              <Check className="w-3 h-3" />
-              {isUpdating ? "Saving..." : "Save Changes"}
-            </button>
+            {canEdit("Users & Roles") && (
+              <>
+                <button
+                  onClick={() => setShowCloneRole(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold border border-border rounded-lg hover:bg-muted transition-colors whitespace-nowrap"
+                >
+                  <Copy className="w-3 h-3" />
+                  Clone Role
+                </button>
+                <button
+                  onClick={handleSaveChanges}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold bg-primary text-white rounded-lg hover:opacity-90 transition-opacity whitespace-nowrap"
+                >
+                  <Check className="w-3 h-3" />
+                  {isUpdating ? "Saving..." : "Save Changes"}
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -3376,6 +3409,7 @@ function ShiftView() {
     Record<string, Record<string, ShiftType>>
   >({});
   const [weekOffset, setWeekOffset] = useState(0);
+  const { canEdit } = usePermissions();
   const { data, isLoading, isError } = useGetApiUsersShifts({
     ...(filterShift !== "all" && {
       shift: filterShift,
@@ -3515,52 +3549,34 @@ function ShiftView() {
     <div className="space-y-4">
       {/* Legend + Filter */}
       <div className="flex items-center gap-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          {(Object.entries(shiftColors) as [ShiftType, string][]).map(
-            ([shift, cls]) => (
-              <div
-                key={shift}
-                className="flex items-center gap-1.5 text-[10px]"
-              >
-                <span className={`w-3 h-3 rounded-sm border ${cls}`} />
-                <span className="font-semibold text-muted-foreground">
-                  {shift}
-                </span>
-              </div>
-            )
-          )}
-        </div>
-
-        <div className="flex-1" />
-
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-muted-foreground font-bold">
-            Filter shift:
-          </span>
-          <div className="flex gap-1">
-            {(["all", ...SHIFTS_LIST] as const).map((s) => (
+          {(["all", ...SHIFTS_LIST] as const).map((s) => {
+            const isActive = filterShift === s;
+            return (
               <button
                 key={s}
-                onClick={() => setFilterShift(s as ShiftType | "all")}
-                className={`px-2 py-1 text-[10px] font-bold rounded-lg border transition-colors ${
-                  filterShift === s
+                onClick={() => setFilterShift(s)}
+                className={`px-4 py-1.5 text-xs font-semibold rounded-xl border transition-all ${
+                  isActive
                     ? "bg-primary text-white border-primary"
                     : "border-border text-muted-foreground hover:bg-muted"
                 }`}
               >
                 {s === "all" ? "All" : s}
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
 
-        <button
-          onClick={handleSave}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold bg-primary text-white rounded-xl hover:opacity-90 transition-opacity whitespace-nowrap"
-        >
-          <Check className="w-3.5 h-3.5" />
-          Save Schedule
-        </button>
+        {canEdit("Users & Roles") && (
+          <button
+            onClick={handleSave}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold bg-primary text-white rounded-xl hover:opacity-90 transition-opacity whitespace-nowrap"
+          >
+            <Check className="w-3.5 h-3.5" />
+            Save Schedule
+          </button>
+        )}
       </div>
 
       {/* Week header */}

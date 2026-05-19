@@ -1,30 +1,65 @@
 const getProfile = async (req, res) => {
   try {
-    const { id } = req.params;
-    const result = await req.db.query("SELECT * FROM users WHERE id = $1", [
-      id,
-    ]);
+    const id = req.user.id;
+
+    const result = await req.db.query(
+      `
+      SELECT
+        u.id,
+        u.full_name,
+        u.employee_id,
+        u.member_since,
+        u.email,
+        u.credentials,
+        u.phone,
+        u.mobile_phone,
+        u.department_id,
+        d.name AS department_name,
+        u.job_title,
+        u.location,
+        u.bio,
+        u.certifications,
+        u.preferences,
+        u.notifications,
+        u.security,
+        u.created_at,
+        u.updated_at
+      FROM users u
+      LEFT JOIN departments d
+        ON d.id = u.department_id
+      WHERE u.id = $1
+      `,
+      [id]
+    );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Profile not found" });
+      return res.status(404).json({
+        error: "Profile not found",
+      });
     }
 
     const userData = result.rows[0];
-    
-    // Split full_name for the UI
+
     const nameParts = (userData.full_name || "").split(" ");
+
     userData.first_name = nameParts[0] || "";
     userData.last_name = nameParts.slice(1).join(" ") || "";
 
-    res.json({ message: "Profile fetched successfully", data: userData });
+    return res.json({
+      message: "Profile fetched successfully",
+      data: userData,
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({
+      error: err.message,
+    });
   }
 };
 
 const updateProfile = async (req, res) => {
   try {
     const { id } = req.params;
+
     const {
       first_name,
       last_name,
@@ -32,35 +67,35 @@ const updateProfile = async (req, res) => {
       email,
       phone,
       mobile_phone,
-      department,
+      department_id,
       job_title,
       location,
       bio,
       certifications,
     } = req.body;
 
-    // Combine first and last name if they are provided
     let full_name = undefined;
+
     if (first_name !== undefined || last_name !== undefined) {
-       full_name = `${first_name || ""} ${last_name || ""}`.trim();
+      full_name = `${first_name || ""} ${last_name || ""}`.trim();
     }
 
     const query = `
-      UPDATE users 
-      SET 
+      UPDATE users
+      SET
         full_name = COALESCE($1, full_name),
         credentials = COALESCE($2, credentials),
         email = COALESCE($3, email),
         phone = COALESCE($4, phone),
         mobile_phone = COALESCE($5, mobile_phone),
-        department = COALESCE($6, department),
+        department_id = COALESCE($6, department_id),
         job_title = COALESCE($7, job_title),
         location = COALESCE($8, location),
         bio = COALESCE($9, bio),
         certifications = COALESCE($10, certifications),
         updated_at = CURRENT_TIMESTAMP
       WHERE id = $11
-      RETURNING *;
+      RETURNING id;
     `;
 
     const values = [
@@ -69,7 +104,7 @@ const updateProfile = async (req, res) => {
       email,
       phone,
       mobile_phone,
-      department,
+      department_id,
       job_title,
       location,
       bio,
@@ -80,17 +115,56 @@ const updateProfile = async (req, res) => {
     const result = await req.db.query(query, values);
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Profile not found" });
+      return res.status(404).json({
+        error: "Profile not found",
+      });
     }
 
-    const updatedUser = result.rows[0];
+    const updatedResult = await req.db.query(
+      `
+      SELECT
+        u.id,
+        u.full_name,
+        u.employee_id,
+        u.member_since,
+        u.email,
+        u.credentials,
+        u.phone,
+        u.mobile_phone,
+        u.department_id,
+        d.name AS department_name,
+        u.job_title,
+        u.location,
+        u.bio,
+        u.certifications,
+        u.preferences,
+        u.notifications,
+        u.security,
+        u.created_at,
+        u.updated_at
+      FROM users u
+      LEFT JOIN departments d
+        ON d.id = u.department_id
+      WHERE u.id = $1
+      `,
+      [id]
+    );
+
+    const updatedUser = updatedResult.rows[0];
+
     const nameParts = (updatedUser.full_name || "").split(" ");
+
     updatedUser.first_name = nameParts[0] || "";
     updatedUser.last_name = nameParts.slice(1).join(" ") || "";
 
-    res.json({ message: "Profile updated successfully", data: updatedUser });
+    return res.json({
+      message: "Profile updated successfully",
+      data: updatedUser,
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({
+      error: err.message,
+    });
   }
 };
 

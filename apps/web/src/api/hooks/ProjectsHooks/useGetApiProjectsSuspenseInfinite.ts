@@ -18,6 +18,7 @@ import type {
 import type {
   GetApiProjectsQueryResponse,
   GetApiProjectsQueryParams,
+  GetApiProjects500,
 } from "../../types/GetApiProjects.ts";
 import {
   infiniteQueryOptions,
@@ -40,7 +41,7 @@ export function getApiProjectsSuspenseInfiniteQueryOptions(
   const queryKey = getApiProjectsSuspenseInfiniteQueryKey(params);
   return infiniteQueryOptions<
     GetApiProjectsQueryResponse,
-    ResponseErrorConfig<Error>,
+    ResponseErrorConfig<GetApiProjects500>,
     InfiniteData<GetApiProjectsQueryResponse>,
     typeof queryKey,
     NonNullable<GetApiProjectsQueryParams["page_no"]>
@@ -68,13 +69,13 @@ export function getApiProjectsSuspenseInfiniteQueryOptions(
 }
 
 /**
- * @description Retrieve projects with search, filters, and pagination
+ * @description Retrieve projects with filters, search, charts progress, client details, and pagination
  * @summary Get all projects
  * {@link /api/projects}
  */
 export function useGetApiProjectsSuspenseInfinite<
   TQueryFnData = GetApiProjectsQueryResponse,
-  TError = ResponseErrorConfig<Error>,
+  TError = ResponseErrorConfig<GetApiProjects500>,
   TData = InfiniteData<TQueryFnData>,
   TQueryKey extends QueryKey = GetApiProjectsSuspenseInfiniteQueryKey,
   TPageParam = NonNullable<GetApiProjectsQueryParams["page_no"]>,

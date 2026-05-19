@@ -16,43 +16,36 @@ import type {
   UseSuspenseInfiniteQueryResult,
 } from "@tanstack/react-query";
 import type {
-  GetApiProfileIdQueryResponse,
-  GetApiProfileIdPathParams,
-  GetApiProfileId404,
-} from "../../types/GetApiProfileId.ts";
+  GetApiProfileMeQueryResponse,
+  GetApiProfileMe404,
+} from "../../types/GetApiProfileMe.ts";
 import {
   infiniteQueryOptions,
   useSuspenseInfiniteQuery,
 } from "@tanstack/react-query";
-import { getApiProfileId } from "../../clients/getApiProfileId.ts";
+import { getApiProfileMe } from "../../clients/getApiProfileMe.ts";
 
-export const getApiProfileIdSuspenseInfiniteQueryKey = (
-  id: GetApiProfileIdPathParams["id"] | undefined,
-) => [{ url: "/api/profile/:id", params: { id: id } }] as const;
+export const getApiProfileMeSuspenseInfiniteQueryKey = () =>
+  [{ url: "/api/profile/me" }] as const;
 
-export type GetApiProfileIdSuspenseInfiniteQueryKey = ReturnType<
-  typeof getApiProfileIdSuspenseInfiniteQueryKey
+export type GetApiProfileMeSuspenseInfiniteQueryKey = ReturnType<
+  typeof getApiProfileMeSuspenseInfiniteQueryKey
 >;
 
-export function getApiProfileIdSuspenseInfiniteQueryOptions(
-  id: GetApiProfileIdPathParams["id"] | undefined,
+export function getApiProfileMeSuspenseInfiniteQueryOptions(
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
-  const queryKey = getApiProfileIdSuspenseInfiniteQueryKey(id);
+  const queryKey = getApiProfileMeSuspenseInfiniteQueryKey();
   return infiniteQueryOptions<
-    GetApiProfileIdQueryResponse,
-    ResponseErrorConfig<GetApiProfileId404>,
-    InfiniteData<GetApiProfileIdQueryResponse>,
+    GetApiProfileMeQueryResponse,
+    ResponseErrorConfig<GetApiProfileMe404>,
+    InfiniteData<GetApiProfileMeQueryResponse>,
     typeof queryKey,
     number
   >({
-    enabled: !!id,
     queryKey,
     queryFn: async ({ signal }) => {
-      return getApiProfileId(id!, {
-        ...config,
-        signal: config.signal ?? signal,
-      });
+      return getApiProfileMe({ ...config, signal: config.signal ?? signal });
     },
     initialPageParam: 0,
     getNextPageParam: (lastPage, _allPages, lastPageParam) =>
@@ -65,17 +58,16 @@ export function getApiProfileIdSuspenseInfiniteQueryOptions(
 }
 
 /**
- * @summary Get user profile by ID
- * {@link /api/profile/:id}
+ * @summary Get logged in user profile
+ * {@link /api/profile/me}
  */
-export function useGetApiProfileIdSuspenseInfinite<
-  TQueryFnData = GetApiProfileIdQueryResponse,
-  TError = ResponseErrorConfig<GetApiProfileId404>,
+export function useGetApiProfileMeSuspenseInfinite<
+  TQueryFnData = GetApiProfileMeQueryResponse,
+  TError = ResponseErrorConfig<GetApiProfileMe404>,
   TData = InfiniteData<TQueryFnData>,
-  TQueryKey extends QueryKey = GetApiProfileIdSuspenseInfiniteQueryKey,
+  TQueryKey extends QueryKey = GetApiProfileMeSuspenseInfiniteQueryKey,
   TPageParam = number,
 >(
-  id: GetApiProfileIdPathParams["id"] | undefined,
   options: {
     query?: Partial<
       UseSuspenseInfiniteQueryOptions<
@@ -92,11 +84,11 @@ export function useGetApiProfileIdSuspenseInfinite<
   const { query: queryConfig = {}, client: config = {} } = options ?? {};
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
-    resolvedOptions?.queryKey ?? getApiProfileIdSuspenseInfiniteQueryKey(id);
+    resolvedOptions?.queryKey ?? getApiProfileMeSuspenseInfiniteQueryKey();
 
   const query = useSuspenseInfiniteQuery(
     {
-      ...getApiProfileIdSuspenseInfiniteQueryOptions(id, config),
+      ...getApiProfileMeSuspenseInfiniteQueryOptions(config),
       ...resolvedOptions,
       queryKey,
     } as unknown as UseSuspenseInfiniteQueryOptions<

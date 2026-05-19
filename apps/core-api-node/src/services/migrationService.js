@@ -10,7 +10,7 @@ async function runMigrations(client, schema) {
   // `);
   //
 
- await client.query(`
+  await client.query(`
   CREATE TABLE IF NOT EXISTS ${schema}.clients (
 
       -- Internal UUID
@@ -90,7 +90,6 @@ async function runMigrations(client, schema) {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
 `);
- 
 
   await client.query(`
     CREATE TABLE IF NOT EXISTS ${schema}.user_roles (
@@ -146,7 +145,8 @@ async function runMigrations(client, schema) {
       is_staff BOOLEAN DEFAULT FALSE,
       is_active BOOLEAN DEFAULT TRUE,
       last_password_changed DATE,
-      employee_id VARCHAR(100),
+      employee_id VARCHAR(100) UNIQUE,
+      member_since DATE DEFAULT CURRENT_DATE,
       is_super_administrator BOOLEAN DEFAULT FALSE,
       project_access UUID[] DEFAULT ARRAY[]::UUID[],
       password TEXT, -- Adding for future auth if needed
@@ -196,6 +196,8 @@ async function runMigrations(client, schema) {
         ADD COLUMN IF NOT EXISTS credentials VARCHAR(255),
         ADD COLUMN IF NOT EXISTS mobile_phone VARCHAR(20),
         ADD COLUMN IF NOT EXISTS location VARCHAR(255),
+        ADD COLUMN IF NOT EXISTS employee_id VARCHAR(100),
+        ADD COLUMN IF NOT EXISTS member_since DATE DEFAULT CURRENT_DATE,
         ADD COLUMN IF NOT EXISTS preferences JSONB DEFAULT '{}'::jsonb,
         ADD COLUMN IF NOT EXISTS certifications JSONB DEFAULT '[]'::jsonb,
         ADD COLUMN IF NOT EXISTS notifications JSONB DEFAULT '{}'::jsonb,
@@ -228,7 +230,9 @@ async function runMigrations(client, schema) {
           'Radiology',
           'Oncology',
           'Cardiothoracic',
-          'Pediatrics'
+          'Pediatrics',
+          'Neurology',
+          'Gastroenterology'
         )
       ),
       priority VARCHAR(50) DEFAULT 'High' CHECK (priority IN ('High', 'Medium', 'Low')),
@@ -312,6 +316,64 @@ async function runMigrations(client, schema) {
       UNIQUE(user_id, date)
     );
   `);
+
+  await client.query(`CREATE TABLE IF NOT EXISTS ${schema}.patients (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  -- Internal
+  patient_id VARCHAR(50) UNIQUE NOT NULL,
+
+  -- External System IDs
+  external_patient_id UUID UNIQUE,
+  external_project_id UUID,
+
+  -- Patient Details
+  first_name VARCHAR(150),
+  last_name VARCHAR(150),
+  dob DATE,
+  gender VARCHAR(20),
+
+  -- Dashboard Fields
+  measure VARCHAR(100),
+  plan VARCHAR(100),
+  priority VARCHAR(50),
+  stage VARCHAR(50) DEFAULT 'Unassigned',
+
+  -- SLA
+  due_date TIMESTAMP,
+
+  -- Relationships
+  project_id UUID REFERENCES ${schema}.projects(id),
+  client_id UUID REFERENCES ${schema}.clients(id),
+
+  -- Assignment
+  assigned_to UUID REFERENCES ${schema}.users(id),
+
+  -- Metadata
+  last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);`);
+
+  await client.query(`CREATE TABLE IF NOT EXISTS ${schema}.patient_charts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  patient_id UUID REFERENCES ${schema}.patients(id) ON DELETE CASCADE,
+  external_chart_id UUID UNIQUE,
+  chart_id VARCHAR(100),
+  status VARCHAR(100),
+  encounter_type VARCHAR(100),
+  specialty VARCHAR(100),
+  facility VARCHAR(255),
+  encounter_date DATE,
+  admission_date DATE,
+  discharge_date DATE,
+  priority VARCHAR(50),
+  chart_document JSONB,
+  coding_notes TEXT,
+  sla_deadline TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);`);
 }
 
 module.exports = { runMigrations };

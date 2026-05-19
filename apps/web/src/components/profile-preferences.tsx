@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   User,
   Settings,
@@ -43,6 +43,14 @@ import {
   CheckSquare,
   ChevronDown,
 } from "lucide-react";
+import {
+  useGetApiProfileMe,
+  usePatchApiProfileId,
+  usePatchApiProfileIdNotifications,
+  usePatchApiProfileIdPreferences,
+  usePatchApiProfileIdSecurity,
+} from "@/api";
+import { toast } from "sonner";
 
 /* ─── Types ─────────────────────────────────────────── */
 type Tab = "profile" | "preferences" | "notifications" | "security";
@@ -259,20 +267,49 @@ export function ProfilePreferences({
   onToggleDarkMode,
 }: ProfilePreferencesProps) {
   const [activeTab, setActiveTab] = useState<Tab>("profile");
+  const [certifications, setCertifications] = useState<any[]>([]);
+  const { data: profileResponse } = useGetApiProfileMe();
+
+  const profile = profileResponse?.data;
 
   /* ── Profile state ── */
   const [profileForm, setProfileForm] = useState({
-    firstName: "Sarah",
-    lastName: "Johnson",
-    credentials: "RHIA, CPC, CPHQ",
-    jobTitle: "HEDIS Lead Abstractor",
-    department: "Clinical Operations",
-    employeeId: "EMP-4412",
-    email: "s.johnson@hedisplatform.com",
-    workPhone: "(617) 555-0142",
-    mobilePhone: "(617) 555-0187",
-    location: "Boston, MA",
-    bio: "Experienced HEDIS abstractor with 8+ years in clinical documentation and NCQA compliance. Specializes in hybrid chart review and quality measure reporting for commercial and Medicaid populations.",
+    firstName: "",
+    lastName: "",
+    credentials: "",
+    jobTitle: "",
+    department: "",
+    departmentId: "",
+    employeeId: "",
+    memberSince: "",
+    email: "",
+    workPhone: "",
+    mobilePhone: "",
+    location: "",
+    bio: "",
+  });
+
+  const { mutate: updateProfile, isPending } = usePatchApiProfileId({
+    mutation: {
+      onSuccess: () => {
+        flashSaved();
+
+        toast.success("Profile updated successfully");
+      },
+
+      onError: (error: any) => {
+        toast.error(error?.response?.data?.error || "Failed to update profile");
+      },
+    },
+  });
+
+  const [showCertModal, setShowCertModal] = useState(false);
+
+  const [certForm, setCertForm] = useState({
+    name: "",
+    issuer: "",
+    issued_year: "",
+    status: "Active",
   });
 
   /* ── Preferences state ── */
@@ -288,6 +325,21 @@ export function ProfilePreferences({
     confirmSubmit: true,
     showQuickStats: true,
   });
+
+  const { mutate: updatePreferences, isPending: isPreferencesSaving } =
+    usePatchApiProfileIdPreferences({
+      mutation: {
+        onSuccess: () => {
+          toast.success("Preferences saved successfully");
+        },
+
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.error || "Failed to save preferences",
+          );
+        },
+      },
+    });
 
   /* ── Notifications state ── */
   const [notifs, setNotifs] = useState({
@@ -305,6 +357,22 @@ export function ProfilePreferences({
     digestDay: "Monday",
   });
 
+  const { mutate: updateNotifications, isPending: isNotificationsSaving } =
+    usePatchApiProfileIdNotifications({
+      mutation: {
+        onSuccess: () => {
+          toast.success("Notification preferences updated successfully");
+        },
+
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.error ||
+              "Failed to update notification preferences",
+          );
+        },
+      },
+    });
+
   /* ── Security state ── */
   const [pwForm, setPwForm] = useState({ current: "", next: "", confirm: "" });
   const [showPw, setShowPw] = useState({
@@ -314,6 +382,8 @@ export function ProfilePreferences({
   });
   const [twoFA, setTwoFA] = useState(true);
   const [pwSaved, setPwSaved] = useState(false);
+  const [sessionTimeout, setSessionTimeout] = useState(30);
+  const [loginAlerts, setLoginAlerts] = useState(true);
 
   /* ── Saved flash ── */
   const [saved, setSaved] = useState(false);
@@ -321,6 +391,152 @@ export function ProfilePreferences({
     setSaved(true);
     setTimeout(() => setSaved(false), 2200);
   };
+
+  const { mutate: updateSecurity, isPending: isSecuritySaving } =
+    usePatchApiProfileIdSecurity({
+      mutation: {
+        onSuccess: () => {
+          toast.success("Security settings updated successfully");
+
+          setPwSaved(true);
+
+          setTimeout(() => setPwSaved(false), 2200);
+
+          setPwForm({
+            current: "",
+            next: "",
+            confirm: "",
+          });
+        },
+
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.error ||
+              "Failed to update security settings",
+          );
+        },
+      },
+    });
+
+  useEffect(() => {
+    if (profile) {
+      /* PREFILL PROFILE */
+      setProfileForm({
+        firstName: profile.first_name || "",
+        lastName: profile.last_name || "",
+        credentials: profile.credentials || "",
+        jobTitle: profile.job_title || "",
+        department: profile.department_name || "",
+        departmentId: profile.department_id || "",
+        employeeId: profile.employee_id || "",
+        memberSince: profile.member_since || "",
+        email: profile.email || "",
+        workPhone: profile.phone || "",
+        mobilePhone: profile.mobile_phone || "",
+        location: profile.location || "",
+        bio: profile.bio || "",
+      });
+
+      setCertifications(profile.certifications || []);
+
+      /* PREFILL PREFERENCES */
+      if (profile.preferences) {
+        setPrefs({
+          theme: profile.preferences?.appearance?.colorTheme || "light",
+
+          sidebarDensity:
+            profile.preferences?.appearance?.sidebarDensity || "comfortable",
+
+          defaultView:
+            profile.preferences?.workflowDefaults?.defaultLandingPage ||
+            "dashboard",
+
+          defaultProgram:
+            profile.preferences?.workflowDefaults?.defaultMeasurementYear ||
+            "HEDIS MY2026",
+
+          itemsPerPage: String(
+            profile.preferences?.workflowDefaults?.itemsPerPage || "25",
+          ),
+
+          dateFormat:
+            profile.preferences?.workflowDefaults?.dateFormat || "MM/DD/YYYY",
+
+          timezone:
+            profile.preferences?.workflowDefaults?.timezone ||
+            "America/New_York",
+
+          autoSave: profile.preferences?.workspaceBehavior?.autoSave ?? true,
+
+          confirmSubmit:
+            profile.preferences?.workspaceBehavior?.confirmBeforeSubmission ??
+            true,
+
+          showQuickStats:
+            profile.preferences?.workspaceBehavior?.showQuickStats ?? true,
+        });
+      }
+
+      /* PREFILL NOTIFICATIONS */
+      if (profile.notifications) {
+        setNotifs({
+          assignmentsInApp:
+            profile.notifications?.eventNotifications?.memberAssignments
+              ?.inApp ?? true,
+
+          assignmentsEmail:
+            profile.notifications?.eventNotifications?.memberAssignments
+              ?.email ?? true,
+
+          qaFeedbackInApp:
+            profile.notifications?.eventNotifications?.qaFeedback?.inApp ??
+            true,
+
+          qaFeedbackEmail:
+            profile.notifications?.eventNotifications?.qaFeedback?.email ??
+            true,
+
+          deadlinesInApp:
+            profile.notifications?.eventNotifications?.abstractionDeadlines
+              ?.inApp ?? true,
+
+          deadlinesEmail:
+            profile.notifications?.eventNotifications?.abstractionDeadlines
+              ?.email ?? false,
+
+          submissionsInApp:
+            profile.notifications?.eventNotifications?.ncqaSubmissions?.inApp ??
+            true,
+
+          submissionsEmail:
+            profile.notifications?.eventNotifications?.ncqaSubmissions?.email ??
+            true,
+
+          systemInApp:
+            profile.notifications?.eventNotifications?.systemUpdates?.inApp ??
+            false,
+
+          systemEmail:
+            profile.notifications?.eventNotifications?.systemUpdates?.email ??
+            false,
+
+          weeklyDigest: profile.notifications?.weeklyDigest?.enabled ?? true,
+
+          digestDay: profile.notifications?.weeklyDigest?.day || "Monday",
+        });
+      }
+
+      if (profile.security) {
+        setTwoFA(profile.security?.two_factor_auth ?? true);
+
+        setSessionTimeout(profile.security?.session_timeout ?? 30);
+
+        setLoginAlerts(profile.security?.login_alerts ?? true);
+      }
+
+      localStorage.setItem("user_profile", JSON.stringify(profile));
+    }
+  }, [profile]);
 
   /* ── helpers ── */
   const pf =
@@ -368,11 +584,141 @@ export function ProfilePreferences({
               </span>
             )}
             <button
-              onClick={flashSaved}
+              onClick={() => {
+                if (!profile?.id) return;
+
+                /* PROFILE TAB */
+                if (activeTab === "profile") {
+                  updateProfile({
+                    id: profile.id,
+                    data: {
+                      first_name: profileForm.firstName,
+                      last_name: profileForm.lastName,
+                      credentials: profileForm.credentials,
+                      email: profileForm.email,
+                      phone: profileForm.workPhone,
+                      mobile_phone: profileForm.mobilePhone,
+                      department_id: profileForm.departmentId || null,
+                      employee_id: profileForm.employeeId,
+                      member_since: profileForm.memberSince,
+                      job_title: profileForm.jobTitle,
+                      location: profileForm.location,
+                      bio: profileForm.bio,
+                      certifications,
+                    },
+                  });
+
+                  return;
+                }
+
+                /* PREFERENCES TAB */
+                if (activeTab === "preferences") {
+                  updatePreferences({
+                    id: profile.id,
+                    data: {
+                      appearance: {
+                        colorTheme: prefs.theme,
+                        sidebarDensity: prefs.sidebarDensity,
+                      },
+
+                      workflowDefaults: {
+                        defaultLandingPage: prefs.defaultView,
+                        defaultMeasurementYear: prefs.defaultProgram,
+                        itemsPerPage: Number(prefs.itemsPerPage),
+                        dateFormat: prefs.dateFormat,
+                        timezone: prefs.timezone,
+                      },
+
+                      workspaceBehavior: {
+                        autoSave: prefs.autoSave,
+                        confirmBeforeSubmission: prefs.confirmSubmit,
+                        showQuickStats: prefs.showQuickStats,
+                      },
+                    },
+                  });
+
+                  return;
+                }
+
+                /* NOTIFICATIONS TAB */
+                if (activeTab === "notifications") {
+                  updateNotifications({
+                    id: profile.id,
+                    data: {
+                      eventNotifications: {
+                        memberAssignments: {
+                          inApp: notifs.assignmentsInApp,
+                          email: notifs.assignmentsEmail,
+                        },
+
+                        qaFeedback: {
+                          inApp: notifs.qaFeedbackInApp,
+                          email: notifs.qaFeedbackEmail,
+                        },
+
+                        abstractionDeadlines: {
+                          inApp: notifs.deadlinesInApp,
+                          email: notifs.deadlinesEmail,
+                        },
+
+                        ncqaSubmissions: {
+                          inApp: notifs.submissionsInApp,
+                          email: notifs.submissionsEmail,
+                        },
+
+                        systemUpdates: {
+                          inApp: notifs.systemInApp,
+                          email: notifs.systemEmail,
+                        },
+                      },
+
+                      weeklyDigest: {
+                        enabled: notifs.weeklyDigest,
+                        day: notifs.digestDay,
+                      },
+                    },
+                  });
+
+                  return;
+                }
+
+                /* SECURITY TAB */
+                if (activeTab === "security") {
+                  updateSecurity({
+                    id: profile.id,
+
+                    data: {
+                      security: {
+                        two_factor_auth: twoFA,
+
+                        session_timeout: sessionTimeout,
+
+                        login_alerts: loginAlerts,
+                      },
+                    },
+                  });
+
+                  return;
+                }
+              }}
               className="btn-primary text-xs px-4 py-2"
             >
               <Save className="w-3.5 h-3.5" />
-              Save Changes
+
+              {isPending ||
+              isPreferencesSaving ||
+              isNotificationsSaving ||
+              isSecuritySaving
+                ? "Saving..."
+                : activeTab === "profile"
+                  ? "Save Profile"
+                  : activeTab === "preferences"
+                    ? "Save Preferences"
+                    : activeTab === "notifications"
+                      ? "Save Notifications"
+                      : activeTab === "security"
+                        ? "Save Security"
+                        : "Save Changes"}
             </button>
           </div>
         </div>
@@ -415,7 +761,8 @@ export function ProfilePreferences({
                     <div className="relative flex-shrink-0">
                       <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-cyan-600 flex items-center justify-center shadow-lg">
                         <span className="text-white font-bold text-2xl select-none">
-                          SJ
+                          {profileForm.firstName?.[0]}
+                          {profileForm.lastName?.[0]}
                         </span>
                       </div>
                       <button className="absolute -bottom-1 -right-1 w-6 h-6 bg-card border-2 border-border rounded-full flex items-center justify-center hover:bg-accent transition-colors shadow-sm">
@@ -426,10 +773,13 @@ export function ProfilePreferences({
                     {/* Name & role */}
                     <div className="flex-1 min-w-0">
                       <h2 className="text-lg font-semibold text-foreground">
-                        Sarah Johnson, RHIA
+                        {profileForm.firstName} {profileForm.lastName}
+                        {profileForm.credentials
+                          ? `, ${profileForm.credentials}`
+                          : ""}
                       </h2>
                       <p className="text-sm text-muted-foreground mt-0.5">
-                        HEDIS Lead Abstractor · Clinical Operations
+                        {profileForm.jobTitle} · {profileForm.department}
                       </p>
                       <div className="flex flex-wrap items-center gap-2 mt-2">
                         <span className="badge badge-primary">
@@ -450,13 +800,20 @@ export function ProfilePreferences({
                         Employee ID
                       </p>
                       <p className="text-xs font-mono font-semibold text-foreground mt-0.5">
-                        EMP-4412
+                        {profileForm.employeeId || "-"}
                       </p>
                       <p className="text-[10px] text-muted-foreground mt-2">
                         Member Since
                       </p>
                       <p className="text-xs font-semibold text-foreground mt-0.5">
-                        March 2019
+                        {profileForm.memberSince
+                          ? new Date(
+                              profileForm.memberSince,
+                            ).toLocaleDateString("en-US", {
+                              month: "long",
+                              year: "numeric",
+                            })
+                          : "-"}
                       </p>
                     </div>
                   </div>
@@ -580,7 +937,7 @@ export function ProfilePreferences({
                 subtitle="Active professional certifications associated with your abstractor profile"
               >
                 <div className="space-y-2">
-                  {CERTS.map((cert, i) => (
+                  {certifications.map((cert, i) => (
                     <div
                       key={i}
                       className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-muted/30 border border-border"
@@ -591,10 +948,10 @@ export function ProfilePreferences({
                           {cert.name}
                         </p>
                         <p className="text-[11px] text-muted-foreground">
-                          {cert.org} · Issued {cert.year}
+                          {cert.issuer} · Issued {cert.issued_year}
                         </p>
                       </div>
-                      {cert.active && (
+                      {cert.status === "Active" && (
                         <span className="badge badge-success text-[10px]">
                           <CheckCircle2 className="w-2.5 h-2.5" />
                           Active
@@ -603,7 +960,10 @@ export function ProfilePreferences({
                     </div>
                   ))}
                 </div>
-                <button className="inline-flex items-center gap-2 whitespace-nowrap mt-3 text-xs text-primary hover:underline font-medium">
+                <button
+                  onClick={() => setShowCertModal(true)}
+                  className="inline-flex items-center gap-2 whitespace-nowrap mt-3 text-xs text-primary hover:underline font-medium"
+                >
                   + Add certification
                 </button>
               </Section>
@@ -1114,14 +1474,49 @@ export function ProfilePreferences({
                   <div className="flex items-center gap-2 pt-1">
                     <button
                       onClick={() => {
-                        setPwSaved(true);
-                        setTimeout(() => setPwSaved(false), 2200);
-                        setPwForm({ current: "", next: "", confirm: "" });
+                        if (!profile?.id) return;
+
+                        if (
+                          !pwForm.current ||
+                          !pwForm.next ||
+                          !pwForm.confirm
+                        ) {
+                          toast.error("Please fill all password fields");
+
+                          return;
+                        }
+
+                        if (pwForm.next !== pwForm.confirm) {
+                          toast.error(
+                            "New password and confirm password do not match",
+                          );
+
+                          return;
+                        }
+
+                        updateSecurity({
+                          id: profile.id,
+
+                          data: {
+                            currentPassword: pwForm.current,
+
+                            newPassword: pwForm.next,
+
+                            security: {
+                              two_factor_auth: twoFA,
+
+                              session_timeout: sessionTimeout,
+
+                              login_alerts: loginAlerts,
+                            },
+                          },
+                        });
                       }}
                       className="btn-primary text-xs px-4 py-2"
                     >
                       <Key className="w-3.5 h-3.5" />
-                      Update Password
+
+                      {isSecuritySaving ? "Updating..." : "Update Password"}
                     </button>
                     {pwSaved && (
                       <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 font-semibold">
@@ -1327,6 +1722,91 @@ export function ProfilePreferences({
           )}
         </div>
       </div>
+
+      {showCertModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-card border border-border rounded-2xl w-full max-w-md p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-semibold">Add Certification</h3>
+
+              <button
+                onClick={() => setShowCertModal(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <Field label="Certification Name" required>
+                <input
+                  className="input-field text-xs"
+                  value={certForm.name}
+                  onChange={(e) =>
+                    setCertForm((p) => ({
+                      ...p,
+                      name: e.target.value,
+                    }))
+                  }
+                />
+              </Field>
+
+              <Field label="Issuer" required>
+                <input
+                  className="input-field text-xs"
+                  value={certForm.issuer}
+                  onChange={(e) =>
+                    setCertForm((p) => ({
+                      ...p,
+                      issuer: e.target.value,
+                    }))
+                  }
+                />
+              </Field>
+
+              <Field label="Issued Year">
+                <input
+                  className="input-field text-xs"
+                  value={certForm.issued_year}
+                  onChange={(e) =>
+                    setCertForm((p) => ({
+                      ...p,
+                      issued_year: e.target.value,
+                    }))
+                  }
+                />
+              </Field>
+
+              <div className="flex justify-end gap-2 pt-3">
+                <button
+                  onClick={() => setShowCertModal(false)}
+                  className="btn-secondary text-xs"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={() => {
+                    setCertifications((prev) => [...prev, certForm]);
+
+                    setCertForm({
+                      name: "",
+                      issuer: "",
+                      issued_year: "",
+                      status: "Active",
+                    });
+
+                    setShowCertModal(false);
+                  }}
+                  className="btn-primary text-xs"
+                >
+                  Add Certification
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

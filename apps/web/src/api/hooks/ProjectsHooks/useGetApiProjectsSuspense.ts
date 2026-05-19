@@ -17,6 +17,7 @@ import type {
 import type {
   GetApiProjectsQueryResponse,
   GetApiProjectsQueryParams,
+  GetApiProjects500,
 } from "../../types/GetApiProjects.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { getApiProjects } from "../../clients/getApiProjects.ts";
@@ -36,7 +37,7 @@ export function getApiProjectsSuspenseQueryOptions(
   const queryKey = getApiProjectsSuspenseQueryKey(params);
   return queryOptions<
     GetApiProjectsQueryResponse,
-    ResponseErrorConfig<Error>,
+    ResponseErrorConfig<GetApiProjects500>,
     GetApiProjectsQueryResponse,
     typeof queryKey
   >({
@@ -51,7 +52,7 @@ export function getApiProjectsSuspenseQueryOptions(
 }
 
 /**
- * @description Retrieve projects with search, filters, and pagination
+ * @description Retrieve projects with filters, search, charts progress, client details, and pagination
  * @summary Get all projects
  * {@link /api/projects}
  */
@@ -64,7 +65,7 @@ export function useGetApiProjectsSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<
         GetApiProjectsQueryResponse,
-        ResponseErrorConfig<Error>,
+        ResponseErrorConfig<GetApiProjects500>,
         TData,
         TQueryKey
       >
@@ -84,7 +85,7 @@ export function useGetApiProjectsSuspense<
       queryKey,
     } as unknown as UseSuspenseQueryOptions,
     queryClient,
-  ) as UseSuspenseQueryResult<TData, ResponseErrorConfig<Error>> & {
+  ) as UseSuspenseQueryResult<TData, ResponseErrorConfig<GetApiProjects500>> & {
     queryKey: TQueryKey;
   };
 

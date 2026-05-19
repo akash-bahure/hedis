@@ -1,26 +1,23 @@
 const express = require("express");
 const router = express.Router();
 const controller = require("../controllers/profile.controller");
+const authMiddleware = require("../middlewares/authMiddleware");
 
 /**
  * @swagger
- * /api/profile/{id}:
+ * /api/profile/me:
  *   get:
- *     summary: Get user profile by ID
+ *     summary: Get logged in user profile
  *     tags: [Profile]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: User profile data fetched successfully
  *       404:
  *         description: Profile not found
  */
-router.get("/:id", controller.getProfile);
+router.get("/me", authMiddleware, controller.getProfile);
 
 /**
  * @swagger
@@ -59,9 +56,15 @@ router.get("/:id", controller.getProfile);
  *               mobile_phone:
  *                 type: string
  *                 example: (617) 555-0187
- *               department:
+ *               employee_id:
  *                 type: string
- *                 example: Clinical Operations
+ *                 example: EMP-0001
+ *               member_since:
+ *                 type: string
+ *                 example: 2026-05-18
+ *               department_id:
+ *                 type: string
+ *                 example: 6f9f5a69-8b31-4f67-bc53-2f77f8c1d111
  *               job_title:
  *                 type: string
  *                 example: HEDIS Lead Abstractor

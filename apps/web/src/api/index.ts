@@ -30,9 +30,9 @@ export type { GetAdminOrgsSuspenseInfiniteQueryKey } from "./hooks/Organizations
 export type { PatchAdminOrgsIdMutationKey } from "./hooks/OrganizationsHooks/usePatchAdminOrgsId.ts";
 export type { PostAdminOrgsMutationKey } from "./hooks/OrganizationsHooks/usePostAdminOrgs.ts";
 export type { PostAdminOrgsOrgIdTenantAdminsMutationKey } from "./hooks/OrganizationsHooks/usePostAdminOrgsOrgIdTenantAdmins.ts";
-export type { GetApiProfileIdQueryKey } from "./hooks/ProfileHooks/useGetApiProfileId.ts";
-export type { GetApiProfileIdSuspenseQueryKey } from "./hooks/ProfileHooks/useGetApiProfileIdSuspense.ts";
-export type { GetApiProfileIdSuspenseInfiniteQueryKey } from "./hooks/ProfileHooks/useGetApiProfileIdSuspenseInfinite.ts";
+export type { GetApiProfileMeQueryKey } from "./hooks/ProfileHooks/useGetApiProfileMe.ts";
+export type { GetApiProfileMeSuspenseQueryKey } from "./hooks/ProfileHooks/useGetApiProfileMeSuspense.ts";
+export type { GetApiProfileMeSuspenseInfiniteQueryKey } from "./hooks/ProfileHooks/useGetApiProfileMeSuspenseInfinite.ts";
 export type { PatchApiProfileIdMutationKey } from "./hooks/ProfileHooks/usePatchApiProfileId.ts";
 export type { PatchApiProfileIdNotificationsMutationKey } from "./hooks/ProfileHooks/usePatchApiProfileIdNotifications.ts";
 export type { PatchApiProfileIdPreferencesMutationKey } from "./hooks/ProfileHooks/usePatchApiProfileIdPreferences.ts";
@@ -165,16 +165,17 @@ export type {
   GetApiDepartmentsQueryResponse,
 } from "./types/GetApiDepartments.ts";
 export type {
-  GetApiProfileId200,
-  GetApiProfileId404,
-  GetApiProfileIdPathParams,
-  GetApiProfileIdQuery,
-  GetApiProfileIdQueryResponse,
-} from "./types/GetApiProfileId.ts";
+  GetApiProfileMe200,
+  GetApiProfileMe404,
+  GetApiProfileMeQuery,
+  GetApiProfileMeQueryResponse,
+} from "./types/GetApiProfileMe.ts";
 export type {
   GetApiProjects200,
+  GetApiProjects500,
   GetApiProjectsQuery,
   GetApiProjectsQueryParams,
+  GetApiProjectsQueryParamsPriorityEnumKey,
   GetApiProjectsQueryParamsProjectTypeEnumKey,
   GetApiProjectsQueryParamsSpecialtyEnumKey,
   GetApiProjectsQueryParamsStatusEnumKey,
@@ -458,6 +459,9 @@ export type {
   PostApiProjectsMutation,
   PostApiProjectsMutationRequest,
   PostApiProjectsMutationRequestPriorityEnumKey,
+  PostApiProjectsMutationRequestProjectTypeEnumKey,
+  PostApiProjectsMutationRequestSpecialtyEnumKey,
+  PostApiProjectsMutationRequestStatusEnumKey,
   PostApiProjectsMutationResponse,
 } from "./types/PostApiProjects.ts";
 export type {
@@ -500,7 +504,7 @@ export { getApiClientsExport } from "./clients/getApiClientsExport.ts";
 export { getApiClientsId } from "./clients/getApiClientsId.ts";
 export { getApiClientsStats } from "./clients/getApiClientsStats.ts";
 export { getApiDepartments } from "./clients/getApiDepartments.ts";
-export { getApiProfileId } from "./clients/getApiProfileId.ts";
+export { getApiProfileMe } from "./clients/getApiProfileMe.ts";
 export { getApiProjects } from "./clients/getApiProjects.ts";
 export { getApiProjectsAccessAll } from "./clients/getApiProjectsAccessAll.ts";
 export { getApiProjectsId } from "./clients/getApiProjectsId.ts";
@@ -634,15 +638,15 @@ export { usePostAdminOrgs } from "./hooks/OrganizationsHooks/usePostAdminOrgs.ts
 export { postAdminOrgsOrgIdTenantAdminsMutationKey } from "./hooks/OrganizationsHooks/usePostAdminOrgsOrgIdTenantAdmins.ts";
 export { postAdminOrgsOrgIdTenantAdminsMutationOptions } from "./hooks/OrganizationsHooks/usePostAdminOrgsOrgIdTenantAdmins.ts";
 export { usePostAdminOrgsOrgIdTenantAdmins } from "./hooks/OrganizationsHooks/usePostAdminOrgsOrgIdTenantAdmins.ts";
-export { getApiProfileIdQueryKey } from "./hooks/ProfileHooks/useGetApiProfileId.ts";
-export { getApiProfileIdQueryOptions } from "./hooks/ProfileHooks/useGetApiProfileId.ts";
-export { useGetApiProfileId } from "./hooks/ProfileHooks/useGetApiProfileId.ts";
-export { getApiProfileIdSuspenseQueryKey } from "./hooks/ProfileHooks/useGetApiProfileIdSuspense.ts";
-export { getApiProfileIdSuspenseQueryOptions } from "./hooks/ProfileHooks/useGetApiProfileIdSuspense.ts";
-export { useGetApiProfileIdSuspense } from "./hooks/ProfileHooks/useGetApiProfileIdSuspense.ts";
-export { getApiProfileIdSuspenseInfiniteQueryKey } from "./hooks/ProfileHooks/useGetApiProfileIdSuspenseInfinite.ts";
-export { getApiProfileIdSuspenseInfiniteQueryOptions } from "./hooks/ProfileHooks/useGetApiProfileIdSuspenseInfinite.ts";
-export { useGetApiProfileIdSuspenseInfinite } from "./hooks/ProfileHooks/useGetApiProfileIdSuspenseInfinite.ts";
+export { getApiProfileMeQueryKey } from "./hooks/ProfileHooks/useGetApiProfileMe.ts";
+export { getApiProfileMeQueryOptions } from "./hooks/ProfileHooks/useGetApiProfileMe.ts";
+export { useGetApiProfileMe } from "./hooks/ProfileHooks/useGetApiProfileMe.ts";
+export { getApiProfileMeSuspenseQueryKey } from "./hooks/ProfileHooks/useGetApiProfileMeSuspense.ts";
+export { getApiProfileMeSuspenseQueryOptions } from "./hooks/ProfileHooks/useGetApiProfileMeSuspense.ts";
+export { useGetApiProfileMeSuspense } from "./hooks/ProfileHooks/useGetApiProfileMeSuspense.ts";
+export { getApiProfileMeSuspenseInfiniteQueryKey } from "./hooks/ProfileHooks/useGetApiProfileMeSuspenseInfinite.ts";
+export { getApiProfileMeSuspenseInfiniteQueryOptions } from "./hooks/ProfileHooks/useGetApiProfileMeSuspenseInfinite.ts";
+export { useGetApiProfileMeSuspenseInfinite } from "./hooks/ProfileHooks/useGetApiProfileMeSuspenseInfinite.ts";
 export { patchApiProfileIdMutationKey } from "./hooks/ProfileHooks/usePatchApiProfileId.ts";
 export { patchApiProfileIdMutationOptions } from "./hooks/ProfileHooks/usePatchApiProfileId.ts";
 export { usePatchApiProfileId } from "./hooks/ProfileHooks/usePatchApiProfileId.ts";
@@ -803,6 +807,7 @@ export { getApiClientsQueryParamsContractTypeEnum } from "./types/GetApiClients.
 export { getApiClientsQueryParamsRegionEnum } from "./types/GetApiClients.ts";
 export { getApiClientsQueryParamsStatusEnum } from "./types/GetApiClients.ts";
 export { getApiClientsExportQueryParamsFormatEnum } from "./types/GetApiClientsExport.ts";
+export { getApiProjectsQueryParamsPriorityEnum } from "./types/GetApiProjects.ts";
 export { getApiProjectsQueryParamsProjectTypeEnum } from "./types/GetApiProjects.ts";
 export { getApiProjectsQueryParamsSpecialtyEnum } from "./types/GetApiProjects.ts";
 export { getApiProjectsQueryParamsStatusEnum } from "./types/GetApiProjects.ts";
@@ -822,6 +827,9 @@ export { postApiClientsMutationRequestPlanTierEnum } from "./types/PostApiClient
 export { postApiClientsMutationRequestRegionEnum } from "./types/PostApiClients.ts";
 export { postApiClientsMutationRequestStatusEnum } from "./types/PostApiClients.ts";
 export { postApiProjectsMutationRequestPriorityEnum } from "./types/PostApiProjects.ts";
+export { postApiProjectsMutationRequestProjectTypeEnum } from "./types/PostApiProjects.ts";
+export { postApiProjectsMutationRequestSpecialtyEnum } from "./types/PostApiProjects.ts";
+export { postApiProjectsMutationRequestStatusEnum } from "./types/PostApiProjects.ts";
 export { rolePermissionsModuleEnum } from "./types/PostApiUserRoles.ts";
 export { postApiUsersMutationRequestShiftEnum } from "./types/PostApiUsers.ts";
 export { postApiUsersMutationRequestUserTypeEnum } from "./types/PostApiUsers.ts";
@@ -961,11 +969,10 @@ export {
   postAdminOrgsMutationResponseSchema,
 } from "./zod/OrganizationsSchemas/postAdminOrgsSchema.ts";
 export {
-  getApiProfileId200Schema,
-  getApiProfileId404Schema,
-  getApiProfileIdPathParamsSchema,
-  getApiProfileIdQueryResponseSchema,
-} from "./zod/ProfileSchemas/getApiProfileIdSchema.ts";
+  getApiProfileMe200Schema,
+  getApiProfileMe404Schema,
+  getApiProfileMeQueryResponseSchema,
+} from "./zod/ProfileSchemas/getApiProfileMeSchema.ts";
 export {
   patchApiProfileIdNotifications200Schema,
   patchApiProfileIdNotificationsMutationRequestSchema,
@@ -1009,6 +1016,7 @@ export {
 } from "./zod/ProjectsSchemas/getApiProjectsIdSchema.ts";
 export {
   getApiProjects200Schema,
+  getApiProjects500Schema,
   getApiProjectsQueryParamsSchema,
   getApiProjectsQueryResponseSchema,
 } from "./zod/ProjectsSchemas/getApiProjectsSchema.ts";
