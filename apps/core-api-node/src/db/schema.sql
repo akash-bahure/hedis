@@ -16,5 +16,7 @@ CREATE TABLE IF NOT EXISTS tenants (
   schema_name TEXT UNIQUE NOT NULL,
   is_active BOOLEAN DEFAULT true,
   is_archived BOOLEAN DEFAULT false,
-  created_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMP DEFAULT NOW(),
+  api_key VARCHAR(255) UNIQUE,
+  external_medical_coding_endpoint VARCHAR(255) UNIQUE
 );

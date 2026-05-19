@@ -19,7 +19,12 @@ async function createDefaultSystemRoles(client, schema) {
   }
 }
 
-async function createTenant({ name, subdomain }) {
+async function createTenant({
+  name,
+  subdomain,
+  api_key,
+  external_medical_coding_endpoint,
+}) {
   const client = await pool.connect();
 
   try {
@@ -36,10 +41,10 @@ async function createTenant({ name, subdomain }) {
 
     // Insert tenant
     const result = await client.query(
-      `INSERT INTO tenants (name, subdomain, schema_name)
-       VALUES ($1, $2, $3)
+      `INSERT INTO tenants (name, subdomain, schema_name, api_key, external_medical_coding_endpoint)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [name, subdomain, schema]
+      [name, subdomain, schema, api_key, external_medical_coding_endpoint]
     );
 
     // Run migrations

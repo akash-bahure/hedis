@@ -10,7 +10,7 @@ async function runMigrations(client, schema) {
   // `);
   //
 
- await client.query(`
+  await client.query(`
   CREATE TABLE IF NOT EXISTS ${schema}.clients (
 
       -- Internal UUID
@@ -90,7 +90,6 @@ async function runMigrations(client, schema) {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
 `);
- 
 
   await client.query(`
     CREATE TABLE IF NOT EXISTS ${schema}.user_roles (
@@ -317,6 +316,64 @@ async function runMigrations(client, schema) {
       UNIQUE(user_id, date)
     );
   `);
+
+  await client.query(`CREATE TABLE IF NOT EXISTS ${schema}.patients (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  -- Internal
+  patient_id VARCHAR(50) UNIQUE NOT NULL,
+
+  -- External System IDs
+  external_patient_id UUID UNIQUE,
+  external_project_id UUID,
+
+  -- Patient Details
+  first_name VARCHAR(150),
+  last_name VARCHAR(150),
+  dob DATE,
+  gender VARCHAR(20),
+
+  -- Dashboard Fields
+  measure VARCHAR(100),
+  plan VARCHAR(100),
+  priority VARCHAR(50),
+  stage VARCHAR(50) DEFAULT 'Unassigned',
+
+  -- SLA
+  due_date TIMESTAMP,
+
+  -- Relationships
+  project_id UUID REFERENCES ${schema}.projects(id),
+  client_id UUID REFERENCES ${schema}.clients(id),
+
+  -- Assignment
+  assigned_to UUID REFERENCES ${schema}.users(id),
+
+  -- Metadata
+  last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);`);
+
+  await client.query(`CREATE TABLE IF NOT EXISTS ${schema}.patient_charts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  patient_id UUID REFERENCES ${schema}.patients(id) ON DELETE CASCADE,
+  external_chart_id UUID UNIQUE,
+  chart_id VARCHAR(100),
+  status VARCHAR(100),
+  encounter_type VARCHAR(100),
+  specialty VARCHAR(100),
+  facility VARCHAR(255),
+  encounter_date DATE,
+  admission_date DATE,
+  discharge_date DATE,
+  priority VARCHAR(50),
+  chart_document JSONB,
+  coding_notes TEXT,
+  sla_deadline TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);`);
 }
 
 module.exports = { runMigrations };
