@@ -56,9 +56,15 @@ router.get("/me", authMiddleware, controller.getProfile);
  *               mobile_phone:
  *                 type: string
  *                 example: (617) 555-0187
- *               department:
+ *               employee_id:
  *                 type: string
- *                 example: Clinical Operations
+ *                 example: EMP-0001
+ *               member_since:
+ *                 type: string
+ *                 example: 2026-05-18
+ *               department_id:
+ *                 type: string
+ *                 example: 6f9f5a69-8b31-4f67-bc53-2f77f8c1d111
  *               job_title:
  *                 type: string
  *                 example: HEDIS Lead Abstractor

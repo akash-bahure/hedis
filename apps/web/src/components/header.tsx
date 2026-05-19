@@ -1,3 +1,4 @@
+import { useGetApiProfileMe } from "@/api";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Search,
@@ -17,7 +18,7 @@ import {
   Calendar,
   Clock,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface HeaderProps {
   darkMode: boolean;
@@ -117,6 +118,19 @@ export function Header({
   const unreadCount = notifications.filter((n) => n.unread).length;
   const crumbs = (breadcrumbMap[activeView] ?? breadcrumbMap["dashboard"]).path;
   const navigate = useNavigate();
+  const { data: profile } = useGetApiProfileMe();
+  useEffect(() => {
+    if (profile) {
+      localStorage.setItem("user_profile", JSON.stringify(profile));
+    }
+  }, [profile]);
+
+  const storedUser =
+    typeof window !== "undefined"
+      ? JSON.parse(localStorage.getItem("user_profile") || "null")
+      : null;
+
+  const user = profile?.data || storedUser;
 
   const iconColor = (type: string) =>
     type === "assignment"
@@ -315,14 +329,20 @@ export function Header({
             className="flex items-center gap-2 hover:bg-accent rounded-lg px-2 py-1.5 transition-colors"
           >
             <div className="w-7 h-7 bg-gradient-to-br from-primary to-cyan-600 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-white text-[10px] font-bold">SJ</span>
+              <span className="text-white text-[10px] font-bold">
+                {user?.full_name
+                  ?.split(" ")
+                  ?.map((n: string) => n[0])
+                  ?.join("")
+                  ?.slice(0, 2) || "U"}
+              </span>
             </div>
             <div className="hidden md:block text-left">
               <div className="text-xs font-semibold text-foreground leading-tight">
-                Sarah Johnson, RHIA
+                {user?.full_name || "User"}
               </div>
               <div className="text-[10px] text-muted-foreground leading-tight">
-                HEDIS Lead Abstractor
+                {user?.job_title || "User"}
               </div>
             </div>
             <ChevronDown className="hidden md:block w-3.5 h-3.5 text-muted-foreground" />
@@ -337,13 +357,13 @@ export function Header({
               <div className="absolute top-full right-0 mt-2 w-56 bg-card border border-border rounded-xl shadow-xl z-20 py-1.5 overflow-hidden">
                 <div className="px-4 py-3 border-b border-border">
                   <p className="text-sm font-semibold text-foreground">
-                    Sarah Johnson, RHIA
+                    {user?.full_name || "User"}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
-                    s.johnson@hedisplatform.com
+                    {user?.email || "No Email"}
                   </p>
                   <span className="mt-1.5 inline-flex items-center px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded">
-                    HEDIS Lead Abstractor
+                    {user?.job_title || "User"}
                   </span>
                 </div>
                 <button
