@@ -48,6 +48,7 @@ import {
   Building2,
   User,
 } from "lucide-react";
+import { usePermissions } from "@/hooks/usePermissions";
 
 /* ─────────────────────────────────────────────────────────────
    TYPES
@@ -1240,14 +1241,46 @@ function RowAction({
   onOpen,
   onOpenWorkspace,
   onOpenQAReview,
+  role,
 }: {
   row: ChartRow;
   onOpen: () => void;
   onOpenWorkspace?: () => void;
   onOpenQAReview?: () => void;
+  role?: "program-manager" | "abstractor" | "qa-analyst";
 }) {
   const [phase, setPhase] = useState<"idle" | "loading" | "ready">("idle");
   const [launching, setLaunching] = useState(false);
+
+  // ===================== PROGRAM MANAGER / ADMIN =====================
+  if (role === "program-manager") {
+    // Only show Assign button (mainly for Not Started / Unassigned charts)
+    if (row.step === 1 || row.assignedTo === "—") {
+      return (
+        <button
+          onClick={onOpen}
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-bold text-blue-600 hover:bg-blue-50 border-blue-200 transition-colors"
+        >
+          <UserPlus className="w-3 h-3" />
+          Assign
+        </button>
+      );
+    }
+
+    // For other stages - simple View button
+    return (
+      // <button
+      //   onClick={onOpen}
+      //   className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-bold text-slate-600 hover:bg-slate-50 border-slate-200 transition-colors"
+      // >
+      //   <Eye className="w-3 h-3" />
+      //   View
+      // </button>
+      <div className="flex items-center justify-center py-2">
+        <span className="text-slate-400 text-base font-light">—</span>
+      </div>
+    );
+  }
 
   /* ── Step 2: multi-phase "Begin Review" ── */
   if (row.step === 2) {
@@ -1262,7 +1295,11 @@ function RowAction({
       setTimeout(() => {
         setPhase("idle");
         setLaunching(false);
-        onOpenQAReview?.();
+        if (role === "qa-analyst") {
+          onOpenQAReview?.();
+        } else {
+          onOpenWorkspace?.();
+        }
       }, 900);
     };
     const handleCancel = () => {
@@ -2102,7 +2139,22 @@ export function WorkQueue({
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [clientSearch, setClientSearch] = useState("");
 
+  const { userDetail } = usePermissions();
+  const rawRole = userDetail?.user_role?.name?.toLowerCase();
+
+  const effectiveRole = useMemo(() => {
+    if (
+      rawRole &&
+      ["admin", "super admin", "operations/program manager"].includes(rawRole)
+    )
+      return "program-manager";
+    if (rawRole === "chart abstractor") return "abstractor";
+    if (rawRole === "quality analyst") return "qa-analyst";
+    return role || "abstractor";
+  }, [rawRole, role]);
+
   // Current user - in a real app this would come from auth context
+  // const currentUser = userDetail?.full_name || "S. Johnson";
   const currentUser = "S. Johnson";
 
   useEffect(() => {
@@ -2128,12 +2180,12 @@ export function WorkQueue({
     }));
 
     // Filter stages for QA Analyst role - only show Pending QA, QA Returned, and Rework
-    if (role === "qa-analyst") {
+    if (effectiveRole === "qa-analyst") {
       return allCounts.filter(
         (p) =>
           p.status === "Pending QA" ||
           p.status === "QA Returned" ||
-          p.status === "Rework",
+          p.status === "Rework"
       );
     }
 
@@ -2151,7 +2203,7 @@ export function WorkQueue({
       myQueue: MOCK.filter((r) => r.assignedTo === currentUser).length,
       ready: MOCK.filter((r) => r.status === "Submission Ready").length,
     }),
-    [currentUser],
+    [currentUser]
   );
 
   /* ── Filter + sort ── */
@@ -2167,7 +2219,8 @@ export function WorkQueue({
         return false;
 
       // For abstractor role, always filter to current user's assignments
-      if (role === "abstractor" && r.assignedTo !== currentUser) return false;
+      if (effectiveRole === "abstractor" && r.assignedTo !== currentUser)
+        return false;
 
       if (myWorkQueue && r.assignedTo !== currentUser) return false;
       if (filterStage !== "All" && r.status !== filterStage) return false;
@@ -2205,7 +2258,7 @@ export function WorkQueue({
         if (sortCol === "due") cmp = a.dueDate.localeCompare(b.dueDate);
         return sortDir === "asc" ? cmp : -cmp;
       }),
-    [filtered, sortCol, sortDir],
+    [filtered, sortCol, sortDir]
   );
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
@@ -2280,7 +2333,7 @@ export function WorkQueue({
       {/* ══════════════════════════════════════════════════════
           LEFT PANEL: CLIENT SIDEBAR (PM Only)
       ══════════════════════════════════════════════════════ */}
-      {role === "program-manager" && (
+      {effectiveRole === "program-manager" && (
         <div
           className={`flex-shrink-0 flex flex-col border-r border-border overflow-hidden bg-card transition-all duration-300 ${clientSidebarCollapsed ? "w-12" : "w-80"}`}
         >
@@ -2352,7 +2405,7 @@ export function WorkQueue({
                     key={client.id}
                     onClick={() =>
                       setSelectedClient(
-                        client.id === selectedClient ? null : client.id,
+                        client.id === selectedClient ? null : client.id
                       )
                     }
                     className={`w-full text-left px-3 py-2.5 border-b border-border hover:bg-muted/50 transition-colors ${selectedClient === client.id ? "bg-primary/5" : ""}`}
@@ -2501,7 +2554,7 @@ export function WorkQueue({
                     <span className="font-semibold text-foreground">
                       {
                         MOCK.filter((r) =>
-                          ["QA Returned", "Rework"].includes(r.status),
+                          ["QA Returned", "Rework"].includes(r.status)
                         ).length
                       }
                     </span>{" "}
@@ -2525,7 +2578,7 @@ export function WorkQueue({
 
             {/* Right: actions */}
             <div className="flex items-center gap-2">
-              {role === "program-manager" && null}
+              {effectiveRole === "program-manager" && null}
               <button className="inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 text-xs border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors">
                 <RefreshCcw className="w-3.5 h-3.5" />
                 Refresh
@@ -2533,7 +2586,7 @@ export function WorkQueue({
               <button
                 onClick={() => {
                   const notStarted = MOCK.filter(
-                    (r) => r.status === "Not Started",
+                    (r) => r.status === "Not Started"
                   ).map((r) => r.id);
                   setAssignModal(notStarted.slice(0, 6));
                 }}
@@ -2560,7 +2613,7 @@ export function WorkQueue({
         <div className="flex-shrink-0 border-b border-border bg-card">
           <div className="flex items-end overflow-x-auto px-4 gap-0">
             {/* For Chart Abstractor: Only show My Work Queue and Rework tabs */}
-            {role === "abstractor" ? (
+            {effectiveRole === "abstractor" ? (
               <>
                 {/* My Work Queue tab */}
                 <button
@@ -2604,8 +2657,7 @@ export function WorkQueue({
                   }`}
                 >
                   {MOCK.filter(
-                    (r) =>
-                      r.status === "Rework" && r.assignedTo === currentUser,
+                    (r) => r.status === "Rework" && r.assignedTo === currentUser
                   ).length > 0 && (
                     <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
                       <span
@@ -2618,8 +2670,7 @@ export function WorkQueue({
                   )}
                   Rework
                   {MOCK.filter(
-                    (r) =>
-                      r.status === "Rework" && r.assignedTo === currentUser,
+                    (r) => r.status === "Rework" && r.assignedTo === currentUser
                   ).length > 0 && (
                     <span
                       className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
@@ -2632,7 +2683,7 @@ export function WorkQueue({
                         MOCK.filter(
                           (r) =>
                             r.status === "Rework" &&
-                            r.assignedTo === currentUser,
+                            r.assignedTo === currentUser
                         ).length
                       }
                     </span>
@@ -3056,7 +3107,7 @@ export function WorkQueue({
                           <button
                             onClick={() =>
                               setShowQaNote(
-                                showQaNote === row.id ? null : row.id,
+                                showQaNote === row.id ? null : row.id
                               )
                             }
                             title={row.qaNote}
@@ -3094,9 +3145,10 @@ export function WorkQueue({
                         onOpen={() => handleRowOpen(row)}
                         onOpenWorkspace={onStartAbstraction}
                         onOpenQAReview={onOpenQAReview}
+                        role={effectiveRole}
                       />
                     </td>
-                  </tr>,
+                  </tr>
                 );
 
                 if (showQaNote === row.id && row.qaNote) {
@@ -3123,7 +3175,7 @@ export function WorkQueue({
                           </button>
                         </div>
                       </td>
-                    </tr>,
+                    </tr>
                   );
                 }
 

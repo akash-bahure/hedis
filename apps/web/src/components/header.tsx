@@ -395,16 +395,22 @@ export function Header({
                 </button>
                 <div className="border-t border-border my-1" />
                 <button
-                  onClick={() => {
-                    setShowUserMenu(false);
-                    localStorage.removeItem("auth");
-                    navigate({ to: "/auth/login" });
-                  }}
-                  className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-accent transition-colors flex items-center gap-2"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Sign Out
-                </button>
+  onClick={() => {
+    setShowUserMenu(false);
+
+    // Remove stored auth data
+    localStorage.removeItem("userDetail");
+    localStorage.removeItem("role");
+    localStorage.removeItem("rememberMe");
+
+    // Redirect to login
+    navigate({ to: "/auth/login" });
+  }}
+  className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-accent transition-colors flex items-center gap-2"
+>
+  <LogOut className="w-4 h-4" />
+  Sign Out
+</button>
               </div>
             </>
           )}
