@@ -288,9 +288,11 @@ exports.getUserRoleById = async (req, res) => {
     );
 
     const permissions = permissionsResult.rows;
-    const isAdminRole = ["admin", "super admin"].includes(
-      role.name?.toLowerCase()
-    );
+    const isAdminRole = [
+      "admin",
+      "super admin",
+      "operations/program manager",
+    ].includes(role.name?.toLowerCase());
 
     // Group permissions
     const groupedPermissions = [];
