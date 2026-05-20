@@ -17,6 +17,7 @@ const MODULE_GROUP_MAPPING = {
   "Security & Compliance": "Administration",
   "AI Optimization": "Administration",
   Settings: "Administration",
+  "Measure Library": "Main",
 };
 
 // LOGIN
@@ -127,11 +128,15 @@ exports.login = async (req, res) => {
         "SELECT * FROM role_permissions WHERE role_id = $1",
         [user.user_role_id]
       );
-
       const permissions = permissionsResult.rows;
-      const isAdminRole = ["admin", "super admin"].includes(
-        user.role?.toLowerCase()
-      );
+
+      const isChartAbstractor = user.role?.toLowerCase() === "chart abstractor";
+      const isQualityAnalyst = user.role?.toLowerCase() === "quality analyst";
+      const isAdminRole = [
+        "admin",
+        "super admin",
+        "operations/program manager",
+      ].includes(user.role?.toLowerCase());
 
       // Group permissions
       const groupedPermissions = [];
@@ -141,6 +146,31 @@ exports.login = async (req, res) => {
         // Force all modules for Admin/Super Admin
         Object.keys(MODULE_GROUP_MAPPING).forEach((moduleName) => {
           const groupName = MODULE_GROUP_MAPPING[moduleName];
+          if (!groups[groupName]) {
+            groups[groupName] = { group: groupName, modules: [] };
+            groupedPermissions.push(groups[groupName]);
+          }
+          groups[groupName].modules.push({
+            id: null,
+            module: moduleName,
+            module_group: groupName,
+            can_view: true,
+            can_edit: true,
+            can_assign: true,
+            can_approve: true,
+            can_reject: true,
+            can_export: true,
+            can_override: true,
+          });
+        });
+      } else if (isChartAbstractor || isQualityAnalyst) {
+        // Force specific modules for Chart Abstractor and Quality Analyst system roles
+        const forcedModules = isChartAbstractor
+          ? ["Dashboard", "Work Queue", "Reports", "Settings"]
+          : ["Dashboard", "Work Queue"];
+
+        forcedModules.forEach((moduleName) => {
+          const groupName = MODULE_GROUP_MAPPING[moduleName] || "Main";
           if (!groups[groupName]) {
             groups[groupName] = { group: groupName, modules: [] };
             groupedPermissions.push(groups[groupName]);
