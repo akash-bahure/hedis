@@ -3139,6 +3139,8 @@ function ProjectAccessView() {
   const { mutate } = usePatchApiProjectsIdAccess({
     mutation: {
       onSuccess: () => {
+        toast.success("project access updated successfully");
+
         queryClient.invalidateQueries({
           queryKey: getApiProjectsAccessAllQueryKey(),
         });
@@ -3423,6 +3425,8 @@ function ShiftView() {
   const { mutate } = usePatchApiUsersShifts({
     mutation: {
       onSuccess: () => {
+        toast.success("shift updated successfully");
+
         queryClient.invalidateQueries({
           queryKey: getApiUsersShiftsQueryKey(),
         });

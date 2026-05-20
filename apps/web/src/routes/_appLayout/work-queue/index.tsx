@@ -11,7 +11,6 @@ function RouteComponent() {
   return (
     <div>
       <WorkQueue
-        role="abstractor"
         onStartAbstraction={() => navigate({ to: "/start-coding" })}
         onOpenPatient360={() => navigate({ to: "/patient-360" })}
         onOpenQAReview={() => navigate({ to: "/qa-review" })}

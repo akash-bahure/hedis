@@ -1,13 +1,13 @@
-import { useMemo } from 'react';
+import { useMemo } from "react";
 
-export type PermissionType = 
-  | 'can_view' 
-  | 'can_edit' 
-  | 'can_assign' 
-  | 'can_approve' 
-  | 'can_reject' 
-  | 'can_export' 
-  | 'can_override';
+export type PermissionType =
+  | "can_view"
+  | "can_edit"
+  | "can_assign"
+  | "can_approve"
+  | "can_reject"
+  | "can_export"
+  | "can_override";
 
 export interface ModulePermission {
   id: string;
@@ -41,12 +41,12 @@ export interface UserDetail {
 
 export function usePermissions() {
   const userDetail: UserDetail | null = useMemo(() => {
-    const rawData = localStorage.getItem('userDetail');
+    const rawData = localStorage.getItem("userDetail");
     if (!rawData) return null;
     try {
       return JSON.parse(rawData);
     } catch (e) {
-      console.error('Error parsing userDetail from localStorage', e);
+      console.error("Error parsing userDetail from localStorage", e);
       return null;
     }
   }, []);
@@ -56,16 +56,21 @@ export function usePermissions() {
   /**
    * Check if user has a specific permission for a module
    */
-  const hasPermission = (moduleName: string, permissionType: PermissionType): boolean => {
+  const hasPermission = (
+    moduleName: string,
+    permissionType: PermissionType
+  ): boolean => {
     // If super admin or superuser flag is set, grant all
-    if (userDetail?.is_super_administrator || userDetail?.is_superuser) return true;
+    if (userDetail?.is_super_administrator || userDetail?.is_superuser)
+      return true;
 
-    // Fail-safe: Check role name for Admin/Super Admin
     const roleName = userDetail?.user_role?.name?.toLowerCase();
-    if (roleName === 'admin' || roleName === 'super admin') return true;
+    const adminRoles = ["admin", "super admin", "operations/program manager"];
+    if (roleName && adminRoles.includes(roleName))
+      return true;
 
     for (const group of permissions) {
-      const modulePerm = group.modules.find(m => m.module === moduleName);
+      const modulePerm = group.modules.find((m) => m.module === moduleName);
       if (modulePerm) {
         return !!modulePerm[permissionType];
       }
@@ -76,12 +81,14 @@ export function usePermissions() {
   /**
    * Shorthand to check if user can view a module
    */
-  const canView = (moduleName: string): boolean => hasPermission(moduleName, 'can_view');
+  const canView = (moduleName: string): boolean =>
+    hasPermission(moduleName, "can_view");
 
   /**
    * Shorthand to check if user can edit/create in a module
    */
-  const canEdit = (moduleName: string): boolean => hasPermission(moduleName, 'can_edit');
+  const canEdit = (moduleName: string): boolean =>
+    hasPermission(moduleName, "can_edit");
 
   return {
     userDetail,
@@ -89,6 +96,8 @@ export function usePermissions() {
     hasPermission,
     canView,
     canEdit,
-    isSuperAdmin: !!(userDetail?.is_super_administrator || userDetail?.is_superuser)
+    isSuperAdmin: !!(
+      userDetail?.is_super_administrator || userDetail?.is_superuser
+    ),
   };
 }
