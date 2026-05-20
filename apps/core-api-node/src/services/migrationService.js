@@ -145,7 +145,8 @@ async function runMigrations(client, schema) {
       is_staff BOOLEAN DEFAULT FALSE,
       is_active BOOLEAN DEFAULT TRUE,
       last_password_changed DATE,
-      employee_id VARCHAR(100),
+      employee_id VARCHAR(100) UNIQUE,
+      member_since DATE DEFAULT CURRENT_DATE,
       is_super_administrator BOOLEAN DEFAULT FALSE,
       project_access UUID[] DEFAULT ARRAY[]::UUID[],
       password TEXT, -- Adding for future auth if needed
@@ -195,6 +196,8 @@ async function runMigrations(client, schema) {
         ADD COLUMN IF NOT EXISTS credentials VARCHAR(255),
         ADD COLUMN IF NOT EXISTS mobile_phone VARCHAR(20),
         ADD COLUMN IF NOT EXISTS location VARCHAR(255),
+        ADD COLUMN IF NOT EXISTS employee_id VARCHAR(100),
+        ADD COLUMN IF NOT EXISTS member_since DATE DEFAULT CURRENT_DATE,
         ADD COLUMN IF NOT EXISTS preferences JSONB DEFAULT '{}'::jsonb,
         ADD COLUMN IF NOT EXISTS certifications JSONB DEFAULT '[]'::jsonb,
         ADD COLUMN IF NOT EXISTS notifications JSONB DEFAULT '{}'::jsonb,

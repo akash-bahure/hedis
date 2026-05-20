@@ -21,6 +21,7 @@ import {
   FolderKanban,
 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
+import { usePermissions } from "@/hooks/usePermissions";
 
 /* ═══════════════════════════════════════════
    TYPES
@@ -379,10 +380,25 @@ export function Sidebar({
 }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [showRolePicker, setShowRolePicker] = useState(false);
+  const { canView } = usePermissions();
 
   const cfg = ROLE_CONFIG[role];
-  const visiblePrimary = PRIMARY_NAV.filter((n) => n.roles.includes(role));
-  const visibleSettings = SETTINGS_NAV.filter((n) => n.roles.includes(role));
+
+  // Map sidebar labels to backend module names if they differ
+  const SIDEBAR_TO_BACKEND: Record<string, string> = {
+    "Audit & Sampling": "Auditing",
+    "Admin": "Users & Roles",
+    "System Logs": "Security & Compliance",
+    "Measure Library": "Settings", 
+  };
+
+  const checkAccess = (item: NavItem) => {
+    const backendModule = SIDEBAR_TO_BACKEND[item.label] || item.label;
+    return canView(backendModule);
+  };
+
+  const visiblePrimary = PRIMARY_NAV.filter((n) => checkAccess(n));
+  const visibleSettings = SETTINGS_NAV.filter((n) => checkAccess(n));
 
   const navigate = useNavigate();
 

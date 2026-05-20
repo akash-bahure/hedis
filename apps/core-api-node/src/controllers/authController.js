@@ -3,150 +3,30 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { sendResetEmail } = require("../services/mail.service");
 
-// REGISTER
-exports.register = async (req, res) => {
-  try {
-
-    const {
-      full_name,
-      email,
-      password,
-      user_role_id
-    } = req.body;
-
-   // Validate role from DB
-   let finalRoleId = user_role_id;
-
-   // If role is passed
-   if (finalRoleId) {
-
-  const roleResult = await req.db.query(
-    `
-    SELECT id, name
-    FROM user_roles
-    WHERE id = $1
-    AND active = true
-    LIMIT 1
-    `,
-    [finalRoleId]
-  );
-
-  if (roleResult.rows.length === 0) {
-    return res.status(400).json({
-      message: "Invalid role selected"
-    });
-  }
-
-  roleData = roleResult.rows[0];
-
-} else {
-
-  // Default Role
-    const defaultRoleResult = await req.db.query(
-      `
-      SELECT id, name
-      FROM user_roles
-      WHERE name = 'Chart Abstractor'
-      AND system_role = true
-      AND active = true
-      LIMIT 1
-      `
-    );
-  
-    if (defaultRoleResult.rows.length === 0) {
-      return res.status(404).json({
-        message: "Default role not found"
-      });
-    }
-  
-    roleData = defaultRoleResult.rows[0];
-    finalRoleId = roleData.id;
-  }
-
-    // Check if user exists
-    const userCheck = await req.db.query(
-      "SELECT * FROM users WHERE email = $1",
-      [email]
-    );
-
-    if (userCheck.rows.length > 0) {
-      return res.status(400).json({
-        message: "User already exists"
-      });
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(
-      password,
-      10
-    );
-
-    // Insert user
-    const result = await req.db.query(
-      `
-      INSERT INTO users (
-        full_name,
-        email,
-        password,
-        user_role_id,
-        user_status,
-        is_active
-      )
-
-      VALUES (
-        $1,
-        $2,
-        $3,
-        $4,
-        'Active',
-        true
-      )
-
-      RETURNING *
-      `,
-      [
-        full_name,
-        email,
-        hashedPassword,
-        finalRoleId,
-      ]
-    );
-
-    const user = result.rows[0];
-
-    res.status(201).json({
-      message: "User registered successfully",
-
-      user: {
-        id: user.id,
-        full_name: user.full_name,
-        email: user.email,
-        role: roleData.name,
-        user_role_id: finalRoleId,
-        user_status: user.user_status,
-        is_active: user.is_active
-      }
-    });
-
-  } catch (error) {
-
-    res.status(500).json({
-      error: error.message
-    });
-
-  }
+const MODULE_GROUP_MAPPING = {
+  "Patients & Charts": "Main",
+  Projects: "Main",
+  Dashboard: "Main",
+  "Work Queue": "Main",
+  Coding: "Operations",
+  Auditing: "Operations",
+  Exceptions: "Operations",
+  Reports: "Insight",
+  Analytics: "Insight",
+  "Users & Roles": "Administration",
+  "Security & Compliance": "Administration",
+  "AI Optimization": "Administration",
+  Settings: "Administration",
 };
 
 // LOGIN
 exports.login = async (req, res) => {
-
   try {
-
     const { email, password } = req.body;
 
     // Get user
     const result = await req.db.query(
-    `
+      `
     SELECT
     u.id,
     u.full_name,
@@ -188,59 +68,137 @@ exports.login = async (req, res) => {
     u.password,
 
     ur.name AS role,
-    ur.system_role
+    ur.description AS role_description,
+    ur.active AS role_active,
+    ur.system_role,
+
+    t.name AS organization_name
 
     FROM users u
-
-    LEFT JOIN user_roles ur
-    ON u.user_role_id = ur.id
-
+    LEFT JOIN user_roles ur ON u.user_role_id = ur.id
+    LEFT JOIN tenants t ON u.organization_id = t.id
     WHERE u.email = $1
   `,
-  [email]
-);
+      [email]
+    );
 
     if (result.rows.length === 0) {
-
       return res.status(400).json({
         message: "Invalid credentials",
       });
-
     }
 
     const user = result.rows[0];
 
     // Check if user is active
     if (!user.is_active) {
-
       return res.status(403).json({
         message: "User account is inactive",
       });
-
     }
 
     // Check password exists
     if (!user.password) {
-
       return res.status(400).json({
         message: "Password not set for this user",
       });
-
     }
 
     // Compare password
-    const isMatch = await bcrypt.compare(
-      password,
-      user.password
-    );
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-
       return res.status(400).json({
         message: "Invalid credentials",
       });
-
     }
+
+    // Fetch Role & Permissions details
+    let userRole = null;
+    if (user.user_role_id) {
+      // Get users count for this role
+      const userCountResult = await req.db.query(
+        "SELECT COUNT(*)::int FROM users WHERE user_role_id = $1",
+        [user.user_role_id]
+      );
+
+      // Get permissions
+      const permissionsResult = await req.db.query(
+        "SELECT * FROM role_permissions WHERE role_id = $1",
+        [user.user_role_id]
+      );
+
+      const permissions = permissionsResult.rows;
+      const isAdminRole = ["admin", "super admin"].includes(
+        user.role?.toLowerCase()
+      );
+
+      // Group permissions
+      const groupedPermissions = [];
+      const groups = {};
+
+      if (isAdminRole) {
+        // Force all modules for Admin/Super Admin
+        Object.keys(MODULE_GROUP_MAPPING).forEach((moduleName) => {
+          const groupName = MODULE_GROUP_MAPPING[moduleName];
+          if (!groups[groupName]) {
+            groups[groupName] = { group: groupName, modules: [] };
+            groupedPermissions.push(groups[groupName]);
+          }
+          groups[groupName].modules.push({
+            id: null,
+            module: moduleName,
+            module_group: groupName,
+            can_view: true,
+            can_edit: true,
+            can_assign: true,
+            can_approve: true,
+            can_reject: true,
+            can_export: true,
+            can_override: true,
+          });
+        });
+      } else {
+        permissions.forEach((p) => {
+          const groupName = MODULE_GROUP_MAPPING[p.module] || "Other";
+          if (!groups[groupName]) {
+            groups[groupName] = { group: groupName, modules: [] };
+            groupedPermissions.push(groups[groupName]);
+          }
+          groups[groupName].modules.push({
+            id: p.id,
+            module: p.module,
+            module_group: groupName,
+            can_view: p.can_view,
+            can_edit: p.can_edit,
+            can_assign: p.can_assign,
+            can_approve: p.can_approve,
+            can_reject: p.can_reject,
+            can_export: p.can_export,
+            can_override: p.can_override,
+          });
+        });
+      }
+
+      userRole = {
+        id: user.user_role_id,
+        name: user.role,
+        description: user.role_description || "",
+        active: user.role_active,
+        users: userCountResult.rows[0].count,
+        system_role: user.system_role,
+        permissions_count: permissions.length,
+        permissions: groupedPermissions,
+      };
+    }
+
+    // Fetch Organization details
+    const organization = user.organization_id
+      ? {
+          id: user.organization_id,
+          name: user.organization_name || "",
+        }
+      : null;
 
     // Update last login
     await req.db.query(
@@ -257,48 +215,42 @@ exports.login = async (req, res) => {
       {
         id: user.id,
         email: user.email,
-        role: user.role
+        role: user.role,
       },
-
       process.env.JWT_SECRET,
-
       {
         expiresIn: "1d",
       }
     );
 
-    // Remove sensitive fields
-   const {
-    password: _password,
-    reset_token,
-    reset_token_expiry,
-    ...safeUser
-  } = user;
+    // Remove sensitive and redundant fields
+    const {
+      password: _password,
+      reset_token,
+      reset_token_expiry,
+      role: _role,
+      role_description: _role_desc,
+      role_active: _role_active,
+      system_role: _sys_role,
+      organization_name: _org_name,
+      ...safeUser
+    } = user;
 
     res.status(200).json({
-    message: "Login successful",
-  
-    token,
-  
-    user: {
-      ...safeUser,
-  
-      role: user.role,
-  
-      system_role: user.system_role,
-  
-      last_login: new Date()
-    }
-  });
-
+      message: "Login successful",
+      token,
+      user: {
+        ...safeUser,
+        organization,
+        user_role: userRole,
+        last_login: new Date(),
+      },
+    });
   } catch (error) {
-
     console.error("Login Error:", error);
-
     res.status(500).json({
       error: error.message,
     });
-
   }
 };
 // SET PASSWORD (INVITE FLOW)
@@ -388,7 +340,8 @@ exports.forgotPassword = async (req, res) => {
     if (userResult.rows.length === 0) {
       // For security, don't reveal if user exists or not
       return res.json({
-        message: "If an account exists with this email, a reset link has been sent.",
+        message:
+          "If an account exists with this email, a reset link has been sent.",
       });
     }
 
@@ -408,7 +361,8 @@ exports.forgotPassword = async (req, res) => {
     await sendResetEmail(user.email, user.full_name, token);
 
     res.json({
-      message: "If an account exists with this email, a reset link has been sent.",
+      message:
+        "If an account exists with this email, a reset link has been sent.",
     });
   } catch (error) {
     console.error("Forgot Password Error:", error);
@@ -461,10 +415,11 @@ exports.resetPassword = async (req, res) => {
       [hashedPassword, user.id]
     );
 
-    res.json({ message: "Password has been reset successfully. You can now log in." });
+    res.json({
+      message: "Password has been reset successfully. You can now log in.",
+    });
   } catch (error) {
     console.error("Reset Password Error:", error);
     res.status(500).json({ error: error.message });
   }
 };
-

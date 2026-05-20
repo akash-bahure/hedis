@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { ElementType } from "react";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   FlaskConical,
   BarChart3,
@@ -721,6 +722,7 @@ function SampleSelectionTab() {
   const [members, setMembers] = useState(sampleMembers);
   const [generated, setGenerated] = useState(true);
   const [showConfirm, setShowConfirm] = useState(false);
+  const { canEdit, hasPermission } = usePermissions();
 
   const selected = members.filter((m) => m.selected);
   const denominator = members.filter((m) => m.eligible).length;
@@ -864,12 +866,14 @@ function SampleSelectionTab() {
                 <span>100%</span>
               </div>
             </div>
-            <button
-              onClick={() => setGenerated(true)}
-              className="btn-primary text-xs px-4 py-2.5 whitespace-nowrap flex-shrink-0"
-            >
-              <Shuffle className="w-3.5 h-3.5" /> Generate Sample
-            </button>
+            {canEdit("Auditing") && (
+              <button
+                onClick={() => setGenerated(true)}
+                className="btn-primary text-xs px-4 py-2.5 whitespace-nowrap flex-shrink-0"
+              >
+                <Shuffle className="w-3.5 h-3.5" /> Generate Sample
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -1064,16 +1068,20 @@ function SampleSelectionTab() {
               )}
             </div>
             <div className="flex gap-2">
-              <button className="btn-outline text-xs px-3 py-1.5">
-                <FileDown className="w-3.5 h-3.5" /> Export Sample
-              </button>
-              <button
-                onClick={() => setShowConfirm(true)}
-                disabled={selected.length < required}
-                className="btn-primary text-xs px-3 py-1.5 disabled:opacity-50"
-              >
-                <ShieldCheck className="w-3.5 h-3.5" /> Confirm Sample
-              </button>
+              {hasPermission("Auditing", "export") && (
+                <button className="btn-outline text-xs px-3 py-1.5">
+                  <FileDown className="w-3.5 h-3.5" /> Export Sample
+                </button>
+              )}
+              {canEdit("Auditing") && (
+                <button
+                  onClick={() => setShowConfirm(true)}
+                  disabled={selected.length < required}
+                  className="btn-primary text-xs px-3 py-1.5 disabled:opacity-50"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" /> Confirm Sample
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -1150,6 +1158,7 @@ function SampleSelectionTab() {
 ───────────────────────────────────────────────────────────── */
 function OversamplingTab() {
   const [showAddReplacement, setShowAddReplacement] = useState(false);
+  const { canEdit } = usePermissions();
   const [form, setForm] = useState({
     originalId: "",
     reason: "",

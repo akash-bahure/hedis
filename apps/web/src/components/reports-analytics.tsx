@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   BarChart,
   Bar,
@@ -465,6 +466,7 @@ export function ReportsAnalytics() {
   const [measureFilter, setMeasureFilter] = useState("all");
   const [gapView, setGapView] = useState<"weekly" | "monthly">("monthly");
   const [exportOpen, setExportOpen] = useState(false);
+  const { hasPermission } = usePermissions();
 
   const gapData = gapView === "monthly" ? GAP_MONTHLY : GAP_WEEKLY;
 
@@ -552,36 +554,38 @@ export function ReportsAnalytics() {
             <RefreshCw className="w-3.5 h-3.5" />
             Refresh
           </button>
-
+          
           {/* Export */}
-          <div className="relative">
-            <button
-              onClick={() => setExportOpen((v) => !v)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
-            >
-              <Download className="w-3.5 h-3.5" />
-              Export
-              <ChevronDown className="w-3 h-3" />
-            </button>
-            {exportOpen && (
-              <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-lg py-1 min-w-[130px] z-30">
-                {[
-                  ["csv", "Export CSV"],
-                  ["pdf", "Export PDF"],
-                  ["xlsx", "Export XLSX"],
-                ].map(([f, l]) => (
-                  <button
-                    key={f}
-                    onClick={() => setExportOpen(false)}
-                    className="w-full text-left px-3 py-1.5 text-[11px] text-foreground hover:bg-muted transition-colors flex items-center gap-2"
-                  >
-                    <FileText className="w-3.5 h-3.5 text-muted-foreground" />
-                    {l}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          {hasPermission("Reports", "export") && (
+            <div className="relative">
+              <button
+                onClick={() => setExportOpen((v) => !v)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Export
+                <ChevronDown className="w-3 h-3" />
+              </button>
+              {exportOpen && (
+                <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-lg py-1 min-w-[130px] z-30">
+                  {[
+                    ["csv", "Export CSV"],
+                    ["pdf", "Export PDF"],
+                    ["xlsx", "Export XLSX"],
+                  ].map(([f, l]) => (
+                    <button
+                      key={f}
+                      onClick={() => setExportOpen(false)}
+                      className="w-full text-left px-3 py-1.5 text-[11px] text-foreground hover:bg-muted transition-colors flex items-center gap-2"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-muted-foreground" />
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Last updated strip */}
