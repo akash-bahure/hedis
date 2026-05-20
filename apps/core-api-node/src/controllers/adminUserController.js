@@ -174,9 +174,9 @@ exports.createTenantAdmin = async (req, res) => {
       });
     }
 
-    const roleName = role || "Org Admin";
+    const roleName = "Admin";
 
-    const roleResult = await client.query(
+    let roleResult = await client.query(
       `
       SELECT id, name
       FROM user_roles
@@ -187,72 +187,64 @@ exports.createTenantAdmin = async (req, res) => {
       [roleName]
     );
 
+    let roleId;
+
     if (roleResult.rows.length === 0) {
-      return res.status(404).json({
-        message: "Role not found",
-      });
+      if (roleName === "Admin") {
+        // Auto-create Admin role if it doesn't exist
+        const newRoleResult = await client.query(
+          `
+          INSERT INTO user_roles (name, description, system_role, active)
+          VALUES ($1, $2, $3, $4)
+          RETURNING id
+          `,
+          ["Admin", "Tenant Administrator Role", true, true]
+        );
+        roleId = newRoleResult.rows[0].id;
+      } else {
+        return res.status(404).json({
+          message: `Role '${roleName}' not found`,
+        });
+      }
+    } else {
+      roleId = roleResult.rows[0].id;
     }
 
-    const roleId = roleResult.rows[0].id;
-
-    // const result = await client.query(
-    //   `
-    //   INSERT INTO users
-    //   (
-    //     full_name,
-    //     email
-    //     role_id
-    //   )
-    //   VALUES ($1, $2)
-    //   RETURNING
-    //     id,
-    //     full_name,
-    //     email,
-    //     user_role_id,
-    //     is_active,
-    //     created_at
-    //   `,
-    //   [name, email]
-    // );
     const result = await client.query(
-  `
-  INSERT INTO users
-  (
-    full_name,
-    email,
-    user_role_id,
-    is_active,
-    user_status,
-    invite_token,
-    invite_token_expiry
-  )
-
-  VALUES
-  (
-    $1,
-    $2,
-    $3,
-    false,
-    'Pending',
-    $4,
-    NOW() + INTERVAL '24 hours'
-  )
-
-  RETURNING
-    id,
-    full_name,
-    email,
-    user_role_id,
-    is_active,
-    created_at
-  `,
-  [
-    name,
-    email,
-    roleId,
-    inviteToken
-  ]
-);
+      `
+      INSERT INTO users
+      (
+        full_name,
+        email,
+        user_role_id,
+        organization_id,
+        is_active,
+        user_status,
+        invite_token,
+        invite_token_expiry
+      )
+      VALUES
+      (
+        $1,
+        $2,
+        $3,
+        $4,
+        false,
+        'Pending',
+        $5,
+        NOW() + INTERVAL '24 hours'
+      )
+      RETURNING
+        id,
+        full_name,
+        email,
+        user_role_id,
+        organization_id,
+        is_active,
+        created_at
+      `,
+      [name, email, roleId, org_id, inviteToken]
+    );
     const createdUser = result.rows[0];
 
     try {

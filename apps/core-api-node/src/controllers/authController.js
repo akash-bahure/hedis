@@ -271,6 +271,7 @@ exports.login = async (req, res) => {
       token,
       user: {
         ...safeUser,
+        role: user.role,
         organization,
         user_role: userRole,
         last_login: new Date(),

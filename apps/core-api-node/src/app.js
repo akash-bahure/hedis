@@ -90,6 +90,7 @@ app.use("/api/departments", require("./routes/department.routes"));
 // app.use("/api/user-roles", require("./routes/userRoleRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/profile", require("./routes/profile.routes"));
+app.use("/api/patients", require("./routes/patient.routes"));
 
 module.exports = app;
 
