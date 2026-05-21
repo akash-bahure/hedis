@@ -165,6 +165,13 @@ async function runMigrations(client, schema) {
   INSERT INTO ${schema}.user_roles 
     (name, description, level, system_role, active)
   VALUES
+   (
+      'Admin',
+      'Tenant Administrator Role',
+      0,
+      TRUE,
+      TRUE
+    ),
     (
       'Operations/Program Manager',
       'Default System Role',
@@ -346,8 +353,12 @@ async function runMigrations(client, schema) {
   project_id UUID REFERENCES ${schema}.projects(id),
   client_id UUID REFERENCES ${schema}.clients(id),
 
+
   -- Assignment
   assigned_to UUID REFERENCES ${schema}.users(id),
+  abstractor_id UUID REFERENCES ${schema}.users(id),
+  qa_id UUID REFERENCES ${schema}.users(id),
+
 
   -- Metadata
   last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
