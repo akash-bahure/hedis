@@ -374,6 +374,120 @@ async function runMigrations(client, schema) {
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );`);
+
+  await client.query(`
+  CREATE TABLE IF NOT EXISTS ${schema}.manual_chart_abstractions (
+
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  -- RELATIONSHIPS
+  patient_id UUID NOT NULL
+  REFERENCES ${schema}.patients(id)
+  ON DELETE CASCADE,
+
+  patient_chart_id UUID NOT NULL
+  REFERENCES ${schema}.patient_charts(id)
+  ON DELETE CASCADE,
+
+  created_by UUID
+  REFERENCES ${schema}.users(id),
+
+  assigned_qa UUID
+  REFERENCES ${schema}.users(id),
+
+  -- SERVICE DETAILS
+  service_date DATE,
+
+  screening_type VARCHAR(255),
+
+  -- EVIDENCE TYPE
+  evidence_type VARCHAR(255)
+  CHECK (
+    evidence_type IN (
+      'Office Visit BP Reading',
+      'Specialist Consult BP Reading',
+      'Telehealth Visit BP Reading',
+      'Home BP Monitoring Record',
+      'Annual Wellness Visit',
+      'Emergency Dept. Reading',
+      'Urgent Care Reading'
+    )
+  ),
+
+  -- BP VALUES
+  systolic INTEGER,
+
+  diastolic INTEGER,
+
+  -- CPT CODE
+  cpt_code VARCHAR(50)
+  CHECK (
+    cpt_code IN (
+      '99211',
+      '99212',
+      '99213',
+      '99214',
+      '99215',
+      '99397',
+      'G0438',
+      'G0439'
+    )
+  ),
+
+  -- ICD-10
+  icd_10_code VARCHAR(50)
+  CHECK (
+    icd_10_code IN (
+      'I10',
+      'I11.9',
+      'I12.9',
+      'N18.3',
+      'E11.9'
+    )
+  ),
+
+  -- SOURCE TYPE
+  source_type VARCHAR(255)
+  CHECK (
+    source_type IN (
+      'Electronic Health Record (EHR)',
+      'Physician Office Chart Note',
+      'Hospital Medical Record',
+      'Specialist Consultation Note',
+      'Telehealth Encounter Record',
+      'Home BP Monitoring Report',
+      'Patient-Reported Form'
+    )
+  ),
+
+  evidence_source TEXT,
+
+  uploaded_document JSONB,
+
+  notes TEXT,
+
+  -- WORKFLOW
+  abstraction_status VARCHAR(100)
+  DEFAULT 'Pending QA',
+
+  qa_status VARCHAR(100)
+  DEFAULT 'Pending',
+
+  submitted_to_qa_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  reviewed_at TIMESTAMP,
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+`);
+
+  await client.query(`
+  ALTER TABLE ${schema}.patient_charts
+  ADD COLUMN IF NOT EXISTS abstraction_status
+  VARCHAR(100) DEFAULT 'Pending';
+`);
 }
 
 module.exports = { runMigrations };
