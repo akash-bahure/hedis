@@ -1,385 +1,10 @@
-// require("dotenv").config();
-
-// const fs = require("fs");
-// const path = require("path");
-// const pool = require("../../src/config/db");
-
-// /*
-// ===========================================
-// LOAD MOCK DATA
-// ===========================================
-// */
-
-// const mockDataPath = path.join(__dirname, "mockData.json");
-
-// const mockApiResponse = JSON.parse(
-//   fs.readFileSync(mockDataPath, "utf-8")
-// );
-
-// /*
-// ===========================================
-// TENANT CONFIG
-// ===========================================
-// */
-
-// const tenant = {
-//   schema_name: "acme15",
-// };
-
-// /*
-// ===========================================
-// MAIN SYNC FUNCTION
-// ===========================================
-// */
-
-// async function syncMedicalCodingData(tenant, data) {
-//   const client = await pool.connect();
-
-//   try {
-//     console.log("\nSCHEMA:", tenant.schema_name);
-
-//     // 1. CREATE SCHEMA (IMPORTANT FIX)
-//     await client.query(`
-//       CREATE SCHEMA IF NOT EXISTS ${tenant.schema_name}
-//     `);
-
-//     // 2. SET SCHEMA CONTEXT
-//     await client.query(`
-//       SET search_path TO ${tenant.schema_name}
-//     `);
-
-//     /*
-// ===========================================
-// CREATE TABLES IF NOT EXISTS
-// ===========================================
-// */
-
-// await client.query(`
-// CREATE TABLE IF NOT EXISTS ${tenant.schema_name}.projects (
-//   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-//   project_name VARCHAR(255),
-//   project_id VARCHAR(100) UNIQUE,
-//   priority VARCHAR(50),
-//   status VARCHAR(50),
-//   project_type VARCHAR(100),
-//   start_date DATE,
-//   end_date DATE,
-//   created_at TIMESTAMP DEFAULT NOW(),
-//   updated_at TIMESTAMP DEFAULT NOW()
-// );
-// `);
-
-// await client.query(`
-// CREATE TABLE IF NOT EXISTS ${tenant.schema_name}.patients (
-//   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-
-//   patient_id VARCHAR(100) UNIQUE,
-
-//   external_patient_id UUID UNIQUE,
-
-//   external_project_id UUID,
-
-//   first_name VARCHAR(255),
-
-//   last_name VARCHAR(255),
-
-//   dob DATE,
-
-//   gender VARCHAR(50),
-
-//   measure VARCHAR(255),
-
-//   plan VARCHAR(255),
-
-//   priority VARCHAR(50),
-
-//   stage VARCHAR(100),
-
-//   due_date TIMESTAMP,
-
-//   project_id UUID REFERENCES ${tenant.schema_name}.projects(id),
-
-//   last_updated_at TIMESTAMP DEFAULT NOW(),
-
-//   created_at TIMESTAMP DEFAULT NOW(),
-
-//   updated_at TIMESTAMP DEFAULT NOW()
-// );
-// `);
-
-// await client.query(`
-// CREATE TABLE IF NOT EXISTS ${tenant.schema_name}.patient_charts (
-//   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-
-//   patient_id UUID REFERENCES ${tenant.schema_name}.patients(id),
-
-//   external_chart_id UUID UNIQUE,
-
-//   chart_id VARCHAR(100),
-
-//   status VARCHAR(100),
-
-//   encounter_type VARCHAR(100),
-
-//   specialty VARCHAR(255),
-
-//   facility VARCHAR(255),
-
-//   encounter_date DATE,
-
-//   admission_date DATE,
-
-//   discharge_date DATE,
-
-//   priority VARCHAR(50),
-
-//   chart_document JSONB,
-
-//   coding_notes TEXT,
-
-//   sla_deadline TIMESTAMP,
-
-//   created_at TIMESTAMP DEFAULT NOW(),
-
-//   updated_at TIMESTAMP DEFAULT NOW()
-// );
-// `);
-
-//     const check = await client.query(`
-//   SELECT to_regclass('${tenant.schema_name}.projects') AS table_exists
-// `);
-
-//     console.log("PROJECTS TABLE CHECK:", check.rows[0]);
-
-//     if (!check.rows[0].table_exists) {
-//       throw new Error(
-//         `Tables NOT found in schema ${tenant.schema_name}. Run migrations first.`
-//       );
-//     }
-
-//     /*
-//     ===========================================
-//     PROJECT LOOP
-//     ===========================================
-//     */
-
-//     for (const project of data) {
-//       const {
-//         id: externalProjectId,
-//         project_id,
-//         name,
-//         status,
-//         project_type,
-//         priority,
-//         start_date,
-//         end_date,
-//         measure_set,
-//         patients = [],
-//       } = project;
-
-//       console.log("\n================ PROJECT ================");
-//       console.log({ project_id, name, patients: patients.length });
-
-//       /*
-//       UPSERT PROJECT
-//       */
-//       const projectResult = await client.query(
-//         `
-//         INSERT INTO projects (
-//           project_name,
-//           project_id,
-//           priority,
-//           status,
-//           project_type,
-//           start_date,
-//           end_date
-//         )
-//         VALUES ($1,$2,$3,$4,$5,$6,$7)
-//         ON CONFLICT (project_id)
-//         DO UPDATE SET
-//           project_name = EXCLUDED.project_name,
-//           priority = EXCLUDED.priority,
-//           status = EXCLUDED.status,
-//           updated_at = NOW()
-//         RETURNING id
-//         `,
-//         [name, project_id, priority, status, project_type, start_date, end_date]
-//       );
-
-//       const internalProjectId = projectResult.rows[0].id;
-
-//       /*
-//       ===========================================
-//       PATIENT LOOP
-//       ===========================================
-//       */
-
-//       for (const patient of patients) {
-//         const {
-//           id: externalPatientId,
-//           first_name,
-//           last_name,
-//           dob,
-//           gender,
-//           payer_type,
-//           discharge_date,
-//           charts = [],
-//         } = patient;
-
-//         console.log("\n---- PATIENT ----");
-//         console.log({ first_name, last_name, charts: charts.length });
-
-//         /*
-//         UPSERT PATIENT
-//         */
-//         const patientResult = await client.query(
-//           `
-//           INSERT INTO patients (
-//             patient_id,
-//             external_patient_id,
-//             external_project_id,
-//             first_name,
-//             last_name,
-//             dob,
-//             gender,
-//             measure,
-//             plan,
-//             priority,
-//             stage,
-//             due_date,
-//             project_id,
-//             last_updated_at
-//           )
-//           VALUES (
-//             $1,$2,$3,$4,$5,$6,$7,
-//             $8,$9,$10,$11,$12,$13,NOW()
-//           )
-//           ON CONFLICT (external_patient_id)
-//           DO UPDATE SET
-//             priority = EXCLUDED.priority,
-//             stage = EXCLUDED.stage,
-//             updated_at = NOW()
-//           RETURNING id
-//           `,
-//           [
-//             `PAT-${externalPatientId.slice(0, 6)}`,
-//             externalPatientId,
-//             externalProjectId,
-//             first_name,
-//             last_name,
-//             dob,
-//             gender,
-//             measure_set || "",
-//             payer_type,
-//             priority,
-//             "Unassigned",
-//             discharge_date,
-//             internalProjectId,
-//           ]
-//         );
-
-//         const internalPatientId = patientResult.rows[0].id;
-
-//         /*
-//         ===========================================
-//         CHART LOOP
-//         ===========================================
-//         */
-
-//         if (!charts.length) {
-//           console.log("   No charts found");
-//           continue;
-//         }
-
-//         for (const chart of charts) {
-//           const {
-//             id: externalChartId,
-//             chart_id,
-//             status,
-//             encounter_type,
-//             speciality,
-//             facility,
-//             encounter_date,
-//             admission_date,
-//             discharge_date,
-//             priority: chartPriority,
-//             chart_document = [],
-//             coding_notes,
-//             sla_deadline,
-//           } = chart;
-
-//           console.log("   -> CHART:", chart_id);
-
-//           await client.query(
-//             `
-//             INSERT INTO patient_charts (
-//               patient_id,
-//               external_chart_id,
-//               chart_id,
-//               status,
-//               encounter_type,
-//               specialty,
-//               facility,
-//               encounter_date,
-//               admission_date,
-//               discharge_date,
-//               priority,
-//               chart_document,
-//               coding_notes,
-//               sla_deadline
-//             )
-//             VALUES (
-//               $1,$2,$3,$4,$5,$6,$7,
-//               $8,$9,$10,$11,$12,$13,$14
-//             )
-//             ON CONFLICT (external_chart_id)
-//             DO UPDATE SET
-//               status = EXCLUDED.status,
-//               updated_at = NOW()
-//             `,
-//             [
-//               internalPatientId,
-//               externalChartId,
-//               chart_id,
-//               status,
-//               encounter_type,
-//               speciality,
-//               facility,
-//               encounter_date,
-//               admission_date,
-//               discharge_date,
-//               chartPriority,
-//               JSON.stringify(chart_document),
-//               coding_notes,
-//               sla_deadline,
-//             ]
-//           );
-//         }
-//       }
-//     }
-
-//     console.log("\n==============================");
-//     console.log("SYNC COMPLETED SUCCESSFULLY");
-//     console.log("==============================");
-//   } catch (err) {
-//     console.error("\nSYNC ERROR:", err.message || err);
-//   } finally {
-//     client.release();
-//     process.exit();
-//   }
-// }
-
-// /*
-// RUN SCRIPT
-// */
-// syncMedicalCodingData(tenant, mockApiResponse);
-
 require("dotenv").config();
 
 const fs = require("fs");
 const path = require("path");
 
 const pool = require("../../src/config/db");
+const { runMigrations } = require("../../src/services/migrationService");
 
 /*
 ===========================================
@@ -396,15 +21,7 @@ const mockApiResponse = JSON.parse(
   fs.readFileSync(mockDataPath, "utf-8")
 );
 
-/*
-===========================================
-TENANT CONFIG
-===========================================
-*/
-
-const tenant = {
-  schema_name: "acme15",
-};
+// Dynamic tenant config is loaded from the database at the end of this script
 
 /*
 ===========================================
@@ -438,13 +55,24 @@ async function syncMedicalCodingData(
 
     /*
     ===========================================
-    SET SEARCH PATH
+    SET SEARCH PATH & RUN MIGRATIONS
     ===========================================
     */
 
     await client.query(`
       SET search_path TO ${tenant.schema_name}
     `);
+
+    // Ensure all tables are created and up-to-date in this schema
+    try {
+      await runMigrations(client, tenant.schema_name);
+    } catch (migErr) {
+      console.log(`[SELF-HEALING] Migration failed for schema ${tenant.schema_name}: ${migErr.message || migErr}. Recreating schema...`);
+      await client.query(`DROP SCHEMA IF EXISTS ${tenant.schema_name} CASCADE`);
+      await client.query(`CREATE SCHEMA ${tenant.schema_name}`);
+      await client.query(`SET search_path TO ${tenant.schema_name}`);
+      await runMigrations(client, tenant.schema_name);
+    }
 
     /*
     ===========================================
@@ -515,7 +143,7 @@ async function syncMedicalCodingData(
       const projectResult =
         await client.query(
           `
-          INSERT INTO projects (
+          INSERT INTO ${tenant.schema_name}.projects (
             project_name,
             project_id,
             priority,
@@ -601,7 +229,7 @@ async function syncMedicalCodingData(
         const patientResult =
           await client.query(
             `
-            INSERT INTO patients (
+            INSERT INTO ${tenant.schema_name}.patients (
               patient_id,
               external_patient_id,
               external_project_id,
@@ -737,7 +365,7 @@ async function syncMedicalCodingData(
 
   await client.query(
     `
-    INSERT INTO patient_charts (
+    INSERT INTO ${tenant.schema_name}.patient_charts (
       patient_id,
       external_chart_id,
       chart_id,
@@ -825,23 +453,36 @@ async function syncMedicalCodingData(
       "================================"
     );
   } catch (err) {
-    console.error(
-      "\nSYNC ERROR:",
-      err.message || err
-    );
+    console.error("\nSYNC ERROR FULL:", err);
   } finally {
     client.release();
-    process.exit();
   }
 }
 
 /*
 ===========================================
-RUN SCRIPT
+RUN SCRIPT FOR ALL TENANTS
 ===========================================
 */
 
-syncMedicalCodingData(
-  tenant,
-  mockApiResponse
-);
+async function runAll() {
+  const client = await pool.connect();
+  try {
+    const tenantsResult = await client.query("SELECT * FROM public.tenants");
+    const tenants = tenantsResult.rows;
+
+    console.log(`\nFound ${tenants.length} tenants in public.tenants.`);
+    for (const t of tenants) {
+      console.log(`Starting mock data seeding for tenant: ${t.name} (Schema: ${t.schema_name})`);
+      await syncMedicalCodingData(t, mockApiResponse);
+    }
+    console.log("\nSeeding completed for all tenants!");
+  } catch (err) {
+    console.error("Error executing seeding for all tenants:", err);
+  } finally {
+    client.release();
+    pool.end();
+  }
+}
+
+runAll();
