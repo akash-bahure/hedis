@@ -41,5 +41,19 @@ const sendResetEmail = async (toEmail, name, token) => {
   });
 };
 
-module.exports = { sendInviteEmail, sendResetEmail };
+const sendOTPEmail = async (toEmail, otp) => {
+  return transporter.sendMail({
+    from: "no-reply@yourapp.com",
+    to: toEmail,
+    subject: "Your Login OTP",
+    html: `
+        <h2>Verification Code</h2>
+        <p>Your 6-digit OTP for login is: <strong>${otp}</strong></p>
+        <p>This code will expire in 5 minutes.</p>
+        <p>If you did not request this code, please ignore this email.</p>
+      `,
+  });
+};
+
+module.exports = { sendInviteEmail, sendResetEmail, sendOTPEmail };
 

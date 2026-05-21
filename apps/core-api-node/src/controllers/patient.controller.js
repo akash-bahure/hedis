@@ -1,5 +1,7 @@
 exports.getPatients = async (req, res) => {
   try {
+    const schema = req.tenant.schema_name;
+
     const {
       search,
       project_id,
@@ -14,59 +16,85 @@ exports.getPatients = async (req, res) => {
     const limit = Number(page_size);
     const offset = (page - 1) * limit;
 
-    let query = `
-          SELECT 
-            p.*,
-            pr.project_name,
-            u_abs.full_name as abstractor_name,
-            u_qa.full_name as qa_name
-          FROM patients p
-          LEFT JOIN projects pr ON p.project_id = pr.id
-          LEFT JOIN users u_abs ON p.abstractor_id = u_abs.id
-          LEFT JOIN users u_qa ON p.qa_id = u_qa.id
-          WHERE 1=1
-        `;
+    let whereClause = `WHERE 1=1`;
     const values = [];
 
     if (search) {
       values.push(`%${search}%`);
-      query += ` AND (p.first_name ILIKE $${values.length} OR p.last_name ILIKE $${values.length} OR p.patient_id ILIKE $${values.length})`;
+
+      whereClause += `
+        AND (
+          p.first_name ILIKE $${values.length}
+          OR p.last_name ILIKE $${values.length}
+          OR p.patient_id ILIKE $${values.length}
+        )
+      `;
     }
 
     if (project_id) {
       values.push(project_id);
-      query += ` AND p.project_id = $${values.length}`;
+      whereClause += ` AND p.project_id = $${values.length}`;
     }
 
     if (stage) {
       values.push(stage);
-      query += ` AND p.stage = $${values.length}`;
+      whereClause += ` AND p.stage = $${values.length}`;
     }
 
     if (abstractor_id) {
       values.push(abstractor_id);
-      query += ` AND p.abstractor_id = $${values.length}`;
+      whereClause += ` AND p.abstractor_id = $${values.length}`;
     }
 
     if (qa_id) {
       values.push(qa_id);
-      query += ` AND p.qa_id = $${values.length}`;
+      whereClause += ` AND p.qa_id = $${values.length}`;
     }
 
-    // Total Count
-    const countQuery = `SELECT COUNT(*) FROM (${query}) AS total_query`;
-    const countResult = await req.db.query(countQuery, values);
-    const total = Number(countResult.rows[0].count);
+    const countQuery = `
+      SELECT COUNT(*) AS total
+      FROM ${schema}.patients p
+      ${whereClause}
+    `;
+    // const dbCheck = await req.db.query(`
+    //   SELECT current_database(), current_schema(), inet_server_addr(), inet_server_port()
+    // `);
 
-    // Pagination
+    // console.log("API DB:", dbCheck.rows);
+    const countResult = await req.db.query(countQuery, values);
+
+    const total = Number(countResult.rows[0].total);
+
     values.push(limit);
-    query += ` ORDER BY p.created_at DESC LIMIT $${values.length}`;
     values.push(offset);
-    query += ` OFFSET $${values.length}`;
+
+    const query = `
+      SELECT
+        p.*,
+        pr.project_name,
+        u_abs.full_name AS abstractor_name,
+        u_qa.full_name AS qa_name
+      FROM ${schema}.patients p
+      LEFT JOIN ${schema}.projects pr
+        ON p.project_id = pr.id
+      LEFT JOIN ${schema}.users u_abs
+        ON p.abstractor_id = u_abs.id
+      LEFT JOIN ${schema}.users u_qa
+        ON p.qa_id = u_qa.id
+      ${whereClause}
+      ORDER BY p.created_at DESC
+      LIMIT $${values.length - 1}
+      OFFSET $${values.length}
+    `;
+
+    console.log("QUERY:", query);
+    console.log("VALUES:", values);
 
     const result = await req.db.query(query, values);
 
-    res.json({
+    console.log("PATIENT RESULT:", result.rows);
+
+    return res.json({
       message: "Patients fetched successfully",
       total,
       page_no: page,
@@ -76,7 +104,10 @@ exports.getPatients = async (req, res) => {
     });
   } catch (err) {
     console.error("Get Patients Error:", err);
-    res.status(500).json({ error: err.message });
+
+    return res.status(500).json({
+      error: err.message,
+    });
   }
 };
 
@@ -86,7 +117,9 @@ exports.assignPatient = async (req, res) => {
     const { userId, role } = req.body;
 
     if (!userId || !role) {
-      return res.status(400).json({ error: "Missing required fields: userId and role" });
+      return res
+        .status(400)
+        .json({ error: "Missing required fields: userId and role" });
     }
 
     let column;
@@ -95,7 +128,9 @@ exports.assignPatient = async (req, res) => {
     } else if (role.toLowerCase() === "chart abstractor") {
       column = "abstractor_id";
     } else {
-      return res.status(400).json({ error: "Invalid role. Use 'QA' or 'Abstractor'" });
+      return res
+        .status(400)
+        .json({ error: "Invalid role. Use 'QA' or 'Abstractor'" });
     }
 
     const query = `
@@ -126,27 +161,38 @@ exports.updatePatientStage = async (req, res) => {
     const { stage } = req.body;
 
     if (!stage) {
-      return res.status(400).json({ error: "Missing required field: stage" });
+      return res.status(400).json({
+        error: "Missing required field: stage",
+      });
     }
 
+    const schema = req.tenant.schema_name;
+
     const query = `
-          UPDATE patients 
-          SET stage = $1, updated_at = NOW() 
-          WHERE id = $2 
-          RETURNING *
-        `;
+      UPDATE ${schema}.patients
+      SET stage = $1,
+          updated_at = NOW()
+      WHERE id = $2
+      RETURNING *
+    `;
+
     const result = await req.db.query(query, [stage, id]);
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Patient not found" });
+      return res.status(404).json({
+        error: "Patient not found",
+      });
     }
 
-    res.json({
+    return res.json({
       message: "Patient stage updated successfully",
       data: result.rows[0],
     });
   } catch (err) {
     console.error("Update Patient Stage Error:", err);
-    res.status(500).json({ error: err.message });
+
+    return res.status(500).json({
+      error: err.message,
+    });
   }
 };
