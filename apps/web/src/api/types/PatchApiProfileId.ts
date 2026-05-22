@@ -43,7 +43,15 @@ export type PatchApiProfileIdMutationRequest = {
   /**
    * @type string | undefined
    */
-  department?: string;
+  employee_id?: string;
+  /**
+   * @type string | undefined
+   */
+  member_since?: string;
+  /**
+   * @type string | undefined
+   */
+  department_id?: string;
   /**
    * @type string | undefined
    */

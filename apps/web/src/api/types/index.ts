@@ -78,6 +78,18 @@ export type {
   GetApiDepartmentsQueryResponse,
 } from "./GetApiDepartments.ts";
 export type {
+  GetApiPatients200,
+  GetApiPatientsQuery,
+  GetApiPatientsQueryParams,
+  GetApiPatientsQueryResponse,
+} from "./GetApiPatients.ts";
+export type {
+  GetApiPatientsExport200,
+  GetApiPatientsExportQuery,
+  GetApiPatientsExportQueryParams,
+  GetApiPatientsExportQueryResponse,
+} from "./GetApiPatientsExport.ts";
+export type {
   GetApiProfileMe200,
   GetApiProfileMe404,
   GetApiProfileMeQuery,
@@ -161,6 +173,7 @@ export type {
 } from "./GetApiUsersStats.ts";
 export type {
   PatchAdminOrgsId200,
+  PatchAdminOrgsId400,
   PatchAdminOrgsId401,
   PatchAdminOrgsId403,
   PatchAdminOrgsId404,
@@ -187,6 +200,13 @@ export type {
   PatchApiClientsIdMutationResponse,
   PatchApiClientsIdPathParams,
 } from "./PatchApiClientsId.ts";
+export type {
+  PatchApiPatientsIdStage200,
+  PatchApiPatientsIdStageMutation,
+  PatchApiPatientsIdStageMutationRequest,
+  PatchApiPatientsIdStageMutationResponse,
+  PatchApiPatientsIdStagePathParams,
+} from "./PatchApiPatientsIdStage.ts";
 export type {
   PatchApiProfileId200,
   PatchApiProfileIdMutation,
@@ -280,6 +300,16 @@ export type {
   PostAdminOrgsMutationResponse,
 } from "./PostAdminOrgs.ts";
 export type {
+  PostAdminOrgsIdSyncMedicalCoding200,
+  PostAdminOrgsIdSyncMedicalCoding401,
+  PostAdminOrgsIdSyncMedicalCoding403,
+  PostAdminOrgsIdSyncMedicalCoding404,
+  PostAdminOrgsIdSyncMedicalCoding500,
+  PostAdminOrgsIdSyncMedicalCodingMutation,
+  PostAdminOrgsIdSyncMedicalCodingMutationResponse,
+  PostAdminOrgsIdSyncMedicalCodingPathParams,
+} from "./PostAdminOrgsIdSyncMedicalCoding.ts";
+export type {
   PostAdminOrgsOrgIdTenantAdmins201,
   PostAdminOrgsOrgIdTenantAdmins400,
   PostAdminOrgsOrgIdTenantAdmins401,
@@ -319,14 +349,6 @@ export type {
   PostApiAuthLoginMutationResponse,
 } from "./PostApiAuthLogin.ts";
 export type {
-  PostApiAuthRegister201,
-  PostApiAuthRegister400,
-  PostApiAuthRegister500,
-  PostApiAuthRegisterMutation,
-  PostApiAuthRegisterMutationRequest,
-  PostApiAuthRegisterMutationResponse,
-} from "./PostApiAuthRegister.ts";
-export type {
   PostApiAuthResetPassword200,
   PostApiAuthResetPassword400,
   PostApiAuthResetPassword404,
@@ -345,6 +367,23 @@ export type {
   PostApiAuthSetPasswordMutationResponse,
   PostApiAuthSetPasswordQueryParams,
 } from "./PostApiAuthSetPassword.ts";
+export type {
+  PostApiAuthTwoFaSendOtp200,
+  PostApiAuthTwoFaSendOtp400,
+  PostApiAuthTwoFaSendOtp404,
+  PostApiAuthTwoFaSendOtp500,
+  PostApiAuthTwoFaSendOtpMutation,
+  PostApiAuthTwoFaSendOtpMutationRequest,
+  PostApiAuthTwoFaSendOtpMutationResponse,
+} from "./PostApiAuthTwoFaSendOtp.ts";
+export type {
+  PostApiAuthTwoFaValidateOtp200,
+  PostApiAuthTwoFaValidateOtp400,
+  PostApiAuthTwoFaValidateOtp500,
+  PostApiAuthTwoFaValidateOtpMutation,
+  PostApiAuthTwoFaValidateOtpMutationRequest,
+  PostApiAuthTwoFaValidateOtpMutationResponse,
+} from "./PostApiAuthTwoFaValidateOtp.ts";
 export type {
   PostApiClients201,
   PostApiClients500,
@@ -365,6 +404,28 @@ export type {
   PostApiDepartmentsMutationRequest,
   PostApiDepartmentsMutationResponse,
 } from "./PostApiDepartments.ts";
+export type {
+  PostApiManualChartAbstraction201,
+  PostApiManualChartAbstraction400,
+  PostApiManualChartAbstraction404,
+  PostApiManualChartAbstraction500,
+  PostApiManualChartAbstractionMutation,
+  PostApiManualChartAbstractionMutationRequest,
+  PostApiManualChartAbstractionMutationRequestCptCodeEnumKey,
+  PostApiManualChartAbstractionMutationRequestEvidenceTypeEnumKey,
+  PostApiManualChartAbstractionMutationRequestIcd10CodeEnumKey,
+  PostApiManualChartAbstractionMutationRequestScreeningTypeEnumKey,
+  PostApiManualChartAbstractionMutationRequestSourceTypeEnumKey,
+  PostApiManualChartAbstractionMutationResponse,
+} from "./PostApiManualChartAbstraction.ts";
+export type {
+  PostApiPatientsIdAssign200,
+  PostApiPatientsIdAssignMutation,
+  PostApiPatientsIdAssignMutationRequest,
+  PostApiPatientsIdAssignMutationRequestRoleEnumKey,
+  PostApiPatientsIdAssignMutationResponse,
+  PostApiPatientsIdAssignPathParams,
+} from "./PostApiPatientsIdAssign.ts";
 export type {
   PostApiProjects201,
   PostApiProjects400,
@@ -429,6 +490,12 @@ export { postApiClientsMutationRequestMeasureYearEnum } from "./PostApiClients.t
 export { postApiClientsMutationRequestPlanTierEnum } from "./PostApiClients.ts";
 export { postApiClientsMutationRequestRegionEnum } from "./PostApiClients.ts";
 export { postApiClientsMutationRequestStatusEnum } from "./PostApiClients.ts";
+export { postApiManualChartAbstractionMutationRequestCptCodeEnum } from "./PostApiManualChartAbstraction.ts";
+export { postApiManualChartAbstractionMutationRequestEvidenceTypeEnum } from "./PostApiManualChartAbstraction.ts";
+export { postApiManualChartAbstractionMutationRequestIcd10CodeEnum } from "./PostApiManualChartAbstraction.ts";
+export { postApiManualChartAbstractionMutationRequestScreeningTypeEnum } from "./PostApiManualChartAbstraction.ts";
+export { postApiManualChartAbstractionMutationRequestSourceTypeEnum } from "./PostApiManualChartAbstraction.ts";
+export { postApiPatientsIdAssignMutationRequestRoleEnum } from "./PostApiPatientsIdAssign.ts";
 export { postApiProjectsMutationRequestPriorityEnum } from "./PostApiProjects.ts";
 export { postApiProjectsMutationRequestProjectTypeEnum } from "./PostApiProjects.ts";
 export { postApiProjectsMutationRequestSpecialtyEnum } from "./PostApiProjects.ts";

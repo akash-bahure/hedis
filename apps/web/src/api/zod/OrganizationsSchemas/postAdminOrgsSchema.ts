@@ -28,13 +28,14 @@ export const postAdminOrgs201Schema = z.object({
       schema_name: z.optional(z.string()),
       is_active: z.optional(z.boolean()),
       is_archived: z.optional(z.boolean()),
+      api_key: z.string().nullish(),
       created_at: z.optional(z.string().datetime({ offset: true })),
     }),
   ),
 }) as unknown as ToZod<PostAdminOrgs201>;
 
 /**
- * @description Invalid request
+ * @description Invalid request - name and subdomain are required
  */
 export const postAdminOrgs400Schema =
   z.unknown() as unknown as ToZod<PostAdminOrgs400>;
@@ -58,8 +59,20 @@ export const postAdminOrgs500Schema =
   z.unknown() as unknown as ToZod<PostAdminOrgs500>;
 
 export const postAdminOrgsMutationRequestSchema = z.object({
-  name: z.string(),
-  subdomain: z.string(),
+  name: z.string().describe("Organization name (required)"),
+  subdomain: z
+    .string()
+    .describe("Organization subdomain, must be unique (required)"),
+  is_active: z.optional(
+    z
+      .boolean()
+      .describe("Organization active status (optional, defaults to true)"),
+  ),
+  api_key: z.optional(
+    z
+      .string()
+      .describe("API key for the organization (optional, defaults to null)"),
+  ),
 }) as unknown as ToZod<PostAdminOrgsMutationRequest>;
 
 export const postAdminOrgsMutationResponseSchema = z.lazy(
