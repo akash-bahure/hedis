@@ -17,6 +17,7 @@ import type {
   PatchAdminOrgsIdMutationRequest,
   PatchAdminOrgsIdMutationResponse,
   PatchAdminOrgsIdPathParams,
+  PatchAdminOrgsId400,
   PatchAdminOrgsId401,
   PatchAdminOrgsId403,
   PatchAdminOrgsId404,
@@ -41,6 +42,7 @@ export function patchAdminOrgsIdMutationOptions<TContext = unknown>(
   return mutationOptions<
     PatchAdminOrgsIdMutationResponse,
     ResponseErrorConfig<
+      | PatchAdminOrgsId400
       | PatchAdminOrgsId401
       | PatchAdminOrgsId403
       | PatchAdminOrgsId404
@@ -60,7 +62,7 @@ export function patchAdminOrgsIdMutationOptions<TContext = unknown>(
 }
 
 /**
- * @description Update organization details such as name and active status.
+ * @description Update organization details. Supports partial updates for name and is_active fields. At least one field is required.
  * @summary Update organization
  * {@link /admin/orgs/:id}
  */
@@ -69,6 +71,7 @@ export function usePatchAdminOrgsId<TContext>(
     mutation?: UseMutationOptions<
       PatchAdminOrgsIdMutationResponse,
       ResponseErrorConfig<
+        | PatchAdminOrgsId400
         | PatchAdminOrgsId401
         | PatchAdminOrgsId403
         | PatchAdminOrgsId404
@@ -95,6 +98,7 @@ export function usePatchAdminOrgsId<TContext>(
   ) as UseMutationOptions<
     PatchAdminOrgsIdMutationResponse,
     ResponseErrorConfig<
+      | PatchAdminOrgsId400
       | PatchAdminOrgsId401
       | PatchAdminOrgsId403
       | PatchAdminOrgsId404
@@ -110,6 +114,7 @@ export function usePatchAdminOrgsId<TContext>(
   return useMutation<
     PatchAdminOrgsIdMutationResponse,
     ResponseErrorConfig<
+      | PatchAdminOrgsId400
       | PatchAdminOrgsId401
       | PatchAdminOrgsId403
       | PatchAdminOrgsId404
@@ -130,6 +135,7 @@ export function usePatchAdminOrgsId<TContext>(
   ) as UseMutationResult<
     PatchAdminOrgsIdMutationResponse,
     ResponseErrorConfig<
+      | PatchAdminOrgsId400
       | PatchAdminOrgsId401
       | PatchAdminOrgsId403
       | PatchAdminOrgsId404

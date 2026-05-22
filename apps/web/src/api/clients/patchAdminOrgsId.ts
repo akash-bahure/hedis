@@ -13,6 +13,7 @@ import type {
   PatchAdminOrgsIdMutationRequest,
   PatchAdminOrgsIdMutationResponse,
   PatchAdminOrgsIdPathParams,
+  PatchAdminOrgsId400,
   PatchAdminOrgsId401,
   PatchAdminOrgsId403,
   PatchAdminOrgsId404,
@@ -25,7 +26,7 @@ function getPatchAdminOrgsIdUrl(id: PatchAdminOrgsIdPathParams["id"]) {
 }
 
 /**
- * @description Update organization details such as name and active status.
+ * @description Update organization details. Supports partial updates for name and is_active fields. At least one field is required.
  * @summary Update organization
  * {@link /admin/orgs/:id}
  */
@@ -43,6 +44,7 @@ export async function patchAdminOrgsId(
   const res = await request<
     PatchAdminOrgsIdMutationResponse,
     ResponseErrorConfig<
+      | PatchAdminOrgsId400
       | PatchAdminOrgsId401
       | PatchAdminOrgsId403
       | PatchAdminOrgsId404

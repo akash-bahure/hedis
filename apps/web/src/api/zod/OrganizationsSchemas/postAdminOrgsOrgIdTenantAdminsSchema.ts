@@ -60,7 +60,6 @@ export const postAdminOrgsOrgIdTenantAdmins500Schema =
 export const postAdminOrgsOrgIdTenantAdminsMutationRequestSchema = z.object({
   name: z.string(),
   email: z.string(),
-  role: z.optional(z.string()),
 }) as unknown as ToZod<PostAdminOrgsOrgIdTenantAdminsMutationRequest>;
 
 export const postAdminOrgsOrgIdTenantAdminsMutationResponseSchema = z.lazy(

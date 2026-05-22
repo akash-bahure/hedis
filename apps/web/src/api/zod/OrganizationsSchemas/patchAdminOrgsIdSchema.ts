@@ -7,6 +7,7 @@ import * as z from "zod";
 import type { ToZod } from "../../.kubb/ToZod.ts";
 import type {
   PatchAdminOrgsId200,
+  PatchAdminOrgsId400,
   PatchAdminOrgsId401,
   PatchAdminOrgsId403,
   PatchAdminOrgsId404,
@@ -17,7 +18,7 @@ import type {
 } from "../../types/PatchAdminOrgsId.ts";
 
 export const patchAdminOrgsIdPathParamsSchema = z.object({
-  id: z.string().describe("Organization ID"),
+  id: z.string().describe("Organization ID (UUID)"),
 }) as unknown as ToZod<PatchAdminOrgsIdPathParams>;
 
 /**
@@ -37,6 +38,12 @@ export const patchAdminOrgsId200Schema = z.object({
     }),
   ),
 }) as unknown as ToZod<PatchAdminOrgsId200>;
+
+/**
+ * @description Bad request - at least one field (name or is_active) is required for update
+ */
+export const patchAdminOrgsId400Schema =
+  z.unknown() as unknown as ToZod<PatchAdminOrgsId400>;
 
 /**
  * @description Unauthorized
@@ -62,10 +69,16 @@ export const patchAdminOrgsId404Schema =
 export const patchAdminOrgsId500Schema =
   z.unknown() as unknown as ToZod<PatchAdminOrgsId500>;
 
-export const patchAdminOrgsIdMutationRequestSchema = z.object({
-  name: z.optional(z.string()),
-  is_active: z.optional(z.boolean()),
-}) as unknown as ToZod<PatchAdminOrgsIdMutationRequest>;
+export const patchAdminOrgsIdMutationRequestSchema = z
+  .object({
+    name: z.optional(z.string().describe("New organization name (optional)")),
+    is_active: z.optional(
+      z.boolean().describe("Organization active status (optional)"),
+    ),
+  })
+  .describe(
+    "At least one field is required",
+  ) as unknown as ToZod<PatchAdminOrgsIdMutationRequest>;
 
 export const patchAdminOrgsIdMutationResponseSchema = z.lazy(
   () => patchAdminOrgsId200Schema,

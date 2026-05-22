@@ -1,8 +1,9 @@
 export type { PostApiAuthForgotPasswordMutationKey } from "./hooks/AuthHooks/usePostApiAuthForgotPassword.ts";
 export type { PostApiAuthLoginMutationKey } from "./hooks/AuthHooks/usePostApiAuthLogin.ts";
-export type { PostApiAuthRegisterMutationKey } from "./hooks/AuthHooks/usePostApiAuthRegister.ts";
 export type { PostApiAuthResetPasswordMutationKey } from "./hooks/AuthHooks/usePostApiAuthResetPassword.ts";
 export type { PostApiAuthSetPasswordMutationKey } from "./hooks/AuthHooks/usePostApiAuthSetPassword.ts";
+export type { PostApiAuthTwoFaSendOtpMutationKey } from "./hooks/AuthHooks/usePostApiAuthTwoFaSendOtp.ts";
+export type { PostApiAuthTwoFaValidateOtpMutationKey } from "./hooks/AuthHooks/usePostApiAuthTwoFaValidateOtp.ts";
 export type { DeleteApiClientsIdMutationKey } from "./hooks/ClientsHooks/useDeleteApiClientsId.ts";
 export type { GetApiClientsQueryKey } from "./hooks/ClientsHooks/useGetApiClients.ts";
 export type { GetApiClientsExportQueryKey } from "./hooks/ClientsHooks/useGetApiClientsExport.ts";
@@ -23,13 +24,24 @@ export type { GetApiDepartmentsQueryKey } from "./hooks/DepartmentsHooks/useGetA
 export type { GetApiDepartmentsSuspenseQueryKey } from "./hooks/DepartmentsHooks/useGetApiDepartmentsSuspense.ts";
 export type { GetApiDepartmentsSuspenseInfiniteQueryKey } from "./hooks/DepartmentsHooks/useGetApiDepartmentsSuspenseInfinite.ts";
 export type { PostApiDepartmentsMutationKey } from "./hooks/DepartmentsHooks/usePostApiDepartments.ts";
+export type { PostApiManualChartAbstractionMutationKey } from "./hooks/Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
 export type { DeleteAdminOrgsIdMutationKey } from "./hooks/OrganizationsHooks/useDeleteAdminOrgsId.ts";
 export type { GetAdminOrgsQueryKey } from "./hooks/OrganizationsHooks/useGetAdminOrgs.ts";
 export type { GetAdminOrgsSuspenseQueryKey } from "./hooks/OrganizationsHooks/useGetAdminOrgsSuspense.ts";
 export type { GetAdminOrgsSuspenseInfiniteQueryKey } from "./hooks/OrganizationsHooks/useGetAdminOrgsSuspenseInfinite.ts";
 export type { PatchAdminOrgsIdMutationKey } from "./hooks/OrganizationsHooks/usePatchAdminOrgsId.ts";
 export type { PostAdminOrgsMutationKey } from "./hooks/OrganizationsHooks/usePostAdminOrgs.ts";
+export type { PostAdminOrgsIdSyncMedicalCodingMutationKey } from "./hooks/OrganizationsHooks/usePostAdminOrgsIdSyncMedicalCoding.ts";
 export type { PostAdminOrgsOrgIdTenantAdminsMutationKey } from "./hooks/OrganizationsHooks/usePostAdminOrgsOrgIdTenantAdmins.ts";
+export type { GetApiPatientsQueryKey } from "./hooks/PatientsHooks/useGetApiPatients.ts";
+export type { GetApiPatientsExportQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsExport.ts";
+export type { GetApiPatientsExportSuspenseQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsExportSuspense.ts";
+export type { GetApiPatientsExportSuspenseInfiniteQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsExportSuspenseInfinite.ts";
+export type { GetApiPatientsInfiniteQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsInfinite.ts";
+export type { GetApiPatientsSuspenseQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsSuspense.ts";
+export type { GetApiPatientsSuspenseInfiniteQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsSuspenseInfinite.ts";
+export type { PatchApiPatientsIdStageMutationKey } from "./hooks/PatientsHooks/usePatchApiPatientsIdStage.ts";
+export type { PostApiPatientsIdAssignMutationKey } from "./hooks/PatientsHooks/usePostApiPatientsIdAssign.ts";
 export type { GetApiProfileMeQueryKey } from "./hooks/ProfileHooks/useGetApiProfileMe.ts";
 export type { GetApiProfileMeSuspenseQueryKey } from "./hooks/ProfileHooks/useGetApiProfileMeSuspense.ts";
 export type { GetApiProfileMeSuspenseInfiniteQueryKey } from "./hooks/ProfileHooks/useGetApiProfileMeSuspenseInfinite.ts";
@@ -165,6 +177,18 @@ export type {
   GetApiDepartmentsQueryResponse,
 } from "./types/GetApiDepartments.ts";
 export type {
+  GetApiPatients200,
+  GetApiPatientsQuery,
+  GetApiPatientsQueryParams,
+  GetApiPatientsQueryResponse,
+} from "./types/GetApiPatients.ts";
+export type {
+  GetApiPatientsExport200,
+  GetApiPatientsExportQuery,
+  GetApiPatientsExportQueryParams,
+  GetApiPatientsExportQueryResponse,
+} from "./types/GetApiPatientsExport.ts";
+export type {
   GetApiProfileMe200,
   GetApiProfileMe404,
   GetApiProfileMeQuery,
@@ -248,6 +272,7 @@ export type {
 } from "./types/GetApiUsersStats.ts";
 export type {
   PatchAdminOrgsId200,
+  PatchAdminOrgsId400,
   PatchAdminOrgsId401,
   PatchAdminOrgsId403,
   PatchAdminOrgsId404,
@@ -274,6 +299,13 @@ export type {
   PatchApiClientsIdMutationResponse,
   PatchApiClientsIdPathParams,
 } from "./types/PatchApiClientsId.ts";
+export type {
+  PatchApiPatientsIdStage200,
+  PatchApiPatientsIdStageMutation,
+  PatchApiPatientsIdStageMutationRequest,
+  PatchApiPatientsIdStageMutationResponse,
+  PatchApiPatientsIdStagePathParams,
+} from "./types/PatchApiPatientsIdStage.ts";
 export type {
   PatchApiProfileId200,
   PatchApiProfileIdMutation,
@@ -367,6 +399,16 @@ export type {
   PostAdminOrgsMutationResponse,
 } from "./types/PostAdminOrgs.ts";
 export type {
+  PostAdminOrgsIdSyncMedicalCoding200,
+  PostAdminOrgsIdSyncMedicalCoding401,
+  PostAdminOrgsIdSyncMedicalCoding403,
+  PostAdminOrgsIdSyncMedicalCoding404,
+  PostAdminOrgsIdSyncMedicalCoding500,
+  PostAdminOrgsIdSyncMedicalCodingMutation,
+  PostAdminOrgsIdSyncMedicalCodingMutationResponse,
+  PostAdminOrgsIdSyncMedicalCodingPathParams,
+} from "./types/PostAdminOrgsIdSyncMedicalCoding.ts";
+export type {
   PostAdminOrgsOrgIdTenantAdmins201,
   PostAdminOrgsOrgIdTenantAdmins400,
   PostAdminOrgsOrgIdTenantAdmins401,
@@ -406,14 +448,6 @@ export type {
   PostApiAuthLoginMutationResponse,
 } from "./types/PostApiAuthLogin.ts";
 export type {
-  PostApiAuthRegister201,
-  PostApiAuthRegister400,
-  PostApiAuthRegister500,
-  PostApiAuthRegisterMutation,
-  PostApiAuthRegisterMutationRequest,
-  PostApiAuthRegisterMutationResponse,
-} from "./types/PostApiAuthRegister.ts";
-export type {
   PostApiAuthResetPassword200,
   PostApiAuthResetPassword400,
   PostApiAuthResetPassword404,
@@ -432,6 +466,23 @@ export type {
   PostApiAuthSetPasswordMutationResponse,
   PostApiAuthSetPasswordQueryParams,
 } from "./types/PostApiAuthSetPassword.ts";
+export type {
+  PostApiAuthTwoFaSendOtp200,
+  PostApiAuthTwoFaSendOtp400,
+  PostApiAuthTwoFaSendOtp404,
+  PostApiAuthTwoFaSendOtp500,
+  PostApiAuthTwoFaSendOtpMutation,
+  PostApiAuthTwoFaSendOtpMutationRequest,
+  PostApiAuthTwoFaSendOtpMutationResponse,
+} from "./types/PostApiAuthTwoFaSendOtp.ts";
+export type {
+  PostApiAuthTwoFaValidateOtp200,
+  PostApiAuthTwoFaValidateOtp400,
+  PostApiAuthTwoFaValidateOtp500,
+  PostApiAuthTwoFaValidateOtpMutation,
+  PostApiAuthTwoFaValidateOtpMutationRequest,
+  PostApiAuthTwoFaValidateOtpMutationResponse,
+} from "./types/PostApiAuthTwoFaValidateOtp.ts";
 export type {
   PostApiClients201,
   PostApiClients500,
@@ -452,6 +503,28 @@ export type {
   PostApiDepartmentsMutationRequest,
   PostApiDepartmentsMutationResponse,
 } from "./types/PostApiDepartments.ts";
+export type {
+  PostApiManualChartAbstraction201,
+  PostApiManualChartAbstraction400,
+  PostApiManualChartAbstraction404,
+  PostApiManualChartAbstraction500,
+  PostApiManualChartAbstractionMutation,
+  PostApiManualChartAbstractionMutationRequest,
+  PostApiManualChartAbstractionMutationRequestCptCodeEnumKey,
+  PostApiManualChartAbstractionMutationRequestEvidenceTypeEnumKey,
+  PostApiManualChartAbstractionMutationRequestIcd10CodeEnumKey,
+  PostApiManualChartAbstractionMutationRequestScreeningTypeEnumKey,
+  PostApiManualChartAbstractionMutationRequestSourceTypeEnumKey,
+  PostApiManualChartAbstractionMutationResponse,
+} from "./types/PostApiManualChartAbstraction.ts";
+export type {
+  PostApiPatientsIdAssign200,
+  PostApiPatientsIdAssignMutation,
+  PostApiPatientsIdAssignMutationRequest,
+  PostApiPatientsIdAssignMutationRequestRoleEnumKey,
+  PostApiPatientsIdAssignMutationResponse,
+  PostApiPatientsIdAssignPathParams,
+} from "./types/PostApiPatientsIdAssign.ts";
 export type {
   PostApiProjects201,
   PostApiProjects400,
@@ -504,6 +577,8 @@ export { getApiClientsExport } from "./clients/getApiClientsExport.ts";
 export { getApiClientsId } from "./clients/getApiClientsId.ts";
 export { getApiClientsStats } from "./clients/getApiClientsStats.ts";
 export { getApiDepartments } from "./clients/getApiDepartments.ts";
+export { getApiPatients } from "./clients/getApiPatients.ts";
+export { getApiPatientsExport } from "./clients/getApiPatientsExport.ts";
 export { getApiProfileMe } from "./clients/getApiProfileMe.ts";
 export { getApiProjects } from "./clients/getApiProjects.ts";
 export { getApiProjectsAccessAll } from "./clients/getApiProjectsAccessAll.ts";
@@ -518,6 +593,7 @@ export { getApiUsersStats } from "./clients/getApiUsersStats.ts";
 export { patchAdminOrgsId } from "./clients/patchAdminOrgsId.ts";
 export { patchAdminUsersId } from "./clients/patchAdminUsersId.ts";
 export { patchApiClientsId } from "./clients/patchApiClientsId.ts";
+export { patchApiPatientsIdStage } from "./clients/patchApiPatientsIdStage.ts";
 export { patchApiProfileId } from "./clients/patchApiProfileId.ts";
 export { patchApiProfileIdNotifications } from "./clients/patchApiProfileIdNotifications.ts";
 export { patchApiProfileIdPreferences } from "./clients/patchApiProfileIdPreferences.ts";
@@ -529,15 +605,19 @@ export { patchApiUsersId } from "./clients/patchApiUsersId.ts";
 export { patchApiUsersShifts } from "./clients/patchApiUsersShifts.ts";
 export { postAdminAuthLogin } from "./clients/postAdminAuthLogin.ts";
 export { postAdminOrgs } from "./clients/postAdminOrgs.ts";
+export { postAdminOrgsIdSyncMedicalCoding } from "./clients/postAdminOrgsIdSyncMedicalCoding.ts";
 export { postAdminOrgsOrgIdTenantAdmins } from "./clients/postAdminOrgsOrgIdTenantAdmins.ts";
 export { postAdminUsers } from "./clients/postAdminUsers.ts";
 export { postApiAuthForgotPassword } from "./clients/postApiAuthForgotPassword.ts";
 export { postApiAuthLogin } from "./clients/postApiAuthLogin.ts";
-export { postApiAuthRegister } from "./clients/postApiAuthRegister.ts";
 export { postApiAuthResetPassword } from "./clients/postApiAuthResetPassword.ts";
 export { postApiAuthSetPassword } from "./clients/postApiAuthSetPassword.ts";
+export { postApiAuthTwoFaSendOtp } from "./clients/postApiAuthTwoFaSendOtp.ts";
+export { postApiAuthTwoFaValidateOtp } from "./clients/postApiAuthTwoFaValidateOtp.ts";
 export { postApiClients } from "./clients/postApiClients.ts";
 export { postApiDepartments } from "./clients/postApiDepartments.ts";
+export { postApiManualChartAbstraction } from "./clients/postApiManualChartAbstraction.ts";
+export { postApiPatientsIdAssign } from "./clients/postApiPatientsIdAssign.ts";
 export { postApiProjects } from "./clients/postApiProjects.ts";
 export { postApiUserRoles } from "./clients/postApiUserRoles.ts";
 export { postApiUsers } from "./clients/postApiUsers.ts";
@@ -548,15 +628,18 @@ export { usePostApiAuthForgotPassword } from "./hooks/AuthHooks/usePostApiAuthFo
 export { postApiAuthLoginMutationKey } from "./hooks/AuthHooks/usePostApiAuthLogin.ts";
 export { postApiAuthLoginMutationOptions } from "./hooks/AuthHooks/usePostApiAuthLogin.ts";
 export { usePostApiAuthLogin } from "./hooks/AuthHooks/usePostApiAuthLogin.ts";
-export { postApiAuthRegisterMutationKey } from "./hooks/AuthHooks/usePostApiAuthRegister.ts";
-export { postApiAuthRegisterMutationOptions } from "./hooks/AuthHooks/usePostApiAuthRegister.ts";
-export { usePostApiAuthRegister } from "./hooks/AuthHooks/usePostApiAuthRegister.ts";
 export { postApiAuthResetPasswordMutationKey } from "./hooks/AuthHooks/usePostApiAuthResetPassword.ts";
 export { postApiAuthResetPasswordMutationOptions } from "./hooks/AuthHooks/usePostApiAuthResetPassword.ts";
 export { usePostApiAuthResetPassword } from "./hooks/AuthHooks/usePostApiAuthResetPassword.ts";
 export { postApiAuthSetPasswordMutationKey } from "./hooks/AuthHooks/usePostApiAuthSetPassword.ts";
 export { postApiAuthSetPasswordMutationOptions } from "./hooks/AuthHooks/usePostApiAuthSetPassword.ts";
 export { usePostApiAuthSetPassword } from "./hooks/AuthHooks/usePostApiAuthSetPassword.ts";
+export { postApiAuthTwoFaSendOtpMutationKey } from "./hooks/AuthHooks/usePostApiAuthTwoFaSendOtp.ts";
+export { postApiAuthTwoFaSendOtpMutationOptions } from "./hooks/AuthHooks/usePostApiAuthTwoFaSendOtp.ts";
+export { usePostApiAuthTwoFaSendOtp } from "./hooks/AuthHooks/usePostApiAuthTwoFaSendOtp.ts";
+export { postApiAuthTwoFaValidateOtpMutationKey } from "./hooks/AuthHooks/usePostApiAuthTwoFaValidateOtp.ts";
+export { postApiAuthTwoFaValidateOtpMutationOptions } from "./hooks/AuthHooks/usePostApiAuthTwoFaValidateOtp.ts";
+export { usePostApiAuthTwoFaValidateOtp } from "./hooks/AuthHooks/usePostApiAuthTwoFaValidateOtp.ts";
 export { deleteApiClientsIdMutationKey } from "./hooks/ClientsHooks/useDeleteApiClientsId.ts";
 export { deleteApiClientsIdMutationOptions } from "./hooks/ClientsHooks/useDeleteApiClientsId.ts";
 export { useDeleteApiClientsId } from "./hooks/ClientsHooks/useDeleteApiClientsId.ts";
@@ -617,6 +700,9 @@ export { useGetApiDepartmentsSuspenseInfinite } from "./hooks/DepartmentsHooks/u
 export { postApiDepartmentsMutationKey } from "./hooks/DepartmentsHooks/usePostApiDepartments.ts";
 export { postApiDepartmentsMutationOptions } from "./hooks/DepartmentsHooks/usePostApiDepartments.ts";
 export { usePostApiDepartments } from "./hooks/DepartmentsHooks/usePostApiDepartments.ts";
+export { postApiManualChartAbstractionMutationKey } from "./hooks/Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
+export { postApiManualChartAbstractionMutationOptions } from "./hooks/Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
+export { usePostApiManualChartAbstraction } from "./hooks/Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
 export { deleteAdminOrgsIdMutationKey } from "./hooks/OrganizationsHooks/useDeleteAdminOrgsId.ts";
 export { deleteAdminOrgsIdMutationOptions } from "./hooks/OrganizationsHooks/useDeleteAdminOrgsId.ts";
 export { useDeleteAdminOrgsId } from "./hooks/OrganizationsHooks/useDeleteAdminOrgsId.ts";
@@ -635,9 +721,39 @@ export { usePatchAdminOrgsId } from "./hooks/OrganizationsHooks/usePatchAdminOrg
 export { postAdminOrgsMutationKey } from "./hooks/OrganizationsHooks/usePostAdminOrgs.ts";
 export { postAdminOrgsMutationOptions } from "./hooks/OrganizationsHooks/usePostAdminOrgs.ts";
 export { usePostAdminOrgs } from "./hooks/OrganizationsHooks/usePostAdminOrgs.ts";
+export { postAdminOrgsIdSyncMedicalCodingMutationKey } from "./hooks/OrganizationsHooks/usePostAdminOrgsIdSyncMedicalCoding.ts";
+export { postAdminOrgsIdSyncMedicalCodingMutationOptions } from "./hooks/OrganizationsHooks/usePostAdminOrgsIdSyncMedicalCoding.ts";
+export { usePostAdminOrgsIdSyncMedicalCoding } from "./hooks/OrganizationsHooks/usePostAdminOrgsIdSyncMedicalCoding.ts";
 export { postAdminOrgsOrgIdTenantAdminsMutationKey } from "./hooks/OrganizationsHooks/usePostAdminOrgsOrgIdTenantAdmins.ts";
 export { postAdminOrgsOrgIdTenantAdminsMutationOptions } from "./hooks/OrganizationsHooks/usePostAdminOrgsOrgIdTenantAdmins.ts";
 export { usePostAdminOrgsOrgIdTenantAdmins } from "./hooks/OrganizationsHooks/usePostAdminOrgsOrgIdTenantAdmins.ts";
+export { getApiPatientsQueryKey } from "./hooks/PatientsHooks/useGetApiPatients.ts";
+export { getApiPatientsQueryOptions } from "./hooks/PatientsHooks/useGetApiPatients.ts";
+export { useGetApiPatients } from "./hooks/PatientsHooks/useGetApiPatients.ts";
+export { getApiPatientsExportQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsExport.ts";
+export { getApiPatientsExportQueryOptions } from "./hooks/PatientsHooks/useGetApiPatientsExport.ts";
+export { useGetApiPatientsExport } from "./hooks/PatientsHooks/useGetApiPatientsExport.ts";
+export { getApiPatientsExportSuspenseQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsExportSuspense.ts";
+export { getApiPatientsExportSuspenseQueryOptions } from "./hooks/PatientsHooks/useGetApiPatientsExportSuspense.ts";
+export { useGetApiPatientsExportSuspense } from "./hooks/PatientsHooks/useGetApiPatientsExportSuspense.ts";
+export { getApiPatientsExportSuspenseInfiniteQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsExportSuspenseInfinite.ts";
+export { getApiPatientsExportSuspenseInfiniteQueryOptions } from "./hooks/PatientsHooks/useGetApiPatientsExportSuspenseInfinite.ts";
+export { useGetApiPatientsExportSuspenseInfinite } from "./hooks/PatientsHooks/useGetApiPatientsExportSuspenseInfinite.ts";
+export { getApiPatientsInfiniteQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsInfinite.ts";
+export { getApiPatientsInfiniteQueryOptions } from "./hooks/PatientsHooks/useGetApiPatientsInfinite.ts";
+export { useGetApiPatientsInfinite } from "./hooks/PatientsHooks/useGetApiPatientsInfinite.ts";
+export { getApiPatientsSuspenseQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsSuspense.ts";
+export { getApiPatientsSuspenseQueryOptions } from "./hooks/PatientsHooks/useGetApiPatientsSuspense.ts";
+export { useGetApiPatientsSuspense } from "./hooks/PatientsHooks/useGetApiPatientsSuspense.ts";
+export { getApiPatientsSuspenseInfiniteQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsSuspenseInfinite.ts";
+export { getApiPatientsSuspenseInfiniteQueryOptions } from "./hooks/PatientsHooks/useGetApiPatientsSuspenseInfinite.ts";
+export { useGetApiPatientsSuspenseInfinite } from "./hooks/PatientsHooks/useGetApiPatientsSuspenseInfinite.ts";
+export { patchApiPatientsIdStageMutationKey } from "./hooks/PatientsHooks/usePatchApiPatientsIdStage.ts";
+export { patchApiPatientsIdStageMutationOptions } from "./hooks/PatientsHooks/usePatchApiPatientsIdStage.ts";
+export { usePatchApiPatientsIdStage } from "./hooks/PatientsHooks/usePatchApiPatientsIdStage.ts";
+export { postApiPatientsIdAssignMutationKey } from "./hooks/PatientsHooks/usePostApiPatientsIdAssign.ts";
+export { postApiPatientsIdAssignMutationOptions } from "./hooks/PatientsHooks/usePostApiPatientsIdAssign.ts";
+export { usePostApiPatientsIdAssign } from "./hooks/PatientsHooks/usePostApiPatientsIdAssign.ts";
 export { getApiProfileMeQueryKey } from "./hooks/ProfileHooks/useGetApiProfileMe.ts";
 export { getApiProfileMeQueryOptions } from "./hooks/ProfileHooks/useGetApiProfileMe.ts";
 export { useGetApiProfileMe } from "./hooks/ProfileHooks/useGetApiProfileMe.ts";
@@ -826,6 +942,12 @@ export { postApiClientsMutationRequestMeasureYearEnum } from "./types/PostApiCli
 export { postApiClientsMutationRequestPlanTierEnum } from "./types/PostApiClients.ts";
 export { postApiClientsMutationRequestRegionEnum } from "./types/PostApiClients.ts";
 export { postApiClientsMutationRequestStatusEnum } from "./types/PostApiClients.ts";
+export { postApiManualChartAbstractionMutationRequestCptCodeEnum } from "./types/PostApiManualChartAbstraction.ts";
+export { postApiManualChartAbstractionMutationRequestEvidenceTypeEnum } from "./types/PostApiManualChartAbstraction.ts";
+export { postApiManualChartAbstractionMutationRequestIcd10CodeEnum } from "./types/PostApiManualChartAbstraction.ts";
+export { postApiManualChartAbstractionMutationRequestScreeningTypeEnum } from "./types/PostApiManualChartAbstraction.ts";
+export { postApiManualChartAbstractionMutationRequestSourceTypeEnum } from "./types/PostApiManualChartAbstraction.ts";
+export { postApiPatientsIdAssignMutationRequestRoleEnum } from "./types/PostApiPatientsIdAssign.ts";
 export { postApiProjectsMutationRequestPriorityEnum } from "./types/PostApiProjects.ts";
 export { postApiProjectsMutationRequestProjectTypeEnum } from "./types/PostApiProjects.ts";
 export { postApiProjectsMutationRequestSpecialtyEnum } from "./types/PostApiProjects.ts";
@@ -849,13 +971,6 @@ export {
   postApiAuthLoginMutationResponseSchema,
 } from "./zod/AuthSchemas/postApiAuthLoginSchema.ts";
 export {
-  postApiAuthRegister201Schema,
-  postApiAuthRegister400Schema,
-  postApiAuthRegister500Schema,
-  postApiAuthRegisterMutationRequestSchema,
-  postApiAuthRegisterMutationResponseSchema,
-} from "./zod/AuthSchemas/postApiAuthRegisterSchema.ts";
-export {
   postApiAuthResetPassword200Schema,
   postApiAuthResetPassword400Schema,
   postApiAuthResetPassword404Schema,
@@ -872,6 +987,21 @@ export {
   postApiAuthSetPasswordMutationResponseSchema,
   postApiAuthSetPasswordQueryParamsSchema,
 } from "./zod/AuthSchemas/postApiAuthSetPasswordSchema.ts";
+export {
+  postApiAuthTwoFaSendOtp200Schema,
+  postApiAuthTwoFaSendOtp400Schema,
+  postApiAuthTwoFaSendOtp404Schema,
+  postApiAuthTwoFaSendOtp500Schema,
+  postApiAuthTwoFaSendOtpMutationRequestSchema,
+  postApiAuthTwoFaSendOtpMutationResponseSchema,
+} from "./zod/AuthSchemas/postApiAuthTwoFaSendOtpSchema.ts";
+export {
+  postApiAuthTwoFaValidateOtp200Schema,
+  postApiAuthTwoFaValidateOtp400Schema,
+  postApiAuthTwoFaValidateOtp500Schema,
+  postApiAuthTwoFaValidateOtpMutationRequestSchema,
+  postApiAuthTwoFaValidateOtpMutationResponseSchema,
+} from "./zod/AuthSchemas/postApiAuthTwoFaValidateOtpSchema.ts";
 export {
   deleteApiClientsId200Schema,
   deleteApiClientsIdMutationResponseSchema,
@@ -923,6 +1053,14 @@ export {
   postApiDepartmentsMutationResponseSchema,
 } from "./zod/DepartmentsSchemas/postApiDepartmentsSchema.ts";
 export {
+  postApiManualChartAbstraction201Schema,
+  postApiManualChartAbstraction400Schema,
+  postApiManualChartAbstraction404Schema,
+  postApiManualChartAbstraction500Schema,
+  postApiManualChartAbstractionMutationRequestSchema,
+  postApiManualChartAbstractionMutationResponseSchema,
+} from "./zod/Manual Chart AbstractionSchemas/postApiManualChartAbstractionSchema.ts";
+export {
   deleteAdminOrgsId200Schema,
   deleteAdminOrgsId401Schema,
   deleteAdminOrgsId403Schema,
@@ -940,6 +1078,7 @@ export {
 } from "./zod/OrganizationsSchemas/getAdminOrgsSchema.ts";
 export {
   patchAdminOrgsId200Schema,
+  patchAdminOrgsId400Schema,
   patchAdminOrgsId401Schema,
   patchAdminOrgsId403Schema,
   patchAdminOrgsId404Schema,
@@ -948,6 +1087,15 @@ export {
   patchAdminOrgsIdMutationResponseSchema,
   patchAdminOrgsIdPathParamsSchema,
 } from "./zod/OrganizationsSchemas/patchAdminOrgsIdSchema.ts";
+export {
+  postAdminOrgsIdSyncMedicalCoding200Schema,
+  postAdminOrgsIdSyncMedicalCoding401Schema,
+  postAdminOrgsIdSyncMedicalCoding403Schema,
+  postAdminOrgsIdSyncMedicalCoding404Schema,
+  postAdminOrgsIdSyncMedicalCoding500Schema,
+  postAdminOrgsIdSyncMedicalCodingMutationResponseSchema,
+  postAdminOrgsIdSyncMedicalCodingPathParamsSchema,
+} from "./zod/OrganizationsSchemas/postAdminOrgsIdSyncMedicalCodingSchema.ts";
 export {
   postAdminOrgsOrgIdTenantAdmins201Schema,
   postAdminOrgsOrgIdTenantAdmins400Schema,
@@ -968,6 +1116,28 @@ export {
   postAdminOrgsMutationRequestSchema,
   postAdminOrgsMutationResponseSchema,
 } from "./zod/OrganizationsSchemas/postAdminOrgsSchema.ts";
+export {
+  getApiPatientsExport200Schema,
+  getApiPatientsExportQueryParamsSchema,
+  getApiPatientsExportQueryResponseSchema,
+} from "./zod/PatientsSchemas/getApiPatientsExportSchema.ts";
+export {
+  getApiPatients200Schema,
+  getApiPatientsQueryParamsSchema,
+  getApiPatientsQueryResponseSchema,
+} from "./zod/PatientsSchemas/getApiPatientsSchema.ts";
+export {
+  patchApiPatientsIdStage200Schema,
+  patchApiPatientsIdStageMutationRequestSchema,
+  patchApiPatientsIdStageMutationResponseSchema,
+  patchApiPatientsIdStagePathParamsSchema,
+} from "./zod/PatientsSchemas/patchApiPatientsIdStageSchema.ts";
+export {
+  postApiPatientsIdAssign200Schema,
+  postApiPatientsIdAssignMutationRequestSchema,
+  postApiPatientsIdAssignMutationResponseSchema,
+  postApiPatientsIdAssignPathParamsSchema,
+} from "./zod/PatientsSchemas/postApiPatientsIdAssignSchema.ts";
 export {
   getApiProfileMe200Schema,
   getApiProfileMe404Schema,

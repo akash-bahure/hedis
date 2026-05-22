@@ -5,7 +5,7 @@
 
 export type PatchAdminOrgsIdPathParams = {
   /**
-   * @description Organization ID
+   * @description Organization ID (UUID)
    * @type string
    */
   id: string;
@@ -55,6 +55,11 @@ export type PatchAdminOrgsId200 = {
 };
 
 /**
+ * @description Bad request - at least one field (name or is_active) is required for update
+ */
+export type PatchAdminOrgsId400 = any;
+
+/**
  * @description Unauthorized
  */
 export type PatchAdminOrgsId401 = any;
@@ -76,10 +81,12 @@ export type PatchAdminOrgsId500 = any;
 
 export type PatchAdminOrgsIdMutationRequest = {
   /**
+   * @description New organization name (optional)
    * @type string | undefined
    */
   name?: string;
   /**
+   * @description Organization active status (optional)
    * @type boolean | undefined
    */
   is_active?: boolean;
@@ -92,6 +99,7 @@ export type PatchAdminOrgsIdMutation = {
   Request: PatchAdminOrgsIdMutationRequest;
   PathParams: PatchAdminOrgsIdPathParams;
   Errors:
+    | PatchAdminOrgsId400
     | PatchAdminOrgsId401
     | PatchAdminOrgsId403
     | PatchAdminOrgsId404

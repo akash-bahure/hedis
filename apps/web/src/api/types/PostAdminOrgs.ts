@@ -40,6 +40,10 @@ export type PostAdminOrgs201 = {
      */
     is_archived?: boolean;
     /**
+     * @type string
+     */
+    api_key?: string | null;
+    /**
      * @type string | undefined, date-time
      */
     created_at?: string;
@@ -47,7 +51,7 @@ export type PostAdminOrgs201 = {
 };
 
 /**
- * @description Invalid request
+ * @description Invalid request - name and subdomain are required
  */
 export type PostAdminOrgs400 = any;
 
@@ -68,13 +72,25 @@ export type PostAdminOrgs500 = any;
 
 export type PostAdminOrgsMutationRequest = {
   /**
+   * @description Organization name (required)
    * @type string
    */
   name: string;
   /**
+   * @description Organization subdomain, must be unique (required)
    * @type string
    */
   subdomain: string;
+  /**
+   * @description Organization active status (optional, defaults to true)
+   * @type boolean | undefined
+   */
+  is_active?: boolean;
+  /**
+   * @description API key for the organization (optional, defaults to null)
+   * @type string | undefined
+   */
+  api_key?: string;
 };
 
 export type PostAdminOrgsMutationResponse = PostAdminOrgs201;
