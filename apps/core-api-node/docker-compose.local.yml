@@ -32,7 +32,8 @@ services:
     image: docker.io/axllent/mailpit:latest
     container_name: myapp_local_mailpit
     ports:
-      - "8026:8026"
+      - "8025:8025" # Web UI
+      - "1025:1025" # SMTP
 
   db:
     image: postgres:15

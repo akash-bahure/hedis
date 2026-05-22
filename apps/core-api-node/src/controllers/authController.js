@@ -1,7 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const { sendResetEmail } = require("../services/mail.service");
+const { sendResetEmail, sendOTPEmail } = require("../services/mail.service");
 
 const MODULE_GROUP_MAPPING = {
   "Patients & Charts": "Main",
@@ -266,6 +266,16 @@ exports.login = async (req, res) => {
       ...safeUser
     } = user;
 
+    // Check if 2FA is enabled
+    if (user.two_fa_auth) {
+      return res.status(200).json({
+        message: "2FA required",
+        two_fa_required: true,
+        email: user.email,
+        key: user.email, // Using email as the key for OTP
+      });
+    }
+
     res.status(200).json({
       message: "Login successful",
       token,
@@ -451,5 +461,372 @@ exports.resetPassword = async (req, res) => {
   } catch (error) {
     console.error("Reset Password Error:", error);
     res.status(500).json({ error: error.message });
+  }
+};
+
+// SEND OTP
+exports.sendOTP = async (req, res) => {
+  try {
+    const { key, device_type, device_id } = req.body;
+
+    if (!key) {
+      return res.status(400).json({ message: "Key (email) is required" });
+    }
+
+    const client = req.db;
+
+    // Find user by email
+    const userResult = await client.query(
+      "SELECT id, two_fa_auth, email FROM users WHERE email = $1",
+      [key]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const user = userResult.rows[0];
+
+    if (!user.two_fa_auth) {
+      return res.status(400).json({ message: "2FA is disabled for this user" });
+    }
+
+    // Generate 6 digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    // Delete old OTP for same key and device_id
+    await client.query(
+      "DELETE FROM user_otp_verifications WHERE key = $1 AND device_id = $2",
+      [key, device_id]
+    );
+
+    // Save OTP
+    await client.query(
+      `INSERT INTO user_otp_verifications (key, otp, device_type, device_id, expires_at)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [key, otp, device_type, device_id, expiresAt]
+    );
+
+    // Send OTP email
+    await sendOTPEmail(user.email, otp);
+
+    res.json({ message: "OTP sent successfully to your email" });
+  } catch (error) {
+    console.error("Send OTP Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+// VALIDATE OTP
+
+exports.validateOTP = async (req, res) => {
+  try {
+    const { otp, key, device_type, device_id } = req.body;
+
+    if (!otp || !key || !device_type || !device_id) {
+      return res.status(400).json({
+        message: "OTP, key, device_type and device_id are required",
+      });
+    }
+
+    const client = req.db;
+
+    // Find matching OTP
+    const otpResult = await client.query(
+      `
+      SELECT *
+      FROM user_otp_verifications
+      WHERE
+        key = $1
+        AND otp = $2
+        AND device_type = $3
+        AND device_id = $4
+        AND verified = false
+      ORDER BY created_at DESC
+      LIMIT 1
+      `,
+      [key, otp, device_type, device_id]
+    );
+
+    if (otpResult.rows.length === 0) {
+      return res.status(400).json({
+        message: "Invalid OTP",
+      });
+    }
+
+    const otpRecord = otpResult.rows[0];
+
+    // Check OTP expiry
+    if (new Date() > new Date(otpRecord.expires_at)) {
+      return res.status(400).json({
+        message: "OTP has expired",
+      });
+    }
+
+    // Mark OTP verified
+    await client.query(
+      `
+      UPDATE user_otp_verifications
+      SET verified = true
+      WHERE id = $1
+      `,
+      [otpRecord.id]
+    );
+
+    // Fetch full user details
+    const result = await client.query(
+      `
+      SELECT
+        u.id,
+        u.full_name,
+        u.credentials,
+        u.email,
+        u.phone,
+        u.mobile_phone,
+        u.department_id,
+        u.job_title,
+        u.address_line_1,
+        u.address_line_2,
+        u.country,
+        u.city,
+        u.state,
+        u.zip_code,
+        u.location,
+        u.bio,
+        u.organization_id,
+        u.user_role_id,
+        u.shift,
+        u.user_type,
+        u.send_email,
+        u.two_fa_auth,
+        u.user_status,
+        u.last_login,
+        u.is_superuser,
+        u.is_staff,
+        u.is_active,
+        u.last_password_changed,
+        u.employee_id,
+        u.is_super_administrator,
+        u.project_access,
+        u.preferences,
+        u.certifications,
+        u.notifications,
+        u.security,
+        u.created_at,
+        u.updated_at,
+        u.password,
+
+        ur.name AS role,
+        ur.description AS role_description,
+        ur.active AS role_active,
+        ur.system_role,
+
+        t.name AS organization_name
+
+      FROM users u
+      LEFT JOIN user_roles ur ON u.user_role_id = ur.id
+      LEFT JOIN tenants t ON u.organization_id = t.id
+      WHERE u.email = $1
+      `,
+      [key]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const user = result.rows[0];
+
+    // Fetch Role & Permissions details
+    let userRole = null;
+
+    if (user.user_role_id) {
+      // Get users count for this role
+      const userCountResult = await client.query(
+        "SELECT COUNT(*)::int FROM users WHERE user_role_id = $1",
+        [user.user_role_id]
+      );
+
+      // Get permissions
+      const permissionsResult = await client.query(
+        "SELECT * FROM role_permissions WHERE role_id = $1",
+        [user.user_role_id]
+      );
+
+      const permissions = permissionsResult.rows;
+
+      const isChartAbstractor = user.role?.toLowerCase() === "chart abstractor";
+
+      const isQualityAnalyst = user.role?.toLowerCase() === "quality analyst";
+
+      const isAdminRole = [
+        "admin",
+        "super admin",
+        "operations/program manager",
+      ].includes(user.role?.toLowerCase());
+
+      // Group permissions
+      const groupedPermissions = [];
+      const groups = {};
+
+      if (isAdminRole) {
+        Object.keys(MODULE_GROUP_MAPPING).forEach((moduleName) => {
+          const groupName = MODULE_GROUP_MAPPING[moduleName];
+
+          if (!groups[groupName]) {
+            groups[groupName] = {
+              group: groupName,
+              modules: [],
+            };
+
+            groupedPermissions.push(groups[groupName]);
+          }
+
+          groups[groupName].modules.push({
+            id: null,
+            module: moduleName,
+            module_group: groupName,
+            can_view: true,
+            can_edit: true,
+            can_assign: true,
+            can_approve: true,
+            can_reject: true,
+            can_export: true,
+            can_override: true,
+          });
+        });
+      } else if (isChartAbstractor || isQualityAnalyst) {
+        const forcedModules = isChartAbstractor
+          ? ["Dashboard", "Work Queue", "Reports", "Settings"]
+          : ["Dashboard", "Work Queue"];
+
+        forcedModules.forEach((moduleName) => {
+          const groupName = MODULE_GROUP_MAPPING[moduleName] || "Main";
+
+          if (!groups[groupName]) {
+            groups[groupName] = {
+              group: groupName,
+              modules: [],
+            };
+
+            groupedPermissions.push(groups[groupName]);
+          }
+
+          groups[groupName].modules.push({
+            id: null,
+            module: moduleName,
+            module_group: groupName,
+            can_view: true,
+            can_edit: true,
+            can_assign: true,
+            can_approve: true,
+            can_reject: true,
+            can_export: true,
+            can_override: true,
+          });
+        });
+      } else {
+        permissions.forEach((p) => {
+          const groupName = MODULE_GROUP_MAPPING[p.module] || "Other";
+
+          if (!groups[groupName]) {
+            groups[groupName] = {
+              group: groupName,
+              modules: [],
+            };
+
+            groupedPermissions.push(groups[groupName]);
+          }
+
+          groups[groupName].modules.push({
+            id: p.id,
+            module: p.module,
+            module_group: groupName,
+            can_view: p.can_view,
+            can_edit: p.can_edit,
+            can_assign: p.can_assign,
+            can_approve: p.can_approve,
+            can_reject: p.can_reject,
+            can_export: p.can_export,
+            can_override: p.can_override,
+          });
+        });
+      }
+
+      userRole = {
+        id: user.user_role_id,
+        name: user.role,
+        description: user.role_description || "",
+        active: user.role_active,
+        users: userCountResult.rows[0].count,
+        system_role: user.system_role,
+        permissions_count: permissions.length,
+        permissions: groupedPermissions,
+      };
+    }
+
+    // Organization
+    const organization = user.organization_id
+      ? {
+          id: user.organization_id,
+          name: user.organization_name || "",
+        }
+      : null;
+
+    // Update last login
+    await client.query(
+      `
+      UPDATE users
+      SET last_login = CURRENT_TIMESTAMP
+      WHERE id = $1
+      `,
+      [user.id]
+    );
+
+    // Generate JWT token
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1d",
+      }
+    );
+
+    // Remove sensitive fields
+    const {
+      password: _password,
+      reset_token,
+      reset_token_expiry,
+      role: _role,
+      role_description: _role_desc,
+      role_active: _role_active,
+      system_role: _sys_role,
+      organization_name: _org_name,
+      ...safeUser
+    } = user;
+
+    // Final response
+    res.status(200).json({
+      message: "Login successful",
+      token,
+      user: {
+        ...safeUser,
+        organization,
+        user_role: userRole,
+        last_login: new Date(),
+      },
+    });
+  } catch (error) {
+    console.error("Validate OTP Error:", error);
+
+    res.status(500).json({
+      error: error.message,
+    });
   }
 };
