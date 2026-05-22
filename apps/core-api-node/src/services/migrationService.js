@@ -214,6 +214,21 @@ async function runMigrations(client, schema) {
     // Columns might already exist or other harmless error
   }
 
+  try {
+    await client.query(`
+      ALTER TABLE ${schema}.projects
+        ADD COLUMN IF NOT EXISTS project_id VARCHAR(50) UNIQUE,
+        ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Draft',
+        ADD COLUMN IF NOT EXISTS specialty VARCHAR(100),
+        ADD COLUMN IF NOT EXISTS notes TEXT,
+        ADD COLUMN IF NOT EXISTS total_charts INTEGER DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS completed_charts INTEGER DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS pending_charts INTEGER DEFAULT 0;
+    `);
+  } catch (err) {
+    // Columns might already exist or other harmless error
+  }
+
   await client.query(`
    CREATE TABLE IF NOT EXISTS ${schema}.projects (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -500,6 +515,66 @@ async function runMigrations(client, schema) {
   VARCHAR(100) DEFAULT 'Pending';
 `);
 
+
+await client.query(`
+CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
+
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    -- Chart Reference
+    patient_chart_id UUID NOT NULL
+    REFERENCES ${schema}.patient_charts(id)
+    ON DELETE CASCADE,
+
+    -- Assigned User
+    assigned_to UUID NOT NULL
+    REFERENCES ${schema}.users(id)
+    ON DELETE CASCADE,
+
+    -- Role of Assigned User
+    assigned_role VARCHAR(100) NOT NULL
+    CHECK (
+      assigned_role IN (
+        'Chart Abstractor',
+        'Quality Analyst'
+      )
+    ),
+
+    -- Priority
+    priority VARCHAR(50) DEFAULT 'Medium'
+    CHECK (
+      priority IN (
+        'Urgent',
+        'High',
+        'Medium',
+        'Low'
+      )
+    ),
+
+    -- Assignment Notes
+    assignment_note TEXT,
+
+    -- Workflow Status
+    assignment_status VARCHAR(100) DEFAULT 'Assigned'
+    CHECK (
+      assignment_status IN (
+        'Assigned',
+        'In Progress',
+        'Completed',
+        'Rejected'
+      )
+    ),
+
+    -- Metadata
+    assigned_by UUID
+    REFERENCES ${schema}.users(id),
+
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
   await client.query(`
   CREATE TABLE IF NOT EXISTS ${schema}.user_otp_verifications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -513,5 +588,6 @@ async function runMigrations(client, schema) {
   );
 `);
 }
+
 
 module.exports = { runMigrations };

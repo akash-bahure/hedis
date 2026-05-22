@@ -72,6 +72,10 @@ const manualChartAbstractionRoutes = require(
   "./routes/manualChartAbstractionRoutes"
 );
 
+const chartAssignmentRoutes = require(
+  "./routes/chartsAssignmentRoute"
+);
+
 // Admin routes
 app.use("/admin/auth", require("./routes/adminAuthRoutes"));
 app.use("/admin/users", require("./routes/adminUserRoutes"));
@@ -84,8 +88,12 @@ app.use(
   "/api/manual-chart-abstraction",
   manualChartAbstractionRoutes
 );
-app.use("/api/user-roles", require("./routes/userRoleRoutes"));
+app.use(
+  "/api/chart-assignments",  
+  chartAssignmentRoutes
+);
 
+app.use("/api/user-roles", require("./routes/userRoleRoutes"));
 
 // Protected Routes
 app.use(authMiddleware);
@@ -98,6 +106,7 @@ app.use("/api/projects", projectRoutes);
 // app.use("/api/user-roles", require("./routes/userRoleRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/departments", require("./routes/department.routes"));
+
 
 app.use("/api/profile", require("./routes/profile.routes"));
 app.use("/api/patients", require("./routes/patient.routes"));

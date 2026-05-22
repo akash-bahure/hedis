@@ -59,7 +59,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useGetApiClients, useGetApiProjects, usePostApiProjects } from "@/api";
+import {
+  getApiProjectsQueryKey,
+  useGetApiClients,
+  useGetApiProjects,
+  usePostApiProjects,
+} from "@/api";
+import { useQueryClient } from "@tanstack/react-query";
 
 /* ─── Types ─────────────────────────────────────────────────── */
 type ProjectStatus = "Active" | "On Hold" | "Completed" | "Draft" | "At Risk";
@@ -1343,10 +1349,10 @@ function SLATab() {
 function TeamTab({ p }: { p: Project }) {
   const [pm, setPm] = useState(p.pm);
   const [selectedCoders, setSelectedCoders] = useState(
-    TEAM_MEMBERS.coders.slice(0, p.coders)
+    TEAM_MEMBERS.coders.slice(0, p.coders),
   );
   const [selectedAuditors, setSelectedAuditors] = useState(
-    TEAM_MEMBERS.auditors.slice(0, p.auditors)
+    TEAM_MEMBERS.auditors.slice(0, p.auditors),
   );
 
   const initials = (name: string) =>
@@ -2319,6 +2325,7 @@ function ProjectDetail({
   onBack: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<TabId>("overview");
+  const permissions = usePermissions();
 
   const TABS: { id: TabId; label: string }[] = [
     { id: "overview", label: "Overview" },
@@ -2371,7 +2378,7 @@ function ProjectDetail({
             <RefreshCw className="w-3.5 h-3.5" />
             Refresh
           </button>
-          {usePermissions().hasPermission("Projects", "can_edit") && (
+          {!permissions.hasPermission("Projects", "can_edit") && (
             <>
               <button className="inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 text-xs border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors">
                 <Edit3 className="w-3.5 h-3.5" />
@@ -2464,6 +2471,8 @@ function NewProjectModal({ onClose }: { onClose: () => void }) {
   });
 
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const permissions = usePermissions();
+  const queryClient = useQueryClient();
 
   // type AssignRole = "coders" | "auditL1" | "auditL2" | "auditL3";
   // const [assigns, setAssigns] = useState<Record<AssignRole, string[]>>({
@@ -2485,6 +2494,10 @@ function NewProjectModal({ onClose }: { onClose: () => void }) {
     mutation: {
       onSuccess: () => {
         toast.success("Project created successfully.");
+
+        queryClient.invalidateQueries({
+          queryKey: getApiProjectsQueryKey(),
+        });
 
         setDone(true);
 
@@ -2865,7 +2878,7 @@ function NewProjectModal({ onClose }: { onClose: () => void }) {
                     disabled={
                       isPending ||
                       !step2Valid ||
-                      !usePermissions().hasPermission("Projects", "can_edit")
+                      !permissions.hasPermission("Projects", "can_edit")
                     }
                     className="flex-1 py-2 text-xs font-bold rounded-xl text-white bg-primary hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5"
                   >
