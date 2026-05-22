@@ -499,6 +499,19 @@ async function runMigrations(client, schema) {
   ADD COLUMN IF NOT EXISTS abstraction_status
   VARCHAR(100) DEFAULT 'Pending';
 `);
+
+  await client.query(`
+  CREATE TABLE IF NOT EXISTS ${schema}.user_otp_verifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    key TEXT NOT NULL,
+    otp VARCHAR(6) NOT NULL,
+    device_type TEXT,
+    device_id TEXT,
+    verified BOOLEAN DEFAULT false,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+`);
 }
 
 module.exports = { runMigrations };

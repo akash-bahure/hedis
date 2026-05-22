@@ -359,4 +359,82 @@ router.post("/forgot-password", authController.forgotPassword);
  */
 router.post("/reset-password", authController.resetPassword);
 
+/**
+ * @swagger
+ * /api/auth/two-fa/send-otp:
+ *   post:
+ *     summary: Send 2FA OTP
+ *     tags: [Auth]
+ *     description: Sends a 6-digit OTP to the user's email for 2FA verification.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - key
+ *             properties:
+ *               key:
+ *                 type: string
+ *                 description: User email address
+ *                 example: john@email.com
+ *               device_type:
+ *                 type: string
+ *                 example: web
+ *               device_id:
+ *                 type: string
+ *                 example: unique_device_id
+ *     responses:
+ *       200:
+ *         description: OTP sent successfully
+ *       400:
+ *         description: Invalid input or 2FA disabled
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+router.post("/two-fa/send-otp", authController.sendOTP);
+
+/**
+ * @swagger
+ * /api/auth/two-fa/validate-otp:
+ *   post:
+ *     summary: Validate 2FA OTP
+ *     tags: [Auth]
+ *     description: Validates the 6-digit OTP and returns a JWT token upon success.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - otp
+ *               - key
+ *             properties:
+ *               otp:
+ *                 type: string
+ *                 example: "123456"
+ *               key:
+ *                 type: string
+ *                 description: User email address
+ *                 example: john@email.com
+ *               device_type:
+ *                 type: string
+ *                 example: web
+ *               device_id:
+ *                 type: string
+ *                 example: unique_device_id
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       400:
+ *         description: Invalid OTP or expired
+ *       500:
+ *         description: Server error
+ */
+router.post("/two-fa/validate-otp", authController.validateOTP);
+
 module.exports = router;
