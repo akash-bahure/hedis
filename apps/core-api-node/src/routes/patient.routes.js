@@ -114,4 +114,27 @@ router.post("/:id/assign", controller.assignPatient);
  */
 router.patch("/:id/stage", controller.updatePatientStage);
 
+/**
+ * @swagger
+ * /api/patients/export:
+ *   get:
+ *     summary: Export all patients to CSV
+ *     tags: [Patients]
+ *     parameters:
+ *       - in: query
+ *         name: format
+ *         schema:
+ *           type: string
+ *           default: csv
+ *         description: Export format (csv)
+ *     responses:
+ *       200:
+ *         description: CSV file downloaded
+ *         content:
+ *           text/csv:
+ *             schema:
+ *               type: string
+ */
+router.get("/export", controller.exportPatients);
+
 module.exports = router;
