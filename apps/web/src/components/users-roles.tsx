@@ -77,7 +77,9 @@ import {
   usePostApiDepartments,
   useGetApiDepartments,
   usePostApiUsersDeactivate,
+  // usePostApiUsersAssignRole,
 } from "@/api";
+
 import {
   useGetApiProjectsAccessAll,
   getApiProjectsAccessAllQueryKey,
@@ -1984,6 +1986,8 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
   const [showInvite, setShowInvite] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [editUser, setEditUser] = useState<User | null>(null);
+  const [showAssignRole, setShowAssignRole] = useState(false);
+  const [selectedRoleId, setSelectedRoleId] = useState("");
   const { canEdit, hasPermission } = usePermissions();
 
   const { data, isLoading } = useGetApiUsers({
@@ -2161,6 +2165,40 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
         },
       },
     });
+
+  // const { mutate: assignRole, isPending: isAssigningRole } =
+  //   usePostApiUsersAssignRole({
+  //     mutation: {
+  //       onSuccess: () => {
+  //         queryClient.invalidateQueries({ queryKey: getApiUsersQueryKey() });
+  //         toast.success("Role assigned successfully to selected users");
+  //         setSelected(new Set());
+  //         setShowAssignRole(false);
+  //         setSelectedRoleId("");
+  //       },
+  //       onError: (error: any) => {
+  //         toast.error(
+  //           error?.response?.data?.message ||
+  //             error?.message ||
+  //             "Failed to assign role"
+  //         );
+  //       },
+  //     },
+  //   });
+
+  // const handleBulkAssignRole = () => {
+  //   if (!selectedRoleId) {
+  //     toast.error("Please select a role");
+  //     return;
+  //   }
+  //   assignRole({
+  //     data: {
+  //       user_ids: Array.from(selected),
+  //       role_id: selectedRoleId,
+  //     },
+  //   });
+  // };
+
   const handleBulkDeactivate = () => {
     if (selected.size === 0) {
       toast.error("Please select users");
@@ -2242,7 +2280,10 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
             <span className="text-[10px] font-bold text-primary">
               {selected.size} selected
             </span>
-            <button className="text-[10px] text-primary font-bold hover:underline">
+            <button
+              onClick={() => setShowAssignRole(true)}
+              className="text-[10px] text-primary font-bold hover:underline"
+            >
               Assign Role
             </button>
             <button
@@ -2426,6 +2467,71 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
           </div>
         </div>
       </div>
+
+      {/* Assign Role Modal */}
+      {showAssignRole && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-muted/30">
+              <h3 className="text-sm font-bold text-foreground">
+                Assign Role to {selected.size} User(s)
+              </h3>
+              <button
+                onClick={() => {
+                  setShowAssignRole(false);
+                  setSelectedRoleId("");
+                }}
+                className="p-1 hover:bg-muted rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  Select New Role
+                </label>
+                <select
+                  value={selectedRoleId}
+                  onChange={(e) => setSelectedRoleId(e.target.value)}
+                  className="w-full px-4 py-2.5 text-xs bg-muted/50 border border-border rounded-xl focus:outline-none focus:ring-1 focus:ring-primary appearance-none"
+                >
+                  <option value="">Select a role...</option>
+                  {rolesdata?.results?.map((role) => (
+                    <option key={role.id} value={role.id}>
+                      {role.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                This will update the role for all selected users. This action
+                cannot be undone easily.
+              </p>
+            </div>
+            <div className="px-6 py-4 bg-muted/30 border-t border-border flex gap-3">
+              <button
+                onClick={() => {
+                  setShowAssignRole(false);
+                  setSelectedRoleId("");
+                }}
+                className="flex-1 py-2 text-xs font-bold border border-border rounded-xl hover:bg-muted transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                // onClick={handleBulkAssignRole}
+                // disabled={isAssigningRole || !selectedRoleId}
+                className="flex-1 py-2 text-xs font-bold bg-primary text-white rounded-xl hover:bg-primary/90 disabled:opacity-50 transition-colors"
+              >
+                {/* {isAssigningRole ? "Assigning..." : "Assign Role"} */}
+                Asssign
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showInvite && (
         <InviteUserModal
           onClose={() => {
