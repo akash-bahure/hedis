@@ -16,8 +16,8 @@ import {
   KeyRound,
 } from "lucide-react";
 import { toast } from "sonner";
-import { usePostApiAuthLogin } from "@/api";
-import { Link } from "@tanstack/react-router";
+import { usePostApiAuthLogin, usePostApiAuthTwoFaSendOtp } from "@/api";
+import { Link, useNavigate } from "@tanstack/react-router";
 
 interface LoginScreenProps {
   onLogin: (roleId: RoleId) => void;
@@ -110,6 +110,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const navigate = useNavigate();
 
   const currentRole = ROLES.find((r) => r.id === selectedRole)!;
 
@@ -142,18 +143,56 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
   //   }, 1200);
   // };
 
-  const { mutate: loginUser, isPending } = usePostApiAuthLogin({
+  const { mutate: sendOtp, isPending: isSendingOtp } =
+    usePostApiAuthTwoFaSendOtp({
+      mutation: {
+        onSuccess: () => {
+          toast.success("2FA Required. OTP sent to your email.");
+
+          navigate({
+            to: "/auth/otp",
+            search: {
+              email: email.trim().toLowerCase(),
+              role: selectedRole,
+            },
+          });
+        },
+
+        onError: (error: any) => {
+          console.error("Send OTP Error:", error);
+
+          toast.error(error?.response?.data?.message || "Failed to send OTP.");
+        },
+      },
+    });
+
+  const { mutate: loginUser, isPending: isLoginPending } = usePostApiAuthLogin({
     mutation: {
       onSuccess: (response: any) => {
         console.log("Login Success:", response);
 
+        if (response?.two_fa_required) {
+          const deviceId =
+            localStorage.getItem("device_id") || crypto.randomUUID();
+
+          localStorage.setItem("device_id", deviceId);
+
+          sendOtp({
+            data: {
+              key: email.trim().toLowerCase(),
+              device_type: "web",
+              device_id: deviceId,
+            },
+          });
+
+          return;
+        }
         const userData = {
           ...response.user,
           accessToken: response.token,
         };
 
         localStorage.setItem("userDetail", JSON.stringify(userData));
-
         localStorage.setItem("role", selectedRole);
 
         if (rememberMe) {
@@ -729,20 +768,22 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             {/* Submit */}
             <button
               type="submit"
-              disabled={isPending}
+              disabled={isLoginPending || isSendingOtp}
               className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-lg text-white font-semibold transition-all active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed mt-2"
               style={{
-                background: isPending
-                  ? "#0891b2"
-                  : "linear-gradient(135deg, #0891b2 0%, #0e7490 100%)",
+                background:
+                  isLoginPending || isSendingOtp
+                    ? "#0891b2"
+                    : "linear-gradient(135deg, #0891b2 0%, #0e7490 100%)",
                 fontSize: "13px",
                 letterSpacing: "0.02em",
-                boxShadow: isPending
-                  ? "none"
-                  : "0 4px 14px rgba(8, 145, 178, 0.35)",
+                boxShadow:
+                  isLoginPending || isSendingOtp
+                    ? "none"
+                    : "0 4px 14px rgba(8, 145, 178, 0.35)",
               }}
             >
-              {isLoading ? (
+              {isLoginPending || isSendingOtp ? (
                 <>
                   <svg
                     className="w-4 h-4 animate-spin"

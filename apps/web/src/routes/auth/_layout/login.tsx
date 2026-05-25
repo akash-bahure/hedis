@@ -21,7 +21,6 @@ function RouteComponent() {
   const navigate = useNavigate();
 
   const handleLogin = (roleId: string) => {
-    localStorage.setItem("auth", "true");
     localStorage.setItem("role", roleId);
     navigate({ to: "/dashboard" }); // or your dashboard route
   };

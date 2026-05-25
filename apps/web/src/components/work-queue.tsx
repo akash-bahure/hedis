@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import type { ElementType } from "react";
+import { getApiPatientsExport } from "@/api";
 import {
   Search,
   ChevronDown,
@@ -49,6 +50,7 @@ import {
   User,
 } from "lucide-react";
 import { usePermissions } from "@/hooks/usePermissions";
+import { toast } from "sonner";
 
 /* ─────────────────────────────────────────────────────────────
    TYPES
@@ -2328,6 +2330,47 @@ export function WorkQueue({
     );
   });
 
+  const handleExport = async () => {
+    try {
+      toast.loading("Preparing export...", { id: "export-toast" });
+
+      const blob = await getApiPatientsExport(
+        {
+          format: "csv",
+        },
+        {
+          responseType: "blob",
+        }
+      );
+
+      // Create downloadable link
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `patients_export_${new Date()
+        .toISOString()
+        .slice(0, 10)}.csv`;
+
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Patients export downloaded successfully", {
+        id: "export-toast",
+      });
+    } catch (err: any) {
+      console.error("Patient export failed:", err);
+
+      toast.error("Failed to export patients. Please try again.", {
+        id: "export-toast",
+      });
+    }
+  };
+
   return (
     <div className="flex h-full overflow-hidden bg-background">
       {/* ══════════════════════════════════════════════════════
@@ -2595,7 +2638,10 @@ export function WorkQueue({
                 <UserPlus className="w-3.5 h-3.5" />
                 Bulk Assign
               </button>
-              <button className="inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 text-xs font-semibold border border-border rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+              <button
+                onClick={handleExport}
+                className="inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 text-xs font-semibold border border-border rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              >
                 <Download className="w-3.5 h-3.5" />
                 Export
               </button>
