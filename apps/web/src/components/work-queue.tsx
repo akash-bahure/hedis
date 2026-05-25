@@ -1740,15 +1740,7 @@ function AssignModal({
             data?.results?.filter((user: any) => {
               const roleName = user?.user_role?.name?.trim();
 
-              if (roleType === "Abstractor") {
-                return roleName === "Chart Abstractor";
-              }
-
-              if (roleType === "QA") {
-                return roleName === "Quality Analyst";
-              }
-
-              return false;
+              return ["Chart Abstractor", "Quality Analyst"].includes(roleName);
             }) || [];
 
           return {
@@ -2293,6 +2285,34 @@ export function WorkQueue({
   );
 
   const apiPatients = patientsResponse?.data ?? [];
+  const { data: usersResponse } = useGetApiUsers(
+    {
+      page: 1,
+      limit: 100,
+    },
+    {
+      query: {
+        select: (data: any) => {
+          return (
+            data?.results?.filter((user: any) => {
+              const roleName = user?.user_role?.name?.trim();
+
+              return (
+                roleName === "Chart Abstractor" ||
+                roleName === "Quality Analyst"
+              );
+            }) || []
+          );
+        },
+      },
+    },
+  );
+
+  const ASSIGNEES = useMemo(() => {
+    const users = usersResponse || [];
+
+    return ["All", ...users.map((user: any) => `${user.full_name}`)];
+  }, [usersResponse]);
 
   const workQueueData = useMemo(
     () =>
@@ -2306,11 +2326,11 @@ export function WorkQueue({
 
         dob: item?.dob ? new Date(item.dob).toLocaleDateString() : "—",
 
-        measureCode: item?.measure_code || "—",
+        measureCode: item?.measure || "—",
 
-        measure: item?.measure_name || "—",
+        measure: item?.measure || "—",
 
-        plan: item?.plan_name || "—",
+        plan: item?.plan || "—",
 
         priority: item?.priority || "Medium",
 
@@ -2318,7 +2338,10 @@ export function WorkQueue({
 
         step: item?.step || 1,
 
-        assignedTo: item?.abstractor_name || item?.assigned_to_name || "—",
+        assignedTo:
+          item?.abstractor_name ||
+          item?.assigned_to_name ||
+          (item?.stage === "Assigned" ? "Assigned" : "—"),
 
         dueDate: item?.due_date
           ? new Date(item.due_date).toLocaleDateString()
@@ -2532,7 +2555,7 @@ export function WorkQueue({
         },
         {
           responseType: "blob",
-        }
+        },
       );
 
       // Create downloadable link
@@ -2817,16 +2840,24 @@ export function WorkQueue({
                 {isFetching ? "Refreshing..." : "Refresh"}
               </button>
               <button
+                disabled={selected.size === 0}
                 onClick={() => {
-                  const notStarted = MOCK.filter(
-                    (r) => r.status === "Not Started",
-                  ).map((r) => r.id);
-                  setAssignModal(notStarted.slice(0, 6));
+                  setAssignModal(Array.from(selected));
                 }}
-                className="inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 text-xs font-bold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                className={`inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 text-xs font-bold rounded-lg transition-colors
+                ${
+                  selected.size === 0
+                    ? "bg-slate-300 text-slate-500 cursor-not-allowed"
+                    : "bg-primary text-white hover:bg-primary/90"
+                }`}
               >
                 <UserPlus className="w-3.5 h-3.5" />
                 Bulk Assign
+                {selected.size > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full bg-white/20 text-[10px]">
+                    {selected.size}
+                  </span>
+                )}
               </button>
               <button
                 onClick={handleExport}
@@ -3521,6 +3552,12 @@ export function WorkQueue({
             roleType={effectiveRole === "qa-analyst" ? "QA" : "Abstractor"}
             onClose={() => setAssignModal([])}
             onAssign={async ({ userId, userName, role }) => {
+              console.log("ROLE RECEIVED =>", role);
+
+              console.log("PAYLOAD =>", {
+                userId,
+                role,
+              });
               try {
                 await Promise.all(
                   assignModal.map(async (chartId) => {
@@ -3530,9 +3567,13 @@ export function WorkQueue({
                         userId,
                         role:
                           role === "QA"
-                            ? postApiPatientsIdAssignMutationRequestRoleEnum.QA
-                            : postApiPatientsIdAssignMutationRequestRoleEnum.Abstractor,
+                            ? "Quality Analyst"
+                            : "Chart Abstractor",
                       },
+                    });
+                    console.log("PAYLOAD =>", {
+                      userId,
+                      role,
                     });
 
                     // Update stage after assignment

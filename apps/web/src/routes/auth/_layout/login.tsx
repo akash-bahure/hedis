@@ -22,7 +22,11 @@ function RouteComponent() {
 
   const handleLogin = (roleId: string) => {
     localStorage.setItem("role", roleId);
-    navigate({ to: "/dashboard" }); // or your dashboard route
+
+    navigate({
+      to: "/dashboard",
+      replace: true,
+    });
   };
 
   return <LoginScreen onLogin={handleLogin} />;
