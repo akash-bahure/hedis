@@ -196,3 +196,109 @@ exports.updatePatientStage = async (req, res) => {
     });
   }
 };
+
+// EXPORT PATIENTS (CSV)
+exports.exportPatients = async (req, res) => {
+  const client = req.db;
+
+  try {
+    const format = req.query.format || "csv";
+
+    const schema = req.tenant.schema_name;
+
+    // Fetch ALL patients (No filters)
+    const result = await client.query(`
+      SELECT 
+        p.patient_id,
+        p.first_name,
+        p.last_name,
+        p.dob,
+        p.gender,
+        p.measure,
+        p.plan,
+        p.priority,
+        p.stage,
+        p.due_date,
+        pr.project_name,
+        u_abs.full_name AS abstractor_name,
+        u_qa.full_name AS qa_name,
+        p.created_at,
+        p.updated_at
+      FROM ${schema}.patients p
+      LEFT JOIN ${schema}.projects pr ON p.project_id = pr.id
+      LEFT JOIN ${schema}.users u_abs ON p.abstractor_id = u_abs.id
+      LEFT JOIN ${schema}.users u_qa ON p.qa_id = u_qa.id
+      ORDER BY p.created_at DESC
+    `);
+
+    const patients = result.rows;
+
+    if (patients.length === 0) {
+      return res.status(404).json({ message: "No patients found" });
+    }
+
+    // ================= CSV =================
+    if (format === "csv") {
+      const headers = [
+        "Patient ID",
+        "First Name",
+        "Last Name",
+        "DOB",
+        "Gender",
+        "Measure",
+        "Plan",
+        "Priority",
+        "Stage",
+        "Due Date",
+        "Project Name",
+        "Abstractor",
+        "QA",
+        "Created At",
+        "Updated At",
+      ];
+
+      const csvRows = patients.map((p) => [
+        p.patient_id,
+        p.first_name,
+        p.last_name,
+        p.dob,
+        p.gender,
+        p.measure,
+        p.plan,
+        p.priority,
+        p.stage,
+        p.due_date,
+        p.project_name,
+        p.abstractor_name,
+        p.qa_name,
+        p.created_at,
+        p.updated_at,
+      ]);
+
+      const csvContent = [headers, ...csvRows]
+        .map((row) => row.map((val) => `"${val ?? ""}"`).join(","))
+        .join("\n");
+
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="patients_export_${new Date().toISOString().split("T")[0]}.csv"`
+      );
+
+      return res.send(csvContent);
+    }
+
+    // Optional: Add PDF support later if needed
+    if (format === "pdf") {
+      return res
+        .status(400)
+        .json({ message: "PDF format not implemented yet" });
+    }
+
+    // Invalid format
+    res.status(400).json({ message: "Invalid format. Use ?format=csv" });
+  } catch (err) {
+    console.error("Export Patients Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
