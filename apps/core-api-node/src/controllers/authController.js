@@ -276,6 +276,9 @@ exports.login = async (req, res) => {
       });
     }
 
+    // Fetch Project Access
+    const projectAccess = await getUserProjectAccess(user.id, req.db);
+
     res.status(200).json({
       message: "Login successful",
       token,
@@ -283,6 +286,7 @@ exports.login = async (req, res) => {
         ...safeUser,
         organization,
         user_role: userRole,
+        project_access: projectAccess,
         last_login: new Date(),
       },
     });
@@ -811,6 +815,9 @@ exports.validateOTP = async (req, res) => {
       ...safeUser
     } = user;
 
+    // Fetch Project Access
+    const projectAccess = await getUserProjectAccess(user.id, client);
+
     // Final response
     res.status(200).json({
       message: "Login successful",
@@ -819,6 +826,7 @@ exports.validateOTP = async (req, res) => {
         ...safeUser,
         organization,
         user_role: userRole,
+        project_access: projectAccess,
         last_login: new Date(),
       },
     });
@@ -828,5 +836,29 @@ exports.validateOTP = async (req, res) => {
     res.status(500).json({
       error: error.message,
     });
+  }
+};
+
+// HELPER: Fetch detailed project access level for a user
+const getUserProjectAccess = async (userId, db) => {
+  try {
+    const query = `
+      SELECT 
+          p.id as project_id,
+          p.project_name,
+          COALESCE(upa.access_level, CASE WHEN p.id = ANY(u.project_access) THEN 'Full' ELSE 'None' END) as access_level
+      FROM projects p
+      CROSS JOIN users u
+      LEFT JOIN user_project_access upa ON upa.user_id = u.id AND upa.project_id = p.id
+      WHERE u.id = $1
+      AND (
+          COALESCE(upa.access_level, CASE WHEN p.id = ANY(u.project_access) THEN 'Full' ELSE 'None' END) != 'None'
+      );
+    `;
+    const result = await db.query(query, [userId]);
+    return result.rows;
+  } catch (error) {
+    console.error("Get User Project Access Error:", error);
+    return [];
   }
 };

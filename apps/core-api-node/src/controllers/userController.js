@@ -43,6 +43,12 @@ const deactivateUsersSchema = z.object({
   user_ids: z.array(z.string().uuid()),
 });
 
+const assignRolesSchema = z.object({
+  user_ids: z.array(z.string().uuid()),
+  role_id: z.string().uuid(),
+});
+
+
 const generateInviteToken = () => crypto.randomBytes(32).toString("hex");
 // CREATE USER
 exports.createUser = async (req, res) => {
@@ -932,3 +938,46 @@ exports.deactivateUsers = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// ASSIGN ROLES TO MULTIPLE USERS
+exports.assignRoles = async (req, res) => {
+  const client = req.db;
+  try {
+    const { user_ids, role_id } = assignRolesSchema.parse(req.body);
+
+    if (!user_ids || user_ids.length === 0) {
+      return res.status(400).json({ message: "No user IDs provided" });
+    }
+
+    // Check if role exists
+    const roleCheck = await client.query(
+      "SELECT id FROM user_roles WHERE id = $1",
+      [role_id]
+    );
+    if (roleCheck.rows.length === 0) {
+      return res.status(400).json({ message: "Invalid role ID" });
+    }
+
+    const query = `
+      UPDATE users 
+      SET user_role_id = $1,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ANY($2)
+      RETURNING id
+    `;
+
+    const result = await client.query(query, [role_id, user_ids]);
+
+    res.json({
+      message: `Role assigned to ${result.rowCount} user(s) successfully`,
+      updated_user_ids: result.rows.map((r) => r.id),
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ errors: error.errors });
+    }
+    console.error("Assign Roles Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
