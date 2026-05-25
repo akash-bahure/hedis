@@ -50,6 +50,13 @@ import {
   User,
 } from "lucide-react";
 import { usePermissions } from "@/hooks/usePermissions";
+import {
+  postApiPatientsIdAssignMutationRequestRoleEnum,
+  useGetApiPatients,
+  useGetApiUsers,
+  usePatchApiPatientsIdStage,
+  usePostApiPatientsIdAssign,
+} from "@/api";
 import { toast } from "sonner";
 
 /* ─────────────────────────────────────────────────────────────
@@ -1706,15 +1713,54 @@ function AssignModal({
   chartIds,
   onClose,
   onAssign,
+  roleType = "Abstractor",
 }: {
   chartIds: string[];
   onClose: () => void;
-  onAssign: (assignee: string) => void;
+  onAssign: (payload: {
+    userId: string;
+    userName: string;
+    role: "Abstractor" | "QA";
+  }) => void;
+  roleType?: "Abstractor" | "QA";
 }) {
-  const [assignee, setAssignee] = useState("S. Johnson");
+  const [selectedUser, setSelectedUser] = useState<any>(null);
   const [priority, setPriority] = useState<Priority>("High");
   const [note, setNote] = useState("");
-  const people = ["S. Johnson", "R. Gupta", "D. Pillai", "M. Joshi", "P. Rao"];
+  const { data: usersResponse, isLoading } = useGetApiUsers(
+    {
+      page: 1,
+      limit: 100,
+      search: "",
+    },
+    {
+      query: {
+        select: (data: any) => {
+          const filteredUsers =
+            data?.results?.filter((user: any) => {
+              const roleName = user?.user_role?.name?.trim();
+
+              if (roleType === "Abstractor") {
+                return roleName === "Chart Abstractor";
+              }
+
+              if (roleType === "QA") {
+                return roleName === "Quality Analyst";
+              }
+
+              return false;
+            }) || [];
+
+          return {
+            ...data,
+            results: filteredUsers,
+          };
+        },
+      },
+    },
+  );
+
+  const users = usersResponse?.results || [];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -1760,17 +1806,32 @@ function AssignModal({
             <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block mb-1.5">
               Assign To
             </label>
-            <div className="grid grid-cols-3 gap-2">
-              {people.map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setAssignee(p)}
-                  className={`px-3 py-2 rounded-xl border text-[11px] font-semibold text-left transition-all ${assignee === p ? "border-primary bg-primary/5 text-primary" : "border-border text-foreground hover:border-primary/40"}`}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
+
+            {isLoading ? (
+              <div className="text-[12px] text-muted-foreground">
+                Loading users...
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {users.map((user: any) => (
+                  <button
+                    key={user?.id}
+                    onClick={() => setSelectedUser(user)}
+                    className={`px-3 py-2 rounded-xl border text-[11px] font-semibold text-left transition-all ${
+                      selectedUser?.id === user?.id
+                        ? "border-primary bg-primary/5 text-primary"
+                        : "border-border text-foreground hover:border-primary/40"
+                    }`}
+                  >
+                    <div className="font-semibold">{user?.full_name}</div>
+
+                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                      {user?.user_role?.name}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Priority */}
@@ -1817,11 +1878,19 @@ function AssignModal({
               Cancel
             </button>
             <button
+              disabled={!selectedUser}
               onClick={() => {
-                onAssign(assignee);
+                if (!selectedUser) return;
+
+                onAssign({
+                  userId: selectedUser?.id,
+                  userName: selectedUser?.full_name,
+                  role: roleType,
+                });
+
                 onClose();
               }}
-              className="flex-1 py-2.5 rounded-xl bg-primary text-white text-[12px] font-bold hover:bg-primary/90 transition-colors inline-flex items-center justify-center gap-1.5"
+              className="flex-1 py-2.5 rounded-xl bg-primary text-white text-[12px] font-bold hover:bg-primary/90 transition-colors inline-flex items-center justify-center gap-1.5 disabled:opacity-50"
             >
               <UserPlus className="w-3.5 h-3.5" />
               Assign{" "}
@@ -2144,6 +2213,35 @@ export function WorkQueue({
   const { userDetail } = usePermissions();
   const rawRole = userDetail?.user_role?.name?.toLowerCase();
 
+  // ===============================
+  // ASSIGN MUTATION
+  // ===============================
+  const assignPatientMutation = usePostApiPatientsIdAssign({
+    mutation: {
+      onSuccess: () => {
+        toast.success("Chart assigned successfully");
+        refetch();
+      },
+
+      onError: () => {
+        toast.error("Failed to assign chart");
+      },
+    },
+  });
+
+  const updateStageMutation = usePatchApiPatientsIdStage({
+    mutation: {
+      onSuccess: () => {
+        toast.success("Stage updated successfully");
+        refetch();
+      },
+
+      onError: () => {
+        toast.error("Failed to update stage");
+      },
+    },
+  });
+
   const effectiveRole = useMemo(() => {
     if (
       rawRole &&
@@ -2174,44 +2272,120 @@ export function WorkQueue({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const {
+    data: patientsResponse,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useGetApiPatients(
+    {
+      search: search || undefined,
+      stage: filterStage !== "All" ? filterStage : undefined,
+      page_no: page,
+      page_size: pageSize,
+    },
+    {
+      query: {
+        keepPreviousData: true,
+        refetchOnWindowFocus: false,
+      },
+    },
+  );
+
+  const apiPatients = patientsResponse?.data ?? [];
+
+  const workQueueData = useMemo(
+    () =>
+      apiPatients.map((item: any) => ({
+        id: item?.chart_id || item?.id,
+        mrn: item?.mrn || "—",
+
+        patientName:
+          item?.patient_name ||
+          `${item?.last_name || ""}, ${item?.first_name || ""}`,
+
+        dob: item?.dob ? new Date(item.dob).toLocaleDateString() : "—",
+
+        measureCode: item?.measure_code || "—",
+
+        measure: item?.measure_name || "—",
+
+        plan: item?.plan_name || "—",
+
+        priority: item?.priority || "Medium",
+
+        status: item?.stage || "Not Started",
+
+        step: item?.step || 1,
+
+        assignedTo: item?.abstractor_name || item?.assigned_to_name || "—",
+
+        dueDate: item?.due_date
+          ? new Date(item.due_date).toLocaleDateString()
+          : "—",
+
+        slaHoursLeft: item?.sla_hours_left || 0,
+
+        qaFlag: item?.qa_flag || false,
+
+        qaNote: item?.qa_note || "",
+
+        auditSample: item?.audit_sample || false,
+
+        lastActivity: item?.updated_at
+          ? new Date(item.updated_at).toLocaleString()
+          : "—",
+
+        overdue: item?.overdue || false,
+      })),
+    [apiPatients],
+  );
+
   /* ── Pipeline counts ── */
   const stageCounts = useMemo(() => {
     const allCounts = PIPELINE.map((p) => ({
       ...p,
-      count: MOCK.filter((r) => r.status === p.status).length,
+      count: workQueueData.filter((r) => r.status === p.status).length,
     }));
 
-    // Filter stages for QA Analyst role - only show Pending QA, QA Returned, and Rework
     if (effectiveRole === "qa-analyst") {
       return allCounts.filter(
         (p) =>
           p.status === "Pending QA" ||
           p.status === "QA Returned" ||
-          p.status === "Rework"
+          p.status === "Rework",
       );
     }
 
     return allCounts;
-  }, [role]);
+  }, [workQueueData, effectiveRole]);
 
   /* ── KPIs ── */
   const kpi = useMemo(
     () => ({
-      total: MOCK.length,
-      overdue: MOCK.filter((r) => r.overdue).length,
-      qaIssues: MOCK.filter((r) => ["QA Returned", "Rework"].includes(r.status))
+      total: workQueueData.length,
+
+      overdue: workQueueData.filter((r) => r.overdue).length,
+
+      qaIssues: workQueueData.filter((r) =>
+        ["QA Returned", "Rework"].includes(r.status),
+      ).length,
+
+      notStarted: workQueueData.filter((r) => r.status === "Not Started")
         .length,
-      notStarted: MOCK.filter((r) => r.status === "Not Started").length,
-      myQueue: MOCK.filter((r) => r.assignedTo === currentUser).length,
-      ready: MOCK.filter((r) => r.status === "Submission Ready").length,
+
+      myQueue: workQueueData.filter((r) => r.assignedTo === currentUser).length,
+
+      ready: workQueueData.filter((r) => r.status === "Submission Ready")
+        .length,
     }),
-    [currentUser]
+    [workQueueData, currentUser],
   );
 
   /* ── Filter + sort ── */
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return MOCK.filter((r) => {
+    return workQueueData.filter((r) => {
       if (
         q &&
         !r.patientName.toLowerCase().includes(q) &&
@@ -2221,8 +2395,8 @@ export function WorkQueue({
         return false;
 
       // For abstractor role, always filter to current user's assignments
-      if (effectiveRole === "abstractor" && r.assignedTo !== currentUser)
-        return false;
+      // if (effectiveRole === "abstractor" && r.assignedTo !== currentUser)
+      //   return false;
 
       if (myWorkQueue && r.assignedTo !== currentUser) return false;
       if (filterStage !== "All" && r.status !== filterStage) return false;
@@ -2260,10 +2434,15 @@ export function WorkQueue({
         if (sortCol === "due") cmp = a.dueDate.localeCompare(b.dueDate);
         return sortDir === "asc" ? cmp : -cmp;
       }),
-    [filtered, sortCol, sortDir]
+    [filtered, sortCol, sortDir],
   );
 
-  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
+  const totalRecords =
+    patientsResponse?.total ||
+    patientsResponse?.pagination?.total ||
+    sorted.length;
+
+  const totalPages = Math.max(1, Math.ceil(totalRecords / pageSize));
   const paginated = sorted.slice((page - 1) * pageSize, page * pageSize);
 
   const handleSort = (col: string) => {
@@ -2298,6 +2477,19 @@ export function WorkQueue({
       return;
     }
     onStartAbstraction();
+  };
+
+  const handleStageChange = async (patientId: string, stage: string) => {
+    try {
+      await updateStageMutation.mutateAsync({
+        id: patientId,
+        data: {
+          stage,
+        },
+      });
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const hasActiveFilters =
@@ -2448,7 +2640,7 @@ export function WorkQueue({
                     key={client.id}
                     onClick={() =>
                       setSelectedClient(
-                        client.id === selectedClient ? null : client.id
+                        client.id === selectedClient ? null : client.id,
                       )
                     }
                     className={`w-full text-left px-3 py-2.5 border-b border-border hover:bg-muted/50 transition-colors ${selectedClient === client.id ? "bg-primary/5" : ""}`}
@@ -2586,7 +2778,7 @@ export function WorkQueue({
                   <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
                   <span>
                     <span className="font-semibold text-foreground">
-                      {MOCK.filter((r) => r.overdue).length}
+                      {kpi.overdue}
                     </span>{" "}
                     overdue
                   </span>
@@ -2595,11 +2787,7 @@ export function WorkQueue({
                   <span className="w-1.5 h-1.5 rounded-full bg-orange-400" />
                   <span>
                     <span className="font-semibold text-foreground">
-                      {
-                        MOCK.filter((r) =>
-                          ["QA Returned", "Rework"].includes(r.status)
-                        ).length
-                      }
+                      {kpi.qaIssues}
                     </span>{" "}
                     QA issues
                   </span>
@@ -2608,10 +2796,7 @@ export function WorkQueue({
                   <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
                   <span>
                     <span className="font-semibold text-foreground">
-                      {
-                        MOCK.filter((r) => r.status === "Submission Ready")
-                          .length
-                      }
+                      {kpi.ready}
                     </span>{" "}
                     ready
                   </span>
@@ -2622,14 +2807,19 @@ export function WorkQueue({
             {/* Right: actions */}
             <div className="flex items-center gap-2">
               {effectiveRole === "program-manager" && null}
-              <button className="inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 text-xs border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors">
-                <RefreshCcw className="w-3.5 h-3.5" />
-                Refresh
+              <button
+                onClick={() => refetch()}
+                className="inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 text-xs border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors"
+              >
+                <RefreshCcw
+                  className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`}
+                />
+                {isFetching ? "Refreshing..." : "Refresh"}
               </button>
               <button
                 onClick={() => {
                   const notStarted = MOCK.filter(
-                    (r) => r.status === "Not Started"
+                    (r) => r.status === "Not Started",
                   ).map((r) => r.id);
                   setAssignModal(notStarted.slice(0, 6));
                 }}
@@ -2702,8 +2892,9 @@ export function WorkQueue({
                       : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
                   }`}
                 >
-                  {MOCK.filter(
-                    (r) => r.status === "Rework" && r.assignedTo === currentUser
+                  {workQueueData.filter(
+                    (r) =>
+                      r.status === "Rework" && r.assignedTo === currentUser,
                   ).length > 0 && (
                     <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
                       <span
@@ -2715,8 +2906,9 @@ export function WorkQueue({
                     </span>
                   )}
                   Rework
-                  {MOCK.filter(
-                    (r) => r.status === "Rework" && r.assignedTo === currentUser
+                  {workQueueData.filter(
+                    (r) =>
+                      r.status === "Rework" && r.assignedTo === currentUser,
                   ).length > 0 && (
                     <span
                       className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
@@ -2726,10 +2918,10 @@ export function WorkQueue({
                       }`}
                     >
                       {
-                        MOCK.filter(
+                        workQueueData.filter(
                           (r) =>
                             r.status === "Rework" &&
-                            r.assignedTo === currentUser
+                            r.assignedTo === currentUser,
                         ).length
                       }
                     </span>
@@ -2759,7 +2951,7 @@ export function WorkQueue({
                         : "bg-muted text-muted-foreground"
                     }`}
                   >
-                    {MOCK.length}
+                    {kpi.total}
                   </span>
                 </button>
 
@@ -2912,7 +3104,7 @@ export function WorkQueue({
           )}
           <div className="flex-1" />
           <span className="text-[11px] text-muted-foreground font-medium">
-            {filtered.length} of {MOCK.length} charts
+            {filtered.length} of {kpi.total} charts
           </span>
           <div className="w-px h-4 bg-border mx-0.5" />
           <Sel
@@ -3009,228 +3201,239 @@ export function WorkQueue({
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {paginated.flatMap((row) => {
-                const isSel = selected.has(row.id);
-                const p = getPipeline(row.status);
-                const rows: JSX.Element[] = [];
-                rows.push(
-                  <tr
-                    key={row.id}
-                    className={`group hover:bg-muted/20 transition-colors ${isSel ? "bg-primary/5" : "bg-card"} ${row.overdue ? "border-l-2 border-l-red-400" : ""}`}
+              {isLoading ? (
+                <tr>
+                  <td
+                    colSpan={12}
+                    className="py-16 text-center text-muted-foreground"
                   >
-                    {/* Checkbox */}
-                    <td className="px-3 py-3">
-                      <button
-                        onClick={() => toggleRow(row.id)}
-                        className="flex items-center justify-center w-4 h-4"
-                      >
-                        {isSel ? (
-                          <CheckSquare className="w-4 h-4 text-primary" />
-                        ) : (
-                          <Square className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100" />
-                        )}
-                      </button>
-                    </td>
-
-                    {/* Chart ID */}
-                    <td className="px-3 py-3">
-                      <div className="flex flex-col gap-0.5">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onOpenPatient360();
-                          }}
-                          className="text-[11px] font-bold text-primary hover:underline cursor-pointer text-left"
-                        >
-                          {row.id}
-                        </button>
-                        <span className="text-[9px] text-muted-foreground font-medium">
-                          {row.mrn}
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* Patient */}
-                    <td className="px-3 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <span className="text-[9px] font-bold text-primary">
-                            {row.patientName
-                              .split(",")[0]
-                              .trim()
-                              .substring(0, 2)
-                              .toUpperCase()}
-                          </span>
-                        </div>
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-[12px] font-semibold text-foreground whitespace-nowrap">
-                            {row.patientName}
-                          </span>
-                          <span className="text-[9px] text-muted-foreground">
-                            DOB: {row.dob}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Measure */}
-                    <td className="px-3 py-3">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-bold w-fit border border-primary/20">
-                          {row.measureCode}
-                        </span>
-                        <span className="text-[9px] text-muted-foreground truncate max-w-[130px]">
-                          {row.measure}
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* Plan */}
-                    <td className="px-3 py-3">
-                      <PlanBadge plan={row.plan} />
-                    </td>
-
-                    {/* Priority */}
-                    <td className="px-3 py-3">
-                      <PriorityBadge priority={row.priority} />
-                    </td>
-
-                    {/* Stage */}
-                    <td className="px-3 py-3">
-                      <div className="flex flex-col gap-1">
-                        <StatusBadge status={row.status} />
-                        <div className="flex items-center gap-1">
-                          {[...Array(9)].map((_, i) => (
-                            <div
-                              key={i}
-                              className={`h-2 w-2 rounded-full flex-shrink-0 ${i < row.step ? p.dot : "bg-muted"}`}
-                            />
-                          ))}
-                          <span className="text-[9px] text-muted-foreground ml-1">
-                            {row.step}/9
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Assigned To */}
-                    <td className="px-3 py-3">
-                      {row.assignedTo === "—" ? (
-                        <span className="text-[11px] text-muted-foreground italic">
-                          Unassigned
-                        </span>
-                      ) : (
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-5 h-5 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
-                            <span className="text-[8px] font-bold text-secondary-foreground">
-                              {row.assignedTo
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
-                            </span>
-                          </div>
-                          <span className="text-[11px] font-semibold text-foreground">
-                            {row.assignedTo}
-                          </span>
-                        </div>
-                      )}
-                    </td>
-
-                    {/* Due / SLA */}
-                    <td className="px-3 py-3">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[11px] text-foreground font-medium">
-                          {row.dueDate}
-                        </span>
-                        <SlaBadge hours={row.slaHoursLeft} />
-                      </div>
-                    </td>
-
-                    {/* QA / Audit */}
-                    <td className="px-3 py-3">
-                      <div className="flex items-center gap-1.5">
-                        {row.qaFlag && (
-                          <button
-                            onClick={() =>
-                              setShowQaNote(
-                                showQaNote === row.id ? null : row.id
-                              )
-                            }
-                            title={row.qaNote}
-                            className="inline-flex items-center gap-1 text-[10px] font-bold text-orange-600 hover:underline px-1.5 py-0.5 rounded-md bg-orange-50 border border-orange-200"
-                          >
-                            <RotateCcw className="w-3 h-3" />
-                            QA
-                          </button>
-                        )}
-                        {row.auditSample && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-violet-600 px-1.5 py-0.5 rounded-md bg-violet-50 border border-violet-200">
-                            <ScanSearch className="w-3 h-3" />
-                            Audit
-                          </span>
-                        )}
-                        {!row.qaFlag && !row.auditSample && (
-                          <span className="text-muted-foreground/30 text-xs">
-                            —
-                          </span>
-                        )}
-                      </div>
-                    </td>
-
-                    {/* Activity */}
-                    <td className="px-3 py-3">
-                      <span className="text-[11px] text-muted-foreground">
-                        {row.lastActivity}
-                      </span>
-                    </td>
-
-                    {/* Action */}
-                    <td className="px-3 py-3">
-                      <RowAction
-                        row={row}
-                        onOpen={() => handleRowOpen(row)}
-                        onOpenWorkspace={onStartAbstraction}
-                        onOpenQAReview={onOpenQAReview}
-                        role={effectiveRole}
-                      />
-                    </td>
-                  </tr>
-                );
-
-                if (showQaNote === row.id && row.qaNote) {
+                    Loading patients...
+                  </td>
+                </tr>
+              ) : (
+                paginated.flatMap((row) => {
+                  const isSel = selected.has(row.id);
+                  const p = getPipeline(row.status);
+                  const rows: JSX.Element[] = [];
                   rows.push(
-                    <tr key={`${row.id}-qa`} className="bg-orange-50/80">
-                      <td colSpan={12} className="px-6 py-3">
-                        <div className="flex items-start gap-2">
-                          <div className="w-6 h-6 rounded-md bg-orange-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <AlertTriangle className="w-3.5 h-3.5 text-orange-500" />
-                          </div>
-                          <div>
-                            <span className="text-[11px] font-bold text-orange-700">
-                              QA Return Note:{" "}
-                            </span>
-                            <span className="text-[11px] text-orange-700">
-                              {row.qaNote}
-                            </span>
-                          </div>
+                    <tr
+                      key={row.id}
+                      className={`group hover:bg-muted/20 transition-colors ${isSel ? "bg-primary/5" : "bg-card"} ${row.overdue ? "border-l-2 border-l-red-400" : ""}`}
+                    >
+                      {/* Checkbox */}
+                      <td className="px-3 py-3">
+                        <button
+                          onClick={() => toggleRow(row.id)}
+                          className="flex items-center justify-center w-4 h-4"
+                        >
+                          {isSel ? (
+                            <CheckSquare className="w-4 h-4 text-primary" />
+                          ) : (
+                            <Square className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100" />
+                          )}
+                        </button>
+                      </td>
+
+                      {/* Chart ID */}
+                      <td className="px-3 py-3">
+                        <div className="flex flex-col gap-0.5">
                           <button
-                            onClick={() => setShowQaNote(null)}
-                            className="ml-auto text-orange-400 hover:text-orange-600 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onOpenPatient360();
+                            }}
+                            className="text-[11px] font-bold text-primary hover:underline cursor-pointer text-left"
                           >
-                            <X className="w-3.5 h-3.5" />
+                            {row.id}
                           </button>
+                          <span className="text-[9px] text-muted-foreground font-medium">
+                            {row.mrn}
+                          </span>
                         </div>
                       </td>
-                    </tr>
-                  );
-                }
 
-                return rows;
-              })}
+                      {/* Patient */}
+                      <td className="px-3 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <span className="text-[9px] font-bold text-primary">
+                              {row.patientName
+                                .split(",")[0]
+                                .trim()
+                                .substring(0, 2)
+                                .toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[12px] font-semibold text-foreground whitespace-nowrap">
+                              {row.patientName}
+                            </span>
+                            <span className="text-[9px] text-muted-foreground">
+                              DOB: {row.dob}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Measure */}
+                      <td className="px-3 py-3">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-bold w-fit border border-primary/20">
+                            {row.measureCode}
+                          </span>
+                          <span className="text-[9px] text-muted-foreground truncate max-w-[130px]">
+                            {row.measure}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Plan */}
+                      <td className="px-3 py-3">
+                        <PlanBadge plan={row.plan} />
+                      </td>
+
+                      {/* Priority */}
+                      <td className="px-3 py-3">
+                        <PriorityBadge priority={row.priority} />
+                      </td>
+
+                      {/* Stage */}
+                      <td className="px-3 py-3">
+                        <div className="flex flex-col gap-1">
+                          <StatusBadge status={row.status} />
+                          <div className="flex items-center gap-1">
+                            {[...Array(9)].map((_, i) => (
+                              <div
+                                key={i}
+                                className={`h-2 w-2 rounded-full flex-shrink-0 ${i < row.step ? p.dot : "bg-muted"}`}
+                              />
+                            ))}
+                            <span className="text-[9px] text-muted-foreground ml-1">
+                              {row.step}/9
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Assigned To */}
+                      <td className="px-3 py-3">
+                        {row.assignedTo === "—" ? (
+                          <span className="text-[11px] text-muted-foreground italic">
+                            Unassigned
+                          </span>
+                        ) : (
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-5 h-5 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                              <span className="text-[8px] font-bold text-secondary-foreground">
+                                {row.assignedTo
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")}
+                              </span>
+                            </div>
+                            <span className="text-[11px] font-semibold text-foreground">
+                              {row.assignedTo}
+                            </span>
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Due / SLA */}
+                      <td className="px-3 py-3">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[11px] text-foreground font-medium">
+                            {row.dueDate}
+                          </span>
+                          <SlaBadge hours={row.slaHoursLeft} />
+                        </div>
+                      </td>
+
+                      {/* QA / Audit */}
+                      <td className="px-3 py-3">
+                        <div className="flex items-center gap-1.5">
+                          {row.qaFlag && (
+                            <button
+                              onClick={() =>
+                                setShowQaNote(
+                                  showQaNote === row.id ? null : row.id,
+                                )
+                              }
+                              title={row.qaNote}
+                              className="inline-flex items-center gap-1 text-[10px] font-bold text-orange-600 hover:underline px-1.5 py-0.5 rounded-md bg-orange-50 border border-orange-200"
+                            >
+                              <RotateCcw className="w-3 h-3" />
+                              QA
+                            </button>
+                          )}
+                          {row.auditSample && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-violet-600 px-1.5 py-0.5 rounded-md bg-violet-50 border border-violet-200">
+                              <ScanSearch className="w-3 h-3" />
+                              Audit
+                            </span>
+                          )}
+                          {!row.qaFlag && !row.auditSample && (
+                            <span className="text-muted-foreground/30 text-xs">
+                              —
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Activity */}
+                      <td className="px-3 py-3">
+                        <span className="text-[11px] text-muted-foreground">
+                          {row.lastActivity}
+                        </span>
+                      </td>
+
+                      {/* Action */}
+                      <td className="px-3 py-3">
+                        <RowAction
+                          row={row}
+                          onOpen={() => handleRowOpen(row)}
+                          onOpenWorkspace={onStartAbstraction}
+                          onOpenQAReview={onOpenQAReview}
+                          role={effectiveRole}
+                        />
+                      </td>
+                    </tr>,
+                  );
+
+                  if (showQaNote === row.id && row.qaNote) {
+                    rows.push(
+                      <tr key={`${row.id}-qa`} className="bg-orange-50/80">
+                        <td colSpan={12} className="px-6 py-3">
+                          <div className="flex items-start gap-2">
+                            <div className="w-6 h-6 rounded-md bg-orange-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                              <AlertTriangle className="w-3.5 h-3.5 text-orange-500" />
+                            </div>
+                            <div>
+                              <span className="text-[11px] font-bold text-orange-700">
+                                QA Return Note:{" "}
+                              </span>
+                              <span className="text-[11px] text-orange-700">
+                                {row.qaNote}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => setShowQaNote(null)}
+                              className="ml-auto text-orange-400 hover:text-orange-600 transition-colors"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>,
+                    );
+                  }
+
+                  return rows;
+                })
+              )}
             </tbody>
           </table>
 
-          {paginated.length === 0 && (
+          {!isLoading && paginated.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
               <div className="w-14 h-14 bg-muted rounded-2xl flex items-center justify-center mb-4">
                 <FileSearch className="w-7 h-7 opacity-40" />
@@ -3262,15 +3465,15 @@ export function WorkQueue({
             <span className="text-[12px] text-muted-foreground">
               Showing{" "}
               <span className="font-semibold text-foreground">
-                {Math.min((page - 1) * pageSize + 1, sorted.length)}
+                {Math.min((page - 1) * pageSize + 1, totalRecords)}
               </span>
               –
               <span className="font-semibold text-foreground">
-                {Math.min(page * pageSize, sorted.length)}
+                {Math.min(page * pageSize, totalRecords)}
               </span>{" "}
               of{" "}
               <span className="font-semibold text-foreground">
-                {sorted.length}
+                {totalRecords}
               </span>{" "}
               charts
             </span>
@@ -3315,10 +3518,41 @@ export function WorkQueue({
         {assignModal.length > 0 && (
           <AssignModal
             chartIds={assignModal}
+            roleType={effectiveRole === "qa-analyst" ? "QA" : "Abstractor"}
             onClose={() => setAssignModal([])}
-            onAssign={(assignee) => {
-              console.log("Assigning", assignModal, "to", assignee);
-              setAssignModal([]);
+            onAssign={async ({ userId, userName, role }) => {
+              try {
+                await Promise.all(
+                  assignModal.map(async (chartId) => {
+                    await assignPatientMutation.mutateAsync({
+                      id: chartId,
+                      data: {
+                        userId,
+                        role:
+                          role === "QA"
+                            ? postApiPatientsIdAssignMutationRequestRoleEnum.QA
+                            : postApiPatientsIdAssignMutationRequestRoleEnum.Abstractor,
+                      },
+                    });
+
+                    // Update stage after assignment
+                    await updateStageMutation.mutateAsync({
+                      id: chartId,
+                      data: {
+                        stage: "Assigned",
+                      },
+                    });
+                  }),
+                );
+
+                toast.success("Charts assigned successfully");
+
+                refetch();
+                setAssignModal([]);
+              } catch (error) {
+                console.error(error);
+                toast.error("Failed to assign charts");
+              }
             }}
           />
         )}
