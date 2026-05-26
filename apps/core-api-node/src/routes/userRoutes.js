@@ -226,6 +226,56 @@ router.post("/deactivate", userController.deactivateUsers);
 
 /**
  * @swagger
+ * /api/users/assign-role:
+ *   post:
+ *     summary: Assign role to multiple users
+ *     tags: [Users]
+ *     description: Updates the role for multiple users at once.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - user_ids
+ *               - role_id
+ *             properties:
+ *               user_ids:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: uuid
+ *                 example: ["550e8400-e29b-41d4-a716-446655440000", "660e8400-e29b-41d4-a716-446655440011"]
+ *               role_id:
+ *                 type: string
+ *                 format: uuid
+ *                 example: "770e8400-e29b-41d4-a716-446655440022"
+ *     responses:
+ *       200:
+ *         description: Role assigned successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 updated_user_ids:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                     format: uuid
+ *       400:
+ *         description: Invalid input or role ID
+ *       500:
+ *         description: Server error
+ */
+router.post("/assign-role", userController.assignRoles);
+
+
+/**
+ * @swagger
  * /api/users/stats:
  *   get:
  *     summary: Get user statistics
