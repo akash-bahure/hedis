@@ -1,4 +1,9 @@
 export type {
+  AuditLog,
+  AuditLogRiskLevelEnumKey,
+  AuditLogStatusEnumKey,
+} from "./AuditLog.ts";
+export type {
   DeleteAdminOrgsId200,
   DeleteAdminOrgsId401,
   DeleteAdminOrgsId403,
@@ -41,6 +46,15 @@ export type {
   GetAdminUsersQuery,
   GetAdminUsersQueryResponse,
 } from "./GetAdminUsers.ts";
+export type {
+  GetApiAuditLogs200,
+  GetApiAuditLogs500,
+  GetApiAuditLogsQuery,
+  GetApiAuditLogsQueryParams,
+  GetApiAuditLogsQueryParamsRiskLevelEnumKey,
+  GetApiAuditLogsQueryParamsStatusEnumKey,
+  GetApiAuditLogsQueryResponse,
+} from "./GetApiAuditLogs.ts";
 export type {
   GetApiClients200,
   GetApiClients500,
@@ -171,6 +185,15 @@ export type {
   GetApiUsersStatsQuery,
   GetApiUsersStatsQueryResponse,
 } from "./GetApiUsersStats.ts";
+export type {
+  GetApiWorkQueue200,
+  GetApiWorkQueue401,
+  GetApiWorkQueue500,
+  GetApiWorkQueueQuery,
+  GetApiWorkQueueQueryParams,
+  GetApiWorkQueueQueryParamsTabEnumKey,
+  GetApiWorkQueueQueryResponse,
+} from "./GetApiWorkQueue.ts";
 export type {
   PatchAdminOrgsId200,
   PatchAdminOrgsId400,
@@ -349,6 +372,12 @@ export type {
   PostApiAuthLoginMutationResponse,
 } from "./PostApiAuthLogin.ts";
 export type {
+  PostApiAuthLogout200,
+  PostApiAuthLogout500,
+  PostApiAuthLogoutMutation,
+  PostApiAuthLogoutMutationResponse,
+} from "./PostApiAuthLogout.ts";
+export type {
   PostApiAuthResetPassword200,
   PostApiAuthResetPassword400,
   PostApiAuthResetPassword404,
@@ -384,6 +413,17 @@ export type {
   PostApiAuthTwoFaValidateOtpMutationRequest,
   PostApiAuthTwoFaValidateOtpMutationResponse,
 } from "./PostApiAuthTwoFaValidateOtp.ts";
+export type {
+  AssignedUsersAssignedRoleEnumKey,
+  PostApiChartAssignmentsBulkAssign201,
+  PostApiChartAssignmentsBulkAssign400,
+  PostApiChartAssignmentsBulkAssign401,
+  PostApiChartAssignmentsBulkAssign500,
+  PostApiChartAssignmentsBulkAssignMutation,
+  PostApiChartAssignmentsBulkAssignMutationRequest,
+  PostApiChartAssignmentsBulkAssignMutationRequestPriorityEnumKey,
+  PostApiChartAssignmentsBulkAssignMutationResponse,
+} from "./PostApiChartAssignmentsBulkAssign.ts";
 export type {
   PostApiClients201,
   PostApiClients500,
@@ -458,6 +498,14 @@ export type {
   PostApiUsersMutationResponse,
 } from "./PostApiUsers.ts";
 export type {
+  PostApiUsersAssignRole200,
+  PostApiUsersAssignRole400,
+  PostApiUsersAssignRole500,
+  PostApiUsersAssignRoleMutation,
+  PostApiUsersAssignRoleMutationRequest,
+  PostApiUsersAssignRoleMutationResponse,
+} from "./PostApiUsersAssignRole.ts";
+export type {
   PostApiUsersDeactivate200,
   PostApiUsersDeactivate400,
   PostApiUsersDeactivate500,
@@ -467,6 +515,10 @@ export type {
 } from "./PostApiUsersDeactivate.ts";
 export type { ShiftScheduleMatrix } from "./ShiftScheduleMatrix.ts";
 export type { User } from "./User.ts";
+export { auditLogRiskLevelEnum } from "./AuditLog.ts";
+export { auditLogStatusEnum } from "./AuditLog.ts";
+export { getApiAuditLogsQueryParamsRiskLevelEnum } from "./GetApiAuditLogs.ts";
+export { getApiAuditLogsQueryParamsStatusEnum } from "./GetApiAuditLogs.ts";
 export { getApiClientsQueryParamsContractTypeEnum } from "./GetApiClients.ts";
 export { getApiClientsQueryParamsRegionEnum } from "./GetApiClients.ts";
 export { getApiClientsQueryParamsStatusEnum } from "./GetApiClients.ts";
@@ -480,11 +532,14 @@ export { getApiUsersQueryParamsUserStatusEnum } from "./GetApiUsers.ts";
 export { getApiUsersExportQueryParamsFormatEnum } from "./GetApiUsersExport.ts";
 export { getApiUsersShiftsQueryParamsShiftEnum } from "./GetApiUsersShifts.ts";
 export { getApiUsersShiftsQueryParamsUserStatusEnum } from "./GetApiUsersShifts.ts";
+export { getApiWorkQueueQueryParamsTabEnum } from "./GetApiWorkQueue.ts";
 export { patchApiProjectsIdAccessMutationRequestAccessLevelEnum } from "./PatchApiProjectsIdAccess.ts";
 export { patchApiUsersIdMutationRequestShiftEnum } from "./PatchApiUsersId.ts";
 export { patchApiUsersIdMutationRequestUserStatusEnum } from "./PatchApiUsersId.ts";
 export { patchApiUsersIdMutationRequestUserTypeEnum } from "./PatchApiUsersId.ts";
 export { schedulesShiftEnum } from "./PatchApiUsersShifts.ts";
+export { assignedUsersAssignedRoleEnum } from "./PostApiChartAssignmentsBulkAssign.ts";
+export { postApiChartAssignmentsBulkAssignMutationRequestPriorityEnum } from "./PostApiChartAssignmentsBulkAssign.ts";
 export { postApiClientsMutationRequestContractTypeEnum } from "./PostApiClients.ts";
 export { postApiClientsMutationRequestMeasureYearEnum } from "./PostApiClients.ts";
 export { postApiClientsMutationRequestPlanTierEnum } from "./PostApiClients.ts";
