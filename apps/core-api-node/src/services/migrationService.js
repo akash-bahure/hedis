@@ -591,6 +591,27 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
 `);
+
+  await client.query(`
+  CREATE TABLE IF NOT EXISTS ${schema}.audit_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID,
+    user_name TEXT,
+    event_type VARCHAR(100),
+    details TEXT,
+    ip_address VARCHAR(45),
+    device TEXT,
+    location TEXT,
+    risk_level VARCHAR(20), -- 'Low', 'Medium', 'High', 'Critical'
+    status VARCHAR(20),     -- 'Success', 'Failed', 'Warning'
+    created_at TIMESTAMP DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_audit_logs_event_type ON ${schema}.audit_logs(event_type);
+  CREATE INDEX IF NOT EXISTS idx_audit_logs_risk_level ON ${schema}.audit_logs(risk_level);
+  CREATE INDEX IF NOT EXISTS idx_audit_logs_status ON ${schema}.audit_logs(status);
+  CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON ${schema}.audit_logs(created_at DESC);
+`);
 }
 
 

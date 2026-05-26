@@ -1,6 +1,7 @@
 // controllers/chartAssignmentController.js
 
 const { v4: uuidv4 } = require("uuid");
+const AuditLog = require("../models/AuditLog");
 
 /**
  * BULK ASSIGN CHARTS
@@ -123,6 +124,17 @@ exports.bulkAssignCharts = async (req, res) => {
         [assigned_to, chartId]
       );
     }
+
+    await AuditLog.createAuditLog(client, {
+      user_id: req.user.id,
+      user_name: req.user.full_name || "System",
+      event_type: "Chart assigned",
+      details: `${chart_ids.length} charts assigned to ${assigned_role}: ${assigned_to}`,
+      ip_address: req.ip,
+      device: req.headers["user-agent"],
+      risk_level: "Low",
+      status: "Success",
+    });
 
     return res.status(201).json({
       success: true,

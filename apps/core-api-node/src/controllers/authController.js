@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { sendResetEmail, sendOTPEmail } = require("../services/mail.service");
+const AuditLog = require("../models/AuditLog");
 
 const MODULE_GROUP_MAPPING = {
   "Patients & Charts": "Main",
@@ -84,6 +85,15 @@ exports.login = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
+      await AuditLog.createAuditLog(req.db, {
+        user_name: email,
+        event_type: "Login Failed",
+        details: `Invalid credentials for email: ${email}`,
+        ip_address: req.ip,
+        device: req.headers["user-agent"],
+        risk_level: "Medium",
+        status: "Failed",
+      });
       return res.status(400).json({
         message: "Invalid credentials",
       });
@@ -109,6 +119,16 @@ exports.login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
+      await AuditLog.createAuditLog(req.db, {
+        user_id: user.id,
+        user_name: user.full_name,
+        event_type: "Login Failed",
+        details: `Incorrect password for user: ${email}`,
+        ip_address: req.ip,
+        device: req.headers["user-agent"],
+        risk_level: "Low",
+        status: "Failed",
+      });
       return res.status(400).json({
         message: "Invalid credentials",
       });
@@ -278,6 +298,17 @@ exports.login = async (req, res) => {
 
     // Fetch Project Access
     const projectAccess = await getUserProjectAccess(user.id, req.db);
+
+    await AuditLog.createAuditLog(req.db, {
+      user_id: user.id,
+      user_name: user.full_name,
+      event_type: "Login Success",
+      details: `User ${user.full_name} logged in successfully`,
+      ip_address: req.ip,
+      device: req.headers["user-agent"],
+      risk_level: "Low",
+      status: "Success",
+    });
 
     res.status(200).json({
       message: "Login successful",
@@ -459,6 +490,17 @@ exports.resetPassword = async (req, res) => {
       [hashedPassword, user.id]
     );
 
+    await AuditLog.createAuditLog(req.db, {
+      user_id: user.id,
+      user_name: user.full_name,
+      event_type: "Password Reset",
+      details: "User password reset successfully via token",
+      ip_address: req.ip,
+      device: req.headers["user-agent"],
+      risk_level: "High",
+      status: "Success",
+    });
+
     res.json({
       message: "Password has been reset successfully. You can now log in.",
     });
@@ -481,7 +523,7 @@ exports.sendOTP = async (req, res) => {
 
     // Find user by email
     const userResult = await client.query(
-      "SELECT id, two_fa_auth, email FROM users WHERE email = $1",
+      "SELECT id, full_name, two_fa_auth, email FROM users WHERE email = $1",
       [key]
     );
 
@@ -514,6 +556,17 @@ exports.sendOTP = async (req, res) => {
 
     // Send OTP email
     await sendOTPEmail(user.email, otp);
+
+    await AuditLog.createAuditLog(req.db, {
+      user_id: user.id,
+      user_name: user.full_name,
+      event_type: "2FA Verification",
+      details: `2FA OTP sent to ${user.email}`,
+      ip_address: req.ip,
+      device: req.headers["user-agent"],
+      risk_level: "Low",
+      status: "Success",
+    });
 
     res.json({ message: "OTP sent successfully to your email" });
   } catch (error) {
@@ -552,7 +605,23 @@ exports.validateOTP = async (req, res) => {
       [key, otp, device_type, device_id]
     );
 
+    // Fetch user name for better logging
+    const userResultForLog = await client.query(
+      "SELECT full_name FROM users WHERE email = $1",
+      [key]
+    );
+    const userNameForLog = userResultForLog.rows[0]?.full_name || key;
+
     if (otpResult.rows.length === 0) {
+      await AuditLog.createAuditLog(req.db, {
+        user_name: userNameForLog,
+        event_type: "2FA Verification Failed",
+        details: `Invalid OTP attempt for ${key}`,
+        ip_address: req.ip,
+        device: req.headers["user-agent"],
+        risk_level: "Medium",
+        status: "Failed",
+      });
       return res.status(400).json({
         message: "Invalid OTP",
       });
@@ -818,6 +887,16 @@ exports.validateOTP = async (req, res) => {
     // Fetch Project Access
     const projectAccess = await getUserProjectAccess(user.id, client);
 
+    await AuditLog.createAuditLog(req.db, {
+      user_id: user.id,
+      user_name: user.full_name,
+      event_type: "Login Success",
+      details: `User ${user.full_name} logged in successfully`,
+      ip_address: req.ip,
+      device: req.headers["user-agent"],
+      risk_level: "Low",
+      status: "Success",
+    });
     // Final response
     res.status(200).json({
       message: "Login successful",
@@ -833,6 +912,35 @@ exports.validateOTP = async (req, res) => {
   } catch (error) {
     console.error("Validate OTP Error:", error);
 
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
+// LOGOUT
+exports.logout = async (req, res) => {
+  try {
+    const user = req.user;
+
+    if (user) {
+      await AuditLog.createAuditLog(req.db, {
+        user_id: user.id,
+        user_name: user.full_name,
+        event_type: "Logout",
+        details: `User ${user.full_name} logged out`,
+        ip_address: req.ip,
+        device: req.headers["user-agent"],
+        risk_level: "Low",
+        status: "Success",
+      });
+    }
+
+    res.status(200).json({
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    console.error("Logout Error:", error);
     res.status(500).json({
       error: error.message,
     });

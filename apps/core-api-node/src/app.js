@@ -68,13 +68,9 @@ app.get("/api-docs.json", (req, res) => {
   res.send(swaggerSpec);
 });
 
-const manualChartAbstractionRoutes = require(
-  "./routes/manualChartAbstractionRoutes"
-);
+const manualChartAbstractionRoutes = require("./routes/manualChartAbstractionRoutes");
 
-const chartAssignmentRoutes = require(
-  "./routes/chartsAssignmentRoute"
-);
+const chartAssignmentRoutes = require("./routes/chartsAssignmentRoute");
 
 // Admin routes
 app.use("/admin/auth", require("./routes/adminAuthRoutes"));
@@ -84,14 +80,8 @@ app.use("/admin/orgs", require("./routes/orgRoutes"));
 // Tenant & Authentication
 app.use(tenantMiddleware);
 app.use("/api/auth", require("./routes/authRoutes"));
-app.use(
-  "/api/manual-chart-abstraction",
-  manualChartAbstractionRoutes
-);
-app.use(
-  "/api/chart-assignments",  
-  chartAssignmentRoutes
-);
+app.use("/api/manual-chart-abstraction", manualChartAbstractionRoutes);
+app.use("/api/chart-assignments", chartAssignmentRoutes);
 
 app.use("/api/user-roles", require("./routes/userRoleRoutes"));
 
@@ -107,10 +97,9 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/departments", require("./routes/department.routes"));
 
-
 app.use("/api/profile", require("./routes/profile.routes"));
 app.use("/api/patients", require("./routes/patient.routes"));
 app.use("/api/work-queue", require("./routes/workQueue.routes"));
+app.use("/api/audit-logs", require("./routes/auditLogRoutes"));
 
 module.exports = app;
-
