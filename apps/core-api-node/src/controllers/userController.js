@@ -2,6 +2,7 @@ const { z } = require("zod");
 const PDFDocument = require("pdfkit");
 const { sendInviteEmail } = require("../services/mail.service");
 const crypto = require("crypto");
+const AuditLog = require("../models/AuditLog");
 const userSchema = z.object({
   full_name: z.string().max(255).optional(),
   email: z.string().email().max(254),
@@ -169,6 +170,17 @@ exports.createUser = async (req, res) => {
         console.error("Email failed:", err.message);
       }
     }
+
+    await AuditLog.createAuditLog(req.db, {
+      user_id: req.user?.id || null,
+      user_name: req.user?.full_name || "System",
+      event_type: "User created",
+      details: `User created with email: ${createdUser.email}`,
+      ip_address: req.ip,
+      device: req.headers["user-agent"],
+      risk_level: "Medium",
+      status: "Success",
+    });
 
     res.status(201).json({
       message: "User created. Invite sent.",
@@ -415,6 +427,17 @@ exports.updateUser = async (req, res) => {
 
     const result = await client.query(query, values);
 
+    await AuditLog.createAuditLog(req.db, {
+      user_id: req.user?.id,
+      user_name: req.user?.full_name || "System",
+      event_type: "User updated",
+      details: `User details updated for ID: ${id}`,
+      ip_address: req.ip,
+      device: req.headers["user-agent"],
+      risk_level: "Low",
+      status: "Success",
+    });
+
     res.json({
       message: "User updated successfully",
       user: result.rows[0],
@@ -451,6 +474,17 @@ exports.deleteUser = async (req, res) => {
 
     // Delete user
     await client.query("DELETE FROM users WHERE id = $1", [id]);
+
+    await AuditLog.createAuditLog(req.db, {
+      user_id: req.user?.id,
+      user_name: req.user?.full_name || "System",
+      event_type: "Delete action",
+      details: `User deleted with ID: ${id}`,
+      ip_address: req.ip,
+      device: req.headers["user-agent"],
+      risk_level: "High",
+      status: "Success",
+    });
 
     res.json({
       message: "User deleted successfully",
@@ -520,6 +554,27 @@ exports.exportUsers = async (req, res) => {
 
       res.setHeader("Content-Type", "text/csv");
       res.setHeader("Content-Disposition", 'attachment; filename="users.csv"');
+
+      await AuditLog.createAuditLog(req.db, {
+        user_name: "System",
+        event_type: "Export action",
+        details: `Users exported to CSV. Count: ${users.length}`,
+        ip_address: req.ip,
+        device: req.headers["user-agent"],
+        risk_level: "Low",
+        status: "Success",
+      });
+
+      await AuditLog.createAuditLog(req.db, {
+        user_id: req.user?.id,
+        user_name: req.user?.full_name || "System",
+        event_type: "Export action",
+        details: `Users exported to CSV. Count: ${users.length}`,
+        ip_address: req.ip,
+        device: req.headers["user-agent"],
+        risk_level: "Low",
+        status: "Success",
+      });
 
       return res.send(csvContent);
     }
@@ -926,6 +981,17 @@ exports.deactivateUsers = async (req, res) => {
 
     const result = await client.query(query, [user_ids]);
 
+    await AuditLog.createAuditLog(req.db, {
+      user_id: req.user?.id,
+      user_name: req.user?.full_name || "System",
+      event_type: "Status change",
+      details: `Users deactivated: ${result.rows.map((r) => r.id).join(", ")}`,
+      ip_address: req.ip,
+      device: req.headers["user-agent"],
+      risk_level: "High",
+      status: "Success",
+    });
+
     res.json({
       message: `${result.rowCount} user(s) deactivated successfully`,
       deactivated_user_ids: result.rows.map((r) => r.id),
@@ -967,6 +1033,17 @@ exports.assignRoles = async (req, res) => {
     `;
 
     const result = await client.query(query, [role_id, user_ids]);
+
+    await AuditLog.createAuditLog(req.db, {
+      user_id: req.user?.id,
+      user_name: req.user?.full_name || "System",
+      event_type: "Role update",
+      details: `Role ID ${role_id} assigned to users: ${result.rows.map((r) => r.id).join(", ")}`,
+      ip_address: req.ip,
+      device: req.headers["user-agent"],
+      risk_level: "High",
+      status: "Success",
+    });
 
     res.json({
       message: `Role assigned to ${result.rowCount} user(s) successfully`,

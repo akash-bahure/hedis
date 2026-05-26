@@ -110,6 +110,7 @@ app.use("/api/departments", require("./routes/department.routes"));
 
 app.use("/api/profile", require("./routes/profile.routes"));
 app.use("/api/patients", require("./routes/patient.routes"));
+app.use("/api/audit-logs", require("./routes/auditLogRoutes"));
 
 module.exports = app;
 

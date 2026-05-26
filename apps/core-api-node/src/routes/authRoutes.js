@@ -437,4 +437,20 @@ router.post("/two-fa/send-otp", authController.sendOTP);
  */
 router.post("/two-fa/validate-otp", authController.validateOTP);
 
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Logout user
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logged out successfully
+ *       500:
+ *         description: Server error
+ */
+router.post("/logout", require("../middlewares/authMiddleware"), authController.logout);
+
 module.exports = router;
