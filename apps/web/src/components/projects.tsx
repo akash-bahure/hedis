@@ -59,6 +59,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useProjectAccess } from "@/hooks/useProjectAccess";
 import {
   getApiProjectsQueryKey,
   useGetApiClients,
@@ -2326,6 +2327,7 @@ function ProjectDetail({
 }) {
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const permissions = usePermissions();
+  const { canEditProject } = useProjectAccess();
 
   const TABS: { id: TabId; label: string }[] = [
     { id: "overview", label: "Overview" },
@@ -2378,7 +2380,7 @@ function ProjectDetail({
             <RefreshCw className="w-3.5 h-3.5" />
             Refresh
           </button>
-          {!permissions.hasPermission("Projects", "can_edit") && (
+          {permissions.hasPermission("Projects", "can_edit") && canEditProject(project.id) && (
             <>
               <button className="inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 text-xs border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors">
                 <Edit3 className="w-3.5 h-3.5" />
@@ -2924,6 +2926,8 @@ function NewProjectModal({ onClose }: { onClose: () => void }) {
 
 /* ─── PROJECT LIST VIEW ──────────────���────────────────────────── */
 function ProjectList({ onSelect }: { onSelect: (p: Project) => void }) {
+  const { canAccessProject } = useProjectAccess();
+  const permissions = usePermissions();
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("All");
@@ -2964,7 +2968,7 @@ function ProjectList({ onSelect }: { onSelect: (p: Project) => void }) {
   });
 
   const projects: Project[] = useMemo(() => {
-    return (
+    const list =
       projectsResponse?.data?.map((p) => ({
         id: p.id || "",
 
@@ -3001,9 +3005,10 @@ function ProjectList({ onSelect }: { onSelect: (p: Project) => void }) {
         projectManagerId: p.project_manager_uuid || "",
 
         clientStatus: p.client_status || "",
-      })) || []
-    );
-  }, [projectsResponse]);
+      })) || [];
+
+    return list.filter((p) => canAccessProject(p.id));
+  }, [projectsResponse, canAccessProject]);
 
   const stats = [
     {
@@ -3042,7 +3047,7 @@ function ProjectList({ onSelect }: { onSelect: (p: Project) => void }) {
             Manage coding projects, clients, and team assignments
           </p>
         </div>
-        {usePermissions().hasPermission("Projects", "can_edit") && (
+        {permissions.hasPermission("Projects", "can_edit") && (
           <button
             onClick={() => setShowNewProjectModal(true)}
             className="inline-flex items-center gap-2 whitespace-nowrap px-3.5 py-2 text-xs bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-semibold"
