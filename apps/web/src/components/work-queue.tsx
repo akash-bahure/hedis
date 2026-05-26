@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import type { ElementType } from "react";
-import { getApiPatientsExport } from "@/api";
+import { getApiPatientsExport, useGetApiWorkQueue } from "@/api";
 import {
   Search,
   ChevronDown,
@@ -2264,16 +2264,61 @@ export function WorkQueue({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // const {
+  //   data: patientsResponse,
+  //   isLoading,
+  //   isFetching,
+  //   refetch,
+  // } = useGetApiPatients(
+  //   {
+  //     search: search || undefined,
+  //     stage: filterStage !== "All" ? filterStage : undefined,
+  //     page_no: page,
+  //     page_size: pageSize,
+  //   },
+  //   {
+  //     query: {
+  //       keepPreviousData: true,
+  //       refetchOnWindowFocus: false,
+  //     },
+  //   },
+  // );
+
+  // const apiPatients = patientsResponse?.data ?? [];
+
+  const workQueueTabMap: Record<string, string> = {
+    All: "all",
+    "Not Started": "not-started",
+    Assigned: "assigned",
+    "In Progress": "in-progress",
+    "Pending QA": "pending-qa",
+    "QA Returned": "qa-returned",
+    Rework: "rework",
+    Completed: "completed",
+    "Submission Ready": "submission-ready",
+  };
+
+  const selectedTab = myWorkQueue
+    ? "my-work"
+    : workQueueTabMap[filterStage] || "all";
+
   const {
-    data: patientsResponse,
+    data: workQueueResponse,
     isLoading,
     isFetching,
     refetch,
-  } = useGetApiPatients(
+  } = useGetApiWorkQueue(
     {
+      tab: selectedTab as any,
+
       search: search || undefined,
-      stage: filterStage !== "All" ? filterStage : undefined,
+
+      plan: filterPlan !== "All Plans" ? filterPlan : undefined,
+
+      priority: filterPriority !== "All" ? filterPriority : undefined,
+
       page_no: page,
+
       page_size: pageSize,
     },
     {
@@ -2284,7 +2329,7 @@ export function WorkQueue({
     },
   );
 
-  const apiPatients = patientsResponse?.data ?? [];
+  const apiPatients = workQueueResponse?.data ?? [];
   const { data: usersResponse } = useGetApiUsers(
     {
       page: 1,
@@ -2317,7 +2362,12 @@ export function WorkQueue({
   const workQueueData = useMemo(
     () =>
       apiPatients.map((item: any) => ({
-        id: item?.chart_id || item?.id,
+        id: item?.patient_uuid,
+
+        patientId: item?.patient_uuid,
+
+        chartId: item?.chart_id,
+
         mrn: item?.mrn || "—",
 
         patientName:
@@ -2365,45 +2415,68 @@ export function WorkQueue({
   );
 
   /* ── Pipeline counts ── */
-  const stageCounts = useMemo(() => {
-    const allCounts = PIPELINE.map((p) => ({
-      ...p,
-      count: workQueueData.filter((r) => r.status === p.status).length,
-    }));
+  const counts = workQueueResponse?.counts;
 
-    if (effectiveRole === "qa-analyst") {
-      return allCounts.filter(
-        (p) =>
-          p.status === "Pending QA" ||
-          p.status === "QA Returned" ||
-          p.status === "Rework",
-      );
-    }
-
-    return allCounts;
-  }, [workQueueData, effectiveRole]);
+  const stageCounts = [
+    {
+      status: "Not Started",
+      short: "Not Started",
+      count: counts?.notStarted || 0,
+      dot: "bg-red-500",
+    },
+    {
+      status: "Assigned",
+      short: "Assigned",
+      count: counts?.assigned || 0,
+      dot: "bg-blue-500",
+    },
+    {
+      status: "In Progress",
+      short: "In Progress",
+      count: counts?.inProgress || 0,
+      dot: "bg-yellow-500",
+    },
+    {
+      status: "Pending QA",
+      short: "Pending QA",
+      count: counts?.pendingQa || 0,
+      dot: "bg-orange-500",
+    },
+    {
+      status: "QA Returned",
+      short: "QA Returned",
+      count: counts?.qaReturned || 0,
+      dot: "bg-red-500",
+    },
+    {
+      status: "Rework",
+      short: "Rework",
+      count: counts?.rework || 0,
+      dot: "bg-purple-500",
+    },
+    {
+      status: "Completed",
+      short: "Completed",
+      count: counts?.completed || 0,
+      dot: "bg-green-500",
+    },
+    {
+      status: "Submission Ready",
+      short: "Submission Ready",
+      count: counts?.submissionReady || 0,
+      dot: "bg-emerald-500",
+    },
+  ];
 
   /* ── KPIs ── */
-  const kpi = useMemo(
-    () => ({
-      total: workQueueData.length,
-
-      overdue: workQueueData.filter((r) => r.overdue).length,
-
-      qaIssues: workQueueData.filter((r) =>
-        ["QA Returned", "Rework"].includes(r.status),
-      ).length,
-
-      notStarted: workQueueData.filter((r) => r.status === "Not Started")
-        .length,
-
-      myQueue: workQueueData.filter((r) => r.assignedTo === currentUser).length,
-
-      ready: workQueueData.filter((r) => r.status === "Submission Ready")
-        .length,
-    }),
-    [workQueueData, currentUser],
-  );
+  const kpi = {
+    total: counts?.all || 0,
+    overdue: 0,
+    qaIssues: (counts?.qaReturned || 0) + (counts?.rework || 0),
+    notStarted: counts?.notStarted || 0,
+    myQueue: counts?.myWork || 0,
+    ready: counts?.submissionReady || 0,
+  };
 
   /* ── Filter + sort ── */
   const filtered = useMemo(() => {
@@ -2421,8 +2494,8 @@ export function WorkQueue({
       // if (effectiveRole === "abstractor" && r.assignedTo !== currentUser)
       //   return false;
 
-      if (myWorkQueue && r.assignedTo !== currentUser) return false;
-      if (filterStage !== "All" && r.status !== filterStage) return false;
+      // if (myWorkQueue && r.assignedTo !== currentUser) return false;
+      // if (filterStage !== "All" && r.status !== filterStage) return false;
       if (filterPriority !== "All" && r.priority !== filterPriority)
         return false;
       if (filterAssignee !== "All" && r.assignedTo !== filterAssignee)
@@ -2460,10 +2533,7 @@ export function WorkQueue({
     [filtered, sortCol, sortDir],
   );
 
-  const totalRecords =
-    patientsResponse?.total ||
-    patientsResponse?.pagination?.total ||
-    sorted.length;
+  const totalRecords = workQueueResponse?.total || sorted.length;
 
   const totalPages = Math.max(1, Math.ceil(totalRecords / pageSize));
   const paginated = sorted.slice((page - 1) * pageSize, page * pageSize);
@@ -3275,7 +3345,7 @@ export function WorkQueue({
                             }}
                             className="text-[11px] font-bold text-primary hover:underline cursor-pointer text-left"
                           >
-                            {row.id}
+                            {row.chartId}
                           </button>
                           <span className="text-[9px] text-muted-foreground font-medium">
                             {row.mrn}
