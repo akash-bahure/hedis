@@ -1,0 +1,20 @@
+{
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "user_id": { "type": "string", "format": "uuid" },
+    "user_name": { "type": "string" },
+    "event_type": { "type": "string" },
+    "details": { "type": "string" },
+    "ip_address": { "type": "string" },
+    "device": { "type": "string" },
+    "location": { "type": "string" },
+    "risk_level": {
+      "type": "string",
+      "enum": ["Low", "Medium", "High", "Critical"]
+    },
+    "status": { "type": "string", "enum": ["Success", "Failed", "Warning"] },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "x-readme-ref-name": "AuditLog"
+}

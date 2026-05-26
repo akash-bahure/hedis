@@ -1,4 +1,10 @@
 export {
+  getApiAuditLogs200Schema,
+  getApiAuditLogs500Schema,
+  getApiAuditLogsQueryParamsSchema,
+  getApiAuditLogsQueryResponseSchema,
+} from "./Audit LogsSchemas/getApiAuditLogsSchema.ts";
+export {
   postApiAuthForgotPassword200Schema,
   postApiAuthForgotPassword400Schema,
   postApiAuthForgotPassword500Schema,
@@ -13,6 +19,11 @@ export {
   postApiAuthLoginMutationRequestSchema,
   postApiAuthLoginMutationResponseSchema,
 } from "./AuthSchemas/postApiAuthLoginSchema.ts";
+export {
+  postApiAuthLogout200Schema,
+  postApiAuthLogout500Schema,
+  postApiAuthLogoutMutationResponseSchema,
+} from "./AuthSchemas/postApiAuthLogoutSchema.ts";
 export {
   postApiAuthResetPassword200Schema,
   postApiAuthResetPassword400Schema,
@@ -45,6 +56,14 @@ export {
   postApiAuthTwoFaValidateOtpMutationRequestSchema,
   postApiAuthTwoFaValidateOtpMutationResponseSchema,
 } from "./AuthSchemas/postApiAuthTwoFaValidateOtpSchema.ts";
+export {
+  postApiChartAssignmentsBulkAssign201Schema,
+  postApiChartAssignmentsBulkAssign400Schema,
+  postApiChartAssignmentsBulkAssign401Schema,
+  postApiChartAssignmentsBulkAssign500Schema,
+  postApiChartAssignmentsBulkAssignMutationRequestSchema,
+  postApiChartAssignmentsBulkAssignMutationResponseSchema,
+} from "./Chart AssignmentsSchemas/postApiChartAssignmentsBulkAssignSchema.ts";
 export {
   deleteApiClientsId200Schema,
   deleteApiClientsIdMutationResponseSchema,
@@ -360,6 +379,13 @@ export {
   patchApiUsersShiftsMutationResponseSchema,
 } from "./UsersSchemas/patchApiUsersShiftsSchema.ts";
 export {
+  postApiUsersAssignRole200Schema,
+  postApiUsersAssignRole400Schema,
+  postApiUsersAssignRole500Schema,
+  postApiUsersAssignRoleMutationRequestSchema,
+  postApiUsersAssignRoleMutationResponseSchema,
+} from "./UsersSchemas/postApiUsersAssignRoleSchema.ts";
+export {
   postApiUsersDeactivate200Schema,
   postApiUsersDeactivate400Schema,
   postApiUsersDeactivate500Schema,
@@ -373,5 +399,13 @@ export {
   postApiUsersMutationRequestSchema,
   postApiUsersMutationResponseSchema,
 } from "./UsersSchemas/postApiUsersSchema.ts";
+export {
+  getApiWorkQueue200Schema,
+  getApiWorkQueue401Schema,
+  getApiWorkQueue500Schema,
+  getApiWorkQueueQueryParamsSchema,
+  getApiWorkQueueQueryResponseSchema,
+} from "./Work QueueSchemas/getApiWorkQueueSchema.ts";
+export { auditLogSchema } from "./auditLogSchema.ts";
 export { shiftScheduleMatrixSchema } from "./shiftScheduleMatrixSchema.ts";
 export { userSchema } from "./userSchema.ts";
