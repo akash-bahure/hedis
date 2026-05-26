@@ -214,21 +214,6 @@ async function runMigrations(client, schema) {
     // Columns might already exist or other harmless error
   }
 
-  try {
-    await client.query(`
-      ALTER TABLE ${schema}.projects
-        ADD COLUMN IF NOT EXISTS project_id VARCHAR(50) UNIQUE,
-        ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Draft',
-        ADD COLUMN IF NOT EXISTS specialty VARCHAR(100),
-        ADD COLUMN IF NOT EXISTS notes TEXT,
-        ADD COLUMN IF NOT EXISTS total_charts INTEGER DEFAULT 0,
-        ADD COLUMN IF NOT EXISTS completed_charts INTEGER DEFAULT 0,
-        ADD COLUMN IF NOT EXISTS pending_charts INTEGER DEFAULT 0;
-    `);
-  } catch (err) {
-    // Columns might already exist or other harmless error
-  }
-
   await client.query(`
    CREATE TABLE IF NOT EXISTS ${schema}.projects (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -279,6 +264,23 @@ async function runMigrations(client, schema) {
     );
 
   `);
+
+  try {
+    await client.query(`
+      ALTER TABLE ${schema}.projects
+        ADD COLUMN IF NOT EXISTS project_id VARCHAR(50) UNIQUE,
+        ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Draft',
+        ADD COLUMN IF NOT EXISTS specialty VARCHAR(100),
+        ADD COLUMN IF NOT EXISTS notes TEXT,
+        ADD COLUMN IF NOT EXISTS total_charts INTEGER DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS completed_charts INTEGER DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS pending_charts INTEGER DEFAULT 0;
+    `);
+  } catch (err) {
+    // Columns might already exist or other harmless error
+  }
+
+  
 
   // Create role_permissions table with UUID references
   await client.query(`
@@ -575,6 +577,8 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
 
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+`);
+
   await client.query(`
   CREATE TABLE IF NOT EXISTS ${schema}.user_otp_verifications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

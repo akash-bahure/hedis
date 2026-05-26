@@ -187,6 +187,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
           return;
         }
+
         const userData = {
           ...response.user,
           accessToken: response.token,
@@ -194,18 +195,11 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
         localStorage.setItem("userDetail", JSON.stringify(userData));
         localStorage.setItem("role", selectedRole);
+        localStorage.setItem("auth", "true");
 
-        if (rememberMe) {
-          localStorage.setItem("rememberMe", "true");
-        } else {
-          localStorage.removeItem("rememberMe");
-        }
+        toast.success(response?.message || "Login successful.");
 
-        toast.success(response?.message || "Login successful. Redirecting...");
-
-        setTimeout(() => {
-          onLogin(selectedRole);
-        }, 1000);
+        onLogin(selectedRole);
       },
 
       onError: (error: any) => {
