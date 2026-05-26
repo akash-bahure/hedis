@@ -22,7 +22,8 @@ import {
 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { usePermissions } from "@/hooks/usePermissions";
-
+import { usePostApiAuthLogout } from "@/api";
+import { toast } from "sonner";
 /* ═══════════════════════════════════════════
    TYPES
 ═══════════════════════════════════════════ */
@@ -383,13 +384,40 @@ export function Sidebar({
   const { canView } = usePermissions();
 
   const cfg = ROLE_CONFIG[role];
+  const storedUser =
+    typeof window !== "undefined"
+      ? (() => {
+          try {
+            return JSON.parse(localStorage.getItem("userDetail") || "null");
+          } catch {
+            return null;
+          }
+        })()
+      : null;
+
+  const loggedInUser = storedUser || {};
+
+  const fullName = loggedInUser?.full_name || "User";
+
+  const roleName =
+    loggedInUser?.user_role?.name || loggedInUser?.job_title || "User";
+
+  const organizationName = loggedInUser?.organization?.name || "Organization";
+
+  const initials =
+    fullName
+      ?.split(" ")
+      ?.map((n: string) => n[0])
+      ?.join("")
+      ?.slice(0, 2)
+      ?.toUpperCase() || "U";
 
   // Map sidebar labels to backend module names if they differ
   const SIDEBAR_TO_BACKEND: Record<string, string> = {
     "Audit & Sampling": "Auditing",
-    "Admin": "Users & Roles",
+    Admin: "Users & Roles",
     "System Logs": "Security & Compliance",
-    "Measure Library": "Settings", 
+    "Measure Library": "Settings",
   };
 
   const checkAccess = (item: NavItem) => {
@@ -402,6 +430,36 @@ export function Sidebar({
 
   const navigate = useNavigate();
 
+  const { mutate: logout, isPending: isLoggingOut } = usePostApiAuthLogout({
+    mutation: {
+      onSuccess: () => {
+        // Clear stored auth data
+        localStorage.removeItem("token");
+        localStorage.removeItem("userDetail");
+        localStorage.removeItem("role");
+        localStorage.removeItem("rememberMe");
+        localStorage.removeItem("user_profile");
+
+        toast.success("Logged out successfully");
+
+        navigate({ to: "/auth/login" });
+      },
+
+      onError: () => {
+        // Even if API fails, clear local session
+        localStorage.removeItem("token");
+        localStorage.removeItem("userDetail");
+        localStorage.removeItem("role");
+        localStorage.removeItem("rememberMe");
+        localStorage.removeItem("user_profile");
+
+        toast.error("Session expired. Please login again.");
+
+        navigate({ to: "/auth/login" });
+      },
+    },
+  });
+
   const collapse = () => {
     setCollapsed(true);
     setShowRolePicker(false);
@@ -411,6 +469,10 @@ export function Sidebar({
   const handleNav = (id: string) => {
     onViewChange(id);
     onMobileClose?.();
+  };
+
+  const handleLogout = () => {
+    logout();
   };
 
   return (
@@ -452,7 +514,7 @@ export function Sidebar({
                 className="text-muted-foreground truncate"
                 style={{ fontSize: 10 }}
               >
-                Apollo Health System
+                {organizationName}
               </p>
             </div>
           </div>
@@ -539,7 +601,7 @@ export function Sidebar({
         {collapsed ? (
           /* Collapsed footer */
           <div className="flex flex-col items-center gap-2 py-3 px-2">
-            <Tooltip label="Sarah Johnson, RHIA" note={cfg.label}>
+            <Tooltip label={fullName} note={roleName}>
               <div
                 className={`w-8 h-8 rounded-full bg-gradient-to-br ${cfg.avatarGradient} flex items-center justify-center cursor-pointer shadow-sm`}
               >
@@ -547,12 +609,17 @@ export function Sidebar({
                   className="text-white font-bold select-none"
                   style={{ fontSize: 10 }}
                 >
-                  SJ
+                  {initials}
                 </span>
               </div>
             </Tooltip>
             <Tooltip label="Sign Out">
-              <button className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 hover:bg-sidebar-accent transition-colors">
+              <button
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 hover:bg-sidebar-accent transition-colors disabled:opacity-50"
+              >
+                {" "}
                 <LogOut className="w-4 h-4" />
               </button>
             </Tooltip>
@@ -569,7 +636,7 @@ export function Sidebar({
                   className="text-white font-bold select-none"
                   style={{ fontSize: 10 }}
                 >
-                  SJ
+                  {initials}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
@@ -577,13 +644,14 @@ export function Sidebar({
                   className="font-semibold text-foreground truncate leading-tight"
                   style={{ fontSize: 12 }}
                 >
-                  Sarah Johnson, RHIA
+                  {fullName}
                 </p>
+
                 <p
                   className="text-muted-foreground truncate mt-0.5"
                   style={{ fontSize: 10 }}
                 >
-                  {cfg.description}
+                  {roleName}
                 </p>
               </div>
               {/* Role switcher */}
@@ -625,7 +693,9 @@ export function Sidebar({
 
             {/* Logout */}
             <button
-              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-medium"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-medium disabled:opacity-50"
               style={{ fontSize: 12 }}
             >
               <LogOut className="w-3.5 h-3.5" />

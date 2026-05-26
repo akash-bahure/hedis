@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useGetApiAuditLogs } from "@/api/hooks/Audit LogsHooks/useGetApiAuditLogs";
+
 import {
   AreaChart,
   Area,
@@ -1109,9 +1111,9 @@ function RiskBadge({ r }: { r: RiskLevel }) {
   );
 }
 
-function EventBadge({ t }: { t: EventType }) {
+function EventBadge({ t }: { t?: string | null }) {
   const map: Record<
-    EventType,
+    string,
     { bg: string; text: string; Icon: React.ElementType; label: string }
   > = {
     login: {
@@ -1126,62 +1128,57 @@ function EventBadge({ t }: { t: EventType }) {
       Icon: LogOut,
       label: "Logout",
     },
-    access: {
-      bg: "bg-blue-50",
-      text: "text-blue-700",
-      Icon: Eye,
-      label: "Chart Access",
-    },
-    coding: {
-      bg: "bg-cyan-50",
-      text: "text-cyan-700",
-      Icon: Code2,
-      label: "Coding Submit",
-    },
-    audit: {
-      bg: "bg-teal-50",
-      text: "text-teal-700",
-      Icon: ClipboardCheck,
-      label: "Audit Decision",
-    },
-    reassign: {
-      bg: "bg-violet-50",
-      text: "text-violet-700",
-      Icon: RotateCcw,
-      label: "Reassignment",
-    },
-    override: {
-      bg: "bg-orange-50",
-      text: "text-orange-700",
-      Icon: Zap,
-      label: "Override",
-    },
     export: {
       bg: "bg-amber-50",
       text: "text-amber-700",
       Icon: Download,
       label: "Export",
     },
-    user_mgmt: {
+    "user updated": {
       bg: "bg-indigo-50",
       text: "text-indigo-700",
       Icon: Users,
       label: "User Mgmt",
     },
-    settings: {
-      bg: "bg-slate-100",
-      text: "text-slate-600",
-      Icon: Terminal,
-      label: "Settings",
-    },
-    failed_login: {
+    "login failed": {
       bg: "bg-red-50",
       text: "text-red-700",
       Icon: XCircle,
       label: "Failed Login",
     },
+    "2fa verification": {
+      bg: "bg-cyan-50",
+      text: "text-cyan-700",
+      Icon: Shield,
+      label: "2FA",
+    },
+    "2fa verification failed": {
+      bg: "bg-red-50",
+      text: "text-red-700",
+      Icon: XCircle,
+      label: "2FA Failed",
+    },
   };
-  const { bg, text, Icon, label } = map[t];
+
+  const normalized =
+    t?.toString()?.trim()?.toLowerCase()?.replace(/\s+/g, " ") || "";
+
+  // Try exact match first, then partial match
+  let config =
+    map[normalized] ||
+    Object.values(map).find((c) => normalized.includes(c.label.toLowerCase()));
+
+  if (!config) {
+    config = {
+      bg: "bg-muted",
+      text: "text-muted-foreground",
+      Icon: Activity,
+      label: t?.split(" ")[0] || "Unknown", // Fallback: first word
+    };
+  }
+
+  const { bg, text, Icon, label } = config;
+
   return (
     <span
       className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full ${bg} ${text} whitespace-nowrap`}
@@ -1191,7 +1188,6 @@ function EventBadge({ t }: { t: EventType }) {
     </span>
   );
 }
-
 function AccessTypeBadge({ t }: { t: AccessType }) {
   const c = {
     code: "bg-blue-50 text-blue-700",
@@ -1990,54 +1986,84 @@ function SecurityDashboardTab() {
 }
 
 /* ════════════════════════════════════════════  TAB: AUDIT LOGS  */
-const EVENT_TYPES: { id: EventType | "all"; label: string }[] = [
-  { id: "all", label: "All Events" },
-  { id: "login", label: "Login" },
-  { id: "logout", label: "Logout" },
-  { id: "access", label: "Chart Access" },
-  { id: "coding", label: "Coding" },
-  { id: "audit", label: "Audit" },
-  { id: "reassign", label: "Reassign" },
-  { id: "override", label: "Override" },
-  { id: "export", label: "Export" },
-  { id: "user_mgmt", label: "User Mgmt" },
-  { id: "failed_login", label: "Failed Login" },
-];
+// const EVENT_TYPES: { id: EventType | "all"; label: string }[] = [
+//   { id: "all", label: "All Events" },
+//   { id: "login", label: "Login" },
+//   { id: "logout", label: "Logout" },
+//   { id: "access", label: "Chart Access" },
+//   { id: "coding", label: "Coding" },
+//   { id: "audit", label: "Audit" },
+//   { id: "reassign", label: "Reassign" },
+//   { id: "override", label: "Override" },
+//   { id: "export", label: "Export" },
+//   { id: "user_mgmt", label: "User Mgmt" },
+//   { id: "failed_login", label: "Failed Login" },
+// ];
+
+/* ════════════════════════════════════════════  TAB: AUDIT LOGS  */
+
+const EVENT_TYPE_MAP: Record<string, { label: string; matches: string[] }> = {
+  all: { label: "All Events", matches: [] },
+  login: { label: "Login", matches: ["Login Success", "Login Failed"] },
+  logout: { label: "Logout", matches: ["Logout"] },
+  export: { label: "Export", matches: ["Export action"] },
+  user_mgmt: { label: "User Mgmt", matches: ["User updated"] },
+  failed_login: { label: "Failed Login", matches: ["Login Failed"] },
+  "2fa": {
+    label: "2FA",
+    matches: ["2FA Verification", "2FA Verification Failed"],
+  },
+};
+
+const EVENT_TYPES = Object.entries(EVENT_TYPE_MAP).map(([id, { label }]) => ({
+  id,
+  label,
+}));
 
 function AuditLogsTab() {
+  const { hasPermission } = usePermissions();
+
   const [search, setSearch] = useState("");
-  const [evType, setEvType] = useState<EventType | "all">("all");
-  const [riskF, setRiskF] = useState<RiskLevel | "all">("all");
+  const [evType, setEvType] = useState<string>("all");
+  const [riskF, setRiskF] = useState<string>("all");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const [page, setPage] = useState(1);
-  const PER_PAGE = 15;
+  const PER_PAGE = 10;
 
-  const filtered = useMemo(
-    () =>
-      AUDIT_LOGS.filter((l) => {
-        if (evType !== "all" && l.eventType !== evType) return false;
-        if (riskF !== "all" && l.risk !== riskF) return false;
-        if (search) {
-          const q = search.toLowerCase();
-          if (
-            !l.user.toLowerCase().includes(q) &&
-            !l.details.toLowerCase().includes(q) &&
-            !l.ip.includes(q) &&
-            !(l.chartId || "").toLowerCase().includes(q)
-          )
-            return false;
-        }
-        return true;
-      }),
-    [search, evType, riskF],
-  );
+  // Get matching backend event types
+  const selectedEventConfig = EVENT_TYPE_MAP[evType];
 
-  const pages = Math.ceil(filtered.length / PER_PAGE);
-  const pageData = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const eventTypeFilter =
+    evType === "all" ? undefined : selectedEventConfig?.matches?.[0];
 
-  const counts = {
-    critical: AUDIT_LOGS.filter((l) => l.risk === "critical").length,
-    high: AUDIT_LOGS.filter((l) => l.risk === "high").length,
-  };
+  const {
+    data: auditLogsData,
+    isLoading,
+    isPlaceholderData,
+  } = useGetApiAuditLogs({
+    page,
+    limit: PER_PAGE,
+    search: search || undefined,
+    // Send array of possible event types (most APIs support this)
+    event_type: eventTypeFilter,
+    risk_level:
+      riskF === "all"
+        ? undefined
+        : ((riskF.charAt(0).toUpperCase() + riskF.slice(1)) as any),
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
+  });
+  const logs = auditLogsData?.data || [];
+  const pagination = auditLogsData?.pagination;
+  const totalPages = pagination?.totalPages || 1;
+  const totalLogs = pagination?.total || 0;
+
+  // Since we don't have counts for all risks from the paginated API easily without another call,
+  // we'll keep the summary based on the current page or just show total.
+  // Ideally there's a separate stats API or the backend returns it.
+  const criticalCount = logs.filter((l) => l.risk_level === "Critical").length;
+  const highCount = logs.filter((l) => l.risk_level === "High").length;
 
   return (
     <div className="space-y-4">
@@ -2046,25 +2072,25 @@ function AuditLogsTab() {
         {[
           {
             label: "Critical Events",
-            count: counts.critical,
+            count: criticalCount,
             cls: "bg-red-50 border-red-200 text-red-700",
             Icon: AlertOctagon,
           },
           {
             label: "High Risk",
-            count: counts.high,
+            count: highCount,
             cls: "bg-orange-50 border-orange-200 text-orange-700",
             Icon: AlertCircle,
           },
           {
             label: "Total Logs",
-            count: AUDIT_LOGS.length,
+            count: totalLogs,
             cls: "bg-muted border-border text-foreground",
             Icon: BookOpen,
           },
           {
-            label: "Filtered",
-            count: filtered.length,
+            label: "Showing",
+            count: logs.length,
             cls: "bg-blue-50 border-blue-200 text-blue-700",
             Icon: Filter,
           },
@@ -2080,14 +2106,14 @@ function AuditLogsTab() {
             </div>
           );
         })}
-          <div className="flex-1" />
-          {hasPermission("Security & Compliance", "export") && (
-            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold border border-border rounded-xl hover:bg-muted transition-colors whitespace-nowrap">
-              <Download className="w-3.5 h-3.5" />
-              Export Logs
-            </button>
-          )}
-        </div>
+        <div className="flex-1" />
+        {hasPermission("Security & Compliance", "export") && (
+          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold border border-border rounded-xl hover:bg-muted transition-colors whitespace-nowrap">
+            <Download className="w-3.5 h-3.5" />
+            Export Logs
+          </button>
+        )}
+      </div>
 
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
@@ -2099,14 +2125,14 @@ function AuditLogsTab() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            placeholder="Search user, IP, chart ID, details…"
+            placeholder="Search user, details…"
             className="w-full pl-8 pr-3 py-2 text-[11px] bg-card border border-border rounded-xl focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
         <select
           value={evType}
           onChange={(e) => {
-            setEvType(e.target.value as any);
+            setEvType(e.target.value);
             setPage(1);
           }}
           className="px-3 py-2 text-[11px] bg-card border border-border rounded-xl focus:outline-none appearance-none"
@@ -2120,7 +2146,7 @@ function AuditLogsTab() {
         <select
           value={riskF}
           onChange={(e) => {
-            setRiskF(e.target.value as any);
+            setRiskF(e.target.value);
             setPage(1);
           }}
           className="px-3 py-2 text-[11px] bg-card border border-border rounded-xl focus:outline-none appearance-none"
@@ -2132,14 +2158,56 @@ function AuditLogsTab() {
             </option>
           ))}
         </select>
-        <button className="inline-flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold border border-border rounded-xl hover:bg-muted transition-colors text-muted-foreground whitespace-nowrap">
-          <Calendar className="w-3.5 h-3.5" />
-          Date Range
-        </button>
+        <div className="flex items-center gap-2 border border-border rounded-xl px-2 bg-card">
+          <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => {
+              setStartDate(e.target.value);
+              setPage(1);
+            }}
+            className="py-2 text-[10px] bg-transparent focus:outline-none"
+          />
+          <span className="text-muted-foreground text-[10px]">to</span>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => {
+              setEndDate(e.target.value);
+              setPage(1);
+            }}
+            className="py-2 text-[10px] bg-transparent focus:outline-none"
+          />
+        </div>
+        {(startDate ||
+          endDate ||
+          search ||
+          evType !== "all" ||
+          riskF !== "all") && (
+          <button
+            onClick={() => {
+              setSearch("");
+              setEvType("all");
+              setRiskF("all");
+              setStartDate("");
+              setEndDate("");
+              setPage(1);
+            }}
+            className="px-3 py-2 text-[11px] font-bold text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+          >
+            Clear All
+          </button>
+        )}
       </div>
 
       {/* Logs Table */}
-      <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+      <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm relative">
+        {isLoading && (
+          <div className="absolute inset-0 bg-white/50 z-10 flex items-center justify-center">
+            <RefreshCw className="w-5 h-5 animate-spin text-primary" />
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -2164,72 +2232,92 @@ function AuditLogsTab() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {pageData.map((log, i) => (
-                <tr
-                  key={log.id}
-                  className={`hover:bg-muted/10 transition-colors ${log.risk === "critical" ? "bg-red-50/30" : log.risk === "high" ? "bg-orange-50/20" : i % 2 === 0 ? "" : "bg-muted/5"}`}
-                >
-                  <td className="px-3 py-2.5">
-                    <span className="text-[10px] font-mono font-semibold text-foreground whitespace-nowrap">
-                      {log.ts}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <span className="text-[10px] font-semibold text-foreground whitespace-nowrap">
-                      {log.user}
-                    </span>
-                    {log.userId && (
-                      <p className="text-[8px] text-muted-foreground font-mono">
-                        {log.userId}
-                      </p>
-                    )}
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <EventBadge t={log.eventType} />
-                  </td>
-                  <td className="px-3 py-2.5 max-w-xs">
-                    <p
-                      className="text-[10px] text-foreground leading-snug truncate"
-                      title={log.details}
-                    >
-                      {log.details}
-                    </p>
-                    {log.chartId && (
-                      <p className="text-[8px] font-mono text-primary mt-0.5">
-                        {log.chartId}
-                      </p>
-                    )}
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <p className="text-[9px] font-mono text-foreground">
-                      {log.ip}
-                    </p>
-                    <p className="text-[8px] text-muted-foreground">
-                      {log.device}
-                    </p>
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <div className="flex items-center gap-1 text-[9px] text-muted-foreground">
-                      <MapPin className="w-2.5 h-2.5" />
-                      {log.location}
-                    </div>
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <RiskBadge r={log.risk} />
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <StatusDot s={log.status} />
+              {logs.length === 0 && !isLoading ? (
+                <tr>
+                  <td
+                    colSpan={8}
+                    className="px-3 py-10 text-center text-muted-foreground text-[11px]"
+                  >
+                    No audit logs found matching your criteria.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                logs.map((log, i) => (
+                  <tr
+                    key={log.id}
+                    className={`hover:bg-muted/10 transition-colors ${log.risk_level === "Critical" ? "bg-red-50/30" : log.risk_level === "High" ? "bg-orange-50/20" : i % 2 === 0 ? "" : "bg-muted/5"}`}
+                  >
+                    <td className="px-3 py-2.5">
+                      <span className="text-[10px] font-mono font-semibold text-foreground whitespace-nowrap">
+                        {log.created_at
+                          ? new Date(log.created_at).toLocaleString("en-IN", {
+                              day: "2-digit",
+                              month: "short",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : "N/A"}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <span className="text-[10px] font-semibold text-foreground whitespace-nowrap">
+                        {log.user_name}
+                      </span>
+                      {log.user_id && (
+                        <p className="text-[8px] text-muted-foreground font-mono">
+                          {log.user_id}
+                        </p>
+                      )}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <EventBadge t={log.event_type} />
+                    </td>
+                    <td className="px-3 py-2.5 max-w-xs">
+                      <p
+                        className="text-[10px] text-foreground leading-snug truncate"
+                        title={log.details}
+                      >
+                        {log.details}
+                      </p>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <p className="text-[9px] font-mono text-foreground">
+                        {log.ip_address}
+                      </p>
+                      <p className="text-[8px] text-muted-foreground">
+                        {log.device}
+                      </p>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <div className="flex items-center gap-1 text-[9px] text-muted-foreground">
+                        <MapPin className="w-2.5 h-2.5" />
+                        {log.location || "N/A"}{" "}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <RiskBadge
+                        r={
+                          (log.risk_level?.toLowerCase() as RiskLevel) || "low"
+                        }
+                      />
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <StatusDot
+                        s={
+                          (log.status?.toLowerCase() as LogStatus) || "success"
+                        }
+                      />
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
         <div className="flex items-center justify-between px-4 py-2.5 border-t border-border bg-muted/5">
           <span className="text-[10px] text-muted-foreground">
             Showing {(page - 1) * PER_PAGE + 1}–
-            {Math.min(page * PER_PAGE, filtered.length)} of {filtered.length}{" "}
-            entries
+            {Math.min(page * PER_PAGE, totalLogs)} of {totalLogs} entries
           </span>
           <div className="flex items-center gap-1">
             <button
@@ -2239,18 +2327,35 @@ function AuditLogsTab() {
             >
               ← Prev
             </button>
-            {Array.from({ length: pages }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setPage(i + 1)}
-                className={`w-6 h-6 text-[10px] font-bold rounded-md ${page === i + 1 ? "bg-primary text-white" : "border border-border hover:bg-muted text-muted-foreground"}`}
-              >
-                {i + 1}
-              </button>
-            ))}
+            {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
+              // Simple pagination logic for showing a few pages
+              let pageNum = i + 1;
+              if (totalPages > 5 && page > 3) {
+                pageNum = page - 3 + i;
+                if (pageNum + (4 - i) > totalPages)
+                  pageNum = totalPages - 4 + i;
+              }
+              if (pageNum <= 0) return null;
+              if (pageNum > totalPages) return null;
+
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setPage(pageNum)}
+                  className={`w-6 h-6 text-[10px] font-bold rounded-md ${page === pageNum ? "bg-primary text-white" : "border border-border hover:bg-muted text-muted-foreground"}`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+            {totalPages > 5 && page < totalPages - 2 && (
+              <span className="text-[10px] px-1 text-muted-foreground">
+                ...
+              </span>
+            )}
             <button
-              onClick={() => setPage((p) => Math.min(pages, p + 1))}
-              disabled={page === pages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
               className="px-2.5 py-1 text-[10px] font-bold border border-border rounded-lg hover:bg-muted disabled:opacity-40 transition-colors"
             >
               Next →
@@ -2288,7 +2393,7 @@ function AccessMonitorTab() {
         }
         return true;
       }),
-    [search, projF, typeF],
+    [search, projF, typeF]
   );
 
   const stats = [
@@ -2527,7 +2632,7 @@ function ComplianceTab() {
 
   const passCount = HIPAA_CONTROLS.filter((c) => c.status === "pass").length;
   const overallScore = Math.round(
-    HIPAA_CONTROLS.reduce((s, c) => s + c.score, 0) / HIPAA_CONTROLS.length,
+    HIPAA_CONTROLS.reduce((s, c) => s + c.score, 0) / HIPAA_CONTROLS.length
   );
 
   return (
@@ -2848,7 +2953,7 @@ function AlertsTab() {
   const [sevF, setSevF] = useState<AlertSev | "all">("all");
   const [statF, setStatF] = useState<AlertStatus | "all">("all");
   const [expanded, setExpanded] = useState<Set<string>>(
-    new Set(["SA001", "SA002"]),
+    new Set(["SA001", "SA002"])
   );
 
   const filtered = useMemo(
@@ -2858,7 +2963,7 @@ function AlertsTab() {
         if (statF !== "all" && a.status !== statF) return false;
         return true;
       }),
-    [sevF, statF],
+    [sevF, statF]
   );
 
   const counts = {
@@ -3127,6 +3232,12 @@ type SecTab = "dashboard" | "audit" | "access" | "compliance" | "alerts";
 export function SecurityCompliance() {
   const [tab, setTab] = useState<SecTab>("dashboard");
   const { canEdit, hasPermission } = usePermissions();
+  const { data: auditLogsCountData } = useGetApiAuditLogs({
+    page: 1,
+    limit: 1,
+  });
+
+  const auditLogsCount = auditLogsCountData?.pagination?.total || 0;
 
   const TABS: {
     id: SecTab;
@@ -3135,14 +3246,19 @@ export function SecurityCompliance() {
     alert?: string;
   }[] = [
     { id: "dashboard", label: "Security Dashboard", icon: Shield },
-    { id: "audit", label: "Audit Logs", icon: BookOpen, alert: "30" },
+    {
+      id: "audit",
+      label: "Audit Logs",
+      icon: BookOpen,
+      alert: auditLogsCount.toString(),
+    },
     { id: "access", label: "Access Monitor", icon: Eye, alert: "LIVE" },
     { id: "compliance", label: "Compliance Controls", icon: ShieldCheck },
     { id: "alerts", label: "Security Alerts", icon: Bell, alert: "2 active" },
   ];
 
   const activeCritical = SECURITY_ALERTS.filter(
-    (a) => a.status === "active" && a.severity === "critical",
+    (a) => a.status === "active" && a.severity === "critical"
   ).length;
 
   return (
