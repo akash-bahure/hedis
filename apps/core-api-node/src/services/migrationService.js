@@ -612,6 +612,42 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
   CREATE INDEX IF NOT EXISTS idx_audit_logs_status ON ${schema}.audit_logs(status);
   CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON ${schema}.audit_logs(created_at DESC);
 `);
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.data_retention_policies (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      phi_records VARCHAR(50) DEFAULT '7 years',
+      audit_logs VARCHAR(50) DEFAULT '6 years',
+      session_logs VARCHAR(50) DEFAULT '1 year',
+      export_logs VARCHAR(50) DEFAULT '2 years',
+      backup_snapshots VARCHAR(50) DEFAULT '90 days',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  await client.query(`
+    INSERT INTO ${schema}.data_retention_policies (phi_records, audit_logs, session_logs, export_logs, backup_snapshots)
+    SELECT '7 years', '6 years', '1 year', '2 years', '90 days'
+    WHERE NOT EXISTS (SELECT 1 FROM ${schema}.data_retention_policies);
+  `);
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.access_expiry_policies (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      inactivity_deactivation VARCHAR(50) DEFAULT '90 days',
+      force_reauthentication VARCHAR(50) DEFAULT '30 days',
+      auth_token_lifetime VARCHAR(50) DEFAULT '24 hours',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  await client.query(`
+    INSERT INTO ${schema}.access_expiry_policies (inactivity_deactivation, force_reauthentication, auth_token_lifetime)
+    SELECT '90 days', '30 days', '24 hours'
+    WHERE NOT EXISTS (SELECT 1 FROM ${schema}.access_expiry_policies);
+  `);
 }
 
 
