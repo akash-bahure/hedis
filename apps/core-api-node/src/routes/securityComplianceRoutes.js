@@ -16,7 +16,7 @@ const authMiddleware = require("../middlewares/authMiddleware");
  *   get:
  *     summary: Retrieve Data Retention Policy settings and available options
  *     tags: [Security & Compliance]
- *     description: Fetches current organization data retention durations for HIPAA PHI records, Audit Logs, Session Logs, Export Logs, and Backup Snapshots, along with available options for each field.
+ *     description: Fetches current organization data retention durations for HIPAA PHI records, Audit Logs, Session Logs, Export Logs, and Backup Snapshots, defined as strict enums.
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -38,50 +38,20 @@ const authMiddleware = require("../middlewares/authMiddleware");
  *                       type: string
  *                       format: uuid
  *                     phi_records:
- *                       type: object
- *                       properties:
- *                         value:
- *                           type: string
- *                         options:
- *                           type: array
- *                           items:
- *                             type: string
+ *                       type: string
+ *                       enum: ["6 years", "7 years", "10 years", "15 years"]
  *                     audit_logs:
- *                       type: object
- *                       properties:
- *                         value:
- *                           type: string
- *                         options:
- *                           type: array
- *                           items:
- *                             type: string
+ *                       type: string
+ *                       enum: ["3 years", "6 years", "10 years"]
  *                     session_logs:
- *                       type: object
- *                       properties:
- *                         value:
- *                           type: string
- *                         options:
- *                           type: array
- *                           items:
- *                             type: string
+ *                       type: string
+ *                       enum: ["90 days", "180 days", "1 year", "2 years"]
  *                     export_logs:
- *                       type: object
- *                       properties:
- *                         value:
- *                           type: string
- *                         options:
- *                           type: array
- *                           items:
- *                             type: string
+ *                       type: string
+ *                       enum: ["1 year", "2 years", "5 years"]
  *                     backup_snapshots:
- *                       type: object
- *                       properties:
- *                         value:
- *                           type: string
- *                         options:
- *                           type: array
- *                           items:
- *                             type: string
+ *                       type: string
+ *                       enum: ["30 days", "60 days", "90 days", "180 days"]
  *                     created_at:
  *                       type: string
  *                       format: date-time
@@ -145,50 +115,20 @@ router.get("/data-retention-policy", authMiddleware, controller.getDataRetention
  *                       type: string
  *                       format: uuid
  *                     phi_records:
- *                       type: object
- *                       properties:
- *                         value:
- *                           type: string
- *                         options:
- *                           type: array
- *                           items:
- *                             type: string
+ *                       type: string
+ *                       enum: ["6 years", "7 years", "10 years", "15 years"]
  *                     audit_logs:
- *                       type: object
- *                       properties:
- *                         value:
- *                           type: string
- *                         options:
- *                           type: array
- *                           items:
- *                             type: string
+ *                       type: string
+ *                       enum: ["3 years", "6 years", "10 years"]
  *                     session_logs:
- *                       type: object
- *                       properties:
- *                         value:
- *                           type: string
- *                         options:
- *                           type: array
- *                           items:
- *                             type: string
+ *                       type: string
+ *                       enum: ["90 days", "180 days", "1 year", "2 years"]
  *                     export_logs:
- *                       type: object
- *                       properties:
- *                         value:
- *                           type: string
- *                         options:
- *                           type: array
- *                           items:
- *                             type: string
+ *                       type: string
+ *                       enum: ["1 year", "2 years", "5 years"]
  *                     backup_snapshots:
- *                       type: object
- *                       properties:
- *                         value:
- *                           type: string
- *                         options:
- *                           type: array
- *                           items:
- *                             type: string
+ *                       type: string
+ *                       enum: ["30 days", "60 days", "90 days", "180 days"]
  *                     created_at:
  *                       type: string
  *                       format: date-time
@@ -232,32 +172,14 @@ router.put("/data-retention-policy", authMiddleware, controller.updateDataRetent
  *                       type: string
  *                       format: uuid
  *                     inactivity_deactivation:
- *                       type: object
- *                       properties:
- *                         value:
- *                           type: string
- *                         options:
- *                           type: array
- *                           items:
- *                             type: string
+ *                       type: string
+ *                       enum: ["30 days", "60 days", "90 days", "180 days"]
  *                     force_reauthentication:
- *                       type: object
- *                       properties:
- *                         value:
- *                           type: string
- *                         options:
- *                           type: array
- *                           items:
- *                             type: string
+ *                       type: string
+ *                       enum: ["7 days", "14 days", "30 days", "60 days"]
  *                     auth_token_lifetime:
- *                       type: object
- *                       properties:
- *                         value:
- *                           type: string
- *                         options:
- *                           type: array
- *                           items:
- *                             type: string
+ *                       type: string
+ *                       enum: ["1 hour", "8 hours", "24 hours", "48 hours"]
  *                     project_restrictions:
  *                       type: array
  *                       items:
@@ -333,32 +255,14 @@ router.get("/access-expiry-policy", authMiddleware, controller.getAccessExpiryPo
  *                       type: string
  *                       format: uuid
  *                     inactivity_deactivation:
- *                       type: object
- *                       properties:
- *                         value:
- *                           type: string
- *                         options:
- *                           type: array
- *                           items:
- *                             type: string
+ *                       type: string
+ *                       enum: ["30 days", "60 days", "90 days", "180 days"]
  *                     force_reauthentication:
- *                       type: object
- *                       properties:
- *                         value:
- *                           type: string
- *                         options:
- *                           type: array
- *                           items:
- *                             type: string
+ *                       type: string
+ *                       enum: ["7 days", "14 days", "30 days", "60 days"]
  *                     auth_token_lifetime:
- *                       type: object
- *                       properties:
- *                         value:
- *                           type: string
- *                         options:
- *                           type: array
- *                           items:
- *                             type: string
+ *                       type: string
+ *                       enum: ["1 hour", "8 hours", "24 hours", "48 hours"]
  *                     project_restrictions:
  *                       type: array
  *                       items:

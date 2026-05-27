@@ -42,29 +42,14 @@ exports.getDataRetentionPolicy = async (req, res) => {
 
     const row = result.rows[0];
 
-    // Format clean response with selected values and their options lists
+    // Format clean flat response
     const formattedData = {
       id: row.id,
-      phi_records: {
-        value: row.phi_records,
-        options: RETENTION_OPTIONS.phi_records
-      },
-      audit_logs: {
-        value: row.audit_logs,
-        options: RETENTION_OPTIONS.audit_logs
-      },
-      session_logs: {
-        value: row.session_logs,
-        options: RETENTION_OPTIONS.session_logs
-      },
-      export_logs: {
-        value: row.export_logs,
-        options: RETENTION_OPTIONS.export_logs
-      },
-      backup_snapshots: {
-        value: row.backup_snapshots,
-        options: RETENTION_OPTIONS.backup_snapshots
-      },
+      phi_records: row.phi_records,
+      audit_logs: row.audit_logs,
+      session_logs: row.session_logs,
+      export_logs: row.export_logs,
+      backup_snapshots: row.backup_snapshots,
       created_at: row.created_at,
       updated_at: row.updated_at
     };
@@ -183,29 +168,14 @@ exports.updateDataRetentionPolicy = async (req, res) => {
 
     const row = result.rows[0];
 
-    // Format clean response
+    // Format clean flat response
     const formattedData = {
       id: row.id,
-      phi_records: {
-        value: row.phi_records,
-        options: RETENTION_OPTIONS.phi_records
-      },
-      audit_logs: {
-        value: row.audit_logs,
-        options: RETENTION_OPTIONS.audit_logs
-      },
-      session_logs: {
-        value: row.session_logs,
-        options: RETENTION_OPTIONS.session_logs
-      },
-      export_logs: {
-        value: row.export_logs,
-        options: RETENTION_OPTIONS.export_logs
-      },
-      backup_snapshots: {
-        value: row.backup_snapshots,
-        options: RETENTION_OPTIONS.backup_snapshots
-      },
+      phi_records: row.phi_records,
+      audit_logs: row.audit_logs,
+      session_logs: row.session_logs,
+      export_logs: row.export_logs,
+      backup_snapshots: row.backup_snapshots,
       created_at: row.created_at,
       updated_at: row.updated_at
     };
@@ -284,18 +254,9 @@ exports.getAccessExpiryPolicy = async (req, res) => {
 
     const formattedData = {
       id: row.id,
-      inactivity_deactivation: {
-        value: row.inactivity_deactivation,
-        options: EXPIRY_OPTIONS.inactivity_deactivation
-      },
-      force_reauthentication: {
-        value: row.force_reauthentication,
-        options: EXPIRY_OPTIONS.force_reauthentication
-      },
-      auth_token_lifetime: {
-        value: row.auth_token_lifetime,
-        options: EXPIRY_OPTIONS.auth_token_lifetime
-      },
+      inactivity_deactivation: row.inactivity_deactivation,
+      force_reauthentication: row.force_reauthentication,
+      auth_token_lifetime: row.auth_token_lifetime,
       project_restrictions: formattedProjects,
       created_at: row.created_at,
       updated_at: row.updated_at
@@ -421,18 +382,9 @@ exports.updateAccessExpiryPolicy = async (req, res) => {
 
     const formattedData = {
       id: row.id,
-      inactivity_deactivation: {
-        value: row.inactivity_deactivation,
-        options: EXPIRY_OPTIONS.inactivity_deactivation
-      },
-      force_reauthentication: {
-        value: row.force_reauthentication,
-        options: EXPIRY_OPTIONS.force_reauthentication
-      },
-      auth_token_lifetime: {
-        value: row.auth_token_lifetime,
-        options: EXPIRY_OPTIONS.auth_token_lifetime
-      },
+      inactivity_deactivation: row.inactivity_deactivation,
+      force_reauthentication: row.force_reauthentication,
+      auth_token_lifetime: row.auth_token_lifetime,
       project_restrictions: formattedProjects,
       created_at: row.created_at,
       updated_at: row.updated_at
