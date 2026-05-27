@@ -3,6 +3,36 @@
  * Do not edit manually.
  */
 
+export const dataInactivityDeactivationEnum2 = {
+  "30 days": "30 days",
+  "60 days": "60 days",
+  "90 days": "90 days",
+  "180 days": "180 days",
+} as const;
+
+export type DataInactivityDeactivationEnum2Key =
+  (typeof dataInactivityDeactivationEnum2)[keyof typeof dataInactivityDeactivationEnum2];
+
+export const dataForceReauthenticationEnum2 = {
+  "7 days": "7 days",
+  "14 days": "14 days",
+  "30 days": "30 days",
+  "60 days": "60 days",
+} as const;
+
+export type DataForceReauthenticationEnum2Key =
+  (typeof dataForceReauthenticationEnum2)[keyof typeof dataForceReauthenticationEnum2];
+
+export const dataAuthTokenLifetimeEnum2 = {
+  "1 hour": "1 hour",
+  "8 hours": "8 hours",
+  "24 hours": "24 hours",
+  "48 hours": "48 hours",
+} as const;
+
+export type DataAuthTokenLifetimeEnum2Key =
+  (typeof dataAuthTokenLifetimeEnum2)[keyof typeof dataAuthTokenLifetimeEnum2];
+
 /**
  * @description Access expiry settings updated successfully
  */
@@ -24,44 +54,17 @@ export type PutApiSecurityComplianceAccessExpiryPolicy200 = {
      */
     id?: string;
     /**
-     * @type object | undefined
+     * @type string | undefined
      */
-    inactivity_deactivation?: {
-      /**
-       * @type string | undefined
-       */
-      value?: string;
-      /**
-       * @type array | undefined
-       */
-      options?: string[];
-    };
+    inactivity_deactivation?: DataInactivityDeactivationEnum2Key;
     /**
-     * @type object | undefined
+     * @type string | undefined
      */
-    force_reauthentication?: {
-      /**
-       * @type string | undefined
-       */
-      value?: string;
-      /**
-       * @type array | undefined
-       */
-      options?: string[];
-    };
+    force_reauthentication?: DataForceReauthenticationEnum2Key;
     /**
-     * @type object | undefined
+     * @type string | undefined
      */
-    auth_token_lifetime?: {
-      /**
-       * @type string | undefined
-       */
-      value?: string;
-      /**
-       * @type array | undefined
-       */
-      options?: string[];
-    };
+    auth_token_lifetime?: DataAuthTokenLifetimeEnum2Key;
     /**
      * @type array | undefined
      */

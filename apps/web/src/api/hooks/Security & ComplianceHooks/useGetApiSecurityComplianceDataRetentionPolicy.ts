@@ -53,7 +53,7 @@ export function getApiSecurityComplianceDataRetentionPolicyQueryOptions(
 }
 
 /**
- * @description Fetches current organization data retention durations for HIPAA PHI records, Audit Logs, Session Logs, Export Logs, and Backup Snapshots, along with available options for each field.
+ * @description Fetches current organization data retention durations for HIPAA PHI records, Audit Logs, Session Logs, Export Logs, and Backup Snapshots, defined as strict enums.
  * @summary Retrieve Data Retention Policy settings and available options
  * {@link /api/security-compliance/data-retention-policy}
  */

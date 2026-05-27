@@ -3,6 +3,54 @@
  * Do not edit manually.
  */
 
+export const dataPhiRecordsEnum2 = {
+  "6 years": "6 years",
+  "7 years": "7 years",
+  "10 years": "10 years",
+  "15 years": "15 years",
+} as const;
+
+export type DataPhiRecordsEnum2Key =
+  (typeof dataPhiRecordsEnum2)[keyof typeof dataPhiRecordsEnum2];
+
+export const dataAuditLogsEnum2 = {
+  "3 years": "3 years",
+  "6 years": "6 years",
+  "10 years": "10 years",
+} as const;
+
+export type DataAuditLogsEnum2Key =
+  (typeof dataAuditLogsEnum2)[keyof typeof dataAuditLogsEnum2];
+
+export const dataSessionLogsEnum2 = {
+  "90 days": "90 days",
+  "180 days": "180 days",
+  "1 year": "1 year",
+  "2 years": "2 years",
+} as const;
+
+export type DataSessionLogsEnum2Key =
+  (typeof dataSessionLogsEnum2)[keyof typeof dataSessionLogsEnum2];
+
+export const dataExportLogsEnum2 = {
+  "1 year": "1 year",
+  "2 years": "2 years",
+  "5 years": "5 years",
+} as const;
+
+export type DataExportLogsEnum2Key =
+  (typeof dataExportLogsEnum2)[keyof typeof dataExportLogsEnum2];
+
+export const dataBackupSnapshotsEnum2 = {
+  "30 days": "30 days",
+  "60 days": "60 days",
+  "90 days": "90 days",
+  "180 days": "180 days",
+} as const;
+
+export type DataBackupSnapshotsEnum2Key =
+  (typeof dataBackupSnapshotsEnum2)[keyof typeof dataBackupSnapshotsEnum2];
+
 /**
  * @description Retention policy updated successfully
  */
@@ -24,70 +72,25 @@ export type PutApiSecurityComplianceDataRetentionPolicy200 = {
      */
     id?: string;
     /**
-     * @type object | undefined
+     * @type string | undefined
      */
-    phi_records?: {
-      /**
-       * @type string | undefined
-       */
-      value?: string;
-      /**
-       * @type array | undefined
-       */
-      options?: string[];
-    };
+    phi_records?: DataPhiRecordsEnum2Key;
     /**
-     * @type object | undefined
+     * @type string | undefined
      */
-    audit_logs?: {
-      /**
-       * @type string | undefined
-       */
-      value?: string;
-      /**
-       * @type array | undefined
-       */
-      options?: string[];
-    };
+    audit_logs?: DataAuditLogsEnum2Key;
     /**
-     * @type object | undefined
+     * @type string | undefined
      */
-    session_logs?: {
-      /**
-       * @type string | undefined
-       */
-      value?: string;
-      /**
-       * @type array | undefined
-       */
-      options?: string[];
-    };
+    session_logs?: DataSessionLogsEnum2Key;
     /**
-     * @type object | undefined
+     * @type string | undefined
      */
-    export_logs?: {
-      /**
-       * @type string | undefined
-       */
-      value?: string;
-      /**
-       * @type array | undefined
-       */
-      options?: string[];
-    };
+    export_logs?: DataExportLogsEnum2Key;
     /**
-     * @type object | undefined
+     * @type string | undefined
      */
-    backup_snapshots?: {
-      /**
-       * @type string | undefined
-       */
-      value?: string;
-      /**
-       * @type array | undefined
-       */
-      options?: string[];
-    };
+    backup_snapshots?: DataBackupSnapshotsEnum2Key;
     /**
      * @type string | undefined, date-time
      */
