@@ -77,7 +77,7 @@ import {
   usePostApiDepartments,
   useGetApiDepartments,
   usePostApiUsersDeactivate,
-  // usePostApiUsersAssignRole,
+  usePostApiUsersAssignRole,
 } from "@/api";
 
 import {
@@ -2166,38 +2166,38 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
       },
     });
 
-  // const { mutate: assignRole, isPending: isAssigningRole } =
-  //   usePostApiUsersAssignRole({
-  //     mutation: {
-  //       onSuccess: () => {
-  //         queryClient.invalidateQueries({ queryKey: getApiUsersQueryKey() });
-  //         toast.success("Role assigned successfully to selected users");
-  //         setSelected(new Set());
-  //         setShowAssignRole(false);
-  //         setSelectedRoleId("");
-  //       },
-  //       onError: (error: any) => {
-  //         toast.error(
-  //           error?.response?.data?.message ||
-  //             error?.message ||
-  //             "Failed to assign role"
-  //         );
-  //       },
-  //     },
-  //   });
+  const { mutate: assignRole, isPending: isAssigningRole } =
+    usePostApiUsersAssignRole({
+      mutation: {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getApiUsersQueryKey() });
+          toast.success("Role assigned successfully to selected users");
+          setSelected(new Set());
+          setShowAssignRole(false);
+          setSelectedRoleId("");
+        },
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.message ||
+              error?.message ||
+              "Failed to assign role"
+          );
+        },
+      },
+    });
 
-  // const handleBulkAssignRole = () => {
-  //   if (!selectedRoleId) {
-  //     toast.error("Please select a role");
-  //     return;
-  //   }
-  //   assignRole({
-  //     data: {
-  //       user_ids: Array.from(selected),
-  //       role_id: selectedRoleId,
-  //     },
-  //   });
-  // };
+  const handleBulkAssignRole = () => {
+    if (!selectedRoleId) {
+      toast.error("Please select a role");
+      return;
+    }
+    assignRole({
+      data: {
+        user_ids: Array.from(selected),
+        role_id: selectedRoleId,
+      },
+    });
+  };
 
   const handleBulkDeactivate = () => {
     if (selected.size === 0) {
@@ -2520,12 +2520,12 @@ function UsersView({ onSelectUser }: { onSelectUser: (u: User) => void }) {
                 Cancel
               </button>
               <button
-                // onClick={handleBulkAssignRole}
-                // disabled={isAssigningRole || !selectedRoleId}
+                onClick={handleBulkAssignRole}
+                disabled={isAssigningRole || !selectedRoleId}
                 className="flex-1 py-2 text-xs font-bold bg-primary text-white rounded-xl hover:bg-primary/90 disabled:opacity-50 transition-colors"
               >
-                {/* {isAssigningRole ? "Assigning..." : "Assign Role"} */}
-                Asssign
+                {isAssigningRole ? "Assigning..." : "Assign Role"}
+                
               </button>
             </div>
           </div>

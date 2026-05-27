@@ -1,7 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useGetApiAuditLogs } from "@/api/hooks/Audit LogsHooks/useGetApiAuditLogs";
-
+import { useGetApiSecurityPasswordPolicy } from "@/api/hooks/Security DashboardHooks/useGetApiSecurityPasswordPolicy";
+import { usePutApiSecurityPasswordPolicy } from "@/api/hooks/Security DashboardHooks/usePutApiSecurityPasswordPolicy";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { getApiAuditLogsExport } from "@/api";
 import {
   AreaChart,
   Area,
@@ -1384,6 +1388,11 @@ function SecurityDashboardTab() {
     deIdExport: true,
     dlp: true,
   });
+
+  const queryClient = useQueryClient();
+  const { data: policyData, isLoading: isLoadingPolicy } =
+    useGetApiSecurityPasswordPolicy();
+
   const [pass, setPass] = useState({
     minLen: 10,
     upper: true,
@@ -1394,6 +1403,57 @@ function SecurityDashboardTab() {
     history: 10,
     maxAttempts: 5,
   });
+
+  // Sync state when data is loaded
+  useEffect(() => {
+    if (policyData?.data) {
+      const policy = policyData.data;
+
+      setPass({
+        minLen: policy.min_length ?? 8,
+        upper: policy.require_uppercase ?? true,
+        lower: policy.require_lowercase ?? true,
+        nums: policy.require_numbers ?? true,
+        symbols: policy.require_symbols ?? true,
+        expiry: policy.expiry_days ?? 90,
+        history: policy.history_count ?? 10,
+        maxAttempts: policy.max_failed_attempts ?? 5,
+      });
+    }
+  }, [policyData]);
+
+  const { mutate: updatePolicy, isPending: isUpdatingPolicy } =
+    usePutApiSecurityPasswordPolicy({
+      mutation: {
+        onSuccess: () => {
+          toast.success("Password policy updated successfully");
+          queryClient.invalidateQueries({
+            queryKey: [{ url: "/api/security/password-policy" }],
+          });
+        },
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.message || "Failed to update password policy"
+          );
+        },
+      },
+    });
+
+  const handleSavePolicy = () => {
+    updatePolicy({
+      data: {
+        min_length: pass.minLen,
+        expiry_days: pass.expiry,
+        history_count: pass.history,
+        require_uppercase: pass.upper,
+        require_lowercase: pass.lower,
+        require_numbers: pass.nums,
+        require_symbols: pass.symbols,
+        max_failed_attempts: pass.maxAttempts,
+      },
+    });
+  };
+
   const [sess, setSess] = useState({
     timeout: 30,
     maxConc: 1,
@@ -1669,7 +1729,12 @@ function SecurityDashboardTab() {
           icon={Key}
           iconColor="text-amber-600"
         >
-          <div className="space-y-3">
+          <div className="space-y-3 relative">
+            {isLoadingPolicy && (
+              <div className="absolute inset-0 bg-background/50 z-10 flex items-center justify-center rounded-xl">
+                <RefreshCw className="w-5 h-5 animate-spin text-primary" />
+              </div>
+            )}
             <div className="grid grid-cols-3 gap-3">
               {[
                 {
@@ -1763,6 +1828,23 @@ function SecurityDashboardTab() {
                 ))}
               </select>
             </div>
+            {/* Save Button */}
+            {"Security & Compliance" && (
+              <div className="pt-3 border-t border-border/50 flex justify-end">
+                <button
+                  onClick={handleSavePolicy}
+                  disabled={isUpdatingPolicy}
+                  className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-primary text-white text-[10px] font-bold rounded-xl hover:opacity-90 transition-all shadow-md shadow-primary/20 disabled:opacity-50"
+                >
+                  {isUpdatingPolicy ? (
+                    <RefreshCw className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="w-3 h-3" />
+                  )}
+                  Save Policy
+                </button>
+              </div>
+            )}
           </div>
         </SettingCard>
       </div>
@@ -2065,6 +2147,56 @@ function AuditLogsTab() {
   const criticalCount = logs.filter((l) => l.risk_level === "Critical").length;
   const highCount = logs.filter((l) => l.risk_level === "High").length;
 
+  const handleExport = async () => {
+    try {
+      toast.loading("Preparing audit logs export...", {
+        id: "audit-export",
+      });
+
+      const blob = await getApiAuditLogsExport(
+        {
+          search: search || undefined,
+          event_type:
+            evType === "all" ? undefined : selectedEventConfig?.matches?.[0],
+          risk_level:
+            riskF === "all"
+              ? undefined
+              : riskF.charAt(0).toUpperCase() + riskF.slice(1),
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+        },
+        {
+          responseType: "blob",
+        }
+      );
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+
+      link.download = `audit_logs_${new Date().toISOString().slice(0, 10)}.csv`;
+
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Audit logs exported successfully", {
+        id: "audit-export",
+      });
+    } catch (err: any) {
+      console.error("Audit logs export failed:", err);
+
+      toast.error("Failed to export audit logs", {
+        id: "audit-export",
+      });
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* Quick Risk Summary */}
@@ -2108,7 +2240,10 @@ function AuditLogsTab() {
         })}
         <div className="flex-1" />
         {hasPermission("Security & Compliance", "export") && (
-          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold border border-border rounded-xl hover:bg-muted transition-colors whitespace-nowrap">
+          <button
+            onClick={handleExport}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold border border-border rounded-xl hover:bg-muted transition-colors whitespace-nowrap"
+          >
             <Download className="w-3.5 h-3.5" />
             Export Logs
           </button>
