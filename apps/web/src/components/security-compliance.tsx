@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useGetApiAuditLogs } from "@/api/hooks/Audit LogsHooks/useGetApiAuditLogs";
 
@@ -75,7 +75,29 @@ import {
   UserX,
   ClipboardList,
   FileWarning,
+  Loader2,
+  Save,
 } from "lucide-react";
+import {
+  getApiProjectsQueryParamsStatusEnum,
+  getApiSecurityComplianceDataRetentionPolicyQueryKey,
+  putApiSecurityComplianceAccessExpiryPolicyMutationRequestAuthTokenLifetimeEnum,
+  putApiSecurityComplianceAccessExpiryPolicyMutationRequestForceReauthenticationEnum,
+  putApiSecurityComplianceAccessExpiryPolicyMutationRequestInactivityDeactivationEnum,
+  PutApiSecurityComplianceDataRetentionPolicyMutationRequest,
+  putApiSecurityComplianceDataRetentionPolicyMutationRequestAuditLogsEnum,
+  putApiSecurityComplianceDataRetentionPolicyMutationRequestBackupSnapshotsEnum,
+  putApiSecurityComplianceDataRetentionPolicyMutationRequestExportLogsEnum,
+  putApiSecurityComplianceDataRetentionPolicyMutationRequestPhiRecordsEnum,
+  putApiSecurityComplianceDataRetentionPolicyMutationRequestSessionLogsEnum,
+  useGetApiProjects,
+  useGetApiSecurityComplianceAccessExpiryPolicy,
+  useGetApiSecurityComplianceDataRetentionPolicy,
+  usePutApiSecurityComplianceAccessExpiryPolicy,
+  usePutApiSecurityComplianceDataRetentionPolicy,
+} from "@/api";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 /* ════════════════════════════════════════════  PALETTE  */
 const C = {
@@ -2393,7 +2415,7 @@ function AccessMonitorTab() {
         }
         return true;
       }),
-    [search, projF, typeF]
+    [search, projF, typeF],
   );
 
   const stats = [
@@ -2630,9 +2652,298 @@ function ComplianceTab() {
     tokenHours: 24,
   });
 
+  const queryClient = useQueryClient();
+
+  const { data: projectsData, isLoading: isProjectsLoading } =
+    useGetApiProjects(
+      {
+        page_no: 1,
+        page_size: 10,
+        status: getApiProjectsQueryParamsStatusEnum.Active,
+      },
+      {
+        query: {
+          refetchOnWindowFocus: false,
+        },
+      },
+    );
+
+  const { data: retentionPolicyData, isLoading: isRetentionLoading } =
+    useGetApiSecurityComplianceDataRetentionPolicy({
+      query: {
+        refetchOnWindowFocus: false,
+      },
+    });
+
+  useEffect(() => {
+    if (retentionPolicyData?.data) {
+      const policy = retentionPolicyData.data;
+
+      setRetention({
+        phi:
+          policy.phi_records === "6 years"
+            ? 6
+            : policy.phi_records === "7 years"
+              ? 7
+              : policy.phi_records === "10 years"
+                ? 10
+                : 15,
+
+        auditLogs:
+          policy.audit_logs === "3 years"
+            ? 3
+            : policy.audit_logs === "6 years"
+              ? 6
+              : 10,
+
+        sessionLogs:
+          policy.session_logs === "90 days"
+            ? 90
+            : policy.session_logs === "180 days"
+              ? 180
+              : policy.session_logs === "1 year"
+                ? 365
+                : 730,
+
+        exportLogs:
+          policy.export_logs === "1 year"
+            ? 365
+            : policy.export_logs === "2 years"
+              ? 730
+              : 1825,
+
+        backups:
+          policy.backup_snapshots === "30 days"
+            ? 30
+            : policy.backup_snapshots === "60 days"
+              ? 60
+              : policy.backup_snapshots === "90 days"
+                ? 90
+                : 180,
+      });
+    }
+  }, [retentionPolicyData]);
+
+  const { mutate: updateRetentionPolicy, isPending: isUpdatingRetention } =
+    usePutApiSecurityComplianceDataRetentionPolicy({
+      mutation: {
+        onSuccess: async () => {
+          toast.success("Data retention policy updated successfully");
+
+          await queryClient.invalidateQueries({
+            queryKey: getApiSecurityComplianceDataRetentionPolicyQueryKey(),
+          });
+        },
+
+        onError: () => {
+          toast.error("Failed to update data retention policy");
+        },
+      },
+    });
+
+  const handleUpdateRetentionPolicy = () => {
+    updateRetentionPolicy({
+      data: {
+        phi_records:
+          retention.phi === 6
+            ? putApiSecurityComplianceDataRetentionPolicyMutationRequestPhiRecordsEnum[
+                "6 years"
+              ]
+            : retention.phi === 7
+              ? putApiSecurityComplianceDataRetentionPolicyMutationRequestPhiRecordsEnum[
+                  "7 years"
+                ]
+              : retention.phi === 10
+                ? putApiSecurityComplianceDataRetentionPolicyMutationRequestPhiRecordsEnum[
+                    "10 years"
+                  ]
+                : putApiSecurityComplianceDataRetentionPolicyMutationRequestPhiRecordsEnum[
+                    "15 years"
+                  ],
+
+        audit_logs:
+          retention.auditLogs === 3
+            ? putApiSecurityComplianceDataRetentionPolicyMutationRequestAuditLogsEnum[
+                "3 years"
+              ]
+            : retention.auditLogs === 6
+              ? putApiSecurityComplianceDataRetentionPolicyMutationRequestAuditLogsEnum[
+                  "6 years"
+                ]
+              : putApiSecurityComplianceDataRetentionPolicyMutationRequestAuditLogsEnum[
+                  "10 years"
+                ],
+
+        session_logs:
+          retention.sessionLogs === 90
+            ? putApiSecurityComplianceDataRetentionPolicyMutationRequestSessionLogsEnum[
+                "90 days"
+              ]
+            : retention.sessionLogs === 180
+              ? putApiSecurityComplianceDataRetentionPolicyMutationRequestSessionLogsEnum[
+                  "180 days"
+                ]
+              : retention.sessionLogs === 365
+                ? putApiSecurityComplianceDataRetentionPolicyMutationRequestSessionLogsEnum[
+                    "1 year"
+                  ]
+                : putApiSecurityComplianceDataRetentionPolicyMutationRequestSessionLogsEnum[
+                    "2 years"
+                  ],
+
+        export_logs:
+          retention.exportLogs === 365
+            ? putApiSecurityComplianceDataRetentionPolicyMutationRequestExportLogsEnum[
+                "1 year"
+              ]
+            : retention.exportLogs === 730
+              ? putApiSecurityComplianceDataRetentionPolicyMutationRequestExportLogsEnum[
+                  "2 years"
+                ]
+              : putApiSecurityComplianceDataRetentionPolicyMutationRequestExportLogsEnum[
+                  "5 years"
+                ],
+
+        backup_snapshots:
+          retention.backups === 30
+            ? putApiSecurityComplianceDataRetentionPolicyMutationRequestBackupSnapshotsEnum[
+                "30 days"
+              ]
+            : retention.backups === 60
+              ? putApiSecurityComplianceDataRetentionPolicyMutationRequestBackupSnapshotsEnum[
+                  "60 days"
+                ]
+              : retention.backups === 90
+                ? putApiSecurityComplianceDataRetentionPolicyMutationRequestBackupSnapshotsEnum[
+                    "90 days"
+                  ]
+                : putApiSecurityComplianceDataRetentionPolicyMutationRequestBackupSnapshotsEnum[
+                    "180 days"
+                  ],
+      },
+    });
+  };
+
+  const {
+    data: accessExpiryPolicyData,
+    refetch: refetchAccessExpiryPolicy,
+    isLoading: isAccessExpiryLoading,
+  } = useGetApiSecurityComplianceAccessExpiryPolicy({
+    query: {
+      refetchOnWindowFocus: false,
+    },
+  });
+
+  useEffect(() => {
+    const policy = accessExpiryPolicyData?.data;
+
+    if (!policy) return;
+
+    setExpiry({
+      inactivityDays:
+        policy.inactivity_deactivation === "30 days"
+          ? 30
+          : policy.inactivity_deactivation === "60 days"
+            ? 60
+            : policy.inactivity_deactivation === "90 days"
+              ? 90
+              : 180,
+
+      forceReauthDays:
+        policy.force_reauthentication === "7 days"
+          ? 7
+          : policy.force_reauthentication === "14 days"
+            ? 14
+            : policy.force_reauthentication === "30 days"
+              ? 30
+              : 60,
+
+      tokenHours:
+        policy.auth_token_lifetime === "1 hour"
+          ? 1
+          : policy.auth_token_lifetime === "8 hours"
+            ? 8
+            : policy.auth_token_lifetime === "24 hours"
+              ? 24
+              : 48,
+    });
+  }, [accessExpiryPolicyData]);
+
+  const {
+    mutate: updateAccessExpiryPolicy,
+    isPending: isUpdatingAccessExpiry,
+  } = usePutApiSecurityComplianceAccessExpiryPolicy({
+    mutation: {
+      onSuccess: () => {
+        toast.success("Access expiry policy updated successfully");
+        refetchAccessExpiryPolicy();
+      },
+      onError: () => {
+        toast.error("Failed to update access expiry policy");
+      },
+    },
+  });
+
+  const handleUpdateAccessExpiryPolicy = () => {
+    updateAccessExpiryPolicy({
+      data: {
+        inactivity_deactivation:
+          expiry.inactivityDays === 30
+            ? putApiSecurityComplianceAccessExpiryPolicyMutationRequestInactivityDeactivationEnum[
+                "30 days"
+              ]
+            : expiry.inactivityDays === 60
+              ? putApiSecurityComplianceAccessExpiryPolicyMutationRequestInactivityDeactivationEnum[
+                  "60 days"
+                ]
+              : expiry.inactivityDays === 90
+                ? putApiSecurityComplianceAccessExpiryPolicyMutationRequestInactivityDeactivationEnum[
+                    "90 days"
+                  ]
+                : putApiSecurityComplianceAccessExpiryPolicyMutationRequestInactivityDeactivationEnum[
+                    "180 days"
+                  ],
+
+        force_reauthentication:
+          expiry.forceReauthDays === 7
+            ? putApiSecurityComplianceAccessExpiryPolicyMutationRequestForceReauthenticationEnum[
+                "7 days"
+              ]
+            : expiry.forceReauthDays === 14
+              ? putApiSecurityComplianceAccessExpiryPolicyMutationRequestForceReauthenticationEnum[
+                  "14 days"
+                ]
+              : expiry.forceReauthDays === 30
+                ? putApiSecurityComplianceAccessExpiryPolicyMutationRequestForceReauthenticationEnum[
+                    "30 days"
+                  ]
+                : putApiSecurityComplianceAccessExpiryPolicyMutationRequestForceReauthenticationEnum[
+                    "60 days"
+                  ],
+
+        auth_token_lifetime:
+          expiry.tokenHours === 1
+            ? putApiSecurityComplianceAccessExpiryPolicyMutationRequestAuthTokenLifetimeEnum[
+                "1 hour"
+              ]
+            : expiry.tokenHours === 8
+              ? putApiSecurityComplianceAccessExpiryPolicyMutationRequestAuthTokenLifetimeEnum[
+                  "8 hours"
+                ]
+              : expiry.tokenHours === 24
+                ? putApiSecurityComplianceAccessExpiryPolicyMutationRequestAuthTokenLifetimeEnum[
+                    "24 hours"
+                  ]
+                : putApiSecurityComplianceAccessExpiryPolicyMutationRequestAuthTokenLifetimeEnum[
+                    "48 hours"
+                  ],
+      },
+    });
+  };
+
   const passCount = HIPAA_CONTROLS.filter((c) => c.status === "pass").length;
   const overallScore = Math.round(
-    HIPAA_CONTROLS.reduce((s, c) => s + c.score, 0) / HIPAA_CONTROLS.length
+    HIPAA_CONTROLS.reduce((s, c) => s + c.score, 0) / HIPAA_CONTROLS.length,
   );
 
   return (
@@ -2750,94 +3061,124 @@ function ComplianceTab() {
           iconColor="text-blue-600"
         >
           <div className="space-y-3">
-            {[
-              {
-                label: "PHI Records (HIPAA)",
-                key: "phi",
-                unit: "years",
-                opts: [
-                  { v: 6, l: "6 years" },
-                  { v: 7, l: "7 years (recommended)" },
-                  { v: 10, l: "10 years" },
-                  { v: 15, l: "15 years" },
-                ],
-              },
-              {
-                label: "Audit Logs",
-                key: "auditLogs",
-                unit: "years",
-                opts: [
-                  { v: 3, l: "3 years" },
-                  { v: 6, l: "6 years" },
-                  { v: 10, l: "10 years" },
-                ],
-              },
-              {
-                label: "Session Logs",
-                key: "sessionLogs",
-                unit: "days",
-                opts: [
-                  { v: 90, l: "90 days" },
-                  { v: 180, l: "180 days" },
-                  { v: 365, l: "1 year" },
-                  { v: 730, l: "2 years" },
-                ],
-              },
-              {
-                label: "Export Logs",
-                key: "exportLogs",
-                unit: "days",
-                opts: [
-                  { v: 365, l: "1 year" },
-                  { v: 730, l: "2 years" },
-                  { v: 1825, l: "5 years" },
-                ],
-              },
-              {
-                label: "Backup Snapshots",
-                key: "backups",
-                unit: "days",
-                opts: [
-                  { v: 30, l: "30 days" },
-                  { v: 60, l: "60 days" },
-                  { v: 90, l: "90 days" },
-                  { v: 180, l: "180 days" },
-                ],
-              },
-            ].map((f) => (
-              <div key={f.key} className="flex items-center justify-between">
-                <div>
-                  <p className="text-[11px] font-semibold text-foreground">
-                    {f.label}
-                  </p>
-                  <p className="text-[9px] text-muted-foreground">Retain for</p>
-                </div>
-                <select
-                  value={(retention as any)[f.key]}
-                  onChange={(e) =>
-                    setRetention({
-                      ...retention,
-                      [f.key]: Number(e.target.value),
-                    })
-                  }
-                  className="px-2.5 py-1.5 text-[10px] bg-muted/30 border border-border rounded-lg focus:outline-none appearance-none min-w-[130px]"
-                >
-                  {f.opts.map((o) => (
-                    <option key={o.v} value={o.v}>
-                      {o.l}
-                    </option>
-                  ))}
-                </select>
+            {isRetentionLoading ? (
+              <div className="flex items-center justify-center py-10">
+                <Loader2 className="w-5 h-5 animate-spin text-primary" />
               </div>
-            ))}
-            <div className="pt-2 border-t border-border/50 flex items-start gap-2">
-              <Info className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
-              <p className="text-[9px] text-muted-foreground">
-                HIPAA requires PHI and audit records retained for minimum 6
-                years from creation or last use. Selected 7-year policy exceeds
-                requirement.
-              </p>
-            </div>
+            ) : (
+              <>
+                {[
+                  {
+                    label: "PHI Records (HIPAA)",
+                    key: "phi",
+                    unit: "years",
+                    opts: [
+                      { v: 6, l: "6 years" },
+                      { v: 7, l: "7 years (recommended)" },
+                      { v: 10, l: "10 years" },
+                      { v: 15, l: "15 years" },
+                    ],
+                  },
+                  {
+                    label: "Audit Logs",
+                    key: "auditLogs",
+                    unit: "years",
+                    opts: [
+                      { v: 3, l: "3 years" },
+                      { v: 6, l: "6 years" },
+                      { v: 10, l: "10 years" },
+                    ],
+                  },
+                  {
+                    label: "Session Logs",
+                    key: "sessionLogs",
+                    unit: "days",
+                    opts: [
+                      { v: 90, l: "90 days" },
+                      { v: 180, l: "180 days" },
+                      { v: 365, l: "1 year" },
+                      { v: 730, l: "2 years" },
+                    ],
+                  },
+                  {
+                    label: "Export Logs",
+                    key: "exportLogs",
+                    unit: "days",
+                    opts: [
+                      { v: 365, l: "1 year" },
+                      { v: 730, l: "2 years" },
+                      { v: 1825, l: "5 years" },
+                    ],
+                  },
+                  {
+                    label: "Backup Snapshots",
+                    key: "backups",
+                    unit: "days",
+                    opts: [
+                      { v: 30, l: "30 days" },
+                      { v: 60, l: "60 days" },
+                      { v: 90, l: "90 days" },
+                      { v: 180, l: "180 days" },
+                    ],
+                  },
+                ].map((f) => (
+                  <div
+                    key={f.key}
+                    className="flex items-center justify-between"
+                  >
+                    <div>
+                      <p className="text-[11px] font-semibold text-foreground">
+                        {f.label}
+                      </p>
+                      <p className="text-[9px] text-muted-foreground">
+                        Retain for
+                      </p>
+                    </div>
+                    <select
+                      value={(retention as any)[f.key]}
+                      onChange={(e) =>
+                        setRetention({
+                          ...retention,
+                          [f.key]: Number(e.target.value),
+                        })
+                      }
+                      className="px-2.5 py-1.5 text-[10px] bg-muted/30 border border-border rounded-lg focus:outline-none appearance-none min-w-[130px]"
+                    >
+                      {f.opts.map((o) => (
+                        <option key={o.v} value={o.v}>
+                          {o.l}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+                <div className="pt-2 border-t border-border/50 flex items-start gap-2">
+                  <div className="flex items-start gap-2 flex-1">
+                    <Info className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
+
+                    <p className="text-[9px] text-muted-foreground">
+                      HIPAA requires PHI and audit records retained for minimum
+                      6 years from creation or last use. Selected 7-year policy
+                      exceeds requirement.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={handleUpdateRetentionPolicy}
+                    disabled={isUpdatingRetention}
+                    className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-[10px] font-bold hover:opacity-90 disabled:opacity-50"
+                  >
+                    {isUpdatingRetention ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Save className="w-3 h-3" />
+                    )}
+
+                    {isUpdatingRetention ? "Updating..." : "Update Policy"}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </SettingCard>
 
@@ -2910,35 +3251,65 @@ function ComplianceTab() {
               </div>
             ))}
             <div className="mt-2">
-              <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide mb-2">
-                Project-Based Access Restrictions
-              </p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">
+                  Project-Based Access Restrictions
+                </p>
+
+                <span className="text-[9px] text-muted-foreground">
+                  {projectsData?.total ?? 0} Projects
+                </span>
+              </div>
+
               <div className="space-y-1.5">
-                {[
-                  "Apollo Inpatient FY26",
-                  "Max Healthcare Q1",
-                  "Fortis Cardiology FY26",
-                  "AIIMS Oncology FY26",
-                  "Manipal General FY26",
-                ].map((p, i) => (
-                  <div
-                    key={p}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/20 border border-border"
-                  >
-                    <FolderKanban className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                    <span className="text-[10px] font-semibold text-foreground flex-1 truncate">
-                      {p}
-                    </span>
-                    <span
-                      className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border ${i < 4 ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}
-                    >
-                      {i < 4 ? "Active" : "Expiring 28 Feb"}
-                    </span>
-                    <button className="text-[9px] text-primary font-bold hover:underline">
-                      Edit
-                    </button>
+                {isProjectsLoading ? (
+                  <div className="flex items-center justify-center py-6">
+                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                   </div>
-                ))}
+                ) : projectsData?.data?.length ? (
+                  projectsData.data.map((project) => {
+                    const isActive = project.status === "Active";
+
+                    return (
+                      <div
+                        key={project.id}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/20 border border-border"
+                      >
+                        <FolderKanban className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[10px] font-semibold text-foreground block truncate">
+                            {project.project_name}
+                          </span>
+
+                          <span className="text-[8px] text-muted-foreground">
+                            {project.project_type} • {project.specialty}
+                          </span>
+                        </div>
+
+                        <span
+                          className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border ${
+                            isActive
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : project.status === "At Risk"
+                                ? "bg-amber-50 text-amber-700 border-amber-200"
+                                : "bg-muted text-muted-foreground border-border"
+                          }`}
+                        >
+                          {project.status}
+                        </span>
+
+                        <button className="text-[9px] text-primary font-bold hover:underline">
+                          Edit
+                        </button>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-6 text-[10px] text-muted-foreground border border-dashed border-border rounded-lg">
+                    No projects found
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -2953,7 +3324,7 @@ function AlertsTab() {
   const [sevF, setSevF] = useState<AlertSev | "all">("all");
   const [statF, setStatF] = useState<AlertStatus | "all">("all");
   const [expanded, setExpanded] = useState<Set<string>>(
-    new Set(["SA001", "SA002"])
+    new Set(["SA001", "SA002"]),
   );
 
   const filtered = useMemo(
@@ -2963,7 +3334,7 @@ function AlertsTab() {
         if (statF !== "all" && a.status !== statF) return false;
         return true;
       }),
-    [sevF, statF]
+    [sevF, statF],
   );
 
   const counts = {
@@ -3258,7 +3629,7 @@ export function SecurityCompliance() {
   ];
 
   const activeCritical = SECURITY_ALERTS.filter(
-    (a) => a.status === "active" && a.severity === "critical"
+    (a) => a.status === "active" && a.severity === "critical",
   ).length;
 
   return (
