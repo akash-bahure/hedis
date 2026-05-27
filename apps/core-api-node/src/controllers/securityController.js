@@ -268,7 +268,7 @@ exports.getAccessExpiryPolicy = async (req, res) => {
         // Format to "DD MMM", e.g. "28 Feb"
         const options = { day: 'numeric', month: 'short' };
         const formattedDate = endDate.toLocaleDateString('en-US', options);
-        displayStatus = `Expiring ${formattedDate}`;
+        displayStatus = `Expires on ${formattedDate}`;
       } else if (diffDays < 0) {
         displayStatus = "Expired";
       }
@@ -277,6 +277,7 @@ exports.getAccessExpiryPolicy = async (req, res) => {
         id: p.id,
         project_name: p.project_name,
         status: displayStatus,
+        due_date: p.end_date,
         end_date: p.end_date
       };
     });
@@ -389,6 +390,35 @@ exports.updateAccessExpiryPolicy = async (req, res) => {
 
     const row = result.rows[0];
 
+    // Fetch projects to format access restrictions
+    const projectsResult = await req.db.query(
+      `SELECT id, project_name, status, end_date FROM ${schema}.projects ORDER BY project_name ASC`
+    );
+
+    const formattedProjects = projectsResult.rows.map((p) => {
+      const today = new Date();
+      const endDate = new Date(p.end_date);
+      const diffTime = endDate - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      let displayStatus = p.status;
+      if (diffDays >= 0 && diffDays <= 30) {
+        const options = { day: 'numeric', month: 'short' };
+        const formattedDate = endDate.toLocaleDateString('en-US', options);
+        displayStatus = `Expires on ${formattedDate}`;
+      } else if (diffDays < 0) {
+        displayStatus = "Expired";
+      }
+
+      return {
+        id: p.id,
+        project_name: p.project_name,
+        status: displayStatus,
+        due_date: p.end_date,
+        end_date: p.end_date
+      };
+    });
+
     const formattedData = {
       id: row.id,
       inactivity_deactivation: {
@@ -403,6 +433,7 @@ exports.updateAccessExpiryPolicy = async (req, res) => {
         value: row.auth_token_lifetime,
         options: EXPIRY_OPTIONS.auth_token_lifetime
       },
+      project_restrictions: formattedProjects,
       created_at: row.created_at,
       updated_at: row.updated_at
     };

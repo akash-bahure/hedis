@@ -270,6 +270,9 @@ router.put("/data-retention-policy", authMiddleware, controller.updateDataRetent
  *                             type: string
  *                           status:
  *                             type: string
+ *                           due_date:
+ *                             type: string
+ *                             format: date
  *                           end_date:
  *                             type: string
  *                             format: date
@@ -356,6 +359,24 @@ router.get("/access-expiry-policy", authMiddleware, controller.getAccessExpiryPo
  *                           type: array
  *                           items:
  *                             type: string
+ *                     project_restrictions:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             format: uuid
+ *                           project_name:
+ *                             type: string
+ *                           status:
+ *                             type: string
+ *                           due_date:
+ *                             type: string
+ *                             format: date
+ *                           end_date:
+ *                             type: string
+ *                             format: date
  *                     created_at:
  *                       type: string
  *                       format: date-time
