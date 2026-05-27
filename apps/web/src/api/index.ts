@@ -268,6 +268,9 @@ export type {
   GetApiProjectsIdQueryResponse,
 } from "./types/GetApiProjectsId.ts";
 export type {
+  DataAuthTokenLifetimeEnumKey,
+  DataForceReauthenticationEnumKey,
+  DataInactivityDeactivationEnumKey,
   GetApiSecurityComplianceAccessExpiryPolicy200,
   GetApiSecurityComplianceAccessExpiryPolicy401,
   GetApiSecurityComplianceAccessExpiryPolicy500,
@@ -275,6 +278,11 @@ export type {
   GetApiSecurityComplianceAccessExpiryPolicyQueryResponse,
 } from "./types/GetApiSecurityComplianceAccessExpiryPolicy.ts";
 export type {
+  DataAuditLogsEnumKey,
+  DataBackupSnapshotsEnumKey,
+  DataExportLogsEnumKey,
+  DataPhiRecordsEnumKey,
+  DataSessionLogsEnumKey,
   GetApiSecurityComplianceDataRetentionPolicy200,
   GetApiSecurityComplianceDataRetentionPolicy401,
   GetApiSecurityComplianceDataRetentionPolicy500,
@@ -666,6 +674,9 @@ export type {
   PostApiUsersDeactivateMutationResponse,
 } from "./types/PostApiUsersDeactivate.ts";
 export type {
+  DataAuthTokenLifetimeEnum2Key,
+  DataForceReauthenticationEnum2Key,
+  DataInactivityDeactivationEnum2Key,
   PutApiSecurityComplianceAccessExpiryPolicy200,
   PutApiSecurityComplianceAccessExpiryPolicy400,
   PutApiSecurityComplianceAccessExpiryPolicy401,
@@ -678,6 +689,11 @@ export type {
   PutApiSecurityComplianceAccessExpiryPolicyMutationResponse,
 } from "./types/PutApiSecurityComplianceAccessExpiryPolicy.ts";
 export type {
+  DataAuditLogsEnum2Key,
+  DataBackupSnapshotsEnum2Key,
+  DataExportLogsEnum2Key,
+  DataPhiRecordsEnum2Key,
+  DataSessionLogsEnum2Key,
   PutApiSecurityComplianceDataRetentionPolicy200,
   PutApiSecurityComplianceDataRetentionPolicy400,
   PutApiSecurityComplianceDataRetentionPolicy401,
@@ -1155,6 +1171,14 @@ export { getApiProjectsQueryParamsProjectTypeEnum } from "./types/GetApiProjects
 export { getApiProjectsQueryParamsSpecialtyEnum } from "./types/GetApiProjects.ts";
 export { getApiProjectsQueryParamsStatusEnum } from "./types/GetApiProjects.ts";
 export { projectAccessAccessLevelEnum } from "./types/GetApiProjectsAccessAll.ts";
+export { dataAuthTokenLifetimeEnum } from "./types/GetApiSecurityComplianceAccessExpiryPolicy.ts";
+export { dataForceReauthenticationEnum } from "./types/GetApiSecurityComplianceAccessExpiryPolicy.ts";
+export { dataInactivityDeactivationEnum } from "./types/GetApiSecurityComplianceAccessExpiryPolicy.ts";
+export { dataAuditLogsEnum } from "./types/GetApiSecurityComplianceDataRetentionPolicy.ts";
+export { dataBackupSnapshotsEnum } from "./types/GetApiSecurityComplianceDataRetentionPolicy.ts";
+export { dataExportLogsEnum } from "./types/GetApiSecurityComplianceDataRetentionPolicy.ts";
+export { dataPhiRecordsEnum } from "./types/GetApiSecurityComplianceDataRetentionPolicy.ts";
+export { dataSessionLogsEnum } from "./types/GetApiSecurityComplianceDataRetentionPolicy.ts";
 export { getApiUsersQueryParamsUserStatusEnum } from "./types/GetApiUsers.ts";
 export { getApiUsersExportQueryParamsFormatEnum } from "./types/GetApiUsersExport.ts";
 export { getApiUsersShiftsQueryParamsShiftEnum } from "./types/GetApiUsersShifts.ts";
@@ -1185,9 +1209,17 @@ export { postApiProjectsMutationRequestStatusEnum } from "./types/PostApiProject
 export { rolePermissionsModuleEnum } from "./types/PostApiUserRoles.ts";
 export { postApiUsersMutationRequestShiftEnum } from "./types/PostApiUsers.ts";
 export { postApiUsersMutationRequestUserTypeEnum } from "./types/PostApiUsers.ts";
+export { dataAuthTokenLifetimeEnum2 } from "./types/PutApiSecurityComplianceAccessExpiryPolicy.ts";
+export { dataForceReauthenticationEnum2 } from "./types/PutApiSecurityComplianceAccessExpiryPolicy.ts";
+export { dataInactivityDeactivationEnum2 } from "./types/PutApiSecurityComplianceAccessExpiryPolicy.ts";
 export { putApiSecurityComplianceAccessExpiryPolicyMutationRequestAuthTokenLifetimeEnum } from "./types/PutApiSecurityComplianceAccessExpiryPolicy.ts";
 export { putApiSecurityComplianceAccessExpiryPolicyMutationRequestForceReauthenticationEnum } from "./types/PutApiSecurityComplianceAccessExpiryPolicy.ts";
 export { putApiSecurityComplianceAccessExpiryPolicyMutationRequestInactivityDeactivationEnum } from "./types/PutApiSecurityComplianceAccessExpiryPolicy.ts";
+export { dataAuditLogsEnum2 } from "./types/PutApiSecurityComplianceDataRetentionPolicy.ts";
+export { dataBackupSnapshotsEnum2 } from "./types/PutApiSecurityComplianceDataRetentionPolicy.ts";
+export { dataExportLogsEnum2 } from "./types/PutApiSecurityComplianceDataRetentionPolicy.ts";
+export { dataPhiRecordsEnum2 } from "./types/PutApiSecurityComplianceDataRetentionPolicy.ts";
+export { dataSessionLogsEnum2 } from "./types/PutApiSecurityComplianceDataRetentionPolicy.ts";
 export { putApiSecurityComplianceDataRetentionPolicyMutationRequestAuditLogsEnum } from "./types/PutApiSecurityComplianceDataRetentionPolicy.ts";
 export { putApiSecurityComplianceDataRetentionPolicyMutationRequestBackupSnapshotsEnum } from "./types/PutApiSecurityComplianceDataRetentionPolicy.ts";
 export { putApiSecurityComplianceDataRetentionPolicyMutationRequestExportLogsEnum } from "./types/PutApiSecurityComplianceDataRetentionPolicy.ts";

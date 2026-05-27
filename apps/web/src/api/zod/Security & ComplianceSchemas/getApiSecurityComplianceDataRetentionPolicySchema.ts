@@ -22,34 +22,15 @@ export const getApiSecurityComplianceDataRetentionPolicy200Schema = z.object({
     z.object({
       id: z.optional(z.string().uuid()),
       phi_records: z.optional(
-        z.object({
-          value: z.optional(z.string()),
-          options: z.optional(z.array(z.string())),
-        }),
+        z.enum(["6 years", "7 years", "10 years", "15 years"]),
       ),
-      audit_logs: z.optional(
-        z.object({
-          value: z.optional(z.string()),
-          options: z.optional(z.array(z.string())),
-        }),
-      ),
+      audit_logs: z.optional(z.enum(["3 years", "6 years", "10 years"])),
       session_logs: z.optional(
-        z.object({
-          value: z.optional(z.string()),
-          options: z.optional(z.array(z.string())),
-        }),
+        z.enum(["90 days", "180 days", "1 year", "2 years"]),
       ),
-      export_logs: z.optional(
-        z.object({
-          value: z.optional(z.string()),
-          options: z.optional(z.array(z.string())),
-        }),
-      ),
+      export_logs: z.optional(z.enum(["1 year", "2 years", "5 years"])),
       backup_snapshots: z.optional(
-        z.object({
-          value: z.optional(z.string()),
-          options: z.optional(z.array(z.string())),
-        }),
+        z.enum(["30 days", "60 days", "90 days", "180 days"]),
       ),
       created_at: z.optional(z.string().datetime({ offset: true })),
       updated_at: z.optional(z.string().datetime({ offset: true })),

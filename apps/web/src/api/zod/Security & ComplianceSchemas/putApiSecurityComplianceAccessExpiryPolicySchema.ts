@@ -24,22 +24,13 @@ export const putApiSecurityComplianceAccessExpiryPolicy200Schema = z.object({
     z.object({
       id: z.optional(z.string().uuid()),
       inactivity_deactivation: z.optional(
-        z.object({
-          value: z.optional(z.string()),
-          options: z.optional(z.array(z.string())),
-        }),
+        z.enum(["30 days", "60 days", "90 days", "180 days"]),
       ),
       force_reauthentication: z.optional(
-        z.object({
-          value: z.optional(z.string()),
-          options: z.optional(z.array(z.string())),
-        }),
+        z.enum(["7 days", "14 days", "30 days", "60 days"]),
       ),
       auth_token_lifetime: z.optional(
-        z.object({
-          value: z.optional(z.string()),
-          options: z.optional(z.array(z.string())),
-        }),
+        z.enum(["1 hour", "8 hours", "24 hours", "48 hours"]),
       ),
       project_restrictions: z.optional(
         z.array(
