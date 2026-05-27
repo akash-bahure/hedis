@@ -150,6 +150,9 @@ async function runMigrations(client, schema) {
       is_super_administrator BOOLEAN DEFAULT FALSE,
       project_access UUID[] DEFAULT ARRAY[]::UUID[],
       password TEXT, -- Adding for future auth if needed
+        failed_login_attempts INTEGER DEFAULT 0,
+      lockout_until TIMESTAMP,
+      customizations JSONB DEFAULT '{}'::jsonb,
       preferences JSONB DEFAULT '{}'::jsonb,
       certifications JSONB DEFAULT '[]'::jsonb,
       notifications JSONB DEFAULT '{}'::jsonb,
@@ -279,8 +282,6 @@ async function runMigrations(client, schema) {
   } catch (err) {
     // Columns might already exist or other harmless error
   }
-
-  
 
   // Create role_permissions table with UUID references
   await client.query(`
@@ -517,8 +518,7 @@ async function runMigrations(client, schema) {
   VARCHAR(100) DEFAULT 'Pending';
 `);
 
-
-await client.query(`
+  await client.query(`
 CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
 
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -648,7 +648,42 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
     SELECT '90 days', '30 days', '24 hours'
     WHERE NOT EXISTS (SELECT 1 FROM ${schema}.access_expiry_policies);
   `);
-}
 
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.password_policies (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      min_length INTEGER DEFAULT 8,
+      expiry_days INTEGER DEFAULT 90,
+      history_count INTEGER DEFAULT 10,
+      require_uppercase BOOLEAN DEFAULT TRUE,
+      require_lowercase BOOLEAN DEFAULT TRUE,
+      require_numbers BOOLEAN DEFAULT TRUE,
+      require_symbols BOOLEAN DEFAULT TRUE,
+      max_failed_attempts INTEGER DEFAULT 5,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // Insert default policy if none exists
+  await client.query(`
+    INSERT INTO ${schema}.password_policies (
+      min_length, expiry_days, history_count, 
+      require_uppercase, require_lowercase, require_numbers, require_symbols, 
+      max_failed_attempts
+    )
+    SELECT 8, 90, 10, TRUE, TRUE, TRUE, TRUE, 5
+    WHERE NOT EXISTS (SELECT 1 FROM ${schema}.password_policies);
+  `);
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.password_history (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES ${schema}.users(id) ON DELETE CASCADE,
+      password_hash TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+}
 
 module.exports = { runMigrations };

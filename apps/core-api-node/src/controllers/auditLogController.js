@@ -49,3 +49,82 @@ exports.getAllAuditLogs = async (req, res) => {
     });
   }
 };
+
+/**
+ * Export Audit Logs CSV
+ */
+exports.exportAuditLogs = async (req, res) => {
+  try {
+    const { event_type, risk_level, status, search, startDate, endDate } =
+      req.query;
+
+    const filters = {
+      event_type,
+      risk_level,
+      status,
+      search,
+      startDate,
+      endDate,
+    };
+
+    // fetch all logs without pagination
+    const logs = await AuditLog.getAuditLogs(req.db, filters, {
+      page: 1,
+      limit: 100000,
+    });
+
+    const headers = [
+      "ID",
+      "User ID",
+      "User Name",
+      "Event Type",
+      "Details",
+      "IP Address",
+      "Device",
+      "Location",
+      "Risk Level",
+      "Status",
+      "Created At",
+    ];
+
+    const csvRows = [];
+
+    csvRows.push(headers.join(","));
+
+    logs.forEach((log) => {
+      const row = [
+        log.id,
+        log.user_id,
+        `"${(log.user_name || "").replace(/"/g, '""')}"`,
+        `"${(log.event_type || "").replace(/"/g, '""')}"`,
+        `"${(log.details || "").replace(/"/g, '""')}"`,
+        `"${(log.ip_address || "").replace(/"/g, '""')}"`,
+        `"${(log.device || "").replace(/"/g, '""')}"`,
+        `"${(log.location || "").replace(/"/g, '""')}"`,
+        `"${(log.risk_level || "").replace(/"/g, '""')}"`,
+        `"${(log.status || "").replace(/"/g, '""')}"`,
+        log.created_at,
+      ];
+
+      csvRows.push(row.join(","));
+    });
+
+    const csvData = csvRows.join("\n");
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=audit_logs_${Date.now()}.csv`
+    );
+
+    return res.status(200).send(csvData);
+  } catch (error) {
+    console.error("Error exporting audit logs:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to export audit logs",
+      error: error.message,
+    });
+  }
+};
