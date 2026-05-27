@@ -101,5 +101,6 @@ app.use("/api/profile", require("./routes/profile.routes"));
 app.use("/api/patients", require("./routes/patient.routes"));
 app.use("/api/work-queue", require("./routes/workQueue.routes"));
 app.use("/api/audit-logs", require("./routes/auditLogRoutes"));
+app.use("/api/security-compliance", require("./routes/securityComplianceRoutes"));
 
 module.exports = app;
