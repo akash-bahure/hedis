@@ -3,6 +3,11 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { sendResetEmail, sendOTPEmail } = require("../services/mail.service");
 const AuditLog = require("../models/AuditLog");
+const {
+  validatePassword,
+  getActivePolicy,
+  checkPasswordHistory,
+} = require("../utils/passwordPolicy");
 
 const MODULE_GROUP_MAPPING = {
   "Patients & Charts": "Main",
@@ -68,7 +73,8 @@ exports.login = async (req, res) => {
     u.created_at,
     u.updated_at,
     u.password,
-
+u.failed_login_attempts,
+u.lockout_until,
     ur.name AS role,
     ur.description AS role_description,
     ur.active AS role_active,
@@ -101,11 +107,35 @@ exports.login = async (req, res) => {
 
     const user = result.rows[0];
 
+    // Check if account is locked
+    if (user.lockout_until && new Date() < new Date(user.lockout_until)) {
+      const remainingTime = Math.ceil(
+        (new Date(user.lockout_until) - new Date()) / 60000
+      );
+      return res.status(403).json({
+        message: `Account is locked. Please try again in ${remainingTime} minutes.`,
+      });
+    }
+
     // Check if user is active
     if (!user.is_active) {
       return res.status(403).json({
         message: "User account is inactive",
       });
+    }
+
+    // Check Password Expiry
+    const policy = await getActivePolicy(req.db);
+    if (policy && policy.expiry_days > 0 && user.last_password_changed) {
+      const expiryDate = new Date(user.last_password_changed);
+      expiryDate.setDate(expiryDate.getDate() + policy.expiry_days);
+      if (new Date() > expiryDate) {
+        return res.status(200).json({
+          message: "Password expired",
+          password_expired: true,
+          email: user.email,
+        });
+      }
     }
 
     // Check password exists
@@ -119,20 +149,48 @@ exports.login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
+      const policy = await getActivePolicy(req.db);
+      const newAttempts = (user.failed_login_attempts || 0) + 1;
+      let lockoutUntil = null;
+      let message = "Invalid credentials";
+
+      if (
+        policy &&
+        policy.max_failed_attempts > 0 &&
+        newAttempts >= policy.max_failed_attempts
+      ) {
+        lockoutUntil = new Date(Date.now() + 30 * 60000); // 30 minutes lockout
+        message = `Account locked due to multiple failed attempts. Please try again in 30 minutes.`;
+      }
+
+      await req.db.query(
+        "UPDATE users SET failed_login_attempts = $1, lockout_until = $2 WHERE id = $3",
+        [newAttempts, lockoutUntil, user.id]
+      );
+
       await AuditLog.createAuditLog(req.db, {
         user_id: user.id,
         user_name: user.full_name,
         event_type: "Login Failed",
-        details: `Incorrect password for user: ${email}`,
+        details: lockoutUntil
+          ? `Account locked after ${newAttempts} failed login attempts`
+          : `Incorrect password for user: ${email}`,
         ip_address: req.ip,
         device: req.headers["user-agent"],
-        risk_level: "Low",
+        risk_level: lockoutUntil ? "High" : "Low",
         status: "Failed",
       });
+
       return res.status(400).json({
-        message: "Invalid credentials",
+        message: message,
       });
     }
+
+    // Reset failed attempts on success
+    await req.db.query(
+      "UPDATE users SET failed_login_attempts = 0, lockout_until = NULL, last_login = CURRENT_TIMESTAMP WHERE id = $1",
+      [user.id]
+    );
 
     // Fetch Role & Permissions details
     let userRole = null;
@@ -250,16 +308,6 @@ exports.login = async (req, res) => {
         }
       : null;
 
-    // Update last login
-    await req.db.query(
-      `
-      UPDATE users
-      SET last_login = CURRENT_TIMESTAMP
-      WHERE id = $1
-      `,
-      [user.id]
-    );
-
     // Generate token
     const token = jwt.sign(
       {
@@ -372,6 +420,26 @@ exports.setPassword = async (req, res) => {
       return res.status(400).json({ message: "Invite link has expired" });
     }
 
+    // Validate Password against policy
+    const policy = await getActivePolicy(client);
+    const validation = validatePassword(password, policy);
+    if (!validation.isValid) {
+      return res.status(400).json({ message: validation.error });
+    }
+
+    // Check Password History
+    const usedBefore = await checkPasswordHistory(
+      password,
+      client,
+      user.id,
+      policy.history_count
+    );
+    if (usedBefore) {
+      return res.status(400).json({
+        message: `Password has been used recently. Please choose a different password (History limit: ${policy.history_count}).`,
+      });
+    }
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -387,6 +455,12 @@ exports.setPassword = async (req, res) => {
            last_password_changed = CURRENT_TIMESTAMP
        WHERE id = $2`,
       [hashedPassword, user.id]
+    );
+
+    // Add to History
+    await client.query(
+      "INSERT INTO password_history (user_id, password_hash) VALUES ($1, $2)",
+      [user.id, hashedPassword]
     );
 
     res.json({ message: "Password set successfully. You can now log in." });
@@ -476,6 +550,26 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ message: "Reset link has expired" });
     }
 
+    // Validate Password against policy
+    const policy = await getActivePolicy(client);
+    const validation = validatePassword(password, policy);
+    if (!validation.isValid) {
+      return res.status(400).json({ message: validation.error });
+    }
+
+    // Check Password History
+    const usedBefore = await checkPasswordHistory(
+      password,
+      client,
+      user.id,
+      policy.history_count
+    );
+    if (usedBefore) {
+      return res.status(400).json({
+        message: `Password has been used recently. Please choose a different password (History limit: ${policy.history_count}).`,
+      });
+    }
+
     // Hash new password
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -488,6 +582,12 @@ exports.resetPassword = async (req, res) => {
            last_password_changed = CURRENT_TIMESTAMP
        WHERE id = $2`,
       [hashedPassword, user.id]
+    );
+
+    // Add to History
+    await client.query(
+      "INSERT INTO password_history (user_id, password_hash) VALUES ($1, $2)",
+      [user.id, hashedPassword]
     );
 
     await AuditLog.createAuditLog(req.db, {

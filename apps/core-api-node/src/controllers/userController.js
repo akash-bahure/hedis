@@ -49,7 +49,6 @@ const assignRolesSchema = z.object({
   role_id: z.string().uuid(),
 });
 
-
 const generateInviteToken = () => crypto.randomBytes(32).toString("hex");
 // CREATE USER
 exports.createUser = async (req, res) => {
@@ -556,16 +555,6 @@ exports.exportUsers = async (req, res) => {
       res.setHeader("Content-Disposition", 'attachment; filename="users.csv"');
 
       await AuditLog.createAuditLog(req.db, {
-        user_name: "System",
-        event_type: "Export action",
-        details: `Users exported to CSV. Count: ${users.length}`,
-        ip_address: req.ip,
-        device: req.headers["user-agent"],
-        risk_level: "Low",
-        status: "Success",
-      });
-
-      await AuditLog.createAuditLog(req.db, {
         user_id: req.user?.id,
         user_name: req.user?.full_name || "System",
         event_type: "Export action",
@@ -1057,4 +1046,3 @@ exports.assignRoles = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
