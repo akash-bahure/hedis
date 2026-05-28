@@ -1,4 +1,5 @@
 const { getActivePolicy } = require("../utils/passwordPolicy");
+const AuditLog = require("../models/AuditLog");
 
 /**
  * @desc    Get password policy
@@ -85,6 +86,17 @@ exports.updatePasswordPolicy = async (req, res) => {
         currentPolicy.id,
       ]
     );
+
+    await AuditLog.createAuditLog(req.db, {
+      user_id: req.user?.id || null,
+      user_name: req.user?.full_name || "System",
+      event_type: "settings",
+      details: `Password policy updated. Min length: ${result.rows[0].min_length}, Expiry days: ${result.rows[0].expiry_days}, Max failed attempts: ${result.rows[0].max_failed_attempts}`,
+      ip_address: req.ip,
+      device: req.headers["user-agent"],
+      risk_level: "High",
+      status: "Success",
+    });
 
     res.status(200).json({
       success: true,
