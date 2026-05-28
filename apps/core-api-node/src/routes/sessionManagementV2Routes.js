@@ -38,7 +38,7 @@ const authMiddleware = require("../middlewares/authMiddleware");
  *                   properties:
  *                     session_timeout:
  *                       type: string
- *                       enum: ["30", "15minutes", "1hr", "2hr"]
+ *                       enum: ["30min", "15min", "1hr", "2hr"]
  *                     max_concurrent_sessions:
  *                       type: string
  *                       enum: ["1 session", "2 sessions", "5 sessions"]
@@ -69,7 +69,7 @@ router.get("/session-management-v2", authMiddleware, controller.getSessionManage
  *             properties:
  *               session_timeout:
  *                 type: string
- *                 enum: ["30", "15minutes", "1hr", "2hr"]
+ *                 enum: ["30min", "15min", "1hr", "2hr"]
  *               max_concurrent_sessions:
  *                 type: string
  *                 enum: ["1 session", "2 sessions", "5 sessions"]
