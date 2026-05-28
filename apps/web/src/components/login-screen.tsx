@@ -182,6 +182,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               key: email.trim().toLowerCase(),
               device_type: "web",
               device_id: deviceId,
+              external_ip: response?.external_ip || false,
             },
           });
 

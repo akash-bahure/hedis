@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const authController = require("../controllers/authController");
+const ipAllowlistMiddleware = require("../middlewares/ipAllowlistMiddleware");
 
 /**
  * @swagger
@@ -8,7 +9,7 @@ const authController = require("../controllers/authController");
  *   post:
  *     summary: Login user
  *     tags: [Auth]
- *     description: Authenticate user and return JWT token
+ *     description: Authenticate user and return JWT token. External IPs (not in the IP allowlist) require additional 2FA.
  *
  *     requestBody:
  *       required: true
@@ -228,7 +229,7 @@ const authController = require("../controllers/authController");
  *       500:
  *         description: Server error
  */
-router.post("/login", authController.login);
+router.post("/login", ipAllowlistMiddleware, authController.login);
 
 /**
  * @swagger

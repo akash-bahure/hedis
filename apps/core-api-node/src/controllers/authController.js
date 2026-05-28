@@ -334,11 +334,16 @@ u.lockout_until,
       ...safeUser
     } = user;
 
-    // Check if 2FA is enabled
-    if (user.two_fa_auth) {
+    // Check if 2FA is enabled OR if IP is not trusted (external IP requires 2FA)
+    const requiresTwoFa = user.two_fa_auth || (req.isTrustedIp === false);
+
+    if (requiresTwoFa) {
       return res.status(200).json({
-        message: "2FA required",
+        message: req.isTrustedIp === false && !user.two_fa_auth
+          ? "External IP detected. Additional 2FA verification required."
+          : "2FA required",
         two_fa_required: true,
+        external_ip: req.isTrustedIp === false,
         email: user.email,
         key: user.email, // Using email as the key for OTP
       });
@@ -613,7 +618,7 @@ exports.resetPassword = async (req, res) => {
 // SEND OTP
 exports.sendOTP = async (req, res) => {
   try {
-    const { key, device_type, device_id } = req.body;
+    const { key, device_type, device_id, external_ip } = req.body;
 
     if (!key) {
       return res.status(400).json({ message: "Key (email) is required" });
@@ -633,7 +638,8 @@ exports.sendOTP = async (req, res) => {
 
     const user = userResult.rows[0];
 
-    if (!user.two_fa_auth) {
+    // Allow OTP if 2FA is enabled OR if triggered by external IP restriction
+    if (!user.two_fa_auth && !external_ip) {
       return res.status(400).json({ message: "2FA is disabled for this user" });
     }
 
