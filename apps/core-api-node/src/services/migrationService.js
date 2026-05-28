@@ -683,6 +683,14 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
       password_hash TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS ${schema}.allowed_ips (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      cidr INET NOT NULL UNIQUE,
+      description TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 }
 

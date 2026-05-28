@@ -133,6 +133,7 @@ export function OtpVerificationScreen({
         key: email,
         device_type: "web",
         device_id: deviceId,
+        external_ip: true,
       },
     });
   };
