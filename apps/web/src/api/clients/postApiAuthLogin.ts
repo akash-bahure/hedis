@@ -23,7 +23,7 @@ function getPostApiAuthLoginUrl() {
 }
 
 /**
- * @description Authenticate user and return JWT token
+ * @description Authenticate user and return JWT token. External IPs (not in the IP allowlist) require additional 2FA.
  * @summary Login user
  * {@link /api/auth/login}
  */

@@ -26,6 +26,12 @@ export type {
   DeleteApiProjectsIdPathParams,
 } from "./DeleteApiProjectsId.ts";
 export type {
+  DeleteApiSecurityAllowedIpsId200,
+  DeleteApiSecurityAllowedIpsIdMutation,
+  DeleteApiSecurityAllowedIpsIdMutationResponse,
+  DeleteApiSecurityAllowedIpsIdPathParams,
+} from "./DeleteApiSecurityAllowedIpsId.ts";
+export type {
   DeleteApiUsersId200,
   DeleteApiUsersId404,
   DeleteApiUsersId500,
@@ -144,6 +150,11 @@ export type {
   GetApiProjectsIdQueryResponse,
 } from "./GetApiProjectsId.ts";
 export type {
+  GetApiSecurityAllowedIps200,
+  GetApiSecurityAllowedIpsQuery,
+  GetApiSecurityAllowedIpsQueryResponse,
+} from "./GetApiSecurityAllowedIps.ts";
+export type {
   DataAuthTokenLifetimeEnumKey,
   DataForceReauthenticationEnumKey,
   DataInactivityDeactivationEnumKey,
@@ -166,10 +177,33 @@ export type {
   GetApiSecurityComplianceDataRetentionPolicyQueryResponse,
 } from "./GetApiSecurityComplianceDataRetentionPolicy.ts";
 export type {
+  DataGracePeriodEnumKey,
+  GetApiSecurityDashboardMfaV2200,
+  GetApiSecurityDashboardMfaV2Query,
+  GetApiSecurityDashboardMfaV2QueryResponse,
+} from "./GetApiSecurityDashboardMfaV2.ts";
+export type {
+  DataMaxConcurrentSessionsEnumKey,
+  DataSessionTimeoutEnumKey,
+  GetApiSecurityDashboardSessionManagementV2200,
+  GetApiSecurityDashboardSessionManagementV2Query,
+  GetApiSecurityDashboardSessionManagementV2QueryResponse,
+} from "./GetApiSecurityDashboardSessionManagementV2.ts";
+export type {
+  GetApiSecurityLoginActivity200,
+  GetApiSecurityLoginActivityQuery,
+  GetApiSecurityLoginActivityQueryResponse,
+} from "./GetApiSecurityLoginActivity.ts";
+export type {
   GetApiSecurityPasswordPolicy200,
   GetApiSecurityPasswordPolicyQuery,
   GetApiSecurityPasswordPolicyQueryResponse,
 } from "./GetApiSecurityPasswordPolicy.ts";
+export type {
+  GetApiSecurityStats200,
+  GetApiSecurityStatsQuery,
+  GetApiSecurityStatsQueryResponse,
+} from "./GetApiSecurityStats.ts";
 export type {
   GetApiUserRoles200,
   GetApiUserRoles500,
@@ -515,6 +549,12 @@ export type {
   PostApiProjectsMutationResponse,
 } from "./PostApiProjects.ts";
 export type {
+  PostApiSecurityAllowedIps201,
+  PostApiSecurityAllowedIpsMutation,
+  PostApiSecurityAllowedIpsMutationRequest,
+  PostApiSecurityAllowedIpsMutationResponse,
+} from "./PostApiSecurityAllowedIps.ts";
+export type {
   PostApiUserRoles201,
   PostApiUserRoles400,
   PostApiUserRoles500,
@@ -584,6 +624,21 @@ export type {
   PutApiSecurityComplianceDataRetentionPolicyMutationResponse,
 } from "./PutApiSecurityComplianceDataRetentionPolicy.ts";
 export type {
+  PutApiSecurityDashboardMfaV2200,
+  PutApiSecurityDashboardMfaV2Mutation,
+  PutApiSecurityDashboardMfaV2MutationRequest,
+  PutApiSecurityDashboardMfaV2MutationRequestGracePeriodEnumKey,
+  PutApiSecurityDashboardMfaV2MutationResponse,
+} from "./PutApiSecurityDashboardMfaV2.ts";
+export type {
+  PutApiSecurityDashboardSessionManagementV2200,
+  PutApiSecurityDashboardSessionManagementV2Mutation,
+  PutApiSecurityDashboardSessionManagementV2MutationRequest,
+  PutApiSecurityDashboardSessionManagementV2MutationRequestMaxConcurrentSessionsEnumKey,
+  PutApiSecurityDashboardSessionManagementV2MutationRequestSessionTimeoutEnumKey,
+  PutApiSecurityDashboardSessionManagementV2MutationResponse,
+} from "./PutApiSecurityDashboardSessionManagementV2.ts";
+export type {
   PutApiSecurityPasswordPolicy200,
   PutApiSecurityPasswordPolicy500,
   PutApiSecurityPasswordPolicyMutation,
@@ -615,6 +670,9 @@ export { dataBackupSnapshotsEnum } from "./GetApiSecurityComplianceDataRetention
 export { dataExportLogsEnum } from "./GetApiSecurityComplianceDataRetentionPolicy.ts";
 export { dataPhiRecordsEnum } from "./GetApiSecurityComplianceDataRetentionPolicy.ts";
 export { dataSessionLogsEnum } from "./GetApiSecurityComplianceDataRetentionPolicy.ts";
+export { dataGracePeriodEnum } from "./GetApiSecurityDashboardMfaV2.ts";
+export { dataMaxConcurrentSessionsEnum } from "./GetApiSecurityDashboardSessionManagementV2.ts";
+export { dataSessionTimeoutEnum } from "./GetApiSecurityDashboardSessionManagementV2.ts";
 export { getApiUsersQueryParamsUserStatusEnum } from "./GetApiUsers.ts";
 export { getApiUsersExportQueryParamsFormatEnum } from "./GetApiUsersExport.ts";
 export { getApiUsersShiftsQueryParamsShiftEnum } from "./GetApiUsersShifts.ts";
@@ -661,3 +719,6 @@ export { putApiSecurityComplianceDataRetentionPolicyMutationRequestBackupSnapsho
 export { putApiSecurityComplianceDataRetentionPolicyMutationRequestExportLogsEnum } from "./PutApiSecurityComplianceDataRetentionPolicy.ts";
 export { putApiSecurityComplianceDataRetentionPolicyMutationRequestPhiRecordsEnum } from "./PutApiSecurityComplianceDataRetentionPolicy.ts";
 export { putApiSecurityComplianceDataRetentionPolicyMutationRequestSessionLogsEnum } from "./PutApiSecurityComplianceDataRetentionPolicy.ts";
+export { putApiSecurityDashboardMfaV2MutationRequestGracePeriodEnum } from "./PutApiSecurityDashboardMfaV2.ts";
+export { putApiSecurityDashboardSessionManagementV2MutationRequestMaxConcurrentSessionsEnum } from "./PutApiSecurityDashboardSessionManagementV2.ts";
+export { putApiSecurityDashboardSessionManagementV2MutationRequestSessionTimeoutEnum } from "./PutApiSecurityDashboardSessionManagementV2.ts";
