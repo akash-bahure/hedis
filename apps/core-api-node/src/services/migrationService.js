@@ -683,15 +683,47 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
       password_hash TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
+  `);
 
-    CREATE TABLE IF NOT EXISTS ${schema}.allowed_ips (
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.session_management_policies (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      cidr INET NOT NULL UNIQUE,
-      description TEXT,
+      session_timeout VARCHAR(50) DEFAULT '30 min',
+      max_concurrent_sessions VARCHAR(50) DEFAULT '1 session',
+      idle_session_logout BOOLEAN DEFAULT TRUE,
+      session_ip_binding BOOLEAN DEFAULT TRUE,
+      remember_me BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
+
+  await client.query(`
+    INSERT INTO ${schema}.session_management_policies (session_timeout, max_concurrent_sessions, idle_session_logout, session_ip_binding, remember_me)
+    SELECT '30 min', '1 session', TRUE, TRUE, FALSE
+    WHERE NOT EXISTS (SELECT 1 FROM ${schema}.session_management_policies);
+  `);
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.mfa_policies (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      require_2fa BOOLEAN DEFAULT TRUE,
+      totp_authenticator BOOLEAN DEFAULT TRUE,
+      sms_otp BOOLEAN DEFAULT FALSE,
+      email_otp BOOLEAN DEFAULT TRUE,
+      new_device_verify BOOLEAN DEFAULT TRUE,
+      grace_period VARCHAR(50) DEFAULT '24h',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  await client.query(`
+    INSERT INTO ${schema}.mfa_policies (require_2fa, totp_authenticator, sms_otp, email_otp, new_device_verify, grace_period)
+    SELECT TRUE, TRUE, FALSE, TRUE, TRUE, '24h'
+    WHERE NOT EXISTS (SELECT 1 FROM ${schema}.mfa_policies);
+  `);
 }
 
 module.exports = { runMigrations };
+
