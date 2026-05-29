@@ -751,6 +751,52 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
     CREATE INDEX IF NOT EXISTS idx_security_alerts_status ON ${schema}.security_alerts(status);
     CREATE INDEX IF NOT EXISTS idx_security_alerts_created_at ON ${schema}.security_alerts(created_at DESC);
   `);
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.phi_access_logs (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      chart_id VARCHAR(50) NOT NULL,
+      patient_name VARCHAR(150) NOT NULL,
+      accessed_by VARCHAR(150) NOT NULL,
+      role VARCHAR(100) NOT NULL,
+      access_type VARCHAR(50) NOT NULL CHECK (access_type IN ('code', 'audit', 'view', 'export', 'edit')),
+      timestamp TIMESTAMP DEFAULT NOW(),
+      duration VARCHAR(50),
+      ip_address VARCHAR(45),
+      project_name VARCHAR(150),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // Seed phi_access_logs if empty
+  const countRes = await client.query(`SELECT COUNT(*) as cnt FROM ${schema}.phi_access_logs`);
+  if (parseInt(countRes.rows[0].cnt) === 0) {
+    const logsToSeed = [
+      ['CHT-78421', 'Verma, Rakesh K.', 'Ankit Sharma', 'Senior Coder', 'code', '8m 32s', '172.16.8.22', 'Apollo Inpatient', '2026-02-20 10:55:00'],
+      ['CHT-78422', 'Pillai, Sreedevi N.', 'Priti Gupta', 'Coder', 'code', '12m 11s', '172.16.8.23', 'Apollo Inpatient', '2026-02-20 10:28:00'],
+      ['CHT-78399', 'Kapoor, Meera S.', 'Vinod Kumar', 'Auditor (L2)', 'audit', '18m 44s', '172.16.8.31', 'Apollo Inpatient', '2026-02-20 09:55:00'],
+      ['CHT-78401', 'Singh, Manpreet K.', 'Shruti Mehta', 'Sr. Auditor', 'audit', '22m 18s', '172.16.8.30', 'Max Healthcare', '2026-02-20 09:22:00'],
+      ['CHT-78505', 'Nambiar, Rajan T.', 'Deepa Nair', 'Coder', 'code', '14m 05s', '172.16.8.41', 'Max Healthcare', '2026-02-20 10:22:00'],
+      ['CHT-78388', 'Iyer, Krishnan T.', 'Shruti Mehta', 'Sr. Auditor', 'audit', '31m 12s', '172.16.8.30', 'Apollo Inpatient', '2026-02-20 10:38:00'],
+      ['CHT-78411', 'Pillai, Sreedevi N.', 'Mohammed Irfan', 'Coder', 'code', '9m 45s', '172.16.8.25', 'Fortis Cardiology', '2026-02-20 10:14:00'],
+      ['CHT-78366', 'Sen, Joyoti P.', 'Ankit Sharma', 'Senior Coder', 'code', '16m 20s', '172.16.8.22', 'Fortis Cardiology', '2026-02-20 08:45:00'],
+      ['CHT-78490', 'Joshi, Amit R.', 'Priti Gupta', 'Coder', 'code', '11m 02s', '172.16.8.23', 'AIIMS Oncology', '2026-02-20 08:12:00'],
+      ['CHT-78415', 'Mukherjee, S.', 'Vinod Kumar', 'Auditor (L2)', 'audit', '25m 30s', '172.16.8.31', 'AIIMS Oncology', '2026-02-20 07:55:00'],
+      ['CHT-78419', 'Bose, Subhash C.', 'Kavita Rao', 'Auditor (L2)', 'audit', '5m 12s', '192.168.1.105', 'Apollo Inpatient', '2026-02-20 02:14:00'],
+      ['CHT-78418', 'Roy, Arundhati', 'Kavita Rao', 'Auditor (L2)', 'view', '1m 05s', '192.168.1.105', 'Apollo Inpatient', '2026-02-20 02:16:00'],
+      ['CHT-78401', 'Singh, Manpreet K.', 'Shruti Mehta', 'Sr. Auditor', 'export', '0m 00s', '172.16.8.30', 'Max Healthcare', '2026-02-20 11:20:00'],
+      ['CHT-78505', 'Nambiar, Rajan T.', 'Deepa Nair', 'Coder', 'edit', '4m 12s', '172.16.8.41', 'Max Healthcare', '2026-02-20 10:45:00']
+    ];
+
+    for (const log of logsToSeed) {
+      await client.query(
+        `INSERT INTO ${schema}.phi_access_logs 
+          (chart_id, patient_name, accessed_by, role, access_type, duration, ip_address, project_name, timestamp)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        log
+      );
+    }
+  }
 }
 
 module.exports = { runMigrations };
