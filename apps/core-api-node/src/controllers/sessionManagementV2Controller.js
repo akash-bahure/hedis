@@ -1,7 +1,7 @@
 // controllers/sessionManagementV2Controller.js
 
 // Enum definitions for Session Management
-const SESSION_TIMEOUT_ENUM = ["30", "15minutes", "1hr", "2hr"];
+const SESSION_TIMEOUT_ENUM = ["30min", "15min", "1hr", "2hr"];
 const MAX_CONCURRENT_ENUM = ["1 session", "2 sessions", "5 sessions"];
 
 /**
