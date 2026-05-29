@@ -107,6 +107,8 @@ app.use(
 );
 app.use("/api/security", require("./routes/securityDashboardRoutes"));
 
+app.use("/api/security-alerts", require("./routes/securityalrestRoute"));
+
 const sessionManagementV2Routes = require("./routes/sessionManagementV2Routes");
 const mfaV2Routes = require("./routes/mfaV2Routes");
 app.use("/api/security-dashboard", sessionManagementV2Routes);

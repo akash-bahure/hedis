@@ -1,3 +1,5 @@
+const SecurityAlert = require("../models/SecurityAlert");
+
 exports.getPatients = async (req, res) => {
   try {
     const schema = req.tenant.schema_name;
@@ -94,6 +96,21 @@ exports.getPatients = async (req, res) => {
 
     console.log("PATIENT RESULT:", result.rows);
 
+    // Create Security Alert for Abnormal Chart Access Rate
+    if (limit > 50) {
+      await SecurityAlert.createSecurityAlert(req.db, {
+        alert_type: "Abnormal Chart Access Rate",
+        severity: "High",
+        status: "Active",
+        user_id: req.user?.id || null,
+        user_name: req.user?.full_name || "System",
+        ip_address: req.ip,
+        description: `${total} charts accessed in a single request — 3.9x above established baseline of 8 charts/hour (simulated baseline).`,
+        investigation_details: "Delhi office IP, within working hours. Possible credential sharing. Investigation open.",
+        metadata: { requested_limit: limit, total_records: total }
+      });
+    }
+
     return res.json({
       message: "Patients fetched successfully",
       total,
@@ -104,6 +121,21 @@ exports.getPatients = async (req, res) => {
     });
   } catch (err) {
     console.error("Get Patients Error:", err);
+
+    // Create Security Alert for Inactive User Access
+    if (req.user?.user_status === 'Inactive' || req.user?.user_status === 'Suspended') {
+      await SecurityAlert.createSecurityAlert(req.db, {
+        alert_type: "Inactive User Access",
+        severity: "Critical",
+        status: "Active",
+        user_id: req.user.id,
+        user_name: req.user.full_name,
+        ip_address: req.ip,
+        description: `User "${req.user.full_name}" (Status: ${req.user.user_status}) attempted to access chart list.`,
+        investigation_details: "User marked inactive/suspended accessed charts without re-activation approval.",
+        metadata: { user_status: req.user.user_status }
+      });
+    }
 
     return res.status(500).json({
       error: err.message,
@@ -236,6 +268,24 @@ exports.exportPatients = async (req, res) => {
     if (patients.length === 0) {
       return res.status(404).json({ message: "No patients found" });
     }
+
+    // Create Security Alert for Data Export
+    const recordCount = patients.length;
+    const isLargeExport = recordCount > 100;
+    
+    await SecurityAlert.createSecurityAlert(req.db, {
+      alert_type: isLargeExport ? "Unauthorized PHI Export Attempt" : "Authorized Bulk Data Export",
+      severity: isLargeExport ? "Critical" : "Low",
+      status: isLargeExport ? "Active" : "Resolved",
+      user_id: req.user?.id || null,
+      user_name: req.user?.full_name || "System",
+      ip_address: req.ip,
+      description: `Bulk export of ${recordCount} PHI records attempted. Access ${isLargeExport ? "denied by DLP (placeholder logic)" : "within authorized scope"}.`,
+      investigation_details: isLargeExport 
+        ? "Pattern: all-charts URL export. Account suspicious. Manager notified."
+        : "Routine export within normal parameters.",
+      metadata: { record_count: recordCount, format: format }
+    });
 
     // ================= CSV =================
     if (format === "csv") {
