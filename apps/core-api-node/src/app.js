@@ -101,17 +101,9 @@ app.use("/api/profile", require("./routes/profile.routes"));
 app.use("/api/patients", require("./routes/patient.routes"));
 app.use("/api/work-queue", require("./routes/workQueue.routes"));
 app.use("/api/audit-logs", require("./routes/auditLogRoutes"));
-app.use(
-  "/api/security-compliance",
-  require("./routes/securityComplianceRoutes")
-);
+app.use("/api/security-compliance", require("./routes/securityComplianceRoutes"));
 app.use("/api/security", require("./routes/securityDashboardRoutes"));
-
+app.use("api/access-monitor",require("./routes/phiAccessLogsRoutes"));
 app.use("/api/security-alerts", require("./routes/securityalrestRoute"));
-
-const sessionManagementV2Routes = require("./routes/sessionManagementV2Routes");
-const mfaV2Routes = require("./routes/mfaV2Routes");
-app.use("/api/security-dashboard", sessionManagementV2Routes);
-app.use("/api/security-dashboard", mfaV2Routes);
 
 module.exports = app;
