@@ -5,6 +5,18 @@ import { useGetApiSecurityPasswordPolicy } from "@/api/hooks/Security DashboardH
 import { usePutApiSecurityPasswordPolicy } from "@/api/hooks/Security DashboardHooks/usePutApiSecurityPasswordPolicy";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import {
+  getApiAuditLogsExport,
+  getApiSecurityDashboardMfaV2QueryKey,
+  getApiSecurityDashboardSessionManagementV2QueryKey,
+  putApiSecurityDashboardMfaV2MutationRequestGracePeriodEnum,
+  putApiSecurityDashboardSessionManagementV2MutationRequestMaxConcurrentSessionsEnum,
+  putApiSecurityDashboardSessionManagementV2MutationRequestSessionTimeoutEnum,
+  useGetApiSecurityDashboardMfaV2,
+  useGetApiSecurityDashboardSessionManagementV2,
+  usePutApiSecurityDashboardMfaV2,
+  usePutApiSecurityDashboardSessionManagementV2,
+} from "@/api";
 import { getApiAuditLogsExport } from "@/api";
 import {
   useGetApiSecurityStats,
@@ -107,8 +119,6 @@ import {
   usePutApiSecurityComplianceAccessExpiryPolicy,
   usePutApiSecurityComplianceDataRetentionPolicy,
 } from "@/api";
-// import { toast } from "sonner";
-// import { useQueryClient } from "@tanstack/react-query";
 
 /* ════════════════════════════════════════════  PALETTE  */
 const C = {
@@ -1501,6 +1511,185 @@ function SecurityDashboardTab() {
 
   const [newIp, setNewIp] = useState("");
 
+  const {
+    data: sessionManagementData,
+    isLoading: isSessionManagementLoading,
+    refetch: refetchSessionManagement,
+  } = useGetApiSecurityDashboardSessionManagementV2({
+    query: {
+      refetchOnWindowFocus: false,
+    },
+  });
+
+  useEffect(() => {
+    const sessionData = sessionManagementData?.data;
+
+    if (!sessionData) return;
+
+    setSess((prev) => ({
+      ...prev,
+
+      timeout:
+        sessionData.session_timeout === "15 min"
+          ? 15
+          : sessionData.session_timeout === "30 min"
+            ? 30
+            : sessionData.session_timeout === "1 hour"
+              ? 60
+              : 120,
+
+      maxConc:
+        sessionData.max_concurrent_sessions === "1 session"
+          ? 1
+          : sessionData.max_concurrent_sessions === "2 sessions"
+            ? 2
+            : 5,
+    }));
+  }, [sessionManagementData]);
+  const {
+    mutate: updateSessionManagement,
+    isPending: isUpdatingSessionManagement,
+  } = usePutApiSecurityDashboardSessionManagementV2({
+    mutation: {
+      onSuccess: async () => {
+        toast.success("Session management updated successfully");
+
+        await queryClient.invalidateQueries({
+          queryKey: getApiSecurityDashboardSessionManagementV2QueryKey(),
+        });
+
+        refetchSessionManagement();
+      },
+
+      onError: () => {
+        toast.error("Failed to update session management");
+      },
+    },
+  });
+
+  const handleUpdateSessionManagement = () => {
+    updateSessionManagement({
+      data: {
+        session_timeout:
+          sess.timeout === 15
+            ? putApiSecurityDashboardSessionManagementV2MutationRequestSessionTimeoutEnum[
+                "15minutes"
+              ]
+            : sess.timeout === 60
+              ? putApiSecurityDashboardSessionManagementV2MutationRequestSessionTimeoutEnum[
+                  "1hr"
+                ]
+              : sess.timeout === 120
+                ? putApiSecurityDashboardSessionManagementV2MutationRequestSessionTimeoutEnum[
+                    "2hr"
+                  ]
+                : putApiSecurityDashboardSessionManagementV2MutationRequestSessionTimeoutEnum[
+                    "30"
+                  ],
+
+        max_concurrent_sessions:
+          sess.maxConc === 1
+            ? putApiSecurityDashboardSessionManagementV2MutationRequestMaxConcurrentSessionsEnum[
+                "1 session"
+              ]
+            : sess.maxConc === 2
+              ? putApiSecurityDashboardSessionManagementV2MutationRequestMaxConcurrentSessionsEnum[
+                  "2 sessions"
+                ]
+              : putApiSecurityDashboardSessionManagementV2MutationRequestMaxConcurrentSessionsEnum[
+                  "5 sessions"
+                ],
+
+        idle_session_logout: sess.idleLogout,
+        session_ip_binding: sess.ipBind,
+        remember_me: sess.rememberMe,
+      },
+    });
+  };
+
+  const {
+    data: mfaData,
+    isLoading: isMfaLoading,
+    refetch: refetchMfa,
+  } = useGetApiSecurityDashboardMfaV2({
+    query: {
+      refetchOnWindowFocus: false,
+    },
+  });
+
+  useEffect(() => {
+    const policy = mfaData?.data;
+
+    if (!policy) return;
+
+    setTfa({
+      enabled: policy.require_2fa ?? true,
+      totp: policy.totp_authenticator ?? true,
+      sms: policy.sms_otp ?? false,
+      email: policy.email_otp ?? true,
+      newDevice: policy.new_device_verify ?? true,
+
+      gracePeriod:
+        policy.grace_period === "none"
+          ? 0
+          : policy.grace_period === "6h"
+            ? 6
+            : policy.grace_period === "12h"
+              ? 12
+              : policy.grace_period === "24hr"
+                ? 24
+                : 48,
+    });
+  }, [mfaData]);
+
+  const { mutate: updateMfa, isPending: isUpdatingMfa } =
+    usePutApiSecurityDashboardMfaV2({
+      mutation: {
+        onSuccess: async () => {
+          toast.success("MFA settings updated successfully");
+
+          await queryClient.invalidateQueries({
+            queryKey: getApiSecurityDashboardMfaV2QueryKey(),
+          });
+
+          refetchMfa();
+        },
+
+        onError: () => {
+          toast.error("Failed to update MFA settings");
+        },
+      },
+    });
+
+  const handleUpdateMfa = () => {
+    updateMfa({
+      data: {
+        require_2fa: tfa.enabled,
+        totp_authenticator: tfa.totp,
+        sms_otp: tfa.sms,
+        email_otp: tfa.email,
+        new_device_verify: tfa.newDevice,
+
+        grace_period:
+          tfa.gracePeriod === 0
+            ? putApiSecurityDashboardMfaV2MutationRequestGracePeriodEnum.none
+            : tfa.gracePeriod === 6
+              ? putApiSecurityDashboardMfaV2MutationRequestGracePeriodEnum["6h"]
+              : tfa.gracePeriod === 12
+                ? putApiSecurityDashboardMfaV2MutationRequestGracePeriodEnum[
+                    "12h"
+                  ]
+                : tfa.gracePeriod === 24
+                  ? putApiSecurityDashboardMfaV2MutationRequestGracePeriodEnum[
+                      "24hr"
+                    ]
+                  : putApiSecurityDashboardMfaV2MutationRequestGracePeriodEnum[
+                      "48hr"
+                    ],
+      },
+    });
+  };
+
   // Allowed IP APIs
   const { data: allowedIpsData, isLoading: isLoadingAllowedIps } =
     useGetApiSecurityAllowedIps();
@@ -1519,9 +1708,7 @@ function SecurityDashboardTab() {
         },
 
         onError: (error: any) => {
-          toast.error(
-            error?.response?.data?.error || "Failed to add IP range"
-          );
+          toast.error(error?.response?.data?.error || "Failed to add IP range");
         },
       },
     });
@@ -2046,6 +2233,12 @@ function SecurityDashboardTab() {
           iconColor="text-blue-600"
         >
           <div className="space-y-2.5">
+            {isSessionManagementLoading && (
+              <div className="absolute inset-0 bg-background/50 z-10 flex items-center justify-center rounded-xl">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              </div>
+            )}
+
             {[
               {
                 label: "Session Timeout",
@@ -2106,6 +2299,24 @@ function SecurityDashboardTab() {
               on={sess.rememberMe}
               onChange={() => toggle(sess, setSess, "rememberMe")}
             />
+
+            <div className="pt-3 border-t border-border/50 flex justify-end">
+              <button
+                onClick={handleUpdateSessionManagement}
+                disabled={isUpdatingSessionManagement}
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-primary text-white text-[10px] font-bold rounded-xl hover:opacity-90 transition-all shadow-md shadow-primary/20 disabled:opacity-50"
+              >
+                {isUpdatingSessionManagement ? (
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="w-3 h-3" />
+                )}
+
+                {isUpdatingSessionManagement
+                  ? "Updating..."
+                  : "Save Session Settings"}
+              </button>
+            </div>
           </div>
         </SettingCard>
 
@@ -2114,7 +2325,12 @@ function SecurityDashboardTab() {
           icon={Smartphone}
           iconColor="text-violet-600"
         >
-          <div className="space-y-2">
+          <div className="space-y-2 relative">
+            {isMfaLoading && (
+              <div className="absolute inset-0 bg-background/50 z-10 flex items-center justify-center rounded-xl">
+                <RefreshCw className="w-5 h-5 animate-spin text-primary" />
+              </div>
+            )}
             <div className="flex items-center justify-between p-2.5 rounded-xl bg-primary/5 border border-primary/15 mb-3">
               <div>
                 <p className="text-[11px] font-black text-foreground">
@@ -2199,6 +2415,21 @@ function SecurityDashboardTab() {
                   </option>
                 ))}
               </select>
+            </div>
+            <div className="pt-3 border-t border-border/50 flex justify-end">
+              <button
+                onClick={handleUpdateMfa}
+                disabled={isUpdatingMfa}
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-primary text-white text-[10px] font-bold rounded-xl hover:opacity-90 transition-all shadow-md shadow-primary/20 disabled:opacity-50"
+              >
+                {isUpdatingMfa ? (
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="w-3 h-3" />
+                )}
+
+                {isUpdatingMfa ? "Updating..." : "Save MFA Settings"}
+              </button>
             </div>
           </div>
         </SettingCard>
@@ -3636,6 +3867,23 @@ function ComplianceTab() {
                   </div>
                 )}
               </div>
+            </div>
+            <div className="pt-3 border-t border-border/50 flex justify-end">
+              <button
+                onClick={handleUpdateAccessExpiryPolicy}
+                disabled={isUpdatingAccessExpiry}
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-primary text-white text-[10px] font-bold rounded-xl hover:opacity-90 transition-all shadow-md shadow-primary/20 disabled:opacity-50"
+              >
+                {isUpdatingAccessExpiry ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Save className="w-3 h-3" />
+                )}
+
+                {isUpdatingAccessExpiry
+                  ? "Updating..."
+                  : "Update Access Policy"}
+              </button>
             </div>
           </div>
         </SettingCard>
