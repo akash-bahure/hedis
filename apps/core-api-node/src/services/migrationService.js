@@ -730,6 +730,27 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
     SELECT TRUE, TRUE, FALSE, TRUE, TRUE, '24h'
     WHERE NOT EXISTS (SELECT 1 FROM ${schema}.mfa_policies);
   `);
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.security_alerts (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      alert_type VARCHAR(255) NOT NULL,
+      severity VARCHAR(50) NOT NULL CHECK (severity IN ('Critical', 'High', 'Medium', 'Low')),
+      status VARCHAR(50) DEFAULT 'Active' CHECK (status IN ('Active', 'Investigating', 'Resolved')),
+      user_id UUID REFERENCES ${schema}.users(id) ON DELETE SET NULL,
+      user_name TEXT,
+      ip_address VARCHAR(45),
+      description TEXT,
+      investigation_details TEXT,
+      metadata JSONB DEFAULT '{}'::jsonb,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_security_alerts_severity ON ${schema}.security_alerts(severity);
+    CREATE INDEX IF NOT EXISTS idx_security_alerts_status ON ${schema}.security_alerts(status);
+    CREATE INDEX IF NOT EXISTS idx_security_alerts_created_at ON ${schema}.security_alerts(created_at DESC);
+  `);
 }
 
 module.exports = { runMigrations };

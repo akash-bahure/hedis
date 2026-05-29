@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { sendResetEmail, sendOTPEmail } = require("../services/mail.service");
 const AuditLog = require("../models/AuditLog");
+const SecurityAlert = require("../models/SecurityAlert");
 const {
   validatePassword,
   getActivePolicy,
@@ -117,10 +118,28 @@ u.lockout_until,
       });
     }
 
-    // Check if user is active
+    // Check user status
+    if (user.user_status === "Suspended") {
+      await AuditLog.createAuditLog(req.db, {
+        user_id: user.id,
+        user_name: user.full_name,
+        event_type: "Login Blocked",
+        details: `Suspended user attempted login`,
+        ip_address: req.ip,
+        device: req.headers["user-agent"],
+        risk_level: "Medium",
+        status: "Blocked",
+      });
+
+      return res.status(403).json({
+        message: "Your account has been suspended. Please contact the administrator.",
+      });
+    }
+
+    // Check if user is inactive
     if (!user.is_active) {
       return res.status(403).json({
-        message: "User account is inactive",
+        message: "Your account is inactive. Please contact the administrator.",
       });
     }
 
@@ -130,10 +149,38 @@ u.lockout_until,
       const expiryDate = new Date(user.last_password_changed);
       expiryDate.setDate(expiryDate.getDate() + policy.expiry_days);
       if (new Date() > expiryDate) {
+        await SecurityAlert.createSecurityAlert(req.db, {
+          alert_type: "Password Expiry Warning",
+          severity: "Medium",
+          status: "Active",
+          user_id: user.id,
+          user_name: user.full_name,
+          ip_address: req.ip,
+          description: `User account "${user.full_name}" has password expired. Policy: ${policy.expiry_days} days.`,
+          investigation_details: "Automated notifications sent. Force-change policy triggers on expiration.",
+          metadata: { expiry_days: policy.expiry_days, last_changed: user.last_password_changed }
+        });
         return res.status(200).json({
           message: "Password expired",
           password_expired: true,
           email: user.email,
+        });
+      }
+
+      // Check if expiring soon (within 7 days)
+      const sevenDaysFromNow = new Date();
+      sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+      if (sevenDaysFromNow > expiryDate) {
+        await SecurityAlert.createSecurityAlert(req.db, {
+          alert_type: "Password Expiry Warning",
+          severity: "Medium",
+          status: "Active",
+          user_id: user.id,
+          user_name: user.full_name,
+          ip_address: req.ip,
+          description: `User account "${user.full_name}" has password expiring within 7 days.`,
+          investigation_details: "Automated alert for upcoming password expiration.",
+          metadata: { expiry_date: expiryDate }
         });
       }
     }
@@ -180,6 +227,34 @@ u.lockout_until,
         risk_level: lockoutUntil ? "High" : "Low",
         status: "Failed",
       });
+
+      // Create Security Alert for Brute Force
+      if (lockoutUntil) {
+        await SecurityAlert.createSecurityAlert(req.db, {
+          alert_type: "Brute Force Login Attempt",
+          severity: "Critical",
+          user_id: user.id,
+          user_name: user.full_name,
+          ip_address: req.ip,
+          description: `${newAttempts} consecutive failed login attempts for user "${user.full_name}" from external IP ${req.ip}. Account locked for 30 minutes.`,
+          investigation_details: "System-triggered lockout due to policy violation.",
+          metadata: { failed_attempts: newAttempts, lockout_duration: "30m" }
+        });
+      }
+
+      // Create Security Alert for External IP Failed Login
+      if (req.isTrustedIp === false) {
+        await SecurityAlert.createSecurityAlert(req.db, {
+          alert_type: "External IP Failed Login",
+          severity: "High",
+          user_id: user.id,
+          user_name: user.full_name,
+          ip_address: req.ip,
+          description: `Failed login attempt from unknown external IP address: ${req.ip} for user "${user.full_name}".`,
+          investigation_details: "IP not in corp whitelist. Possible unauthorized access attempt.",
+          metadata: { ip_address: req.ip }
+        });
+      }
 
       return res.status(400).json({
         message: message,
@@ -303,9 +378,9 @@ u.lockout_until,
     // Fetch Organization details
     const organization = user.organization_id
       ? {
-          id: user.organization_id,
-          name: user.organization_name || "",
-        }
+        id: user.organization_id,
+        name: user.organization_name || "",
+      }
       : null;
 
     // Generate token
@@ -362,6 +437,21 @@ u.lockout_until,
       risk_level: "Low",
       status: "Success",
     });
+
+    // Create Security Alert for New Device / External IP login success
+    if (req.isTrustedIp === false) {
+      await SecurityAlert.createSecurityAlert(req.db, {
+        alert_type: "New Device Authentication",
+        severity: "Medium",
+        status: "Resolved",
+        user_id: user.id,
+        user_name: user.full_name,
+        ip_address: req.ip,
+        description: `Successful login from unrecognized device/external IP — new browser fingerprint detected.`,
+        investigation_details: "User verified via 2FA/IP policy. No further action required.",
+        metadata: { ip_address: req.ip, device: req.headers["user-agent"] }
+      });
+    }
 
     res.status(200).json({
       message: "Login successful",
@@ -467,6 +557,18 @@ exports.setPassword = async (req, res) => {
       "INSERT INTO password_history (user_id, password_hash) VALUES ($1, $2)",
       [user.id, hashedPassword]
     );
+
+    // Create Security Alert for Password Change
+    await SecurityAlert.createSecurityAlert(req.db, {
+      alert_type: "Password Changed",
+      severity: "Low",
+      status: "Resolved",
+      user_id: user.id,
+      user_name: "User", // Fallback for invite flow
+      ip_address: req.ip,
+      description: "Password set successfully via invite flow.",
+      investigation_details: "Routine password setup during onboarding.",
+    });
 
     res.json({ message: "Password set successfully. You can now log in." });
   } catch (error) {
@@ -594,6 +696,18 @@ exports.resetPassword = async (req, res) => {
       "INSERT INTO password_history (user_id, password_hash) VALUES ($1, $2)",
       [user.id, hashedPassword]
     );
+
+    // Create Security Alert for Password Change
+    await SecurityAlert.createSecurityAlert(req.db, {
+      alert_type: "Password Changed",
+      severity: "Low",
+      status: "Resolved",
+      user_id: user.id,
+      user_name: user.full_name || "User",
+      ip_address: req.ip,
+      description: "User password reset successfully via token.",
+      investigation_details: "Routine password reset action.",
+    });
 
     await AuditLog.createAuditLog(req.db, {
       user_id: user.id,
@@ -949,9 +1063,9 @@ exports.validateOTP = async (req, res) => {
     // Organization
     const organization = user.organization_id
       ? {
-          id: user.organization_id,
-          name: user.organization_name || "",
-        }
+        id: user.organization_id,
+        name: user.organization_name || "",
+      }
       : null;
 
     // Update last login

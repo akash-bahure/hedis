@@ -1,3 +1,5 @@
+const SecurityAlert = require("../models/SecurityAlert");
+
 const getProfile = async (req, res) => {
   try {
     const id = req.user.id;
@@ -235,6 +237,18 @@ const updateSecurity = async (req, res) => {
     if (newPassword) {
       const passQuery = `UPDATE users SET password = $1 WHERE id = $2`;
       await req.db.query(passQuery, [newPassword, id]);
+
+      // Create Security Alert for Password Change
+      await SecurityAlert.createSecurityAlert(req.db, {
+        alert_type: "Password Changed",
+        severity: "Low",
+        status: "Resolved",
+        user_id: id,
+        user_name: req.user?.full_name || "User",
+        ip_address: req.ip,
+        description: "User profile password updated successfully.",
+        investigation_details: "Routine password change from profile settings.",
+      });
     }
 
     // Handle security JSON object (2FA, sessions, etc)
