@@ -6,7 +6,6 @@ import { usePutApiSecurityPasswordPolicy } from "@/api/hooks/Security DashboardH
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  getApiAuditLogsExport,
   getApiSecurityDashboardMfaV2QueryKey,
   getApiSecurityDashboardSessionManagementV2QueryKey,
   putApiSecurityDashboardMfaV2MutationRequestGracePeriodEnum,
