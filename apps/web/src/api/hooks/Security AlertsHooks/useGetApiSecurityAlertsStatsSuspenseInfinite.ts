@@ -15,36 +15,34 @@ import type {
   UseSuspenseInfiniteQueryOptions,
   UseSuspenseInfiniteQueryResult,
 } from "@tanstack/react-query";
-import type { GetApiSecurityDashboardSessionManagementV2QueryResponse } from "../../types/GetApiSecurityDashboardSessionManagementV2.ts";
+import type { GetApiSecurityAlertsStatsQueryResponse } from "../../types/GetApiSecurityAlertsStats.ts";
 import {
   infiniteQueryOptions,
   useSuspenseInfiniteQuery,
 } from "@tanstack/react-query";
-import { getApiSecurityDashboardSessionManagementV2 } from "../../clients/getApiSecurityDashboardSessionManagementV2.ts";
+import { getApiSecurityAlertsStats } from "../../clients/getApiSecurityAlertsStats.ts";
 
-export const getApiSecurityDashboardSessionManagementV2SuspenseInfiniteQueryKey =
-  () => [{ url: "/api/security-dashboard/session-management-v2" }] as const;
+export const getApiSecurityAlertsStatsSuspenseInfiniteQueryKey = () =>
+  [{ url: "/api/security-alerts/stats" }] as const;
 
-export type GetApiSecurityDashboardSessionManagementV2SuspenseInfiniteQueryKey =
-  ReturnType<
-    typeof getApiSecurityDashboardSessionManagementV2SuspenseInfiniteQueryKey
-  >;
+export type GetApiSecurityAlertsStatsSuspenseInfiniteQueryKey = ReturnType<
+  typeof getApiSecurityAlertsStatsSuspenseInfiniteQueryKey
+>;
 
-export function getApiSecurityDashboardSessionManagementV2SuspenseInfiniteQueryOptions(
+export function getApiSecurityAlertsStatsSuspenseInfiniteQueryOptions(
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
-  const queryKey =
-    getApiSecurityDashboardSessionManagementV2SuspenseInfiniteQueryKey();
+  const queryKey = getApiSecurityAlertsStatsSuspenseInfiniteQueryKey();
   return infiniteQueryOptions<
-    GetApiSecurityDashboardSessionManagementV2QueryResponse,
+    GetApiSecurityAlertsStatsQueryResponse,
     ResponseErrorConfig<Error>,
-    InfiniteData<GetApiSecurityDashboardSessionManagementV2QueryResponse>,
+    InfiniteData<GetApiSecurityAlertsStatsQueryResponse>,
     typeof queryKey,
     number
   >({
     queryKey,
     queryFn: async ({ signal }) => {
-      return getApiSecurityDashboardSessionManagementV2({
+      return getApiSecurityAlertsStats({
         ...config,
         signal: config.signal ?? signal,
       });
@@ -60,16 +58,15 @@ export function getApiSecurityDashboardSessionManagementV2SuspenseInfiniteQueryO
 }
 
 /**
- * @description Returns current session timeout and max concurrent session settings with defined enums.
- * @summary Retrieve Session Management (v2) settings
- * {@link /api/security-dashboard/session-management-v2}
+ * @summary Get alert stats
+ * {@link /api/security-alerts/stats}
  */
-export function useGetApiSecurityDashboardSessionManagementV2SuspenseInfinite<
-  TQueryFnData = GetApiSecurityDashboardSessionManagementV2QueryResponse,
+export function useGetApiSecurityAlertsStatsSuspenseInfinite<
+  TQueryFnData = GetApiSecurityAlertsStatsQueryResponse,
   TError = ResponseErrorConfig<Error>,
   TData = InfiniteData<TQueryFnData>,
   TQueryKey extends QueryKey =
-    GetApiSecurityDashboardSessionManagementV2SuspenseInfiniteQueryKey,
+    GetApiSecurityAlertsStatsSuspenseInfiniteQueryKey,
   TPageParam = number,
 >(
   options: {
@@ -89,13 +86,11 @@ export function useGetApiSecurityDashboardSessionManagementV2SuspenseInfinite<
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
     resolvedOptions?.queryKey ??
-    getApiSecurityDashboardSessionManagementV2SuspenseInfiniteQueryKey();
+    getApiSecurityAlertsStatsSuspenseInfiniteQueryKey();
 
   const query = useSuspenseInfiniteQuery(
     {
-      ...getApiSecurityDashboardSessionManagementV2SuspenseInfiniteQueryOptions(
-        config,
-      ),
+      ...getApiSecurityAlertsStatsSuspenseInfiniteQueryOptions(config),
       ...resolvedOptions,
       queryKey,
     } as unknown as UseSuspenseInfiniteQueryOptions<

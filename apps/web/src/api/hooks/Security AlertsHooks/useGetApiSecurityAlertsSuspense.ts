@@ -14,30 +14,35 @@ import type {
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
-import type { GetApiSecurityDashboardMfaV2QueryResponse } from "../../types/GetApiSecurityDashboardMfaV2.ts";
+import type {
+  GetApiSecurityAlertsQueryResponse,
+  GetApiSecurityAlertsQueryParams,
+} from "../../types/GetApiSecurityAlerts.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { getApiSecurityDashboardMfaV2 } from "../../clients/getApiSecurityDashboardMfaV2.ts";
+import { getApiSecurityAlerts } from "../../clients/getApiSecurityAlerts.ts";
 
-export const getApiSecurityDashboardMfaV2SuspenseQueryKey = () =>
-  [{ url: "/api/security-dashboard/mfa-v2" }] as const;
+export const getApiSecurityAlertsSuspenseQueryKey = (
+  params?: GetApiSecurityAlertsQueryParams,
+) => [{ url: "/api/security-alerts" }, ...(params ? [params] : [])] as const;
 
-export type GetApiSecurityDashboardMfaV2SuspenseQueryKey = ReturnType<
-  typeof getApiSecurityDashboardMfaV2SuspenseQueryKey
+export type GetApiSecurityAlertsSuspenseQueryKey = ReturnType<
+  typeof getApiSecurityAlertsSuspenseQueryKey
 >;
 
-export function getApiSecurityDashboardMfaV2SuspenseQueryOptions(
+export function getApiSecurityAlertsSuspenseQueryOptions(
+  params?: GetApiSecurityAlertsQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
-  const queryKey = getApiSecurityDashboardMfaV2SuspenseQueryKey();
+  const queryKey = getApiSecurityAlertsSuspenseQueryKey(params);
   return queryOptions<
-    GetApiSecurityDashboardMfaV2QueryResponse,
+    GetApiSecurityAlertsQueryResponse,
     ResponseErrorConfig<Error>,
-    GetApiSecurityDashboardMfaV2QueryResponse,
+    GetApiSecurityAlertsQueryResponse,
     typeof queryKey
   >({
     queryKey,
     queryFn: async ({ signal }) => {
-      return getApiSecurityDashboardMfaV2({
+      return getApiSecurityAlerts(params, {
         ...config,
         signal: config.signal ?? signal,
       });
@@ -46,18 +51,18 @@ export function getApiSecurityDashboardMfaV2SuspenseQueryOptions(
 }
 
 /**
- * @description Returns current MFA configuration including grace period with defined enums.
- * @summary Retrieve MFA (v2) settings
- * {@link /api/security-dashboard/mfa-v2}
+ * @summary Get all security alerts
+ * {@link /api/security-alerts}
  */
-export function useGetApiSecurityDashboardMfaV2Suspense<
-  TData = GetApiSecurityDashboardMfaV2QueryResponse,
-  TQueryKey extends QueryKey = GetApiSecurityDashboardMfaV2SuspenseQueryKey,
+export function useGetApiSecurityAlertsSuspense<
+  TData = GetApiSecurityAlertsQueryResponse,
+  TQueryKey extends QueryKey = GetApiSecurityAlertsSuspenseQueryKey,
 >(
+  params?: GetApiSecurityAlertsQueryParams,
   options: {
     query?: Partial<
       UseSuspenseQueryOptions<
-        GetApiSecurityDashboardMfaV2QueryResponse,
+        GetApiSecurityAlertsQueryResponse,
         ResponseErrorConfig<Error>,
         TData,
         TQueryKey
@@ -69,11 +74,11 @@ export function useGetApiSecurityDashboardMfaV2Suspense<
   const { query: queryConfig = {}, client: config = {} } = options ?? {};
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
-    resolvedOptions?.queryKey ?? getApiSecurityDashboardMfaV2SuspenseQueryKey();
+    resolvedOptions?.queryKey ?? getApiSecurityAlertsSuspenseQueryKey(params);
 
   const query = useSuspenseQuery(
     {
-      ...getApiSecurityDashboardMfaV2SuspenseQueryOptions(config),
+      ...getApiSecurityAlertsSuspenseQueryOptions(params, config),
       ...resolvedOptions,
       queryKey,
     } as unknown as UseSuspenseQueryOptions,

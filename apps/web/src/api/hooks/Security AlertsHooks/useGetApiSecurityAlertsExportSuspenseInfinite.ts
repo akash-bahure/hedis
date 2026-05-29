@@ -15,34 +15,48 @@ import type {
   UseSuspenseInfiniteQueryOptions,
   UseSuspenseInfiniteQueryResult,
 } from "@tanstack/react-query";
-import type { GetApiSecurityDashboardMfaV2QueryResponse } from "../../types/GetApiSecurityDashboardMfaV2.ts";
+import type {
+  GetApiSecurityAlertsExportQueryResponse,
+  GetApiSecurityAlertsExportQueryParams,
+} from "../../types/GetApiSecurityAlertsExport.ts";
 import {
   infiniteQueryOptions,
   useSuspenseInfiniteQuery,
 } from "@tanstack/react-query";
-import { getApiSecurityDashboardMfaV2 } from "../../clients/getApiSecurityDashboardMfaV2.ts";
+import { getApiSecurityAlertsExport } from "../../clients/getApiSecurityAlertsExport.ts";
 
-export const getApiSecurityDashboardMfaV2SuspenseInfiniteQueryKey = () =>
-  [{ url: "/api/security-dashboard/mfa-v2" }] as const;
+export const getApiSecurityAlertsExportSuspenseInfiniteQueryKey = (
+  params?: GetApiSecurityAlertsExportQueryParams,
+) =>
+  [
+    { url: "/api/security-alerts/export" },
+    ...(params ? [params] : []),
+  ] as const;
 
-export type GetApiSecurityDashboardMfaV2SuspenseInfiniteQueryKey = ReturnType<
-  typeof getApiSecurityDashboardMfaV2SuspenseInfiniteQueryKey
+export type GetApiSecurityAlertsExportSuspenseInfiniteQueryKey = ReturnType<
+  typeof getApiSecurityAlertsExportSuspenseInfiniteQueryKey
 >;
 
-export function getApiSecurityDashboardMfaV2SuspenseInfiniteQueryOptions(
+export function getApiSecurityAlertsExportSuspenseInfiniteQueryOptions(
+  params?: GetApiSecurityAlertsExportQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
-  const queryKey = getApiSecurityDashboardMfaV2SuspenseInfiniteQueryKey();
+  const queryKey = getApiSecurityAlertsExportSuspenseInfiniteQueryKey(params);
   return infiniteQueryOptions<
-    GetApiSecurityDashboardMfaV2QueryResponse,
+    GetApiSecurityAlertsExportQueryResponse,
     ResponseErrorConfig<Error>,
-    InfiniteData<GetApiSecurityDashboardMfaV2QueryResponse>,
+    InfiniteData<GetApiSecurityAlertsExportQueryResponse>,
     typeof queryKey,
-    number
+    NonNullable<GetApiSecurityAlertsExportQueryParams["page_no"]>
   >({
     queryKey,
-    queryFn: async ({ signal }) => {
-      return getApiSecurityDashboardMfaV2({
+    queryFn: async ({ signal, pageParam }) => {
+      params = {
+        ...(params ?? {}),
+        ["page_no"]:
+          pageParam as unknown as GetApiSecurityAlertsExportQueryParams["page_no"],
+      } as GetApiSecurityAlertsExportQueryParams;
+      return getApiSecurityAlertsExport(params, {
         ...config,
         signal: config.signal ?? signal,
       });
@@ -58,18 +72,18 @@ export function getApiSecurityDashboardMfaV2SuspenseInfiniteQueryOptions(
 }
 
 /**
- * @description Returns current MFA configuration including grace period with defined enums.
- * @summary Retrieve MFA (v2) settings
- * {@link /api/security-dashboard/mfa-v2}
+ * @summary Export security alerts CSV
+ * {@link /api/security-alerts/export}
  */
-export function useGetApiSecurityDashboardMfaV2SuspenseInfinite<
-  TQueryFnData = GetApiSecurityDashboardMfaV2QueryResponse,
+export function useGetApiSecurityAlertsExportSuspenseInfinite<
+  TQueryFnData = GetApiSecurityAlertsExportQueryResponse,
   TError = ResponseErrorConfig<Error>,
   TData = InfiniteData<TQueryFnData>,
   TQueryKey extends QueryKey =
-    GetApiSecurityDashboardMfaV2SuspenseInfiniteQueryKey,
-  TPageParam = number,
+    GetApiSecurityAlertsExportSuspenseInfiniteQueryKey,
+  TPageParam = NonNullable<GetApiSecurityAlertsExportQueryParams["page_no"]>,
 >(
+  params?: GetApiSecurityAlertsExportQueryParams,
   options: {
     query?: Partial<
       UseSuspenseInfiniteQueryOptions<
@@ -87,11 +101,11 @@ export function useGetApiSecurityDashboardMfaV2SuspenseInfinite<
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
     resolvedOptions?.queryKey ??
-    getApiSecurityDashboardMfaV2SuspenseInfiniteQueryKey();
+    getApiSecurityAlertsExportSuspenseInfiniteQueryKey(params);
 
   const query = useSuspenseInfiniteQuery(
     {
-      ...getApiSecurityDashboardMfaV2SuspenseInfiniteQueryOptions(config),
+      ...getApiSecurityAlertsExportSuspenseInfiniteQueryOptions(params, config),
       ...resolvedOptions,
       queryKey,
     } as unknown as UseSuspenseInfiniteQueryOptions<
