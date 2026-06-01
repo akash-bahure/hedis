@@ -100,14 +100,22 @@ export type { GetApiSecurityAllowedIpsSuspenseInfiniteQueryKey } from "./hooks/S
 export type { GetApiSecurityLoginActivityQueryKey } from "./hooks/Security DashboardHooks/useGetApiSecurityLoginActivity.ts";
 export type { GetApiSecurityLoginActivitySuspenseQueryKey } from "./hooks/Security DashboardHooks/useGetApiSecurityLoginActivitySuspense.ts";
 export type { GetApiSecurityLoginActivitySuspenseInfiniteQueryKey } from "./hooks/Security DashboardHooks/useGetApiSecurityLoginActivitySuspenseInfinite.ts";
+export type { GetApiSecurityMfaV2QueryKey } from "./hooks/Security DashboardHooks/useGetApiSecurityMfaV2.ts";
+export type { GetApiSecurityMfaV2SuspenseQueryKey } from "./hooks/Security DashboardHooks/useGetApiSecurityMfaV2Suspense.ts";
+export type { GetApiSecurityMfaV2SuspenseInfiniteQueryKey } from "./hooks/Security DashboardHooks/useGetApiSecurityMfaV2SuspenseInfinite.ts";
 export type { GetApiSecurityPasswordPolicyQueryKey } from "./hooks/Security DashboardHooks/useGetApiSecurityPasswordPolicy.ts";
 export type { GetApiSecurityPasswordPolicySuspenseQueryKey } from "./hooks/Security DashboardHooks/useGetApiSecurityPasswordPolicySuspense.ts";
 export type { GetApiSecurityPasswordPolicySuspenseInfiniteQueryKey } from "./hooks/Security DashboardHooks/useGetApiSecurityPasswordPolicySuspenseInfinite.ts";
+export type { GetApiSecuritySessionManagementV2QueryKey } from "./hooks/Security DashboardHooks/useGetApiSecuritySessionManagementV2.ts";
+export type { GetApiSecuritySessionManagementV2SuspenseQueryKey } from "./hooks/Security DashboardHooks/useGetApiSecuritySessionManagementV2Suspense.ts";
+export type { GetApiSecuritySessionManagementV2SuspenseInfiniteQueryKey } from "./hooks/Security DashboardHooks/useGetApiSecuritySessionManagementV2SuspenseInfinite.ts";
 export type { GetApiSecurityStatsQueryKey } from "./hooks/Security DashboardHooks/useGetApiSecurityStats.ts";
 export type { GetApiSecurityStatsSuspenseQueryKey } from "./hooks/Security DashboardHooks/useGetApiSecurityStatsSuspense.ts";
 export type { GetApiSecurityStatsSuspenseInfiniteQueryKey } from "./hooks/Security DashboardHooks/useGetApiSecurityStatsSuspenseInfinite.ts";
 export type { PostApiSecurityAllowedIpsMutationKey } from "./hooks/Security DashboardHooks/usePostApiSecurityAllowedIps.ts";
+export type { PutApiSecurityMfaV2MutationKey } from "./hooks/Security DashboardHooks/usePutApiSecurityMfaV2.ts";
 export type { PutApiSecurityPasswordPolicyMutationKey } from "./hooks/Security DashboardHooks/usePutApiSecurityPasswordPolicy.ts";
+export type { PutApiSecuritySessionManagementV2MutationKey } from "./hooks/Security DashboardHooks/usePutApiSecuritySessionManagementV2.ts";
 export type { PostAdminAuthLoginMutationKey } from "./hooks/Super Admin AuthHooks/usePostAdminAuthLogin.ts";
 export type { GetAdminUsersQueryKey } from "./hooks/Super Admin UsersHooks/useGetAdminUsers.ts";
 export type { GetAdminUsersSuspenseQueryKey } from "./hooks/Super Admin UsersHooks/useGetAdminUsersSuspense.ts";
@@ -357,10 +365,23 @@ export type {
   GetApiSecurityLoginActivityQueryResponse,
 } from "./types/GetApiSecurityLoginActivity.ts";
 export type {
+  DataGracePeriodEnumKey,
+  GetApiSecurityMfaV2200,
+  GetApiSecurityMfaV2Query,
+  GetApiSecurityMfaV2QueryResponse,
+} from "./types/GetApiSecurityMfaV2.ts";
+export type {
   GetApiSecurityPasswordPolicy200,
   GetApiSecurityPasswordPolicyQuery,
   GetApiSecurityPasswordPolicyQueryResponse,
 } from "./types/GetApiSecurityPasswordPolicy.ts";
+export type {
+  DataMaxConcurrentSessionsEnumKey,
+  DataSessionTimeoutEnumKey,
+  GetApiSecuritySessionManagementV2200,
+  GetApiSecuritySessionManagementV2Query,
+  GetApiSecuritySessionManagementV2QueryResponse,
+} from "./types/GetApiSecuritySessionManagementV2.ts";
 export type {
   GetApiSecurityStats200,
   GetApiSecurityStatsQuery,
@@ -800,12 +821,27 @@ export type {
   PutApiSecurityComplianceDataRetentionPolicyMutationResponse,
 } from "./types/PutApiSecurityComplianceDataRetentionPolicy.ts";
 export type {
+  PutApiSecurityMfaV2200,
+  PutApiSecurityMfaV2Mutation,
+  PutApiSecurityMfaV2MutationRequest,
+  PutApiSecurityMfaV2MutationRequestGracePeriodEnumKey,
+  PutApiSecurityMfaV2MutationResponse,
+} from "./types/PutApiSecurityMfaV2.ts";
+export type {
   PutApiSecurityPasswordPolicy200,
   PutApiSecurityPasswordPolicy500,
   PutApiSecurityPasswordPolicyMutation,
   PutApiSecurityPasswordPolicyMutationRequest,
   PutApiSecurityPasswordPolicyMutationResponse,
 } from "./types/PutApiSecurityPasswordPolicy.ts";
+export type {
+  PutApiSecuritySessionManagementV2200,
+  PutApiSecuritySessionManagementV2Mutation,
+  PutApiSecuritySessionManagementV2MutationRequest,
+  PutApiSecuritySessionManagementV2MutationRequestMaxConcurrentSessionsEnumKey,
+  PutApiSecuritySessionManagementV2MutationRequestSessionTimeoutEnumKey,
+  PutApiSecuritySessionManagementV2MutationResponse,
+} from "./types/PutApiSecuritySessionManagementV2.ts";
 export type { ShiftScheduleMatrix } from "./types/ShiftScheduleMatrix.ts";
 export type { User } from "./types/User.ts";
 export { deleteAdminOrgsId } from "./clients/deleteAdminOrgsId.ts";
@@ -836,7 +872,9 @@ export { getApiSecurityComplianceAccessExpiryPolicy } from "./clients/getApiSecu
 export { getApiSecurityComplianceDataRetentionPolicy } from "./clients/getApiSecurityComplianceDataRetentionPolicy.ts";
 export { getApiSecurityDashboardAccessMonitor } from "./clients/getApiSecurityDashboardAccessMonitor.ts";
 export { getApiSecurityLoginActivity } from "./clients/getApiSecurityLoginActivity.ts";
+export { getApiSecurityMfaV2 } from "./clients/getApiSecurityMfaV2.ts";
 export { getApiSecurityPasswordPolicy } from "./clients/getApiSecurityPasswordPolicy.ts";
+export { getApiSecuritySessionManagementV2 } from "./clients/getApiSecuritySessionManagementV2.ts";
 export { getApiSecurityStats } from "./clients/getApiSecurityStats.ts";
 export { getApiUserRoles } from "./clients/getApiUserRoles.ts";
 export { getApiUserRolesId } from "./clients/getApiUserRolesId.ts";
@@ -886,7 +924,9 @@ export { postApiUsersAssignRole } from "./clients/postApiUsersAssignRole.ts";
 export { postApiUsersDeactivate } from "./clients/postApiUsersDeactivate.ts";
 export { putApiSecurityComplianceAccessExpiryPolicy } from "./clients/putApiSecurityComplianceAccessExpiryPolicy.ts";
 export { putApiSecurityComplianceDataRetentionPolicy } from "./clients/putApiSecurityComplianceDataRetentionPolicy.ts";
+export { putApiSecurityMfaV2 } from "./clients/putApiSecurityMfaV2.ts";
 export { putApiSecurityPasswordPolicy } from "./clients/putApiSecurityPasswordPolicy.ts";
+export { putApiSecuritySessionManagementV2 } from "./clients/putApiSecuritySessionManagementV2.ts";
 export { getApiSecurityDashboardAccessMonitorQueryKey } from "./hooks/Access MonitorHooks/useGetApiSecurityDashboardAccessMonitor.ts";
 export { getApiSecurityDashboardAccessMonitorQueryOptions } from "./hooks/Access MonitorHooks/useGetApiSecurityDashboardAccessMonitor.ts";
 export { useGetApiSecurityDashboardAccessMonitor } from "./hooks/Access MonitorHooks/useGetApiSecurityDashboardAccessMonitor.ts";
@@ -1193,6 +1233,15 @@ export { useGetApiSecurityLoginActivitySuspense } from "./hooks/Security Dashboa
 export { getApiSecurityLoginActivitySuspenseInfiniteQueryKey } from "./hooks/Security DashboardHooks/useGetApiSecurityLoginActivitySuspenseInfinite.ts";
 export { getApiSecurityLoginActivitySuspenseInfiniteQueryOptions } from "./hooks/Security DashboardHooks/useGetApiSecurityLoginActivitySuspenseInfinite.ts";
 export { useGetApiSecurityLoginActivitySuspenseInfinite } from "./hooks/Security DashboardHooks/useGetApiSecurityLoginActivitySuspenseInfinite.ts";
+export { getApiSecurityMfaV2QueryKey } from "./hooks/Security DashboardHooks/useGetApiSecurityMfaV2.ts";
+export { getApiSecurityMfaV2QueryOptions } from "./hooks/Security DashboardHooks/useGetApiSecurityMfaV2.ts";
+export { useGetApiSecurityMfaV2 } from "./hooks/Security DashboardHooks/useGetApiSecurityMfaV2.ts";
+export { getApiSecurityMfaV2SuspenseQueryKey } from "./hooks/Security DashboardHooks/useGetApiSecurityMfaV2Suspense.ts";
+export { getApiSecurityMfaV2SuspenseQueryOptions } from "./hooks/Security DashboardHooks/useGetApiSecurityMfaV2Suspense.ts";
+export { useGetApiSecurityMfaV2Suspense } from "./hooks/Security DashboardHooks/useGetApiSecurityMfaV2Suspense.ts";
+export { getApiSecurityMfaV2SuspenseInfiniteQueryKey } from "./hooks/Security DashboardHooks/useGetApiSecurityMfaV2SuspenseInfinite.ts";
+export { getApiSecurityMfaV2SuspenseInfiniteQueryOptions } from "./hooks/Security DashboardHooks/useGetApiSecurityMfaV2SuspenseInfinite.ts";
+export { useGetApiSecurityMfaV2SuspenseInfinite } from "./hooks/Security DashboardHooks/useGetApiSecurityMfaV2SuspenseInfinite.ts";
 export { getApiSecurityPasswordPolicyQueryKey } from "./hooks/Security DashboardHooks/useGetApiSecurityPasswordPolicy.ts";
 export { getApiSecurityPasswordPolicyQueryOptions } from "./hooks/Security DashboardHooks/useGetApiSecurityPasswordPolicy.ts";
 export { useGetApiSecurityPasswordPolicy } from "./hooks/Security DashboardHooks/useGetApiSecurityPasswordPolicy.ts";
@@ -1202,6 +1251,15 @@ export { useGetApiSecurityPasswordPolicySuspense } from "./hooks/Security Dashbo
 export { getApiSecurityPasswordPolicySuspenseInfiniteQueryKey } from "./hooks/Security DashboardHooks/useGetApiSecurityPasswordPolicySuspenseInfinite.ts";
 export { getApiSecurityPasswordPolicySuspenseInfiniteQueryOptions } from "./hooks/Security DashboardHooks/useGetApiSecurityPasswordPolicySuspenseInfinite.ts";
 export { useGetApiSecurityPasswordPolicySuspenseInfinite } from "./hooks/Security DashboardHooks/useGetApiSecurityPasswordPolicySuspenseInfinite.ts";
+export { getApiSecuritySessionManagementV2QueryKey } from "./hooks/Security DashboardHooks/useGetApiSecuritySessionManagementV2.ts";
+export { getApiSecuritySessionManagementV2QueryOptions } from "./hooks/Security DashboardHooks/useGetApiSecuritySessionManagementV2.ts";
+export { useGetApiSecuritySessionManagementV2 } from "./hooks/Security DashboardHooks/useGetApiSecuritySessionManagementV2.ts";
+export { getApiSecuritySessionManagementV2SuspenseQueryKey } from "./hooks/Security DashboardHooks/useGetApiSecuritySessionManagementV2Suspense.ts";
+export { getApiSecuritySessionManagementV2SuspenseQueryOptions } from "./hooks/Security DashboardHooks/useGetApiSecuritySessionManagementV2Suspense.ts";
+export { useGetApiSecuritySessionManagementV2Suspense } from "./hooks/Security DashboardHooks/useGetApiSecuritySessionManagementV2Suspense.ts";
+export { getApiSecuritySessionManagementV2SuspenseInfiniteQueryKey } from "./hooks/Security DashboardHooks/useGetApiSecuritySessionManagementV2SuspenseInfinite.ts";
+export { getApiSecuritySessionManagementV2SuspenseInfiniteQueryOptions } from "./hooks/Security DashboardHooks/useGetApiSecuritySessionManagementV2SuspenseInfinite.ts";
+export { useGetApiSecuritySessionManagementV2SuspenseInfinite } from "./hooks/Security DashboardHooks/useGetApiSecuritySessionManagementV2SuspenseInfinite.ts";
 export { getApiSecurityStatsQueryKey } from "./hooks/Security DashboardHooks/useGetApiSecurityStats.ts";
 export { getApiSecurityStatsQueryOptions } from "./hooks/Security DashboardHooks/useGetApiSecurityStats.ts";
 export { useGetApiSecurityStats } from "./hooks/Security DashboardHooks/useGetApiSecurityStats.ts";
@@ -1214,9 +1272,15 @@ export { useGetApiSecurityStatsSuspenseInfinite } from "./hooks/Security Dashboa
 export { postApiSecurityAllowedIpsMutationKey } from "./hooks/Security DashboardHooks/usePostApiSecurityAllowedIps.ts";
 export { postApiSecurityAllowedIpsMutationOptions } from "./hooks/Security DashboardHooks/usePostApiSecurityAllowedIps.ts";
 export { usePostApiSecurityAllowedIps } from "./hooks/Security DashboardHooks/usePostApiSecurityAllowedIps.ts";
+export { putApiSecurityMfaV2MutationKey } from "./hooks/Security DashboardHooks/usePutApiSecurityMfaV2.ts";
+export { putApiSecurityMfaV2MutationOptions } from "./hooks/Security DashboardHooks/usePutApiSecurityMfaV2.ts";
+export { usePutApiSecurityMfaV2 } from "./hooks/Security DashboardHooks/usePutApiSecurityMfaV2.ts";
 export { putApiSecurityPasswordPolicyMutationKey } from "./hooks/Security DashboardHooks/usePutApiSecurityPasswordPolicy.ts";
 export { putApiSecurityPasswordPolicyMutationOptions } from "./hooks/Security DashboardHooks/usePutApiSecurityPasswordPolicy.ts";
 export { usePutApiSecurityPasswordPolicy } from "./hooks/Security DashboardHooks/usePutApiSecurityPasswordPolicy.ts";
+export { putApiSecuritySessionManagementV2MutationKey } from "./hooks/Security DashboardHooks/usePutApiSecuritySessionManagementV2.ts";
+export { putApiSecuritySessionManagementV2MutationOptions } from "./hooks/Security DashboardHooks/usePutApiSecuritySessionManagementV2.ts";
+export { usePutApiSecuritySessionManagementV2 } from "./hooks/Security DashboardHooks/usePutApiSecuritySessionManagementV2.ts";
 export { postAdminAuthLoginMutationKey } from "./hooks/Super Admin AuthHooks/usePostAdminAuthLogin.ts";
 export { postAdminAuthLoginMutationOptions } from "./hooks/Super Admin AuthHooks/usePostAdminAuthLogin.ts";
 export { usePostAdminAuthLogin } from "./hooks/Super Admin AuthHooks/usePostAdminAuthLogin.ts";
@@ -1360,6 +1424,9 @@ export { dataExportLogsEnum } from "./types/GetApiSecurityComplianceDataRetentio
 export { dataPhiRecordsEnum } from "./types/GetApiSecurityComplianceDataRetentionPolicy.ts";
 export { dataSessionLogsEnum } from "./types/GetApiSecurityComplianceDataRetentionPolicy.ts";
 export { getApiSecurityDashboardAccessMonitorQueryParamsAccessTypeEnum } from "./types/GetApiSecurityDashboardAccessMonitor.ts";
+export { dataGracePeriodEnum } from "./types/GetApiSecurityMfaV2.ts";
+export { dataMaxConcurrentSessionsEnum } from "./types/GetApiSecuritySessionManagementV2.ts";
+export { dataSessionTimeoutEnum } from "./types/GetApiSecuritySessionManagementV2.ts";
 export { getApiUsersQueryParamsUserStatusEnum } from "./types/GetApiUsers.ts";
 export { getApiUsersExportQueryParamsFormatEnum } from "./types/GetApiUsersExport.ts";
 export { getApiUsersShiftsQueryParamsShiftEnum } from "./types/GetApiUsersShifts.ts";
@@ -1407,6 +1474,9 @@ export { putApiSecurityComplianceDataRetentionPolicyMutationRequestBackupSnapsho
 export { putApiSecurityComplianceDataRetentionPolicyMutationRequestExportLogsEnum } from "./types/PutApiSecurityComplianceDataRetentionPolicy.ts";
 export { putApiSecurityComplianceDataRetentionPolicyMutationRequestPhiRecordsEnum } from "./types/PutApiSecurityComplianceDataRetentionPolicy.ts";
 export { putApiSecurityComplianceDataRetentionPolicyMutationRequestSessionLogsEnum } from "./types/PutApiSecurityComplianceDataRetentionPolicy.ts";
+export { putApiSecurityMfaV2MutationRequestGracePeriodEnum } from "./types/PutApiSecurityMfaV2.ts";
+export { putApiSecuritySessionManagementV2MutationRequestMaxConcurrentSessionsEnum } from "./types/PutApiSecuritySessionManagementV2.ts";
+export { putApiSecuritySessionManagementV2MutationRequestSessionTimeoutEnum } from "./types/PutApiSecuritySessionManagementV2.ts";
 export {
   getApiSecurityDashboardAccessMonitor200Schema,
   getApiSecurityDashboardAccessMonitorQueryParamsSchema,
@@ -1759,9 +1829,17 @@ export {
   getApiSecurityLoginActivityQueryResponseSchema,
 } from "./zod/Security DashboardSchemas/getApiSecurityLoginActivitySchema.ts";
 export {
+  getApiSecurityMfaV2200Schema,
+  getApiSecurityMfaV2QueryResponseSchema,
+} from "./zod/Security DashboardSchemas/getApiSecurityMfaV2Schema.ts";
+export {
   getApiSecurityPasswordPolicy200Schema,
   getApiSecurityPasswordPolicyQueryResponseSchema,
 } from "./zod/Security DashboardSchemas/getApiSecurityPasswordPolicySchema.ts";
+export {
+  getApiSecuritySessionManagementV2200Schema,
+  getApiSecuritySessionManagementV2QueryResponseSchema,
+} from "./zod/Security DashboardSchemas/getApiSecuritySessionManagementV2Schema.ts";
 export {
   getApiSecurityStats200Schema,
   getApiSecurityStatsQueryResponseSchema,
@@ -1772,11 +1850,21 @@ export {
   postApiSecurityAllowedIpsMutationResponseSchema,
 } from "./zod/Security DashboardSchemas/postApiSecurityAllowedIpsSchema.ts";
 export {
+  putApiSecurityMfaV2200Schema,
+  putApiSecurityMfaV2MutationRequestSchema,
+  putApiSecurityMfaV2MutationResponseSchema,
+} from "./zod/Security DashboardSchemas/putApiSecurityMfaV2Schema.ts";
+export {
   putApiSecurityPasswordPolicy200Schema,
   putApiSecurityPasswordPolicy500Schema,
   putApiSecurityPasswordPolicyMutationRequestSchema,
   putApiSecurityPasswordPolicyMutationResponseSchema,
 } from "./zod/Security DashboardSchemas/putApiSecurityPasswordPolicySchema.ts";
+export {
+  putApiSecuritySessionManagementV2200Schema,
+  putApiSecuritySessionManagementV2MutationRequestSchema,
+  putApiSecuritySessionManagementV2MutationResponseSchema,
+} from "./zod/Security DashboardSchemas/putApiSecuritySessionManagementV2Schema.ts";
 export {
   postAdminAuthLogin200Schema,
   postAdminAuthLoginMutationRequestSchema,
