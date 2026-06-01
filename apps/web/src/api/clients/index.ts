@@ -26,7 +26,9 @@ export { getApiSecurityComplianceAccessExpiryPolicy } from "./getApiSecurityComp
 export { getApiSecurityComplianceDataRetentionPolicy } from "./getApiSecurityComplianceDataRetentionPolicy.ts";
 export { getApiSecurityDashboardAccessMonitor } from "./getApiSecurityDashboardAccessMonitor.ts";
 export { getApiSecurityLoginActivity } from "./getApiSecurityLoginActivity.ts";
+export { getApiSecurityMfaV2 } from "./getApiSecurityMfaV2.ts";
 export { getApiSecurityPasswordPolicy } from "./getApiSecurityPasswordPolicy.ts";
+export { getApiSecuritySessionManagementV2 } from "./getApiSecuritySessionManagementV2.ts";
 export { getApiSecurityStats } from "./getApiSecurityStats.ts";
 export { getApiUserRoles } from "./getApiUserRoles.ts";
 export { getApiUserRolesId } from "./getApiUserRolesId.ts";
@@ -76,4 +78,6 @@ export { postApiUsersAssignRole } from "./postApiUsersAssignRole.ts";
 export { postApiUsersDeactivate } from "./postApiUsersDeactivate.ts";
 export { putApiSecurityComplianceAccessExpiryPolicy } from "./putApiSecurityComplianceAccessExpiryPolicy.ts";
 export { putApiSecurityComplianceDataRetentionPolicy } from "./putApiSecurityComplianceDataRetentionPolicy.ts";
+export { putApiSecurityMfaV2 } from "./putApiSecurityMfaV2.ts";
 export { putApiSecurityPasswordPolicy } from "./putApiSecurityPasswordPolicy.ts";
+export { putApiSecuritySessionManagementV2 } from "./putApiSecuritySessionManagementV2.ts";

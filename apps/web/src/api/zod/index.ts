@@ -350,9 +350,17 @@ export {
   getApiSecurityLoginActivityQueryResponseSchema,
 } from "./Security DashboardSchemas/getApiSecurityLoginActivitySchema.ts";
 export {
+  getApiSecurityMfaV2200Schema,
+  getApiSecurityMfaV2QueryResponseSchema,
+} from "./Security DashboardSchemas/getApiSecurityMfaV2Schema.ts";
+export {
   getApiSecurityPasswordPolicy200Schema,
   getApiSecurityPasswordPolicyQueryResponseSchema,
 } from "./Security DashboardSchemas/getApiSecurityPasswordPolicySchema.ts";
+export {
+  getApiSecuritySessionManagementV2200Schema,
+  getApiSecuritySessionManagementV2QueryResponseSchema,
+} from "./Security DashboardSchemas/getApiSecuritySessionManagementV2Schema.ts";
 export {
   getApiSecurityStats200Schema,
   getApiSecurityStatsQueryResponseSchema,
@@ -363,11 +371,21 @@ export {
   postApiSecurityAllowedIpsMutationResponseSchema,
 } from "./Security DashboardSchemas/postApiSecurityAllowedIpsSchema.ts";
 export {
+  putApiSecurityMfaV2200Schema,
+  putApiSecurityMfaV2MutationRequestSchema,
+  putApiSecurityMfaV2MutationResponseSchema,
+} from "./Security DashboardSchemas/putApiSecurityMfaV2Schema.ts";
+export {
   putApiSecurityPasswordPolicy200Schema,
   putApiSecurityPasswordPolicy500Schema,
   putApiSecurityPasswordPolicyMutationRequestSchema,
   putApiSecurityPasswordPolicyMutationResponseSchema,
 } from "./Security DashboardSchemas/putApiSecurityPasswordPolicySchema.ts";
+export {
+  putApiSecuritySessionManagementV2200Schema,
+  putApiSecuritySessionManagementV2MutationRequestSchema,
+  putApiSecuritySessionManagementV2MutationResponseSchema,
+} from "./Security DashboardSchemas/putApiSecuritySessionManagementV2Schema.ts";
 export {
   postAdminAuthLogin200Schema,
   postAdminAuthLoginMutationRequestSchema,
