@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const securityDashboardController = require("../controllers/SecurityDashboardController");
+const controller = require("../controllers/mfaV2Controller");
+const smController = require("../controllers/sessionManagementV2Controller");
 const authMiddleware = require("../middlewares/authMiddleware");
 
 /**
@@ -255,5 +257,175 @@ router.post("/allowed-ips", authMiddleware, securityDashboardController.addAllow
  *         description: IP range deleted
  */
 router.delete("/allowed-ips/:id", authMiddleware, securityDashboardController.deleteAllowedIp);
+
+/**
+ * @swagger
+ * /api/security/mfa-v2:
+ *   get:
+ *     summary: Retrieve MFA (v2) settings
+ *     tags: [Security Dashboard]
+ *     description: Returns current MFA configuration including grace period with defined enums.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: MFA settings fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     grace_period:
+ *                       type: string
+ *                       enum: ["none", "6h", "12h", "24hr", "48hr"]
+ *                     require_2fa:
+ *                       type: boolean
+ *                     totp_authenticator:
+ *                       type: boolean
+ *                     sms_otp:
+ *                       type: boolean
+ *                     email_otp:
+ *                       type: boolean
+ *                     new_device_verify:
+ *                       type: boolean
+ */
+router.get("/mfa-v2", authMiddleware, controller.getMfa);
+
+/**
+ * @swagger
+ * /api/security/mfa-v2:
+ *   put:
+ *     summary: Update MFA (v2) settings
+ *     tags: [Security Dashboard]
+ *     description: Updates MFA configuration. Validates grace_period against allowed enum values.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               grace_period:
+ *                 type: string
+ *                 enum: ["none", "6h", "12h", "24hr", "48hr"]
+ *               require_2fa:
+ *                 type: boolean
+ *               totp_authenticator:
+ *                 type: boolean
+ *               sms_otp:
+ *                 type: boolean
+ *               email_otp:
+ *                 type: boolean
+ *               new_device_verify:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: MFA settings updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ */
+router.put("/mfa-v2", authMiddleware, controller.updateMfa);
+
+/**
+ * @swagger
+ * /api/security/session-management-v2:
+ *   get:
+ *     summary: Retrieve Session Management (v2) settings
+ *     tags: [Security Dashboard]
+ *     description: Returns current session timeout and max concurrent session settings with defined enums.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Session management settings fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     session_timeout:
+ *                       type: string
+ *                       enum: ["30min", "15min", "1hr", "2hr"]
+ *                     max_concurrent_sessions:
+ *                       type: string
+ *                       enum: ["1 session", "2 sessions", "5 sessions"]
+ *                     idle_session_logout:
+ *                       type: boolean
+ *                     session_ip_binding:
+ *                       type: boolean
+ *                     remember_me:
+ *                       type: boolean
+ */
+router.get("/session-management-v2", authMiddleware, smController.getSessionManagement);
+
+/**
+ * @swagger
+ * /api/security/session-management-v2:
+ *   put:
+ *     summary: Update Session Management (v2) settings
+ *     tags: [Security Dashboard]
+ *     description: Updates session timeout and max concurrent sessions. Validates against allowed enum values.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               session_timeout:
+ *                 type: string
+ *                 enum: ["30min", "15min", "1hr", "2hr"]
+ *               max_concurrent_sessions:
+ *                 type: string
+ *                 enum: ["1 session", "2 sessions", "5 sessions"]
+ *               idle_session_logout:
+ *                 type: boolean
+ *               session_ip_binding:
+ *                 type: boolean
+ *               remember_me:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Session management settings updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ */
+router.put("/session-management-v2", authMiddleware, smController.updateSessionManagement);
 
 module.exports = router;
