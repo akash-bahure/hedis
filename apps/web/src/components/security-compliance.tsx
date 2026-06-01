@@ -6,17 +6,18 @@ import { usePutApiSecurityPasswordPolicy } from "@/api/hooks/Security DashboardH
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  getApiSecurityDashboardMfaV2QueryKey,
-  getApiSecurityDashboardSessionManagementV2QueryKey,
-  putApiSecurityDashboardMfaV2MutationRequestGracePeriodEnum,
-  putApiSecurityDashboardSessionManagementV2MutationRequestMaxConcurrentSessionsEnum,
-  putApiSecurityDashboardSessionManagementV2MutationRequestSessionTimeoutEnum,
-  useGetApiSecurityDashboardMfaV2,
-  useGetApiSecurityDashboardSessionManagementV2,
-  usePutApiSecurityDashboardMfaV2,
-  usePutApiSecurityDashboardSessionManagementV2,
+  getApiAuditLogsExport,
+  getApiSecurityMfaV2QueryKey,
+  getApiSecuritySessionManagementV2QueryKey,
+  putApiSecurityMfaV2MutationRequestGracePeriodEnum,
+  putApiSecuritySessionManagementV2MutationRequestMaxConcurrentSessionsEnum,
+  putApiSecuritySessionManagementV2MutationRequestSessionTimeoutEnum,
+  useGetApiAccessLogsAccessMonitor,
+  useGetApiSecurityMfaV2,
+  useGetApiSecuritySessionManagementV2,
+  usePutApiSecurityMfaV2,
+  usePutApiSecuritySessionManagementV2,
 } from "@/api";
-import { getApiAuditLogsExport } from "@/api";
 import {
   useGetApiSecurityStats,
   useGetApiSecurityAllowedIps,
@@ -1471,7 +1472,8 @@ function SecurityDashboardTab() {
         },
         onError: (error: any) => {
           toast.error(
-            error?.response?.data?.message || "Failed to update password policy"
+            error?.response?.data?.message ||
+              "Failed to update password policy",
           );
         },
       },
@@ -1514,7 +1516,7 @@ function SecurityDashboardTab() {
     data: sessionManagementData,
     isLoading: isSessionManagementLoading,
     refetch: refetchSessionManagement,
-  } = useGetApiSecurityDashboardSessionManagementV2({
+  } = useGetApiSecuritySessionManagementV2({
     query: {
       refetchOnWindowFocus: false,
     },
@@ -1548,13 +1550,13 @@ function SecurityDashboardTab() {
   const {
     mutate: updateSessionManagement,
     isPending: isUpdatingSessionManagement,
-  } = usePutApiSecurityDashboardSessionManagementV2({
+  } = usePutApiSecuritySessionManagementV2({
     mutation: {
       onSuccess: async () => {
         toast.success("Session management updated successfully");
 
         await queryClient.invalidateQueries({
-          queryKey: getApiSecurityDashboardSessionManagementV2QueryKey(),
+          queryKey: getApiSecuritySessionManagementV2QueryKey(),
         });
 
         refetchSessionManagement();
@@ -1571,31 +1573,31 @@ function SecurityDashboardTab() {
       data: {
         session_timeout:
           sess.timeout === 15
-            ? putApiSecurityDashboardSessionManagementV2MutationRequestSessionTimeoutEnum[
-                "15minutes"
+            ? putApiSecuritySessionManagementV2MutationRequestSessionTimeoutEnum[
+                "15min"
               ]
             : sess.timeout === 60
-              ? putApiSecurityDashboardSessionManagementV2MutationRequestSessionTimeoutEnum[
+              ? putApiSecuritySessionManagementV2MutationRequestSessionTimeoutEnum[
                   "1hr"
                 ]
               : sess.timeout === 120
-                ? putApiSecurityDashboardSessionManagementV2MutationRequestSessionTimeoutEnum[
+                ? putApiSecuritySessionManagementV2MutationRequestSessionTimeoutEnum[
                     "2hr"
                   ]
-                : putApiSecurityDashboardSessionManagementV2MutationRequestSessionTimeoutEnum[
-                    "30"
+                : putApiSecuritySessionManagementV2MutationRequestSessionTimeoutEnum[
+                    "30min"
                   ],
 
         max_concurrent_sessions:
           sess.maxConc === 1
-            ? putApiSecurityDashboardSessionManagementV2MutationRequestMaxConcurrentSessionsEnum[
+            ? putApiSecuritySessionManagementV2MutationRequestMaxConcurrentSessionsEnum[
                 "1 session"
               ]
             : sess.maxConc === 2
-              ? putApiSecurityDashboardSessionManagementV2MutationRequestMaxConcurrentSessionsEnum[
+              ? putApiSecuritySessionManagementV2MutationRequestMaxConcurrentSessionsEnum[
                   "2 sessions"
                 ]
-              : putApiSecurityDashboardSessionManagementV2MutationRequestMaxConcurrentSessionsEnum[
+              : putApiSecuritySessionManagementV2MutationRequestMaxConcurrentSessionsEnum[
                   "5 sessions"
                 ],
 
@@ -1610,7 +1612,7 @@ function SecurityDashboardTab() {
     data: mfaData,
     isLoading: isMfaLoading,
     refetch: refetchMfa,
-  } = useGetApiSecurityDashboardMfaV2({
+  } = useGetApiSecurityMfaV2({
     query: {
       refetchOnWindowFocus: false,
     },
@@ -1642,13 +1644,13 @@ function SecurityDashboardTab() {
   }, [mfaData]);
 
   const { mutate: updateMfa, isPending: isUpdatingMfa } =
-    usePutApiSecurityDashboardMfaV2({
+    usePutApiSecurityMfaV2({
       mutation: {
         onSuccess: async () => {
           toast.success("MFA settings updated successfully");
 
           await queryClient.invalidateQueries({
-            queryKey: getApiSecurityDashboardMfaV2QueryKey(),
+            queryKey: getApiSecurityMfaV2QueryKey(),
           });
 
           refetchMfa();
@@ -1671,20 +1673,14 @@ function SecurityDashboardTab() {
 
         grace_period:
           tfa.gracePeriod === 0
-            ? putApiSecurityDashboardMfaV2MutationRequestGracePeriodEnum.none
+            ? putApiSecurityMfaV2MutationRequestGracePeriodEnum.none
             : tfa.gracePeriod === 6
-              ? putApiSecurityDashboardMfaV2MutationRequestGracePeriodEnum["6h"]
+              ? putApiSecurityMfaV2MutationRequestGracePeriodEnum["6h"]
               : tfa.gracePeriod === 12
-                ? putApiSecurityDashboardMfaV2MutationRequestGracePeriodEnum[
-                    "12h"
-                  ]
+                ? putApiSecurityMfaV2MutationRequestGracePeriodEnum["12h"]
                 : tfa.gracePeriod === 24
-                  ? putApiSecurityDashboardMfaV2MutationRequestGracePeriodEnum[
-                      "24hr"
-                    ]
-                  : putApiSecurityDashboardMfaV2MutationRequestGracePeriodEnum[
-                      "48hr"
-                    ],
+                  ? putApiSecurityMfaV2MutationRequestGracePeriodEnum["24hr"]
+                  : putApiSecurityMfaV2MutationRequestGracePeriodEnum["48hr"],
       },
     });
   };
@@ -1724,7 +1720,7 @@ function SecurityDashboardTab() {
 
       onError: (error: any) => {
         toast.error(
-          error?.response?.data?.message || "Failed to delete IP range"
+          error?.response?.data?.message || "Failed to delete IP range",
         );
       },
     },
@@ -1767,7 +1763,7 @@ function SecurityDashboardTab() {
   // Helper to safely access stats
   const getStat = <K extends keyof SecurityStats>(
     key: K,
-    fallback: NonNullable<SecurityStats[K]>
+    fallback: NonNullable<SecurityStats[K]>,
   ): NonNullable<SecurityStats[K]> => {
     return (stats?.[key] ?? fallback) as NonNullable<SecurityStats[K]>;
   };
@@ -1793,7 +1789,7 @@ function SecurityDashboardTab() {
   const peakAnomaly =
     loginActivity.length > 0
       ? loginActivity.reduce((prev: any, current: any) =>
-          current.failed > prev.failed ? current : prev
+          current.failed > prev.failed ? current : prev,
         )
       : null;
 
@@ -2609,7 +2605,7 @@ function AuditLogsTab() {
         },
         {
           responseType: "blob",
-        }
+        },
       );
 
       // Create download link
@@ -2949,67 +2945,129 @@ function AccessMonitorTab() {
   const [search, setSearch] = useState("");
   const [projF, setProjF] = useState("all");
   const [typeF, setTypeF] = useState("all");
+  const [page, setPage] = useState(1);
+  const limit = 10;
 
-  const filtered = useMemo(
-    () =>
-      ACCESS_LOGS.filter((l) => {
-        if (
-          projF !== "all" &&
-          !l.project.toLowerCase().includes(projF.toLowerCase())
-        )
-          return false;
-        if (typeF !== "all" && l.accessType !== typeF) return false;
-        if (search) {
-          const q = search.toLowerCase();
-          if (
-            !l.user.toLowerCase().includes(q) &&
-            !l.chartId.toLowerCase().includes(q) &&
-            !l.patient.toLowerCase().includes(q)
-          )
-            return false;
-        }
-        return true;
-      }),
-    [search, projF, typeF]
-  );
+  const {
+    data: accessMonitorData,
+    isLoading,
+    isError,
+    error,
+  } = useGetApiAccessLogsAccessMonitor({
+    search: search || undefined,
+    project: projF !== "all" ? projF : undefined,
+    accessType: typeF !== "all" ? typeF : undefined,
+    page,
+    limit,
+  });
 
   const stats = [
     {
       label: "Active Sessions",
-      value: 8,
+      value: accessMonitorData?.stats?.activeSessions ?? 0,
       icon: Monitor,
       bg: "bg-blue-50",
       color: "text-blue-600",
     },
     {
       label: "Charts Accessed (24h)",
-      value: 42,
+      value: accessMonitorData?.stats?.chartsAccessed24h ?? 0,
       icon: FileText,
       bg: "bg-teal-50",
       color: "text-teal-600",
     },
     {
       label: "Avg Access Duration",
-      value: "14.2m",
+      value: accessMonitorData?.stats?.avgAccessDuration ?? "-",
       icon: Clock,
       bg: "bg-violet-50",
       color: "text-violet-600",
     },
     {
       label: "Anomalies Detected",
-      value: 3,
+      value: accessMonitorData?.stats?.anomaliesDetected ?? 0,
       icon: AlertTriangle,
       bg: "bg-red-50",
       color: "text-red-600",
     },
   ];
 
+  // const filtered = useMemo(
+  //   () =>
+  //     ACCESS_LOGS.filter((l) => {
+  //       if (
+  //         projF !== "all" &&
+  //         !l.project.toLowerCase().includes(projF.toLowerCase())
+  //       )
+  //         return false;
+  //       if (typeF !== "all" && l.accessType !== typeF) return false;
+  //       if (search) {
+  //         const q = search.toLowerCase();
+  //         if (
+  //           !l.user.toLowerCase().includes(q) &&
+  //           !l.chartId.toLowerCase().includes(q) &&
+  //           !l.patient.toLowerCase().includes(q)
+  //         )
+  //           return false;
+  //       }
+  //       return true;
+  //     }),
+  //   [search, projF, typeF],
+  // );
+
+  // const stats = [
+  //   {
+  //     label: "Active Sessions",
+  //     value: 8,
+  //     icon: Monitor,
+  //     bg: "bg-blue-50",
+  //     color: "text-blue-600",
+  //   },
+  //   {
+  //     label: "Charts Accessed (24h)",
+  //     value: 42,
+  //     icon: FileText,
+  //     bg: "bg-teal-50",
+  //     color: "text-teal-600",
+  //   },
+  //   {
+  //     label: "Avg Access Duration",
+  //     value: "14.2m",
+  //     icon: Clock,
+  //     bg: "bg-violet-50",
+  //     color: "text-violet-600",
+  //   },
+  //   {
+  //     label: "Anomalies Detected",
+  //     value: 3,
+  //     icon: AlertTriangle,
+  //     bg: "bg-red-50",
+  //     color: "text-red-600",
+  //   },
+  // ];
+
+  // const projects = [
+  //   "all",
+  //   "Apollo Inpatient",
+  //   "Max Healthcare",
+  //   "Fortis Cardiology",
+  //   "AIIMS Oncology",
+  // ];
+  const { data: projectsData } = useGetApiProjects({
+    page_no: 1,
+    page_size: 100,
+  });
+
+  console.log("Projects API Response:", projectsData);
   const projects = [
-    "all",
-    "Apollo Inpatient",
-    "Max Healthcare",
-    "Fortis Cardiology",
-    "AIIMS Oncology",
+    {
+      label: "All Projects",
+      value: "all",
+    },
+    ...(projectsData?.data?.map((project) => ({
+      label: project.project_name || "",
+      value: project.project_name || "",
+    })) || []),
   ];
 
   return (
@@ -3057,9 +3115,9 @@ function AccessMonitorTab() {
           onChange={(e) => setProjF(e.target.value)}
           className="px-3 py-2 text-[11px] bg-card border border-border rounded-xl focus:outline-none appearance-none"
         >
-          {projects.map((p) => (
-            <option key={p} value={p}>
-              {p === "all" ? "All Projects" : p}
+          {projects.map((project) => (
+            <option key={project.value} value={project.value}>
+              {project.label}
             </option>
           ))}
         </select>
@@ -3091,7 +3149,7 @@ function AccessMonitorTab() {
           </span>
           <div className="flex-1" />
           <span className="text-[10px] text-muted-foreground">
-            {filtered.length} records shown
+            {accessMonitorData?.pagination?.total ?? 0} records shown
           </span>
         </div>
         <div className="overflow-x-auto">
@@ -3119,7 +3177,7 @@ function AccessMonitorTab() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filtered.map((l, i) => {
+              {(accessMonitorData?.data ?? []).map((l, i) => {
                 const isAnomaly =
                   l.ts.includes("02:14") || l.user === "Kavita Rao";
                 return (
@@ -3220,7 +3278,7 @@ function ComplianceTab() {
         query: {
           refetchOnWindowFocus: false,
         },
-      }
+      },
     );
 
   const { data: retentionPolicyData, isLoading: isRetentionLoading } =
@@ -3498,7 +3556,7 @@ function ComplianceTab() {
 
   const passCount = HIPAA_CONTROLS.filter((c) => c.status === "pass").length;
   const overallScore = Math.round(
-    HIPAA_CONTROLS.reduce((s, c) => s + c.score, 0) / HIPAA_CONTROLS.length
+    HIPAA_CONTROLS.reduce((s, c) => s + c.score, 0) / HIPAA_CONTROLS.length,
   );
 
   return (
@@ -3896,7 +3954,7 @@ function AlertsTab() {
   const [sevF, setSevF] = useState<AlertSev | "all">("all");
   const [statF, setStatF] = useState<AlertStatus | "all">("all");
   const [expanded, setExpanded] = useState<Set<string>>(
-    new Set(["SA001", "SA002"])
+    new Set(["SA001", "SA002"]),
   );
 
   const filtered = useMemo(
@@ -3906,7 +3964,7 @@ function AlertsTab() {
         if (statF !== "all" && a.status !== statF) return false;
         return true;
       }),
-    [sevF, statF]
+    [sevF, statF],
   );
 
   const counts = {
@@ -4201,7 +4259,7 @@ export function SecurityCompliance() {
   ];
 
   const activeCritical = SECURITY_ALERTS.filter(
-    (a) => a.status === "active" && a.severity === "critical"
+    (a) => a.status === "active" && a.severity === "critical",
   ).length;
 
   return (
