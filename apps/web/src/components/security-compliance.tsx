@@ -8,14 +8,18 @@ import { toast } from "sonner";
 import {
   getApiAuditLogsExport,
   getApiSecurityMfaV2QueryKey,
+  getApiSecurityPhiEncryptionControlsQueryKey,
   getApiSecuritySessionManagementV2QueryKey,
   putApiSecurityMfaV2MutationRequestGracePeriodEnum,
   putApiSecuritySessionManagementV2MutationRequestMaxConcurrentSessionsEnum,
   putApiSecuritySessionManagementV2MutationRequestSessionTimeoutEnum,
   useGetApiAccessLogsAccessMonitor,
   useGetApiSecurityMfaV2,
+  useGetApiSecurityPhiEncryptionControls,
+  useGetApiSecuritySecurityScore,
   useGetApiSecuritySessionManagementV2,
   usePutApiSecurityMfaV2,
+  usePutApiSecurityPhiEncryptionControls,
   usePutApiSecuritySessionManagementV2,
 } from "@/api";
 import {
@@ -1801,6 +1805,77 @@ function SecurityDashboardTab() {
         )
       : null;
 
+  const { data: securityScoreData, isLoading: isLoadingSecurityScore } =
+    useGetApiSecuritySecurityScore({
+      query: {
+        refetchOnWindowFocus: false,
+      },
+    });
+
+  const securityScore = securityScoreData?.data;
+
+  const {
+    data: phiData,
+    isLoading: isLoadingPhi,
+    refetch: refetchPhi,
+  } = useGetApiSecurityPhiEncryptionControls({
+    query: {
+      refetchOnWindowFocus: false,
+    },
+  });
+
+  useEffect(() => {
+    if (!phiData?.data) return;
+
+    setPhi({
+      encRest: phiData.data.encryption_at_rest ?? true,
+
+      encTransit: phiData.data.encryption_in_transit ?? true,
+
+      phiMask: phiData.data.phi_masking_logs ?? true,
+
+      auditTrail: phiData.data.full_access_audit_trail ?? true,
+
+      deIdExport: phiData.data.deidentify_on_export ?? true,
+
+      dlp: phiData.data.dlp_controls ?? true,
+    });
+  }, [phiData]);
+
+  const { mutate: updatePhiControls, isPending: isUpdatingPhi } =
+    usePutApiSecurityPhiEncryptionControls({
+      mutation: {
+        onSuccess: async () => {
+          toast.success("PHI & Encryption Controls updated successfully");
+
+          await queryClient.invalidateQueries({
+            queryKey: getApiSecurityPhiEncryptionControlsQueryKey(),
+          });
+
+          refetchPhi();
+        },
+
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.message || "Failed to update PHI controls",
+          );
+        },
+      },
+    });
+
+  const handleSavePhiControls = () => {
+    updatePhiControls({
+      data: {
+        encryption_at_rest: phi.encRest,
+        encryption_in_transit: phi.encTransit,
+        phi_masking_logs: phi.phiMask,
+        full_access_audit_trail: phi.auditTrail,
+        deidentify_on_export: phi.deIdExport,
+        dlp_controls: phi.dlp,
+      },
+    });
+  };
+
   return (
     <div className="space-y-5">
       {/* KPI Strip */}
@@ -2053,54 +2128,76 @@ function SecurityDashboardTab() {
           icon={FileLock2}
           iconColor="text-teal-600"
         >
-          <ToggleRow
-            label="Encryption at Rest"
-            sub="AES-256 for all stored ePHI (database + backups)"
-            on={phi.encRest}
-            onChange={() => toggle(phi, setPhi, "encRest")}
-            badge={{
-              text: "FIPS 140-2",
-              cls: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-            }}
-          />
-          <ToggleRow
-            label="Encryption in Transit"
-            sub="TLS 1.3 enforced for all API and web traffic"
-            on={phi.encTransit}
-            onChange={() => toggle(phi, setPhi, "encTransit")}
-            badge={{
-              text: "TLS 1.3",
-              cls: "bg-blue-50 text-blue-700 border border-blue-200",
-            }}
-          />
-          <ToggleRow
-            label="PHI Masking in Logs"
-            sub="Redact patient identifiers in system audit logs"
-            on={phi.phiMask}
-            onChange={() => toggle(phi, setPhi, "phiMask")}
-          />
-          <ToggleRow
-            label="Full Access Audit Trail"
-            sub="Log every PHI read, write, export and delete"
-            on={phi.auditTrail}
-            onChange={() => toggle(phi, setPhi, "auditTrail")}
-            badge={{
-              text: "HIPAA §164.312(b)",
-              cls: "bg-violet-50 text-violet-700 border border-violet-200",
-            }}
-          />
-          <ToggleRow
-            label="De-identify on Export"
-            sub="Auto-apply Safe Harbor de-identification on CSV/PDF exports"
-            on={phi.deIdExport}
-            onChange={() => toggle(phi, setPhi, "deIdExport")}
-          />
-          <ToggleRow
-            label="DLP Controls"
-            sub="Block bulk download/screen-scrape of PHI records"
-            on={phi.dlp}
-            onChange={() => toggle(phi, setPhi, "dlp")}
-          />
+          <div className="relative">
+            {isLoadingPhi && (
+              <div className="absolute inset-0 bg-background/50 z-10 flex items-center justify-center rounded-xl">
+                <RefreshCw className="w-5 h-5 animate-spin text-primary" />
+              </div>
+            )}
+            <ToggleRow
+              label="Encryption at Rest"
+              sub="AES-256 for all stored ePHI (database + backups)"
+              on={phi.encRest}
+              onChange={() => toggle(phi, setPhi, "encRest")}
+              badge={{
+                text: "FIPS 140-2",
+                cls: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+              }}
+            />
+            <ToggleRow
+              label="Encryption in Transit"
+              sub="TLS 1.3 enforced for all API and web traffic"
+              on={phi.encTransit}
+              onChange={() => toggle(phi, setPhi, "encTransit")}
+              badge={{
+                text: "TLS 1.3",
+                cls: "bg-blue-50 text-blue-700 border border-blue-200",
+              }}
+            />
+            <ToggleRow
+              label="PHI Masking in Logs"
+              sub="Redact patient identifiers in system audit logs"
+              on={phi.phiMask}
+              onChange={() => toggle(phi, setPhi, "phiMask")}
+            />
+            <ToggleRow
+              label="Full Access Audit Trail"
+              sub="Log every PHI read, write, export and delete"
+              on={phi.auditTrail}
+              onChange={() => toggle(phi, setPhi, "auditTrail")}
+              badge={{
+                text: "HIPAA §164.312(b)",
+                cls: "bg-violet-50 text-violet-700 border border-violet-200",
+              }}
+            />
+            <ToggleRow
+              label="De-identify on Export"
+              sub="Auto-apply Safe Harbor de-identification on CSV/PDF exports"
+              on={phi.deIdExport}
+              onChange={() => toggle(phi, setPhi, "deIdExport")}
+            />
+            <ToggleRow
+              label="DLP Controls"
+              sub="Block bulk download/screen-scrape of PHI records"
+              on={phi.dlp}
+              onChange={() => toggle(phi, setPhi, "dlp")}
+            />
+            <div className="pt-3 border-t border-border/50 flex justify-end">
+              <button
+                onClick={handleSavePhiControls}
+                disabled={isUpdatingPhi}
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-primary text-white text-[10px] font-bold rounded-xl hover:opacity-90 transition-all shadow-md shadow-primary/20 disabled:opacity-50"
+              >
+                {isUpdatingPhi ? (
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="w-3 h-3" />
+                )}
+
+                {isUpdatingPhi ? "Updating..." : "Save PHI Controls"}
+              </button>
+            </div>
+          </div>
         </SettingCard>
 
         <SettingCard

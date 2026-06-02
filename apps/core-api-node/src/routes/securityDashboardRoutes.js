@@ -436,8 +436,9 @@ router.put("/session-management-v2", authMiddleware, smController.updateSessionM
  * @swagger
  * /api/security/security-score:
  *   get:
- *     summary: Get security score breakdown
- *     tags: [Security Dashboard]
+ *     summary: Get Security Score Dashboard
+ *     tags:
+ *       - Security Dashboard
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -457,36 +458,57 @@ router.put("/session-management-v2", authMiddleware, smController.updateSessionM
  *                     overall_score:
  *                       type: integer
  *                       example: 92
- *                       description: Overall security score out of 100
- *                     risk_level:
+ *                     max_score:
+ *                       type: integer
+ *                       example: 100
+ *                     posture:
  *                       type: string
  *                       example: Excellent
+ *                     risk_level:
+ *                       type: string
  *                       enum:
- *                         - Excellent
- *                         - Good
- *                         - Fair
- *                         - Poor
- *                     authentication_score:
- *                       type: integer
- *                       example: 98
- *                     data_protection_score:
- *                       type: integer
- *                       example: 95
- *                     access_control_score:
- *                       type: integer
- *                       example: 91
- *                     audit_coverage_score:
- *                       type: integer
- *                       example: 88
- *                     facility_device_score:
- *                       type: integer
- *                       example: 80
+ *                         - Low
+ *                         - Medium
+ *                         - High
+ *                         - Critical
  *                     last_assessed_at:
  *                       type: string
  *                       format: date-time
- *                       example: "2026-06-02T09:00:00Z"
- *       500:
- *         description: Failed to fetch security score
+ *
+ *                     authentication_score:
+ *                       type: integer
+ *                       example: 98
+ *
+ *                     data_protection_score:
+ *                       type: integer
+ *                       example: 95
+ *
+ *                     access_control_score:
+ *                       type: integer
+ *                       example: 91
+ *
+ *                     audit_coverage_score:
+ *                       type: integer
+ *                       example: 88
+ *
+ *                     facility_device_score:
+ *                       type: integer
+ *                       example: 80
+ *
+ *                     categories:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           label:
+ *                             type: string
+ *                             example: Authentication
+ *                           score:
+ *                             type: integer
+ *                             example: 98
+ *                           weight:
+ *                             type: integer
+ *                             example: 25
  */
 router.get(
   "/security-score",
