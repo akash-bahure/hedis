@@ -15,38 +15,38 @@ import type {
   UseQueryResult,
 } from "@tanstack/react-query";
 import type {
-  GetApiSecurityDashboardAccessMonitorQueryResponse,
-  GetApiSecurityDashboardAccessMonitorQueryParams,
-} from "../../types/GetApiSecurityDashboardAccessMonitor.ts";
+  GetApiAccessLogsAccessMonitorQueryResponse,
+  GetApiAccessLogsAccessMonitorQueryParams,
+} from "../../types/GetApiAccessLogsAccessMonitor.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import { getApiSecurityDashboardAccessMonitor } from "../../clients/getApiSecurityDashboardAccessMonitor.ts";
+import { getApiAccessLogsAccessMonitor } from "../../clients/getApiAccessLogsAccessMonitor.ts";
 
-export const getApiSecurityDashboardAccessMonitorQueryKey = (
-  params?: GetApiSecurityDashboardAccessMonitorQueryParams,
+export const getApiAccessLogsAccessMonitorQueryKey = (
+  params?: GetApiAccessLogsAccessMonitorQueryParams,
 ) =>
   [
-    { url: "/api/security-dashboard/access-monitor" },
+    { url: "/api/access-logs/access-monitor" },
     ...(params ? [params] : []),
   ] as const;
 
-export type GetApiSecurityDashboardAccessMonitorQueryKey = ReturnType<
-  typeof getApiSecurityDashboardAccessMonitorQueryKey
+export type GetApiAccessLogsAccessMonitorQueryKey = ReturnType<
+  typeof getApiAccessLogsAccessMonitorQueryKey
 >;
 
-export function getApiSecurityDashboardAccessMonitorQueryOptions(
-  params?: GetApiSecurityDashboardAccessMonitorQueryParams,
+export function getApiAccessLogsAccessMonitorQueryOptions(
+  params?: GetApiAccessLogsAccessMonitorQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
-  const queryKey = getApiSecurityDashboardAccessMonitorQueryKey(params);
+  const queryKey = getApiAccessLogsAccessMonitorQueryKey(params);
   return queryOptions<
-    GetApiSecurityDashboardAccessMonitorQueryResponse,
+    GetApiAccessLogsAccessMonitorQueryResponse,
     ResponseErrorConfig<Error>,
-    GetApiSecurityDashboardAccessMonitorQueryResponse,
+    GetApiAccessLogsAccessMonitorQueryResponse,
     typeof queryKey
   >({
     queryKey,
     queryFn: async ({ signal }) => {
-      return getApiSecurityDashboardAccessMonitor(params, {
+      return getApiAccessLogsAccessMonitor(params, {
         ...config,
         signal: config.signal ?? signal,
       });
@@ -57,18 +57,18 @@ export function getApiSecurityDashboardAccessMonitorQueryOptions(
 /**
  * @description Returns current active sessions, charts accessed, average duration, and anomalies stats, along with filtered list of PHI access logs.
  * @summary Retrieve PHI Access Logs and Access Monitor Stats
- * {@link /api/security-dashboard/access-monitor}
+ * {@link /api/access-logs/access-monitor}
  */
-export function useGetApiSecurityDashboardAccessMonitor<
-  TData = GetApiSecurityDashboardAccessMonitorQueryResponse,
-  TQueryData = GetApiSecurityDashboardAccessMonitorQueryResponse,
-  TQueryKey extends QueryKey = GetApiSecurityDashboardAccessMonitorQueryKey,
+export function useGetApiAccessLogsAccessMonitor<
+  TData = GetApiAccessLogsAccessMonitorQueryResponse,
+  TQueryData = GetApiAccessLogsAccessMonitorQueryResponse,
+  TQueryKey extends QueryKey = GetApiAccessLogsAccessMonitorQueryKey,
 >(
-  params?: GetApiSecurityDashboardAccessMonitorQueryParams,
+  params?: GetApiAccessLogsAccessMonitorQueryParams,
   options: {
     query?: Partial<
       QueryObserverOptions<
-        GetApiSecurityDashboardAccessMonitorQueryResponse,
+        GetApiAccessLogsAccessMonitorQueryResponse,
         ResponseErrorConfig<Error>,
         TData,
         TQueryData,
@@ -81,12 +81,11 @@ export function useGetApiSecurityDashboardAccessMonitor<
   const { query: queryConfig = {}, client: config = {} } = options ?? {};
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
-    resolvedOptions?.queryKey ??
-    getApiSecurityDashboardAccessMonitorQueryKey(params);
+    resolvedOptions?.queryKey ?? getApiAccessLogsAccessMonitorQueryKey(params);
 
   const query = useQuery(
     {
-      ...getApiSecurityDashboardAccessMonitorQueryOptions(params, config),
+      ...getApiAccessLogsAccessMonitorQueryOptions(params, config),
       ...resolvedOptions,
       queryKey,
     } as unknown as QueryObserverOptions,

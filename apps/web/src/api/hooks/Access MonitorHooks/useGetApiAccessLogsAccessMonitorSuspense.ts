@@ -15,38 +15,38 @@ import type {
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
 import type {
-  GetApiSecurityDashboardAccessMonitorQueryResponse,
-  GetApiSecurityDashboardAccessMonitorQueryParams,
-} from "../../types/GetApiSecurityDashboardAccessMonitor.ts";
+  GetApiAccessLogsAccessMonitorQueryResponse,
+  GetApiAccessLogsAccessMonitorQueryParams,
+} from "../../types/GetApiAccessLogsAccessMonitor.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { getApiSecurityDashboardAccessMonitor } from "../../clients/getApiSecurityDashboardAccessMonitor.ts";
+import { getApiAccessLogsAccessMonitor } from "../../clients/getApiAccessLogsAccessMonitor.ts";
 
-export const getApiSecurityDashboardAccessMonitorSuspenseQueryKey = (
-  params?: GetApiSecurityDashboardAccessMonitorQueryParams,
+export const getApiAccessLogsAccessMonitorSuspenseQueryKey = (
+  params?: GetApiAccessLogsAccessMonitorQueryParams,
 ) =>
   [
-    { url: "/api/security-dashboard/access-monitor" },
+    { url: "/api/access-logs/access-monitor" },
     ...(params ? [params] : []),
   ] as const;
 
-export type GetApiSecurityDashboardAccessMonitorSuspenseQueryKey = ReturnType<
-  typeof getApiSecurityDashboardAccessMonitorSuspenseQueryKey
+export type GetApiAccessLogsAccessMonitorSuspenseQueryKey = ReturnType<
+  typeof getApiAccessLogsAccessMonitorSuspenseQueryKey
 >;
 
-export function getApiSecurityDashboardAccessMonitorSuspenseQueryOptions(
-  params?: GetApiSecurityDashboardAccessMonitorQueryParams,
+export function getApiAccessLogsAccessMonitorSuspenseQueryOptions(
+  params?: GetApiAccessLogsAccessMonitorQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
-  const queryKey = getApiSecurityDashboardAccessMonitorSuspenseQueryKey(params);
+  const queryKey = getApiAccessLogsAccessMonitorSuspenseQueryKey(params);
   return queryOptions<
-    GetApiSecurityDashboardAccessMonitorQueryResponse,
+    GetApiAccessLogsAccessMonitorQueryResponse,
     ResponseErrorConfig<Error>,
-    GetApiSecurityDashboardAccessMonitorQueryResponse,
+    GetApiAccessLogsAccessMonitorQueryResponse,
     typeof queryKey
   >({
     queryKey,
     queryFn: async ({ signal }) => {
-      return getApiSecurityDashboardAccessMonitor(params, {
+      return getApiAccessLogsAccessMonitor(params, {
         ...config,
         signal: config.signal ?? signal,
       });
@@ -57,18 +57,17 @@ export function getApiSecurityDashboardAccessMonitorSuspenseQueryOptions(
 /**
  * @description Returns current active sessions, charts accessed, average duration, and anomalies stats, along with filtered list of PHI access logs.
  * @summary Retrieve PHI Access Logs and Access Monitor Stats
- * {@link /api/security-dashboard/access-monitor}
+ * {@link /api/access-logs/access-monitor}
  */
-export function useGetApiSecurityDashboardAccessMonitorSuspense<
-  TData = GetApiSecurityDashboardAccessMonitorQueryResponse,
-  TQueryKey extends QueryKey =
-    GetApiSecurityDashboardAccessMonitorSuspenseQueryKey,
+export function useGetApiAccessLogsAccessMonitorSuspense<
+  TData = GetApiAccessLogsAccessMonitorQueryResponse,
+  TQueryKey extends QueryKey = GetApiAccessLogsAccessMonitorSuspenseQueryKey,
 >(
-  params?: GetApiSecurityDashboardAccessMonitorQueryParams,
+  params?: GetApiAccessLogsAccessMonitorQueryParams,
   options: {
     query?: Partial<
       UseSuspenseQueryOptions<
-        GetApiSecurityDashboardAccessMonitorQueryResponse,
+        GetApiAccessLogsAccessMonitorQueryResponse,
         ResponseErrorConfig<Error>,
         TData,
         TQueryKey
@@ -81,14 +80,11 @@ export function useGetApiSecurityDashboardAccessMonitorSuspense<
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
     resolvedOptions?.queryKey ??
-    getApiSecurityDashboardAccessMonitorSuspenseQueryKey(params);
+    getApiAccessLogsAccessMonitorSuspenseQueryKey(params);
 
   const query = useSuspenseQuery(
     {
-      ...getApiSecurityDashboardAccessMonitorSuspenseQueryOptions(
-        params,
-        config,
-      ),
+      ...getApiAccessLogsAccessMonitorSuspenseQueryOptions(params, config),
       ...resolvedOptions,
       queryKey,
     } as unknown as UseSuspenseQueryOptions,

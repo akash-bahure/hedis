@@ -10,14 +10,14 @@ import type {
   ResponseErrorConfig,
 } from "../../../utils/client.ts";
 import type {
-  GetApiSecurityDashboardAccessMonitorQueryResponse,
-  GetApiSecurityDashboardAccessMonitorQueryParams,
-} from "../types/GetApiSecurityDashboardAccessMonitor.ts";
+  GetApiAccessLogsAccessMonitorQueryResponse,
+  GetApiAccessLogsAccessMonitorQueryParams,
+} from "../types/GetApiAccessLogsAccessMonitor.ts";
 
-function getGetApiSecurityDashboardAccessMonitorUrl() {
+function getGetApiAccessLogsAccessMonitorUrl() {
   const res = {
     method: "GET",
-    url: `/api/security-dashboard/access-monitor` as const,
+    url: `/api/access-logs/access-monitor` as const,
   };
   return res;
 }
@@ -25,21 +25,21 @@ function getGetApiSecurityDashboardAccessMonitorUrl() {
 /**
  * @description Returns current active sessions, charts accessed, average duration, and anomalies stats, along with filtered list of PHI access logs.
  * @summary Retrieve PHI Access Logs and Access Monitor Stats
- * {@link /api/security-dashboard/access-monitor}
+ * {@link /api/access-logs/access-monitor}
  */
-export async function getApiSecurityDashboardAccessMonitor(
-  params?: GetApiSecurityDashboardAccessMonitorQueryParams,
+export async function getApiAccessLogsAccessMonitor(
+  params?: GetApiAccessLogsAccessMonitorQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
   const { client: request = fetch, ...requestConfig } = config;
 
   const res = await request<
-    GetApiSecurityDashboardAccessMonitorQueryResponse,
+    GetApiAccessLogsAccessMonitorQueryResponse,
     ResponseErrorConfig<Error>,
     unknown
   >({
     method: "GET",
-    url: getGetApiSecurityDashboardAccessMonitorUrl().url.toString(),
+    url: getGetApiAccessLogsAccessMonitorUrl().url.toString(),
     params,
     ...requestConfig,
   });

@@ -1,8 +1,8 @@
 export {
-  getApiSecurityDashboardAccessMonitor200Schema,
-  getApiSecurityDashboardAccessMonitorQueryParamsSchema,
-  getApiSecurityDashboardAccessMonitorQueryResponseSchema,
-} from "./Access MonitorSchemas/getApiSecurityDashboardAccessMonitorSchema.ts";
+  getApiAccessLogsAccessMonitor200Schema,
+  getApiAccessLogsAccessMonitorQueryParamsSchema,
+  getApiAccessLogsAccessMonitorQueryResponseSchema,
+} from "./Access MonitorSchemas/getApiAccessLogsAccessMonitorSchema.ts";
 export {
   getApiAuditLogsExport200Schema,
   getApiAuditLogsExport500Schema,
@@ -212,6 +212,19 @@ export {
   postApiPatientsIdAssignPathParamsSchema,
 } from "./PatientsSchemas/postApiPatientsIdAssignSchema.ts";
 export {
+  deleteApiProfileActiveSessionsSessionid200Schema,
+  deleteApiProfileActiveSessionsSessionidMutationResponseSchema,
+  deleteApiProfileActiveSessionsSessionidPathParamsSchema,
+} from "./ProfileSchemas/deleteApiProfileActiveSessionsSessionidSchema.ts";
+export {
+  getApiProfileActiveSessions200Schema,
+  getApiProfileActiveSessionsQueryResponseSchema,
+} from "./ProfileSchemas/getApiProfileActiveSessionsSchema.ts";
+export {
+  getApiProfileLoginActivity200Schema,
+  getApiProfileLoginActivityQueryResponseSchema,
+} from "./ProfileSchemas/getApiProfileLoginActivitySchema.ts";
+export {
   getApiProfileMe200Schema,
   getApiProfileMe404Schema,
   getApiProfileMeQueryResponseSchema,
@@ -241,6 +254,10 @@ export {
   patchApiProfileIdSecurityMutationResponseSchema,
   patchApiProfileIdSecurityPathParamsSchema,
 } from "./ProfileSchemas/patchApiProfileIdSecuritySchema.ts";
+export {
+  postApiProfileActiveSessionsRevokeOthers200Schema,
+  postApiProfileActiveSessionsRevokeOthersMutationResponseSchema,
+} from "./ProfileSchemas/postApiProfileActiveSessionsRevokeOthersSchema.ts";
 export {
   deleteApiProjectsId200Schema,
   deleteApiProjectsIdMutationResponseSchema,
@@ -358,6 +375,15 @@ export {
   getApiSecurityPasswordPolicyQueryResponseSchema,
 } from "./Security DashboardSchemas/getApiSecurityPasswordPolicySchema.ts";
 export {
+  getApiSecurityPhiEncryptionControls200Schema,
+  getApiSecurityPhiEncryptionControlsQueryResponseSchema,
+} from "./Security DashboardSchemas/getApiSecurityPhiEncryptionControlsSchema.ts";
+export {
+  getApiSecurityScore200Schema,
+  getApiSecurityScore500Schema,
+  getApiSecurityScoreQueryResponseSchema,
+} from "./Security DashboardSchemas/getApiSecuritySecurityScoreSchema.ts";
+export {
   getApiSecuritySessionManagementV2200Schema,
   getApiSecuritySessionManagementV2QueryResponseSchema,
 } from "./Security DashboardSchemas/getApiSecuritySessionManagementV2Schema.ts";
@@ -381,6 +407,12 @@ export {
   putApiSecurityPasswordPolicyMutationRequestSchema,
   putApiSecurityPasswordPolicyMutationResponseSchema,
 } from "./Security DashboardSchemas/putApiSecurityPasswordPolicySchema.ts";
+export {
+  putApiSecurityPhiEncryptionControls200Schema,
+  putApiSecurityPhiEncryptionControls500Schema,
+  putApiSecurityPhiEncryptionControlsMutationRequestSchema,
+  putApiSecurityPhiEncryptionControlsMutationResponseSchema,
+} from "./Security DashboardSchemas/putApiSecurityPhiEncryptionControlsSchema.ts";
 export {
   putApiSecuritySessionManagementV2200Schema,
   putApiSecuritySessionManagementV2MutationRequestSchema,
