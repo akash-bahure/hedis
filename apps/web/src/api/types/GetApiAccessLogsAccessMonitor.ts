@@ -3,7 +3,7 @@
  * Do not edit manually.
  */
 
-export const getApiSecurityDashboardAccessMonitorQueryParamsAccessTypeEnum = {
+export const getApiAccessLogsAccessMonitorQueryParamsAccessTypeEnum = {
   all: "all",
   code: "code",
   audit: "audit",
@@ -12,10 +12,10 @@ export const getApiSecurityDashboardAccessMonitorQueryParamsAccessTypeEnum = {
   edit: "edit",
 } as const;
 
-export type GetApiSecurityDashboardAccessMonitorQueryParamsAccessTypeEnumKey =
-  (typeof getApiSecurityDashboardAccessMonitorQueryParamsAccessTypeEnum)[keyof typeof getApiSecurityDashboardAccessMonitorQueryParamsAccessTypeEnum];
+export type GetApiAccessLogsAccessMonitorQueryParamsAccessTypeEnumKey =
+  (typeof getApiAccessLogsAccessMonitorQueryParamsAccessTypeEnum)[keyof typeof getApiAccessLogsAccessMonitorQueryParamsAccessTypeEnum];
 
-export type GetApiSecurityDashboardAccessMonitorQueryParams = {
+export type GetApiAccessLogsAccessMonitorQueryParams = {
   /**
    * @description Search by user, chart ID, or patient name
    * @type string | undefined
@@ -30,7 +30,7 @@ export type GetApiSecurityDashboardAccessMonitorQueryParams = {
    * @description Filter by access type
    * @type string | undefined
    */
-  accessType?: GetApiSecurityDashboardAccessMonitorQueryParamsAccessTypeEnumKey;
+  accessType?: GetApiAccessLogsAccessMonitorQueryParamsAccessTypeEnumKey;
   /**
    * @description Page number for pagination
    * @default 1
@@ -48,7 +48,7 @@ export type GetApiSecurityDashboardAccessMonitorQueryParams = {
 /**
  * @description PHI access logs and stats fetched successfully
  */
-export type GetApiSecurityDashboardAccessMonitor200 = {
+export type GetApiAccessLogsAccessMonitor200 = {
   /**
    * @type boolean | undefined
    */
@@ -146,11 +146,11 @@ export type GetApiSecurityDashboardAccessMonitor200 = {
   };
 };
 
-export type GetApiSecurityDashboardAccessMonitorQueryResponse =
-  GetApiSecurityDashboardAccessMonitor200;
+export type GetApiAccessLogsAccessMonitorQueryResponse =
+  GetApiAccessLogsAccessMonitor200;
 
-export type GetApiSecurityDashboardAccessMonitorQuery = {
-  Response: GetApiSecurityDashboardAccessMonitor200;
-  QueryParams: GetApiSecurityDashboardAccessMonitorQueryParams;
+export type GetApiAccessLogsAccessMonitorQuery = {
+  Response: GetApiAccessLogsAccessMonitor200;
+  QueryParams: GetApiAccessLogsAccessMonitorQueryParams;
   Errors: any;
 };

@@ -20,6 +20,12 @@ export type {
   DeleteApiClientsIdPathParams,
 } from "./DeleteApiClientsId.ts";
 export type {
+  DeleteApiProfileActiveSessionsSessionid200,
+  DeleteApiProfileActiveSessionsSessionidMutation,
+  DeleteApiProfileActiveSessionsSessionidMutationResponse,
+  DeleteApiProfileActiveSessionsSessionidPathParams,
+} from "./DeleteApiProfileActiveSessionsSessionid.ts";
+export type {
   DeleteApiProjectsId200,
   DeleteApiProjectsIdMutation,
   DeleteApiProjectsIdMutationResponse,
@@ -52,6 +58,13 @@ export type {
   GetAdminUsersQuery,
   GetAdminUsersQueryResponse,
 } from "./GetAdminUsers.ts";
+export type {
+  GetApiAccessLogsAccessMonitor200,
+  GetApiAccessLogsAccessMonitorQuery,
+  GetApiAccessLogsAccessMonitorQueryParams,
+  GetApiAccessLogsAccessMonitorQueryParamsAccessTypeEnumKey,
+  GetApiAccessLogsAccessMonitorQueryResponse,
+} from "./GetApiAccessLogsAccessMonitor.ts";
 export type {
   GetApiAuditLogs200,
   GetApiAuditLogs500,
@@ -118,6 +131,16 @@ export type {
   GetApiPatientsExportQueryParams,
   GetApiPatientsExportQueryResponse,
 } from "./GetApiPatientsExport.ts";
+export type {
+  GetApiProfileActiveSessions200,
+  GetApiProfileActiveSessionsQuery,
+  GetApiProfileActiveSessionsQueryResponse,
+} from "./GetApiProfileActiveSessions.ts";
+export type {
+  GetApiProfileLoginActivity200,
+  GetApiProfileLoginActivityQuery,
+  GetApiProfileLoginActivityQueryResponse,
+} from "./GetApiProfileLoginActivity.ts";
 export type {
   GetApiProfileMe200,
   GetApiProfileMe404,
@@ -196,13 +219,6 @@ export type {
   GetApiSecurityComplianceDataRetentionPolicyQueryResponse,
 } from "./GetApiSecurityComplianceDataRetentionPolicy.ts";
 export type {
-  GetApiSecurityDashboardAccessMonitor200,
-  GetApiSecurityDashboardAccessMonitorQuery,
-  GetApiSecurityDashboardAccessMonitorQueryParams,
-  GetApiSecurityDashboardAccessMonitorQueryParamsAccessTypeEnumKey,
-  GetApiSecurityDashboardAccessMonitorQueryResponse,
-} from "./GetApiSecurityDashboardAccessMonitor.ts";
-export type {
   GetApiSecurityLoginActivity200,
   GetApiSecurityLoginActivityQuery,
   GetApiSecurityLoginActivityQueryResponse,
@@ -218,6 +234,18 @@ export type {
   GetApiSecurityPasswordPolicyQuery,
   GetApiSecurityPasswordPolicyQueryResponse,
 } from "./GetApiSecurityPasswordPolicy.ts";
+export type {
+  GetApiSecurityPhiEncryptionControls200,
+  GetApiSecurityPhiEncryptionControlsQuery,
+  GetApiSecurityPhiEncryptionControlsQueryResponse,
+} from "./GetApiSecurityPhiEncryptionControls.ts";
+export type {
+  DataRiskLevelEnumKey,
+  GetApiSecurityScore200,
+  GetApiSecurityScore500,
+  GetApiSecurityScoreQueryResponse,
+  GetApiSecuritySecurityScoreQuery,
+} from "./GetApiSecuritySecurityScore.ts";
 export type {
   DataMaxConcurrentSessionsEnumKey,
   DataSessionTimeoutEnumKey,
@@ -571,6 +599,11 @@ export type {
   PostApiPatientsIdAssignPathParams,
 } from "./PostApiPatientsIdAssign.ts";
 export type {
+  PostApiProfileActiveSessionsRevokeOthers200,
+  PostApiProfileActiveSessionsRevokeOthersMutation,
+  PostApiProfileActiveSessionsRevokeOthersMutationResponse,
+} from "./PostApiProfileActiveSessionsRevokeOthers.ts";
+export type {
   PostApiProjects201,
   PostApiProjects400,
   PostApiProjects500,
@@ -678,6 +711,13 @@ export type {
   PutApiSecurityPasswordPolicyMutationResponse,
 } from "./PutApiSecurityPasswordPolicy.ts";
 export type {
+  PutApiSecurityPhiEncryptionControls200,
+  PutApiSecurityPhiEncryptionControls500,
+  PutApiSecurityPhiEncryptionControlsMutation,
+  PutApiSecurityPhiEncryptionControlsMutationRequest,
+  PutApiSecurityPhiEncryptionControlsMutationResponse,
+} from "./PutApiSecurityPhiEncryptionControls.ts";
+export type {
   PutApiSecuritySessionManagementV2200,
   PutApiSecuritySessionManagementV2Mutation,
   PutApiSecuritySessionManagementV2MutationRequest,
@@ -689,6 +729,7 @@ export type { ShiftScheduleMatrix } from "./ShiftScheduleMatrix.ts";
 export type { User } from "./User.ts";
 export { auditLogRiskLevelEnum } from "./AuditLog.ts";
 export { auditLogStatusEnum } from "./AuditLog.ts";
+export { getApiAccessLogsAccessMonitorQueryParamsAccessTypeEnum } from "./GetApiAccessLogsAccessMonitor.ts";
 export { getApiAuditLogsQueryParamsRiskLevelEnum } from "./GetApiAuditLogs.ts";
 export { getApiAuditLogsQueryParamsStatusEnum } from "./GetApiAuditLogs.ts";
 export { getApiAuditLogsExportQueryParamsRiskLevelEnum } from "./GetApiAuditLogsExport.ts";
@@ -712,8 +753,8 @@ export { dataBackupSnapshotsEnum } from "./GetApiSecurityComplianceDataRetention
 export { dataExportLogsEnum } from "./GetApiSecurityComplianceDataRetentionPolicy.ts";
 export { dataPhiRecordsEnum } from "./GetApiSecurityComplianceDataRetentionPolicy.ts";
 export { dataSessionLogsEnum } from "./GetApiSecurityComplianceDataRetentionPolicy.ts";
-export { getApiSecurityDashboardAccessMonitorQueryParamsAccessTypeEnum } from "./GetApiSecurityDashboardAccessMonitor.ts";
 export { dataGracePeriodEnum } from "./GetApiSecurityMfaV2.ts";
+export { dataRiskLevelEnum } from "./GetApiSecuritySecurityScore.ts";
 export { dataMaxConcurrentSessionsEnum } from "./GetApiSecuritySessionManagementV2.ts";
 export { dataSessionTimeoutEnum } from "./GetApiSecuritySessionManagementV2.ts";
 export { getApiUsersQueryParamsUserStatusEnum } from "./GetApiUsers.ts";

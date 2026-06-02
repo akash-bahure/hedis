@@ -6,12 +6,12 @@
 import * as z from "zod";
 import type { ToZod } from "../../.kubb/ToZod.ts";
 import type {
-  GetApiSecurityDashboardAccessMonitor200,
-  GetApiSecurityDashboardAccessMonitorQueryParams,
-  GetApiSecurityDashboardAccessMonitorQueryResponse,
-} from "../../types/GetApiSecurityDashboardAccessMonitor.ts";
+  GetApiAccessLogsAccessMonitor200,
+  GetApiAccessLogsAccessMonitorQueryParams,
+  GetApiAccessLogsAccessMonitorQueryResponse,
+} from "../../types/GetApiAccessLogsAccessMonitor.ts";
 
-export const getApiSecurityDashboardAccessMonitorQueryParamsSchema = z.object({
+export const getApiAccessLogsAccessMonitorQueryParamsSchema = z.object({
   search: z.optional(
     z.string().describe("Search by user, chart ID, or patient name"),
   ),
@@ -37,12 +37,12 @@ export const getApiSecurityDashboardAccessMonitorQueryParamsSchema = z.object({
     .int()
     .default(10)
     .describe("Number of records per page"),
-}) as unknown as ToZod<GetApiSecurityDashboardAccessMonitorQueryParams>;
+}) as unknown as ToZod<GetApiAccessLogsAccessMonitorQueryParams>;
 
 /**
  * @description PHI access logs and stats fetched successfully
  */
-export const getApiSecurityDashboardAccessMonitor200Schema = z.object({
+export const getApiAccessLogsAccessMonitor200Schema = z.object({
   success: z.optional(z.boolean()),
   message: z.optional(z.string()),
   stats: z.optional(
@@ -77,8 +77,8 @@ export const getApiSecurityDashboardAccessMonitor200Schema = z.object({
       totalPages: z.optional(z.number().int()),
     }),
   ),
-}) as unknown as ToZod<GetApiSecurityDashboardAccessMonitor200>;
+}) as unknown as ToZod<GetApiAccessLogsAccessMonitor200>;
 
-export const getApiSecurityDashboardAccessMonitorQueryResponseSchema = z.lazy(
-  () => getApiSecurityDashboardAccessMonitor200Schema,
-) as unknown as ToZod<GetApiSecurityDashboardAccessMonitorQueryResponse>;
+export const getApiAccessLogsAccessMonitorQueryResponseSchema = z.lazy(
+  () => getApiAccessLogsAccessMonitor200Schema,
+) as unknown as ToZod<GetApiAccessLogsAccessMonitorQueryResponse>;

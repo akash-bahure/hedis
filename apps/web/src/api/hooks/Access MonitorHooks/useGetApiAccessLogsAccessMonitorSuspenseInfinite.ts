@@ -16,49 +16,48 @@ import type {
   UseSuspenseInfiniteQueryResult,
 } from "@tanstack/react-query";
 import type {
-  GetApiSecurityDashboardAccessMonitorQueryResponse,
-  GetApiSecurityDashboardAccessMonitorQueryParams,
-} from "../../types/GetApiSecurityDashboardAccessMonitor.ts";
+  GetApiAccessLogsAccessMonitorQueryResponse,
+  GetApiAccessLogsAccessMonitorQueryParams,
+} from "../../types/GetApiAccessLogsAccessMonitor.ts";
 import {
   infiniteQueryOptions,
   useSuspenseInfiniteQuery,
 } from "@tanstack/react-query";
-import { getApiSecurityDashboardAccessMonitor } from "../../clients/getApiSecurityDashboardAccessMonitor.ts";
+import { getApiAccessLogsAccessMonitor } from "../../clients/getApiAccessLogsAccessMonitor.ts";
 
-export const getApiSecurityDashboardAccessMonitorSuspenseInfiniteQueryKey = (
-  params?: GetApiSecurityDashboardAccessMonitorQueryParams,
+export const getApiAccessLogsAccessMonitorSuspenseInfiniteQueryKey = (
+  params?: GetApiAccessLogsAccessMonitorQueryParams,
 ) =>
   [
-    { url: "/api/security-dashboard/access-monitor" },
+    { url: "/api/access-logs/access-monitor" },
     ...(params ? [params] : []),
   ] as const;
 
-export type GetApiSecurityDashboardAccessMonitorSuspenseInfiniteQueryKey =
-  ReturnType<
-    typeof getApiSecurityDashboardAccessMonitorSuspenseInfiniteQueryKey
-  >;
+export type GetApiAccessLogsAccessMonitorSuspenseInfiniteQueryKey = ReturnType<
+  typeof getApiAccessLogsAccessMonitorSuspenseInfiniteQueryKey
+>;
 
-export function getApiSecurityDashboardAccessMonitorSuspenseInfiniteQueryOptions(
-  params?: GetApiSecurityDashboardAccessMonitorQueryParams,
+export function getApiAccessLogsAccessMonitorSuspenseInfiniteQueryOptions(
+  params?: GetApiAccessLogsAccessMonitorQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
   const queryKey =
-    getApiSecurityDashboardAccessMonitorSuspenseInfiniteQueryKey(params);
+    getApiAccessLogsAccessMonitorSuspenseInfiniteQueryKey(params);
   return infiniteQueryOptions<
-    GetApiSecurityDashboardAccessMonitorQueryResponse,
+    GetApiAccessLogsAccessMonitorQueryResponse,
     ResponseErrorConfig<Error>,
-    InfiniteData<GetApiSecurityDashboardAccessMonitorQueryResponse>,
+    InfiniteData<GetApiAccessLogsAccessMonitorQueryResponse>,
     typeof queryKey,
-    NonNullable<GetApiSecurityDashboardAccessMonitorQueryParams["page_no"]>
+    NonNullable<GetApiAccessLogsAccessMonitorQueryParams["page_no"]>
   >({
     queryKey,
     queryFn: async ({ signal, pageParam }) => {
       params = {
         ...(params ?? {}),
         ["page_no"]:
-          pageParam as unknown as GetApiSecurityDashboardAccessMonitorQueryParams["page_no"],
-      } as GetApiSecurityDashboardAccessMonitorQueryParams;
-      return getApiSecurityDashboardAccessMonitor(params, {
+          pageParam as unknown as GetApiAccessLogsAccessMonitorQueryParams["page_no"],
+      } as GetApiAccessLogsAccessMonitorQueryParams;
+      return getApiAccessLogsAccessMonitor(params, {
         ...config,
         signal: config.signal ?? signal,
       });
@@ -76,19 +75,17 @@ export function getApiSecurityDashboardAccessMonitorSuspenseInfiniteQueryOptions
 /**
  * @description Returns current active sessions, charts accessed, average duration, and anomalies stats, along with filtered list of PHI access logs.
  * @summary Retrieve PHI Access Logs and Access Monitor Stats
- * {@link /api/security-dashboard/access-monitor}
+ * {@link /api/access-logs/access-monitor}
  */
-export function useGetApiSecurityDashboardAccessMonitorSuspenseInfinite<
-  TQueryFnData = GetApiSecurityDashboardAccessMonitorQueryResponse,
+export function useGetApiAccessLogsAccessMonitorSuspenseInfinite<
+  TQueryFnData = GetApiAccessLogsAccessMonitorQueryResponse,
   TError = ResponseErrorConfig<Error>,
   TData = InfiniteData<TQueryFnData>,
   TQueryKey extends QueryKey =
-    GetApiSecurityDashboardAccessMonitorSuspenseInfiniteQueryKey,
-  TPageParam = NonNullable<
-    GetApiSecurityDashboardAccessMonitorQueryParams["page_no"]
-  >,
+    GetApiAccessLogsAccessMonitorSuspenseInfiniteQueryKey,
+  TPageParam = NonNullable<GetApiAccessLogsAccessMonitorQueryParams["page_no"]>,
 >(
-  params?: GetApiSecurityDashboardAccessMonitorQueryParams,
+  params?: GetApiAccessLogsAccessMonitorQueryParams,
   options: {
     query?: Partial<
       UseSuspenseInfiniteQueryOptions<
@@ -106,11 +103,11 @@ export function useGetApiSecurityDashboardAccessMonitorSuspenseInfinite<
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
     resolvedOptions?.queryKey ??
-    getApiSecurityDashboardAccessMonitorSuspenseInfiniteQueryKey(params);
+    getApiAccessLogsAccessMonitorSuspenseInfiniteQueryKey(params);
 
   const query = useSuspenseInfiniteQuery(
     {
-      ...getApiSecurityDashboardAccessMonitorSuspenseInfiniteQueryOptions(
+      ...getApiAccessLogsAccessMonitorSuspenseInfiniteQueryOptions(
         params,
         config,
       ),
