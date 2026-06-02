@@ -1,5 +1,7 @@
+const { getDeviceName } = require("../utils/deviceParser");
 const getAuditLogs = async (db, filters, pagination) => {
-  const { event_type, risk_level, status, search, startDate, endDate } = filters;
+  const { event_type, risk_level, status, search, startDate, endDate } =
+    filters;
   const { page = 1, limit = 10 } = pagination;
   const offset = (page - 1) * limit;
 
@@ -49,7 +51,8 @@ const getAuditLogs = async (db, filters, pagination) => {
 };
 
 const countAuditLogs = async (db, filters) => {
-  const { event_type, risk_level, status, search, startDate, endDate } = filters;
+  const { event_type, risk_level, status, search, startDate, endDate } =
+    filters;
 
   let query = `
     SELECT COUNT(*) as total FROM audit_logs
@@ -94,7 +97,7 @@ const countAuditLogs = async (db, filters) => {
 };
 
 const createAuditLog = async (db, logEntry) => {
-  const {
+  let {
     user_id,
     user_name,
     event_type,
@@ -103,17 +106,40 @@ const createAuditLog = async (db, logEntry) => {
     device,
     location,
     risk_level,
-    status
+    status,
   } = logEntry;
+
+  // Convert raw user-agent into readable device name
+  if (device) {
+    device = getDeviceName(device);
+  }
 
   const query = `
     INSERT INTO audit_logs (
-      user_id, user_name, event_type, details, ip_address, device, location, risk_level, status
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      user_id,
+      user_name,
+      event_type,
+      details,
+      ip_address,
+      device,
+      location,
+      risk_level,
+      status
+    )
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
     RETURNING *;
   `;
+
   const values = [
-    user_id, user_name, event_type, details, ip_address, device, location, risk_level, status
+    user_id,
+    user_name,
+    event_type,
+    details,
+    ip_address,
+    device,
+    location,
+    risk_level,
+    status,
   ];
 
   const result = await db.query(query, values);
@@ -123,5 +149,5 @@ const createAuditLog = async (db, logEntry) => {
 module.exports = {
   getAuditLogs,
   countAuditLogs,
-  createAuditLog
+  createAuditLog,
 };

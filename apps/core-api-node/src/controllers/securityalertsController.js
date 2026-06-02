@@ -106,7 +106,11 @@ exports.updateAlertStatus = async (req, res) => {
       WHERE id = $3
       RETURNING *;
     `;
-    const result = await req.db.query(query, [status, investigation_details, id]);
+    const result = await req.db.query(query, [
+      status,
+      investigation_details,
+      id,
+    ]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Alert not found" });
@@ -117,6 +121,8 @@ exports.updateAlertStatus = async (req, res) => {
       user_name: req.user?.full_name || "System",
       event_type: "settings",
       details: `Alert ${id} status updated to ${status}`,
+      location: req.user?.location || "Unknown",
+
       ip_address: req.ip,
       risk_level: "Medium",
       status: "Success",
@@ -139,13 +145,7 @@ exports.updateAlertStatus = async (req, res) => {
  */
 exports.exportAlerts = async (req, res) => {
   try {
-    const {
-      severity,
-      status,
-      search,
-      startDate,
-      endDate,
-    } = req.query;
+    const { severity, status, search, startDate, endDate } = req.query;
 
     let query = `
       SELECT 
@@ -248,6 +248,8 @@ exports.exportAlerts = async (req, res) => {
       user_name: req.user?.full_name || "System",
       event_type: "Security Alerts Export",
       details: `Security alerts exported successfully`,
+      location: req.user?.location || "Unknown",
+
       ip_address: req.ip,
       risk_level: "Low",
       status: "Success",
@@ -302,6 +304,8 @@ exports.blockUser = async (req, res) => {
       user_name: req.user?.full_name || "System",
       event_type: "User Blocked",
       details: `User ${blockedUser.full_name} (${blockedUser.email}) blocked. Reason: ${reason || "N/A"}`,
+      location: req.user?.location || "Unknown",
+
       ip_address: req.ip,
       risk_level: "Critical",
       status: "Success",

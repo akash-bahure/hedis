@@ -433,6 +433,8 @@ exports.updateUser = async (req, res) => {
       details: `User details updated for ID: ${id}`,
       ip_address: req.ip,
       device: req.headers["user-agent"],
+      location: req.user?.location || "Unknown",
+
       risk_level: "Low",
       status: "Success",
     });
@@ -481,6 +483,8 @@ exports.deleteUser = async (req, res) => {
       details: `User deleted with ID: ${id}`,
       ip_address: req.ip,
       device: req.headers["user-agent"],
+      location: req.user?.location || "Unknown",
+
       risk_level: "High",
       status: "Success",
     });
@@ -561,6 +565,8 @@ exports.exportUsers = async (req, res) => {
         details: `Users exported to CSV. Count: ${users.length}`,
         ip_address: req.ip,
         device: req.headers["user-agent"],
+        location: req.user?.location || "Unknown",
+
         risk_level: "Low",
         status: "Success",
       });
@@ -977,6 +983,8 @@ exports.deactivateUsers = async (req, res) => {
       details: `Users deactivated: ${result.rows.map((r) => r.id).join(", ")}`,
       ip_address: req.ip,
       device: req.headers["user-agent"],
+      location: req.user?.location || "Unknown",
+
       risk_level: "High",
       status: "Success",
     });
@@ -1030,6 +1038,8 @@ exports.assignRoles = async (req, res) => {
       details: `Role ID ${role_id} assigned to users: ${result.rows.map((r) => r.id).join(", ")}`,
       ip_address: req.ip,
       device: req.headers["user-agent"],
+      location: req.user?.location || "Unknown",
+
       risk_level: "High",
       status: "Success",
     });

@@ -277,10 +277,89 @@ const updateSecurity = async (req, res) => {
   }
 };
 
+const getActiveSessions = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const result = await req.db.query(
+      "SELECT id, session_id, ip_address, device, location, last_active, created_at FROM user_sessions WHERE user_id = $1 AND is_active = true ORDER BY created_at DESC",
+      [userId]
+    );
+
+    res.json({
+      success: true,
+      data: result.rows.map((s) => ({
+        ...s,
+        is_current: s.session_id === req.user.session_id,
+      })),
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+const revokeSession = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const userId = req.user.id;
+
+    await req.db.query(
+      "UPDATE user_sessions SET is_active = false WHERE session_id = $1 AND user_id = $2",
+      [sessionId, userId]
+    );
+
+    res.json({ success: true, message: "Session revoked successfully" });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+const revokeAllOtherSessions = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const currentSessionId = req.user.session_id;
+
+    await req.db.query(
+      "UPDATE user_sessions SET is_active = false WHERE user_id = $1 AND session_id != $2",
+      [userId, currentSessionId]
+    );
+
+    res.json({
+      success: true,
+      message: "All other sessions revoked successfully",
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+const getRecentLoginActivity = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const result = await req.db.query(
+      `SELECT id, event_type, details, ip_address, device, location, status, created_at 
+       FROM audit_logs 
+       WHERE user_id = $1 AND event_type IN ('Login Success', 'Login Failed', '2FA Verification', '2FA Verification Failed') 
+       ORDER BY created_at DESC LIMIT 5`,
+      [userId]
+    );
+
+    res.json({
+      success: true,
+      data: result.rows,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
 module.exports = {
   getProfile,
   updateProfile,
   updatePreferences,
   updateNotifications,
   updateSecurity,
+  getActiveSessions,
+  revokeSession,
+  revokeAllOtherSessions,
+  getRecentLoginActivity,
 };
