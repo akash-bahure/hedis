@@ -103,7 +103,7 @@ app.use("/api/work-queue", require("./routes/workQueue.routes"));
 app.use("/api/audit-logs", require("./routes/auditLogRoutes"));
 app.use("/api/security-compliance", require("./routes/securityComplianceRoutes"));
 app.use("/api/security", require("./routes/securityDashboardRoutes"));
-app.use("api/access-monitor",require("./routes/phiAccessLogsRoutes"));
+app.use("/api/access-logs", require("./routes/phiAccessLogsRoutes"));
 app.use("/api/security-alerts", require("./routes/securityalrestRoute"));
 
 module.exports = app;

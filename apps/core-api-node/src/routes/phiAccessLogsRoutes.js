@@ -14,7 +14,7 @@ const authMiddleware = require("../middlewares/authMiddleware");
 
 /**
  * @swagger
- * /api/security-dashboard/access-monitor:
+ * /api/access-logs/access-monitor:
  *   get:
  *     summary: Retrieve PHI Access Logs and Access Monitor Stats
  *     tags: [Access Monitor]
