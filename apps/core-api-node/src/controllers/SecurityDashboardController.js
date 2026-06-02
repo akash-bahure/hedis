@@ -389,3 +389,293 @@ exports.deleteAllowedIp = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+/**
+ * @desc    Get Security Score Dashboard
+ * @route   GET /api/security/security-score
+ * @access  Private (Admin)
+ */
+exports.getSecurityScore = async (req, res) => {
+  try {
+    const failedLoginsQuery = `
+      SELECT
+        COUNT(*) as total,
+        COUNT(*) FILTER (
+          WHERE risk_level = 'Critical'
+        ) as critical
+      FROM audit_logs
+      WHERE event_type = 'Login Failed'
+      AND created_at >= NOW() - INTERVAL '24 hours'
+    `;
+
+    const usersCountQuery = `
+      SELECT COUNT(*) as total
+      FROM users
+    `;
+
+    const mfaUsersQuery = `
+      SELECT COUNT(*) as total
+      FROM users
+      WHERE two_fa_auth = true
+    `;
+
+    const phiPoliciesQuery = `
+      SELECT *
+      FROM phi_policies
+      LIMIT 1
+    `;
+
+    const allowListQuery = `
+      SELECT COUNT(*) as total
+      FROM allowed_ips
+    `;
+
+    const [
+      failedResult,
+      usersResult,
+      mfaResult,
+      phiResult,
+      allowListResult
+    ] = await Promise.all([
+      req.db.query(failedLoginsQuery),
+      req.db.query(usersCountQuery),
+      req.db.query(mfaUsersQuery),
+      req.db.query(phiPoliciesQuery),
+      req.db.query(allowListQuery)
+    ]);
+
+    const totalFailed =
+      parseInt(failedResult.rows[0].total || 0);
+
+    const totalCritical =
+      parseInt(failedResult.rows[0].critical || 0);
+
+    const totalUsers =
+      parseInt(usersResult.rows[0].total || 1);
+
+    const totalMfa =
+      parseInt(mfaResult.rows[0].total || 0);
+
+    const phi =
+      phiResult.rows[0] || {};
+
+    const hasAllowList =
+      parseInt(
+        allowListResult.rows[0].total || 0
+      ) > 0;
+
+    const mfaAdoption =
+      (totalMfa / totalUsers) * 100;
+
+    /**
+     * Authentication
+     */
+    let authentication = 100;
+
+    authentication -= Math.min(
+      totalFailed * 2,
+      20
+    );
+
+    authentication -= Math.min(
+      totalCritical * 5,
+      20
+    );
+
+    authentication -= Math.max(
+      0,
+      80 - mfaAdoption
+    ) * 0.5;
+
+    authentication = Math.max(
+      0,
+      Math.min(
+        100,
+        Math.round(authentication)
+      )
+    );
+
+    /**
+     * Data Protection
+     */
+    let dataProtection = 0;
+
+    if (phi.enc_rest)
+      dataProtection += 40;
+
+    if (phi.enc_transit)
+      dataProtection += 40;
+
+    if (phi.de_id_export)
+      dataProtection += 20;
+
+    /**
+     * Access Control
+     */
+    let accessControl = 0;
+
+    if (phi.dlp)
+      accessControl += 60;
+
+    if (hasAllowList)
+      accessControl += 40;
+
+    /**
+     * Audit Coverage
+     */
+    let auditCoverage = 0;
+
+    if (phi.audit_trail)
+      auditCoverage += 70;
+
+    if (phi.phi_mask)
+      auditCoverage += 30;
+
+    /**
+     * Facility Device
+     */
+    const facilityDevice = 80;
+
+    const overallScore = Math.round(
+      authentication * 0.25 +
+      dataProtection * 0.25 +
+      accessControl * 0.20 +
+      auditCoverage * 0.20 +
+      facilityDevice * 0.10
+    );
+
+    let posture = "Excellent";
+
+    if (overallScore < 90)
+      posture = "Good";
+
+    if (overallScore < 75)
+      posture = "Fair";
+
+    if (overallScore < 60)
+      posture = "Poor";
+
+    res.status(200).json({
+      success: true,
+      data: {
+        overall_score: overallScore,
+        max_score: 100,
+        posture,
+        trend: "+2 this week",
+
+        categories: [
+          {
+            label: "Authentication",
+            score: authentication,
+            weight: 25
+          },
+          {
+            label: "Data Protection",
+            score: dataProtection,
+            weight: 25
+          },
+          {
+            label: "Access Control",
+            score: accessControl,
+            weight: 20
+          },
+          {
+            label: "Audit Coverage",
+            score: auditCoverage,
+            weight: 20
+          },
+          {
+            label: "Facility/Device",
+            score: facilityDevice,
+            weight: 10
+          }
+        ]
+      }
+    });
+  } catch (error) {
+    console.error(
+      "Get Security Score Error:",
+      error
+    );
+
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+exports.getPhiEncryptionControls = async (req, res) => {
+  const client = req.db;
+
+  try {
+    const result = await client.query(`
+      SELECT *
+      FROM phi_encryption_controls
+      LIMIT 1
+    `);
+
+    return res.status(200).json({
+      success: true,
+      data: result.rows[0] || null,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch PHI controls",
+    });
+  }
+};
+
+exports.updatePhiEncryptionControls = async (req, res) => {
+  const client = req.db;
+
+  try {
+    const {
+      encryption_at_rest,
+      encryption_in_transit,
+      phi_masking_logs,
+      full_access_audit_trail,
+      deidentify_on_export,
+      dlp_controls,
+    } = req.body;
+
+    const result = await client.query(
+      `
+      UPDATE phi_encryption_controls
+      SET
+        encryption_at_rest = COALESCE($1, encryption_at_rest),
+        encryption_in_transit = COALESCE($2, encryption_in_transit),
+        phi_masking_logs = COALESCE($3, phi_masking_logs),
+        full_access_audit_trail = COALESCE($4, full_access_audit_trail),
+        deidentify_on_export = COALESCE($5, deidentify_on_export),
+        dlp_controls = COALESCE($6, dlp_controls),
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING *
+      `,
+      [
+        encryption_at_rest,
+        encryption_in_transit,
+        phi_masking_logs,
+        full_access_audit_trail,
+        deidentify_on_export,
+        dlp_controls,
+      ]
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "PHI & Encryption Controls updated successfully",
+      data: result.rows[0],
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update PHI controls",
+    });
+  }
+};

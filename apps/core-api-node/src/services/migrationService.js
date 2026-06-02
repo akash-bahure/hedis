@@ -813,6 +813,54 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
       );
     }
   }
+  await client.query(`
+  CREATE TABLE IF NOT EXISTS ${schema}.security_scores (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    overall_score INTEGER NOT NULL DEFAULT 0
+      CHECK (overall_score >= 0 AND overall_score <= 100),
+
+    password_policy_score INTEGER DEFAULT 0
+      CHECK (password_policy_score >= 0 AND password_policy_score <= 100),
+
+    mfa_score INTEGER DEFAULT 0
+      CHECK (mfa_score >= 0 AND mfa_score <= 100),
+
+    session_management_score INTEGER DEFAULT 0
+      CHECK (session_management_score >= 0 AND session_management_score <= 100),
+
+    access_control_score INTEGER DEFAULT 0
+      CHECK (access_control_score >= 0 AND access_control_score <= 100),
+
+    audit_logging_score INTEGER DEFAULT 0
+      CHECK (audit_logging_score >= 0 AND audit_logging_score <= 100),
+
+    risk_level VARCHAR(20) DEFAULT 'Medium'
+      CHECK (risk_level IN ('Low', 'Medium', 'High', 'Critical')),
+
+    last_assessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
+await client.query(`
+  CREATE TABLE IF NOT EXISTS ${schema}.phi_encryption_controls (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    encryption_at_rest BOOLEAN DEFAULT TRUE,
+    encryption_in_transit BOOLEAN DEFAULT TRUE,
+    phi_masking_logs BOOLEAN DEFAULT TRUE,
+    full_access_audit_trail BOOLEAN DEFAULT TRUE,
+    deidentify_on_export BOOLEAN DEFAULT TRUE,
+    dlp_controls BOOLEAN DEFAULT TRUE,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+  
 }
 
 module.exports = { runMigrations };
