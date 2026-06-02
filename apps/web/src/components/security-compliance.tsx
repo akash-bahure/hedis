@@ -119,7 +119,15 @@ import {
   usePutApiSecurityComplianceAccessExpiryPolicy,
   usePutApiSecurityComplianceDataRetentionPolicy,
 } from "@/api";
-
+import {
+  getApiSecurityAlertsExport,
+  useGetApiSecurityAlerts,
+  useGetApiSecurityAlertsStats,
+  usePatchApiSecurityAlertsIdStatus,
+  usePostApiSecurityAlertsBlockUser,
+  getApiSecurityAlertsQueryKey,
+  getApiSecurityAlertsStatsQueryKey,
+} from "@/api";
 /* ════════════════════════════════════════════  PALETTE  */
 const C = {
   blue: "#2563eb",
@@ -3949,41 +3957,211 @@ function ComplianceTab() {
   );
 }
 
-/* ════════════════════════════════════════════  TAB: SECURITY ALERTS  */
+/* ════════════════════════════════════════════
+   TAB: SECURITY ALERTS
+════════════════════════════════════════════ */
 function AlertsTab() {
-  const [sevF, setSevF] = useState<AlertSev | "all">("all");
-  const [statF, setStatF] = useState<AlertStatus | "all">("all");
-  const [expanded, setExpanded] = useState<Set<string>>(
-    new Set(["SA001", "SA002"]),
-  );
+  // const [sevF, setSevF] = useState<AlertSev | "all">("all");
+  // const [statF, setStatF] = useState<AlertStatus | "all">("all");
+  // const [expanded, setExpanded] = useState<Set<string>>(
+  //   new Set(["SA001", "SA002"]),
+  // );
 
-  const filtered = useMemo(
-    () =>
-      SECURITY_ALERTS.filter((a) => {
-        if (sevF !== "all" && a.severity !== sevF) return false;
-        if (statF !== "all" && a.status !== statF) return false;
-        return true;
-      }),
-    [sevF, statF],
-  );
+  // const filtered = useMemo(
+  //   () =>
+  //     SECURITY_ALERTS.filter((a) => {
+  //       if (sevF !== "all" && a.severity !== sevF) return false;
+  //       if (statF !== "all" && a.status !== statF) return false;
+  //       return true;
+  //     }),
+  //   [sevF, statF],
+  // );
 
-  const counts = {
-    critical: SECURITY_ALERTS.filter((a) => a.severity === "critical").length,
-    high: SECURITY_ALERTS.filter((a) => a.severity === "high").length,
-    medium: SECURITY_ALERTS.filter((a) => a.severity === "medium").length,
-    low: SECURITY_ALERTS.filter((a) => a.severity === "low").length,
-    active: SECURITY_ALERTS.filter((a) => a.status === "active").length,
+  const [sevF, setSevF] = useState<string>("all");
+  const [statF, setStatF] = useState<string>("all");
+  const [page, setPage] = useState(1);
+  const queryClient = useQueryClient();
+
+  const limit = 10;
+
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const severityMap = {
+    critical: "Critical",
+    high: "High",
+    medium: "Medium",
+    low: "Low",
   };
 
-  const toggle = (id: string) =>
-    setExpanded((prev) => {
-      const n = new Set(prev);
-      n.has(id) ? n.delete(id) : n.add(id);
-      return n;
+  const statusMap = {
+    active: "Active",
+    investigating: "Investigating",
+    resolved: "Resolved",
+  };
+
+  /* API CALL */
+  const { data, isLoading, isError } = useGetApiSecurityAlerts({
+    severity:
+      sevF !== "all"
+        ? severityMap[sevF as keyof typeof severityMap]
+        : undefined,
+
+    status:
+      statF !== "all" ? statusMap[statF as keyof typeof statusMap] : undefined,
+
+    page,
+    limit,
+  });
+
+  /* ALERT STATS API */
+  const { data: statsData } = useGetApiSecurityAlertsStats();
+
+  /* UPDATE ALERT STATUS API */
+  const { mutate: updateAlertStatus, isPending: isUpdatingStatus } =
+    usePatchApiSecurityAlertsIdStatus({
+      mutation: {
+        onSuccess: async (_response, variables) => {
+          toast.success(`Alert marked as ${variables.data.status}`);
+
+          await queryClient.invalidateQueries({
+            queryKey: getApiSecurityAlertsQueryKey(),
+          });
+
+          await queryClient.invalidateQueries({
+            queryKey: getApiSecurityAlertsStatsQueryKey(),
+          });
+        },
+
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.error || "Failed to update alert status",
+          );
+        },
+      },
     });
 
+  /* BLOCK USER API */
+  const { mutate: blockUser, isPending: isBlockingUser } =
+    usePostApiSecurityAlertsBlockUser({
+      mutation: {
+        onSuccess: async (response: any) => {
+          toast.success(response?.message || "User blocked successfully");
+
+          await queryClient.invalidateQueries({
+            queryKey: getApiSecurityAlertsQueryKey(),
+          });
+
+          await queryClient.invalidateQueries({
+            queryKey: getApiSecurityAlertsStatsQueryKey(),
+          });
+        },
+
+        onError: (error: any) => {
+          toast.error(error?.response?.data?.error || "Failed to block user");
+        },
+      },
+    });
+  /* API DATA */
+  const alerts = data?.data || [];
+  const pagination = data?.pagination;
+
+  /* STATS DATA */
+  const counts = {
+    critical: Number(statsData?.data?.critical || 0),
+    high: Number(statsData?.data?.high || 0),
+    medium: Number(statsData?.data?.medium || 0),
+    low: Number(statsData?.data?.low || 0),
+    active: Number(statsData?.data?.active_now || 0),
+  };
+
+  /* HANDLE STATUS UPDATE */
+  const handleUpdateStatus = (
+    id: string,
+    status: string,
+    investigation_details?: string,
+  ) => {
+    updateAlertStatus({
+      id,
+
+      data: {
+        status,
+        investigation_details,
+      },
+    });
+  };
+
+  /* HANDLE BLOCK USER */
+  const handleBlockUser = (userId: string, userName?: string) => {
+    blockUser({
+      data: {
+        userId,
+        reason: `Blocked from security alerts panel${userName ? ` - ${userName}` : ""}`,
+      },
+    });
+  };
+
+  /* HANDLE EXPORT ALERTS */
+  const handleExportAlerts = async () => {
+    try {
+      toast.loading("Preparing security alerts export...", {
+        id: "alerts-export",
+      });
+
+      const blob = await getApiSecurityAlertsExport(
+        {
+          severity: sevF === "all" ? undefined : sevF,
+          status:
+            statF === "all"
+              ? undefined
+              : statF.charAt(0).toUpperCase() + statF.slice(1),
+        },
+        {
+          responseType: "blob",
+        },
+      );
+
+      /* CREATE DOWNLOAD LINK */
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+
+      link.download = `security_alerts_${new Date()
+        .toISOString()
+        .slice(0, 10)}.csv`;
+
+      document.body.appendChild(link);
+      link.click();
+
+      /* CLEANUP */
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Security alerts exported successfully", {
+        id: "alerts-export",
+      });
+    } catch (err: any) {
+      console.error("Security alerts export failed:", err);
+
+      toast.error("Failed to export security alerts", {
+        id: "alerts-export",
+      });
+    }
+  };
+
+  /* EXPAND / COLLAPSE */
+  const toggle = (id: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+
+      next.has(id) ? next.delete(id) : next.add(id);
+
+      return next;
+    });
+
+  /* ALERT CONFIG */
   const alertCfg: Record<
-    AlertSev,
+    string,
     { border: string; bg: string; hdr: string; icon: React.ElementType }
   > = {
     critical: {
@@ -3992,18 +4170,21 @@ function AlertsTab() {
       hdr: "bg-red-50",
       icon: AlertOctagon,
     },
+
     high: {
       border: "border-orange-300",
       bg: "bg-orange-50/40",
       hdr: "bg-orange-50",
       icon: AlertCircle,
     },
+
     medium: {
       border: "border-amber-300",
       bg: "bg-amber-50/30",
       hdr: "bg-amber-50",
       icon: AlertTriangle,
     },
+
     low: {
       border: "border-slate-200",
       bg: "bg-slate-50/30",
@@ -4012,9 +4193,27 @@ function AlertsTab() {
     },
   };
 
+  /* LOADING */
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  /* ERROR */
+  if (isError) {
+    return (
+      <div className="text-center py-12 text-red-500 text-sm font-medium">
+        Failed to load security alerts
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      {/* Severity Summary */}
+      {/* SEVERITY SUMMARY */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {[
           {
@@ -4023,99 +4222,134 @@ function AlertsTab() {
             bg: "bg-red-50",
             border: "border-red-200",
             text: "text-red-700",
-            dot: "bg-red-500",
             icon: AlertOctagon,
           },
+
           {
             label: "High",
             count: counts.high,
             bg: "bg-orange-50",
             border: "border-orange-200",
             text: "text-orange-700",
-            dot: "bg-orange-500",
             icon: AlertCircle,
           },
+
           {
             label: "Medium",
             count: counts.medium,
             bg: "bg-amber-50",
             border: "border-amber-200",
             text: "text-amber-700",
-            dot: "bg-amber-500",
             icon: AlertTriangle,
           },
+
           {
             label: "Low",
             count: counts.low,
             bg: "bg-slate-100",
             border: "border-slate-200",
             text: "text-slate-600",
-            dot: "bg-slate-400",
             icon: Info,
           },
+
           {
             label: "Active Now",
             count: counts.active,
             bg: "bg-red-50",
             border: "border-red-200",
             text: "text-red-700",
-            dot: "bg-red-500",
             icon: Bell,
           },
         ].map((s) => {
           const Icon = s.icon;
+
           return (
             <div
               key={s.label}
               onClick={() => {
-                if (["Critical", "High", "Medium", "Low"].includes(s.label))
-                  setSevF(s.label.toLowerCase() as AlertSev);
-                else setSevF("all");
+                if (["Critical", "High", "Medium", "Low"].includes(s.label)) {
+                  setSevF(s.label.toLowerCase());
+                } else {
+                  setSevF("all");
+                }
+
+                setPage(1);
               }}
               className={`flex flex-col items-center gap-1 px-4 py-3 rounded-2xl border cursor-pointer transition-all hover:shadow-md ${s.bg} ${s.border} ${s.text}`}
             >
               <Icon className="w-5 h-5" />
+
               <span className="text-2xl font-black">{s.count}</span>
+
               <span className="text-[10px] font-bold">{s.label}</span>
             </div>
           );
         })}
       </div>
 
-      {/* Filters */}
+      {/* FILTERS */}
       <div className="flex items-center gap-3 flex-wrap">
         <span className="text-[11px] font-bold text-foreground">Filter:</span>
+
+        {/* SEVERITY FILTER */}
         {(["all", "critical", "high", "medium", "low"] as const).map((s) => (
           <button
             key={s}
-            onClick={() => setSevF(s)}
-            className={`px-3 py-1 text-[10px] font-bold rounded-lg border transition-colors capitalize ${sevF === s ? "bg-primary text-white border-primary" : "border-border text-muted-foreground hover:bg-muted"}`}
+            onClick={() => {
+              setSevF(s);
+              setPage(1);
+            }}
+            className={`px-3 py-1 text-[10px] font-bold rounded-lg border transition-colors capitalize ${
+              sevF === s
+                ? "bg-primary text-white border-primary"
+                : "border-border text-muted-foreground hover:bg-muted"
+            }`}
           >
             {s === "all" ? "All Severities" : s}
           </button>
         ))}
+
         <div className="w-px h-5 bg-border mx-1" />
+
+        {/* STATUS FILTER */}
         {(["all", "active", "investigating", "resolved"] as const).map((s) => (
           <button
             key={s}
-            onClick={() => setStatF(s)}
-            className={`px-3 py-1 text-[10px] font-bold rounded-lg border transition-colors capitalize ${statF === s ? "bg-primary text-white border-primary" : "border-border text-muted-foreground hover:bg-muted"}`}
+            onClick={() => {
+              setStatF(s);
+              setPage(1);
+            }}
+            className={`px-3 py-1 text-[10px] font-bold rounded-lg border transition-colors capitalize ${
+              statF === s
+                ? "bg-primary text-white border-primary"
+                : "border-border text-muted-foreground hover:bg-muted"
+            }`}
           >
             {s === "all" ? "All Status" : s}
           </button>
         ))}
+
         <div className="flex-1" />
-        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold border border-border rounded-xl hover:bg-muted transition-colors whitespace-nowrap text-muted-foreground">
+
+        {/* EXPORT */}
+        <button
+          onClick={handleExportAlerts}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold border border-border rounded-xl hover:bg-muted transition-colors whitespace-nowrap text-muted-foreground"
+        >
           <Download className="w-3.5 h-3.5" />
           Export Alerts
         </button>
       </div>
 
-      {/* Alert list */}
+      {/* ALERT LIST */}
       <div className="space-y-2">
-        {filtered.map((alert) => {
-          const cfg = alertCfg[alert.severity];
+        {alerts.map((alert: any) => {
+          const severity = alert.severity?.toLowerCase();
+
+          const cfg = alertCfg[severity] || alertCfg.low;
+
           const Icon = cfg.icon;
+
           const isExpanded = expanded.has(alert.id);
 
           return (
@@ -4123,41 +4357,57 @@ function AlertsTab() {
               key={alert.id}
               className={`rounded-2xl border overflow-hidden shadow-sm ${cfg.border} ${cfg.bg}`}
             >
-              {/* Alert Header */}
+              {/* HEADER */}
               <button
                 className={`w-full flex items-start gap-3 px-5 py-3.5 text-left ${cfg.hdr} hover:opacity-95 transition-opacity`}
                 onClick={() => toggle(alert.id)}
               >
                 <div className="flex-shrink-0 mt-0.5">
                   <Icon
-                    className={`w-4.5 h-4.5 ${alert.severity === "critical" ? "text-red-600" : alert.severity === "high" ? "text-orange-600" : alert.severity === "medium" ? "text-amber-600" : "text-slate-500"}`}
+                    className={`w-4.5 h-4.5 ${
+                      severity === "critical"
+                        ? "text-red-600"
+                        : severity === "high"
+                          ? "text-orange-600"
+                          : severity === "medium"
+                            ? "text-amber-600"
+                            : "text-slate-500"
+                    }`}
                   />
                 </div>
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-[11px] font-black text-foreground">
-                      {alert.type}
+                      {alert.alert_type}
                     </span>
-                    <SeverityBadge s={alert.severity} />
-                    <AlertStatusBadge s={alert.status} />
-                    {alert.user && (
+
+                    <SeverityBadge s={severity} />
+
+                    <AlertStatusBadge s={alert.status?.toLowerCase()} />
+
+                    {alert.user_name && (
                       <span className="text-[9px] text-muted-foreground">
-                        User: <strong>{alert.user}</strong>
+                        User: <strong>{alert.user_name}</strong>
                       </span>
                     )}
-                    {alert.ip && (
+
+                    {alert.ip_address && (
                       <span className="text-[9px] font-mono text-muted-foreground">
-                        {alert.ip}
+                        {alert.ip_address}
                       </span>
                     )}
+
                     <span className="text-[9px] text-muted-foreground ml-auto flex-shrink-0">
-                      {alert.ts}
+                      {new Date(alert.created_at).toLocaleString()}
                     </span>
                   </div>
+
                   <p className="text-[10px] text-foreground mt-0.5 leading-snug">
                     {alert.description}
                   </p>
                 </div>
+
                 {isExpanded ? (
                   <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                 ) : (
@@ -4165,45 +4415,105 @@ function AlertsTab() {
                 )}
               </button>
 
-              {/* Expanded Detail */}
+              {/* DETAILS */}
               {isExpanded && (
                 <div className="px-5 py-4 border-t border-current/10 space-y-3">
                   <div className="flex items-start gap-2.5">
                     <Terminal className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+
                     <div>
                       <p className="text-[10px] font-bold text-foreground mb-0.5">
                         Investigation Details
                       </p>
+
                       <p className="text-[10px] text-muted-foreground leading-relaxed">
-                        {alert.details}
+                        {alert.investigation_details}
                       </p>
                     </div>
                   </div>
-                  {alert.status !== "resolved" && (
+
+                  {/* METADATA */}
+                  {alert.metadata && Object.keys(alert.metadata).length > 0 && (
+                    <div className="rounded-xl border border-border bg-background/70 p-3">
+                      <p className="text-[10px] font-bold mb-2">Metadata</p>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        {Object.entries(alert.metadata).map(([key, value]) => (
+                          <div key={key} className="text-[10px]">
+                            <span className="font-semibold capitalize">
+                              {key.replaceAll("_", " ")}:
+                            </span>{" "}
+                            <span className="text-muted-foreground">
+                              {String(value)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ACTION BUTTONS */}
+
+                  {/* ACTION BUTTONS */}
+                  {alert.status?.toLowerCase() !== "resolved" && (
                     <div className="flex items-center gap-2 pt-1">
-                      {alert.status === "active" && (
-                        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold bg-amber-600 text-white rounded-lg hover:opacity-90 transition-opacity whitespace-nowrap">
+                      {/* INVESTIGATE */}
+                      {alert.status?.toLowerCase() === "active" && (
+                        <button
+                          disabled={isUpdatingStatus}
+                          onClick={() =>
+                            handleUpdateStatus(
+                              alert.id,
+                              "Investigating",
+                              "Security team started investigation.",
+                            )
+                          }
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold bg-amber-600 text-white rounded-lg hover:opacity-90 transition-opacity whitespace-nowrap disabled:opacity-50"
+                        >
                           <Search className="w-3 h-3" />
                           Investigate
                         </button>
                       )}
-                      {alert.user && alert.status !== "resolved" && (
-                        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold bg-red-600 text-white rounded-lg hover:opacity-90 transition-opacity whitespace-nowrap">
-                          <Lock className="w-3 h-3" />
-                          Block User
+
+                      {/* BLOCK USER */}
+
+                      {alert.user_id && (
+                        <button
+                          disabled={isBlockingUser}
+                          onClick={() =>
+                            handleBlockUser(alert.user_id, alert.user_name)
+                          }
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold bg-red-600 text-white rounded-lg hover:opacity-90 transition-opacity whitespace-nowrap disabled:opacity-50"
+                        >
+                          {isBlockingUser ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <Lock className="w-3 h-3" />
+                          )}
+
+                          {isBlockingUser ? "Blocking..." : "Block User"}
                         </button>
                       )}
-                      <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold border border-border rounded-lg hover:bg-muted transition-colors text-muted-foreground whitespace-nowrap">
+
+                      {/* MARK RESOLVED */}
+                      <button
+                        disabled={isUpdatingStatus}
+                        onClick={() =>
+                          handleUpdateStatus(
+                            alert.id,
+                            "Resolved",
+                            "Alert resolved by admin.",
+                          )
+                        }
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold border border-border rounded-lg hover:bg-muted transition-colors text-muted-foreground whitespace-nowrap disabled:opacity-50"
+                      >
                         <Check className="w-3 h-3" />
                         Mark Resolved
                       </button>
-                      <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold border border-border rounded-lg hover:bg-muted transition-colors text-muted-foreground whitespace-nowrap">
-                        <FileText className="w-3 h-3" />
-                        Add Note
-                      </button>
                     </div>
                   )}
-                  {alert.status === "resolved" && (
+
+                  {alert.status?.toLowerCase() === "resolved" && (
                     <div className="flex items-center gap-2 text-[10px] text-emerald-600 font-bold">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       Resolved — no further action required
@@ -4214,15 +4524,43 @@ function AlertsTab() {
             </div>
           );
         })}
-        {filtered.length === 0 && (
+
+        {/* EMPTY STATE */}
+        {alerts.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
             <ShieldCheck className="w-12 h-12 mx-auto mb-3 opacity-30" />
+
             <p className="text-sm font-semibold">
               No alerts match the current filters
             </p>
           </div>
         )}
       </div>
+
+      {/* PAGINATION */}
+      {pagination && (
+        <div className="flex items-center justify-end gap-2 pt-4">
+          <button
+            disabled={page === 1}
+            onClick={() => setPage((prev) => prev - 1)}
+            className="px-3 py-1.5 text-xs border rounded-lg disabled:opacity-50"
+          >
+            Previous
+          </button>
+
+          <span className="text-xs text-muted-foreground">
+            Page {pagination.page}
+          </span>
+
+          <button
+            disabled={alerts.length < limit}
+            onClick={() => setPage((prev) => prev + 1)}
+            className="px-3 py-1.5 text-xs border rounded-lg disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -4240,6 +4578,10 @@ export function SecurityCompliance() {
 
   const auditLogsCount = auditLogsCountData?.pagination?.total || 0;
 
+  const { data: securityAlertStats } = useGetApiSecurityAlertsStats();
+
+  const activeAlertsCount = Number(securityAlertStats?.data?.active_now || 0);
+
   const TABS: {
     id: SecTab;
     label: string;
@@ -4255,12 +4597,15 @@ export function SecurityCompliance() {
     },
     { id: "access", label: "Access Monitor", icon: Eye, alert: "LIVE" },
     { id: "compliance", label: "Compliance Controls", icon: ShieldCheck },
-    { id: "alerts", label: "Security Alerts", icon: Bell, alert: "2 active" },
+    {
+      id: "alerts",
+      label: "Security Alerts",
+      icon: Bell,
+      alert: activeAlertsCount > 0 ? `${activeAlertsCount} active` : undefined,
+    },
   ];
 
-  const activeCritical = SECURITY_ALERTS.filter(
-    (a) => a.status === "active" && a.severity === "critical",
-  ).length;
+  const activeCritical = Number(securityAlertStats?.data?.critical || 0);
 
   return (
     <div className="flex flex-col gap-5 min-h-full">

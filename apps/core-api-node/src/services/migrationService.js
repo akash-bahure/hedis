@@ -732,6 +732,22 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
   `);
 
   await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.user_sessions (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES ${schema}.users(id) ON DELETE CASCADE,
+      session_id UUID NOT NULL, -- Logical ID for the session, included in JWT
+      ip_address VARCHAR(45),
+      device TEXT,
+      location VARCHAR(255),
+      is_active BOOLEAN DEFAULT TRUE,
+      last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON ${schema}.user_sessions(user_id);
+    CREATE INDEX IF NOT EXISTS idx_user_sessions_session_id ON ${schema}.user_sessions(session_id);
+  `);
+
+  await client.query(`
     CREATE TABLE IF NOT EXISTS ${schema}.security_alerts (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       alert_type VARCHAR(255) NOT NULL,

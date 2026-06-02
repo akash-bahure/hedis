@@ -284,4 +284,66 @@ router.patch("/:id/notifications", controller.updateNotifications);
  */
 router.patch("/:id/security", controller.updateSecurity);
 
+/**
+ * @swagger
+ * /api/profile/active-sessions:
+ *   get:
+ *     summary: Get all active sessions for the current user
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Active sessions fetched successfully
+ */
+router.get("/active-sessions", authMiddleware, controller.getActiveSessions);
+
+/**
+ * @swagger
+ * /api/profile/active-sessions/{sessionId}:
+ *   delete:
+ *     summary: Revoke a specific active session
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: sessionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Session revoked successfully
+ */
+router.delete("/active-sessions/:sessionId", authMiddleware, controller.revokeSession);
+
+/**
+ * @swagger
+ * /api/profile/active-sessions/revoke-others:
+ *   post:
+ *     summary: Revoke all other active sessions except the current one
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Other sessions revoked successfully
+ */
+router.post("/active-sessions/revoke-others", authMiddleware, controller.revokeAllOtherSessions);
+
+/**
+ * @swagger
+ * /api/profile/login-activity:
+ *   get:
+ *     summary: Get recent login activity for the current user
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Recent login activity fetched successfully
+ */
+router.get("/login-activity", authMiddleware, controller.getRecentLoginActivity);
+
 module.exports = router;

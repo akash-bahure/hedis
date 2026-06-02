@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const UAParser = require("ua-parser-js");
 const { sendResetEmail, sendOTPEmail } = require("../services/mail.service");
 const AuditLog = require("../models/AuditLog");
 const SecurityAlert = require("../models/SecurityAlert");
@@ -127,12 +128,15 @@ u.lockout_until,
         details: `Suspended user attempted login`,
         ip_address: req.ip,
         device: req.headers["user-agent"],
+        location: user.location || "Unknown",
+
         risk_level: "Medium",
         status: "Blocked",
       });
 
       return res.status(403).json({
-        message: "Your account has been suspended. Please contact the administrator.",
+        message:
+          "Your account has been suspended. Please contact the administrator.",
       });
     }
 
@@ -157,8 +161,12 @@ u.lockout_until,
           user_name: user.full_name,
           ip_address: req.ip,
           description: `User account "${user.full_name}" has password expired. Policy: ${policy.expiry_days} days.`,
-          investigation_details: "Automated notifications sent. Force-change policy triggers on expiration.",
-          metadata: { expiry_days: policy.expiry_days, last_changed: user.last_password_changed }
+          investigation_details:
+            "Automated notifications sent. Force-change policy triggers on expiration.",
+          metadata: {
+            expiry_days: policy.expiry_days,
+            last_changed: user.last_password_changed,
+          },
         });
         return res.status(200).json({
           message: "Password expired",
@@ -179,8 +187,9 @@ u.lockout_until,
           user_name: user.full_name,
           ip_address: req.ip,
           description: `User account "${user.full_name}" has password expiring within 7 days.`,
-          investigation_details: "Automated alert for upcoming password expiration.",
-          metadata: { expiry_date: expiryDate }
+          investigation_details:
+            "Automated alert for upcoming password expiration.",
+          metadata: { expiry_date: expiryDate },
         });
       }
     }
@@ -224,6 +233,8 @@ u.lockout_until,
           : `Incorrect password for user: ${email}`,
         ip_address: req.ip,
         device: req.headers["user-agent"],
+        location: user.location || "Unknown",
+
         risk_level: lockoutUntil ? "High" : "Low",
         status: "Failed",
       });
@@ -237,8 +248,9 @@ u.lockout_until,
           user_name: user.full_name,
           ip_address: req.ip,
           description: `${newAttempts} consecutive failed login attempts for user "${user.full_name}" from external IP ${req.ip}. Account locked for 30 minutes.`,
-          investigation_details: "System-triggered lockout due to policy violation.",
-          metadata: { failed_attempts: newAttempts, lockout_duration: "30m" }
+          investigation_details:
+            "System-triggered lockout due to policy violation.",
+          metadata: { failed_attempts: newAttempts, lockout_duration: "30m" },
         });
       }
 
@@ -251,8 +263,9 @@ u.lockout_until,
           user_name: user.full_name,
           ip_address: req.ip,
           description: `Failed login attempt from unknown external IP address: ${req.ip} for user "${user.full_name}".`,
-          investigation_details: "IP not in corp whitelist. Possible unauthorized access attempt.",
-          metadata: { ip_address: req.ip }
+          investigation_details:
+            "IP not in corp whitelist. Possible unauthorized access attempt.",
+          metadata: { ip_address: req.ip },
         });
       }
 
@@ -378,10 +391,36 @@ u.lockout_until,
     // Fetch Organization details
     const organization = user.organization_id
       ? {
-        id: user.organization_id,
-        name: user.organization_name || "",
-      }
+          id: user.organization_id,
+          name: user.organization_name || "",
+        }
       : null;
+
+    // Generate session ID
+    const sessionId = crypto.randomUUID();
+
+    // Store session
+    const parser = new UAParser(req.headers["user-agent"]);
+    const ua = parser.getResult();
+
+    const browser = ua.browser.name || "Unknown Browser";
+    const os = ua.os.name || "Unknown OS";
+    const deviceType = ua.device.type || "Desktop";
+
+    const deviceName =
+      deviceType === "mobile" ? `${browser} - Mobile` : `${browser} - ${os}`;
+
+    await req.db.query(
+      `INSERT INTO user_sessions (
+          user_id,
+          session_id,
+          ip_address,
+          device,
+          location
+       )
+       VALUES ($1, $2, $3, $4, $5)`,
+      [user.id, sessionId, req.ip, deviceName, user.location || "Unknown"]
+    );
 
     // Generate token
     const token = jwt.sign(
@@ -389,6 +428,7 @@ u.lockout_until,
         id: user.id,
         email: user.email,
         role: user.role,
+        session_id: sessionId,
       },
       process.env.JWT_SECRET,
       {
@@ -410,13 +450,14 @@ u.lockout_until,
     } = user;
 
     // Check if 2FA is enabled OR if IP is not trusted (external IP requires 2FA)
-    const requiresTwoFa = user.two_fa_auth || (req.isTrustedIp === false);
+    const requiresTwoFa = user.two_fa_auth || req.isTrustedIp === false;
 
     if (requiresTwoFa) {
       return res.status(200).json({
-        message: req.isTrustedIp === false && !user.two_fa_auth
-          ? "External IP detected. Additional 2FA verification required."
-          : "2FA required",
+        message:
+          req.isTrustedIp === false && !user.two_fa_auth
+            ? "External IP detected. Additional 2FA verification required."
+            : "2FA required",
         two_fa_required: true,
         external_ip: req.isTrustedIp === false,
         email: user.email,
@@ -434,6 +475,8 @@ u.lockout_until,
       details: `User ${user.full_name} logged in successfully`,
       ip_address: req.ip,
       device: req.headers["user-agent"],
+      location: user.location || "Unknown",
+
       risk_level: "Low",
       status: "Success",
     });
@@ -448,8 +491,9 @@ u.lockout_until,
         user_name: user.full_name,
         ip_address: req.ip,
         description: `Successful login from unrecognized device/external IP — new browser fingerprint detected.`,
-        investigation_details: "User verified via 2FA/IP policy. No further action required.",
-        metadata: { ip_address: req.ip, device: req.headers["user-agent"] }
+        investigation_details:
+          "User verified via 2FA/IP policy. No further action required.",
+        metadata: { ip_address: req.ip, device: req.headers["user-agent"] },
       });
     }
 
@@ -716,6 +760,8 @@ exports.resetPassword = async (req, res) => {
       details: "User password reset successfully via token",
       ip_address: req.ip,
       device: req.headers["user-agent"],
+      location: user.location || "Unknown",
+
       risk_level: "High",
       status: "Success",
     });
@@ -784,6 +830,8 @@ exports.sendOTP = async (req, res) => {
       details: `2FA OTP sent to ${user.email}`,
       ip_address: req.ip,
       device: req.headers["user-agent"],
+      location: user.location || "Unknown",
+
       risk_level: "Low",
       status: "Success",
     });
@@ -1063,9 +1111,9 @@ exports.validateOTP = async (req, res) => {
     // Organization
     const organization = user.organization_id
       ? {
-        id: user.organization_id,
-        name: user.organization_name || "",
-      }
+          id: user.organization_id,
+          name: user.organization_name || "",
+        }
       : null;
 
     // Update last login
@@ -1078,12 +1126,39 @@ exports.validateOTP = async (req, res) => {
       [user.id]
     );
 
+    // Generate session ID
+    const sessionId = crypto.randomUUID();
+
+    // Store session
+    const parser = new UAParser(req.headers["user-agent"]);
+    const ua = parser.getResult();
+
+    const browser = ua.browser.name || "Unknown Browser";
+    const os = ua.os.name || "Unknown OS";
+    const deviceType = ua.device.type || "Desktop";
+
+    const deviceName =
+      deviceType === "mobile" ? `${browser} - Mobile` : `${browser} - ${os}`;
+
+    await req.db.query(
+      `INSERT INTO user_sessions (
+          user_id,
+          session_id,
+          ip_address,
+          device,
+          location
+       )
+       VALUES ($1, $2, $3, $4, $5)`,
+      [user.id, sessionId, req.ip, deviceName, user.location || "Unknown"]
+    );
+
     // Generate JWT token
     const token = jwt.sign(
       {
         id: user.id,
         email: user.email,
         role: user.role,
+        session_id: sessionId,
       },
       process.env.JWT_SECRET,
       {
@@ -1114,6 +1189,8 @@ exports.validateOTP = async (req, res) => {
       details: `User ${user.full_name} logged in successfully`,
       ip_address: req.ip,
       device: req.headers["user-agent"],
+      location: user.location || "Unknown",
+
       risk_level: "Low",
       status: "Success",
     });
@@ -1144,6 +1221,14 @@ exports.logout = async (req, res) => {
     const user = req.user;
 
     if (user) {
+      // Mark session as inactive
+      if (user.session_id) {
+        await req.db.query(
+          "UPDATE user_sessions SET is_active = false WHERE session_id = $1",
+          [user.session_id]
+        );
+      }
+
       await AuditLog.createAuditLog(req.db, {
         user_id: user.id,
         user_name: user.full_name,
@@ -1151,6 +1236,8 @@ exports.logout = async (req, res) => {
         details: `User ${user.full_name} logged out`,
         ip_address: req.ip,
         device: req.headers["user-agent"],
+        location: user.location || "Unknown",
+
         risk_level: "Low",
         status: "Success",
       });
