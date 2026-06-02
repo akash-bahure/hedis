@@ -3,6 +3,10 @@ const router = express.Router();
 const securityDashboardController = require("../controllers/SecurityDashboardController");
 const controller = require("../controllers/mfaV2Controller");
 const smController = require("../controllers/sessionManagementV2Controller");
+const {
+  getPhiEncryptionControls,
+  updatePhiEncryptionControls,
+} = require("../controllers/securityDashboardController");
 const authMiddleware = require("../middlewares/authMiddleware");
 
 /**
@@ -427,5 +431,196 @@ router.get("/session-management-v2", authMiddleware, smController.getSessionMana
  *                   type: object
  */
 router.put("/session-management-v2", authMiddleware, smController.updateSessionManagement);
+
+/**
+ * @swagger
+ * /api/security/security-score:
+ *   get:
+ *     summary: Get security score breakdown
+ *     tags: [Security Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Security score fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     overall_score:
+ *                       type: integer
+ *                       example: 92
+ *                       description: Overall security score out of 100
+ *                     risk_level:
+ *                       type: string
+ *                       example: Excellent
+ *                       enum:
+ *                         - Excellent
+ *                         - Good
+ *                         - Fair
+ *                         - Poor
+ *                     authentication_score:
+ *                       type: integer
+ *                       example: 98
+ *                     data_protection_score:
+ *                       type: integer
+ *                       example: 95
+ *                     access_control_score:
+ *                       type: integer
+ *                       example: 91
+ *                     audit_coverage_score:
+ *                       type: integer
+ *                       example: 88
+ *                     facility_device_score:
+ *                       type: integer
+ *                       example: 80
+ *                     last_assessed_at:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2026-06-02T09:00:00Z"
+ *       500:
+ *         description: Failed to fetch security score
+ */
+router.get(
+  "/security-score",
+  authMiddleware,
+  securityDashboardController.getSecurityScore
+);
+
+/**
+ * @swagger
+ * /api/security/phi-encryption-controls:
+ *   get:
+ *     summary: Get PHI & Encryption Controls Settings
+ *     tags:
+ *       - Security Dashboard
+ *     responses:
+ *       200:
+ *         description: PHI & Encryption Controls fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     encryption_at_rest:
+ *                       type: boolean
+ *                       example: true
+ *                     encryption_in_transit:
+ *                       type: boolean
+ *                       example: true
+ *                     phi_masking_logs:
+ *                       type: boolean
+ *                       example: true
+ *                     full_access_audit_trail:
+ *                       type: boolean
+ *                       example: true
+ *                     deidentify_on_export:
+ *                       type: boolean
+ *                       example: true
+ *                     dlp_controls:
+ *                       type: boolean
+ *                       example: true
+ *                     created_at:
+ *                       type: string
+ *                       format: date-time
+ *                     updated_at:
+ *                       type: string
+ *                       format: date-time
+ */
+router.get(
+  "/phi-encryption-controls",
+  getPhiEncryptionControls
+);
+
+/**
+ * @swagger
+ * /api/security/phi-encryption-controls:
+ *   put:
+ *     summary: Update PHI & Encryption Controls Settings
+ *     tags:
+ *       - Security Dashboard
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               encryption_at_rest:
+ *                 type: boolean
+ *                 example: true
+ *               encryption_in_transit:
+ *                 type: boolean
+ *                 example: true
+ *               phi_masking_logs:
+ *                 type: boolean
+ *                 example: true
+ *               full_access_audit_trail:
+ *                 type: boolean
+ *                 example: true
+ *               deidentify_on_export:
+ *                 type: boolean
+ *                 example: true
+ *               dlp_controls:
+ *                 type: boolean
+ *                 example: true
+ *     responses:
+ *       200:
+ *         description: PHI & Encryption Controls updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: PHI & Encryption Controls updated successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     encryption_at_rest:
+ *                       type: boolean
+ *                     encryption_in_transit:
+ *                       type: boolean
+ *                     phi_masking_logs:
+ *                       type: boolean
+ *                     full_access_audit_trail:
+ *                       type: boolean
+ *                     deidentify_on_export:
+ *                       type: boolean
+ *                     dlp_controls:
+ *                       type: boolean
+ *                     updated_at:
+ *                       type: string
+ *                       format: date-time
+ *       500:
+ *         description: Failed to update PHI & Encryption Controls
+ */
+router.put(
+  "/phi-encryption-controls",
+  updatePhiEncryptionControls
+);
 
 module.exports = router;
