@@ -29,6 +29,7 @@
     "sequelize": "^6.37.8",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
+    "ua-parser-js": "^2.0.10",
     "zod": "^3.5.4",
     "zod-to-openapi": "^0.2.1"
   },
