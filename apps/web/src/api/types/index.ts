@@ -173,6 +173,14 @@ export type {
   GetApiProjectsIdQueryResponse,
 } from "./GetApiProjectsId.ts";
 export type {
+  GetApiReportsAnalyticsAbstractorProductivity200,
+  GetApiReportsAnalyticsAbstractorProductivity401,
+  GetApiReportsAnalyticsAbstractorProductivity500,
+  GetApiReportsAnalyticsAbstractorProductivityQuery,
+  GetApiReportsAnalyticsAbstractorProductivityQueryParams,
+  GetApiReportsAnalyticsAbstractorProductivityQueryResponse,
+} from "./GetApiReportsAnalyticsAbstractorProductivity.ts";
+export type {
   GetApiSecurityAlerts200,
   GetApiSecurityAlertsQuery,
   GetApiSecurityAlertsQueryParams,

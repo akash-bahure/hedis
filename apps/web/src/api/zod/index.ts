@@ -301,6 +301,13 @@ export {
   postApiProjectsMutationResponseSchema,
 } from "./ProjectsSchemas/postApiProjectsSchema.ts";
 export {
+  getApiReportsAnalyticsAbstractorProductivity200Schema,
+  getApiReportsAnalyticsAbstractorProductivity401Schema,
+  getApiReportsAnalyticsAbstractorProductivity500Schema,
+  getApiReportsAnalyticsAbstractorProductivityQueryParamsSchema,
+  getApiReportsAnalyticsAbstractorProductivityQueryResponseSchema,
+} from "./Reports & AnalyticsSchemas/getApiReportsAnalyticsAbstractorProductivitySchema.ts";
+export {
   getApiSecurityComplianceAccessExpiryPolicy200Schema,
   getApiSecurityComplianceAccessExpiryPolicy401Schema,
   getApiSecurityComplianceAccessExpiryPolicy500Schema,
