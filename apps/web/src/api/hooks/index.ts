@@ -82,6 +82,9 @@ export type { GetApiProjectsSuspenseInfiniteQueryKey } from "./ProjectsHooks/use
 export type { PatchApiProjectsIdMutationKey } from "./ProjectsHooks/usePatchApiProjectsId.ts";
 export type { PatchApiProjectsIdAccessMutationKey } from "./ProjectsHooks/usePatchApiProjectsIdAccess.ts";
 export type { PostApiProjectsMutationKey } from "./ProjectsHooks/usePostApiProjects.ts";
+export type { GetApiReportsAnalyticsAbstractorProductivityQueryKey } from "./Reports & AnalyticsHooks/useGetApiReportsAnalyticsAbstractorProductivity.ts";
+export type { GetApiReportsAnalyticsAbstractorProductivitySuspenseQueryKey } from "./Reports & AnalyticsHooks/useGetApiReportsAnalyticsAbstractorProductivitySuspense.ts";
+export type { GetApiReportsAnalyticsAbstractorProductivitySuspenseInfiniteQueryKey } from "./Reports & AnalyticsHooks/useGetApiReportsAnalyticsAbstractorProductivitySuspenseInfinite.ts";
 export type { GetApiSecurityComplianceAccessExpiryPolicyQueryKey } from "./Security & ComplianceHooks/useGetApiSecurityComplianceAccessExpiryPolicy.ts";
 export type { GetApiSecurityComplianceAccessExpiryPolicySuspenseQueryKey } from "./Security & ComplianceHooks/useGetApiSecurityComplianceAccessExpiryPolicySuspense.ts";
 export type { GetApiSecurityComplianceAccessExpiryPolicySuspenseInfiniteQueryKey } from "./Security & ComplianceHooks/useGetApiSecurityComplianceAccessExpiryPolicySuspenseInfinite.ts";
@@ -422,6 +425,15 @@ export { usePatchApiProjectsIdAccess } from "./ProjectsHooks/usePatchApiProjects
 export { postApiProjectsMutationKey } from "./ProjectsHooks/usePostApiProjects.ts";
 export { postApiProjectsMutationOptions } from "./ProjectsHooks/usePostApiProjects.ts";
 export { usePostApiProjects } from "./ProjectsHooks/usePostApiProjects.ts";
+export { getApiReportsAnalyticsAbstractorProductivityQueryKey } from "./Reports & AnalyticsHooks/useGetApiReportsAnalyticsAbstractorProductivity.ts";
+export { getApiReportsAnalyticsAbstractorProductivityQueryOptions } from "./Reports & AnalyticsHooks/useGetApiReportsAnalyticsAbstractorProductivity.ts";
+export { useGetApiReportsAnalyticsAbstractorProductivity } from "./Reports & AnalyticsHooks/useGetApiReportsAnalyticsAbstractorProductivity.ts";
+export { getApiReportsAnalyticsAbstractorProductivitySuspenseQueryKey } from "./Reports & AnalyticsHooks/useGetApiReportsAnalyticsAbstractorProductivitySuspense.ts";
+export { getApiReportsAnalyticsAbstractorProductivitySuspenseQueryOptions } from "./Reports & AnalyticsHooks/useGetApiReportsAnalyticsAbstractorProductivitySuspense.ts";
+export { useGetApiReportsAnalyticsAbstractorProductivitySuspense } from "./Reports & AnalyticsHooks/useGetApiReportsAnalyticsAbstractorProductivitySuspense.ts";
+export { getApiReportsAnalyticsAbstractorProductivitySuspenseInfiniteQueryKey } from "./Reports & AnalyticsHooks/useGetApiReportsAnalyticsAbstractorProductivitySuspenseInfinite.ts";
+export { getApiReportsAnalyticsAbstractorProductivitySuspenseInfiniteQueryOptions } from "./Reports & AnalyticsHooks/useGetApiReportsAnalyticsAbstractorProductivitySuspenseInfinite.ts";
+export { useGetApiReportsAnalyticsAbstractorProductivitySuspenseInfinite } from "./Reports & AnalyticsHooks/useGetApiReportsAnalyticsAbstractorProductivitySuspenseInfinite.ts";
 export { getApiSecurityComplianceAccessExpiryPolicyQueryKey } from "./Security & ComplianceHooks/useGetApiSecurityComplianceAccessExpiryPolicy.ts";
 export { getApiSecurityComplianceAccessExpiryPolicyQueryOptions } from "./Security & ComplianceHooks/useGetApiSecurityComplianceAccessExpiryPolicy.ts";
 export { useGetApiSecurityComplianceAccessExpiryPolicy } from "./Security & ComplianceHooks/useGetApiSecurityComplianceAccessExpiryPolicy.ts";
