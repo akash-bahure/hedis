@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useGetApiReportsAnalyticsAbstractorProductivity } from "@/api";
 import {
   BarChart,
   Bar,
@@ -470,6 +471,32 @@ export function ReportsAnalytics() {
 
   const gapData = gapView === "monthly" ? GAP_MONTHLY : GAP_WEEKLY;
 
+  const { data: productivityData, isLoading } =
+    useGetApiReportsAnalyticsAbstractorProductivity({
+      measure_year: "MY2026",
+    });
+
+  const abstractors =
+    productivityData?.data?.map((item) => ({
+      id: item.abstractor_id ?? "",
+      name: item.abstractor_name ?? "",
+      short: (item.abstractor_name ?? "")
+        .split(" ")
+        .map((n) => n.charAt(0))
+        .join("")
+        .toUpperCase(),
+
+      assigned: item.assigned ?? 0,
+      completed: item.completed ?? 0,
+
+      avgTime: item.avg_time ?? "0 min",
+
+      qaFailPct: item.qa_fail_percentage ?? 0,
+      completedPct: item.completed_percentage ?? 0,
+    })) ?? [];
+
+  const atRiskCount = abstractors.filter((a) => (a.qaFailPct ?? 0) > 6).length;
+
   return (
     <div className="h-full overflow-y-auto bg-background">
       {/* ══════════════════════════════════════════════════════
@@ -554,7 +581,7 @@ export function ReportsAnalytics() {
             <RefreshCw className="w-3.5 h-3.5" />
             Refresh
           </button>
-          
+
           {/* Export */}
           {hasPermission("Reports", "export") && (
             <div className="relative">
@@ -1060,7 +1087,8 @@ export function ReportsAnalytics() {
             subtitle="Charts completed per coder · MY 2025 YTD"
             actions={
               <span className="text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3" />1 at-risk coder
+                <AlertTriangle className="w-3 h-3" />
+                {atRiskCount} at-risk coder{atRiskCount !== 1 ? "s" : ""}
               </span>
             }
           >
@@ -1068,7 +1096,7 @@ export function ReportsAnalytics() {
             <div style={{ height: 140 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={ABSTRACTORS}
+                  data={abstractors}
                   layout="vertical"
                   margin={{ top: 0, right: 60, left: 50, bottom: 0 }}
                 >
@@ -1102,7 +1130,7 @@ export function ReportsAnalytics() {
                     radius={[0, 3, 3, 0]}
                     maxBarSize={14}
                   >
-                    {ABSTRACTORS.map((a, i) => (
+                    {abstractors.map((a, i) => (
                       <Cell
                         key={i}
                         fill={a.qaFailPct > 6 ? C.orange : C.primary}
@@ -1144,7 +1172,7 @@ export function ReportsAnalytics() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {ABSTRACTORS.map((a) => {
+                  {abstractors.map((a) => {
                     const atRisk = a.qaFailPct > 6;
                     return (
                       <tr
@@ -1175,11 +1203,11 @@ export function ReportsAnalytics() {
                             {a.completed}
                           </span>
                           <span className="text-[10px] text-muted-foreground ml-1">
-                            ({Math.round((a.completed / a.assigned) * 100)}%)
+                            ({a.completedPct}%)
                           </span>
                         </td>
                         <td className="py-2 pr-4 text-[12px] text-foreground">
-                          {a.avgMin} min
+                          {a.avgTime || "0"}
                         </td>
                         <td className="py-2">
                           <span

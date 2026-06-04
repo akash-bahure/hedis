@@ -135,7 +135,7 @@ export default function App() {
         return <MeasuresLibrary />;
 
       /* ── Insights ── */
-      case "reports-submissions":
+      case "reports-analytics":
         return <ReportsAnalytics />;
       case "analytics":
         return <AnalyticsDashboard />;
