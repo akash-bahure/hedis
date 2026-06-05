@@ -49,8 +49,13 @@ import {
   usePatchApiProfileIdNotifications,
   usePatchApiProfileIdPreferences,
   usePatchApiProfileIdSecurity,
+  useGetApiProfileActiveSessions,
+  useDeleteApiProfileActiveSessionsSessionid,
+  usePostApiProfileActiveSessionsRevokeOthers,
+  useGetApiProfileLoginActivity,
 } from "@/api";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 /* ─── Types ─────────────────────────────────────────── */
 type Tab = "profile" | "preferences" | "notifications" | "security";
@@ -60,67 +65,6 @@ interface ProfilePreferencesProps {
   darkMode?: boolean;
   onToggleDarkMode?: () => void;
 }
-
-/* ─── Static mock data ───────────────────────────────── */
-const SESSIONS = [
-  {
-    id: 1,
-    device: "Chrome · macOS",
-    location: "Boston, MA",
-    last: "Active now",
-    current: true,
-    icon: Monitor,
-  },
-  {
-    id: 2,
-    device: "Safari · iPhone",
-    location: "Boston, MA",
-    last: "2 hrs ago",
-    current: false,
-    icon: Smartphone,
-  },
-  {
-    id: 3,
-    device: "Edge · Windows",
-    location: "New York, NY",
-    last: "3 days ago",
-    current: false,
-    icon: Laptop,
-  },
-];
-
-const LOGIN_HISTORY = [
-  {
-    date: "Apr 21, 2026 · 8:02 AM",
-    device: "Chrome · macOS",
-    location: "Boston, MA",
-    status: "success",
-  },
-  {
-    date: "Apr 20, 2026 · 7:48 AM",
-    device: "Chrome · macOS",
-    location: "Boston, MA",
-    status: "success",
-  },
-  {
-    date: "Apr 19, 2026 · 9:11 AM",
-    device: "Safari · iPhone",
-    location: "Boston, MA",
-    status: "success",
-  },
-  {
-    date: "Apr 18, 2026 · 6:55 PM",
-    device: "Unknown · Windows",
-    location: "Newark, NJ",
-    status: "failed",
-  },
-  {
-    date: "Apr 17, 2026 · 8:33 AM",
-    device: "Chrome · macOS",
-    location: "Boston, MA",
-    status: "success",
-  },
-];
 
 const CERTS = [
   {
@@ -269,8 +213,50 @@ export function ProfilePreferences({
   const [activeTab, setActiveTab] = useState<Tab>("profile");
   const [certifications, setCertifications] = useState<any[]>([]);
   const { data: profileResponse } = useGetApiProfileMe();
+  const queryClient = useQueryClient();
 
   const profile = profileResponse?.data;
+  /* New API Hooks */
+  const { data: activeSessionsResponse } = useGetApiProfileActiveSessions();
+  const { data: loginActivityResponse } = useGetApiProfileLoginActivity();
+
+  const activeSessions = activeSessionsResponse?.data || [];
+  const loginActivity = loginActivityResponse?.data?.slice(0, 5) || [];
+
+  const { mutate: revokeSession, isPending: isRevokingSession } =
+    useDeleteApiProfileActiveSessionsSessionid({
+      mutation: {
+        onSuccess: async () => {
+          toast.success("Session revoked successfully");
+
+          await queryClient.invalidateQueries({
+            queryKey: [{ url: "/api/profile/active-sessions" }],
+          });
+        },
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.error || "Failed to revoke session"
+          );
+        },
+      },
+    });
+
+  const { mutate: revokeOthers, isPending: isRevokingOthers } =
+    usePostApiProfileActiveSessionsRevokeOthers({
+      mutation: {
+        onSuccess: async () => {
+          toast.success("All other devices signed out successfully");
+          await queryClient.invalidateQueries({
+            queryKey: [{ url: "/api/profile/active-sessions" }],
+          });
+        },
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.error || "Failed to sign out other devices"
+          );
+        },
+      },
+    });
 
   /* ── Profile state ── */
   const [profileForm, setProfileForm] = useState({
@@ -335,7 +321,7 @@ export function ProfilePreferences({
 
         onError: (error: any) => {
           toast.error(
-            error?.response?.data?.error || "Failed to save preferences",
+            error?.response?.data?.error || "Failed to save preferences"
           );
         },
       },
@@ -367,7 +353,7 @@ export function ProfilePreferences({
         onError: (error: any) => {
           toast.error(
             error?.response?.data?.error ||
-              "Failed to update notification preferences",
+              "Failed to update notification preferences"
           );
         },
       },
@@ -411,8 +397,7 @@ export function ProfilePreferences({
 
         onError: (error: any) => {
           toast.error(
-            error?.response?.data?.error ||
-              "Failed to update security settings",
+            error?.response?.data?.error || "Failed to update security settings"
           );
         },
       },
@@ -456,7 +441,7 @@ export function ProfilePreferences({
             "HEDIS MY2026",
 
           itemsPerPage: String(
-            profile.preferences?.workflowDefaults?.itemsPerPage || "25",
+            profile.preferences?.workflowDefaults?.itemsPerPage || "25"
           ),
 
           dateFormat:
@@ -550,6 +535,33 @@ export function ProfilePreferences({
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "security", label: "Security", icon: Shield },
   ];
+
+  /* Device Icon Helper */
+  const getDeviceIcon = (device: string) => {
+    if (
+      device.toLowerCase().includes("iphone") ||
+      device.toLowerCase().includes("mobile")
+    )
+      return Smartphone;
+    if (
+      device.toLowerCase().includes("windows") ||
+      device.toLowerCase().includes("chrome")
+    )
+      return Laptop;
+    return Monitor;
+  };
+
+  /* Format date */
+  const formatLastActive = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+
+    if (diffMins < 1) return "Active now";
+    if (diffMins < 60) return `${diffMins} min ago`;
+    return `${Math.floor(diffMins / 60)} hrs ago`;
+  };
 
   /* ══════ RENDER ══════ */
   return (
@@ -808,7 +820,7 @@ export function ProfilePreferences({
                       <p className="text-xs font-semibold text-foreground mt-0.5">
                         {profileForm.memberSince
                           ? new Date(
-                              profileForm.memberSince,
+                              profileForm.memberSince
                             ).toLocaleDateString("en-US", {
                               month: "long",
                               year: "numeric",
@@ -1488,7 +1500,7 @@ export function ProfilePreferences({
 
                         if (pwForm.next !== pwForm.confirm) {
                           toast.error(
-                            "New password and confirm password do not match",
+                            "New password and confirm password do not match"
                           );
 
                           return;
@@ -1588,8 +1600,8 @@ export function ProfilePreferences({
                 subtitle="Devices currently signed into your account"
               >
                 <div className="space-y-2">
-                  {SESSIONS.map((session) => {
-                    const Icon = session.icon;
+                  {activeSessions.map((session: any) => {
+                    const Icon = getDeviceIcon(session.device);
                     return (
                       <div
                         key={session.id}
@@ -1603,7 +1615,7 @@ export function ProfilePreferences({
                             <p className="text-xs font-semibold text-foreground">
                               {session.device}
                             </p>
-                            {session.current && (
+                            {session.is_current && (
                               <span className="badge badge-success text-[10px]">
                                 <CheckCircle2 className="w-2.5 h-2.5" />
                                 This device
@@ -1611,26 +1623,42 @@ export function ProfilePreferences({
                             )}
                           </div>
                           <p className="text-[11px] text-muted-foreground mt-0.5">
-                            {session.location} · {session.last}
+                            {session.location || "Unknown Location"} ·{" "}
+                            {formatLastActive(session.last_active)}
                           </p>
                         </div>
-                        {!session.current && (
-                          <button className="inline-flex items-center gap-1.5 whitespace-nowrap text-[11px] text-destructive hover:underline font-medium flex-shrink-0">
+                        {!session.is_current && (
+                          <button
+                            onClick={() =>
+                              revokeSession({ sessionId: session.session_id })
+                            }
+                            disabled={isRevokingSession}
+                            className="inline-flex items-center gap-1.5 whitespace-nowrap text-[11px] text-destructive hover:underline font-medium flex-shrink-0 disabled:opacity-50"
+                          >
                             <LogOut className="w-3 h-3" />
-                            Revoke
+                            {isRevokingSession ? "Revoking..." : "Revoke"}
                           </button>
                         )}
                       </div>
                     );
                   })}
                 </div>
-                <button className="inline-flex items-center gap-2 whitespace-nowrap mt-3 text-xs text-destructive hover:underline font-medium">
-                  <LogOut className="w-3.5 h-3.5" />
-                  Sign out all other devices
-                </button>
+
+                {activeSessions.length > 1 && (
+                  <button
+                    onClick={() => revokeOthers()}
+                    disabled={isRevokingOthers}
+                    className="inline-flex items-center gap-2 whitespace-nowrap mt-3 text-xs text-destructive hover:underline font-medium"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    {isRevokingOthers
+                      ? "Signing out..."
+                      : "Sign out all other devices"}
+                  </button>
+                )}
               </Section>
 
-              {/* Login History */}
+              {/* Recent Login Activity */}
               <Section
                 title="Recent Login Activity"
                 subtitle="Last 5 sign-in events for your account"
@@ -1654,17 +1682,16 @@ export function ProfilePreferences({
                       </tr>
                     </thead>
                     <tbody>
-                      {LOGIN_HISTORY.map((row, i) => (
-                        <tr
-                          key={i}
-                          className={
-                            row.status === "failed"
-                              ? "bg-red-50/50 dark:bg-red-900/10"
-                              : ""
-                          }
-                        >
+                      {loginActivity.map((row: any, i: number) => (
+                        <tr key={i}>
                           <td className="text-xs font-mono text-muted-foreground whitespace-nowrap">
-                            {row.date}
+                            {new Date(row.created_at).toLocaleString("en-US", {
+                              month: "short",
+                              day: "2-digit",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
                           </td>
                           <td className="text-xs text-foreground whitespace-nowrap">
                             {row.device}
@@ -1673,17 +1700,22 @@ export function ProfilePreferences({
                             {row.location}
                           </td>
                           <td>
-                            {row.status === "success" ? (
-                              <span className="badge badge-success text-[10px]">
+                            <span
+                              className={`badge text-[10px] ${
+                                row.status?.toLowerCase() === "success" ||
+                                row.event_type?.includes("Success")
+                                  ? "badge-success"
+                                  : "badge-error"
+                              }`}
+                            >
+                              {row.status?.toLowerCase() === "success" ||
+                              row.event_type?.includes("Success") ? (
                                 <CheckCircle2 className="w-2.5 h-2.5" />
-                                Success
-                              </span>
-                            ) : (
-                              <span className="badge badge-error text-[10px]">
+                              ) : (
                                 <AlertTriangle className="w-2.5 h-2.5" />
-                                Failed
-                              </span>
-                            )}
+                              )}
+                              {row.status || row.event_type}
+                            </span>
                           </td>
                         </tr>
                       ))}
