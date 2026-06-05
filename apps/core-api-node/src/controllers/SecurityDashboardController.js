@@ -397,200 +397,73 @@ exports.deleteAllowedIp = async (req, res) => {
  */
 exports.getSecurityScore = async (req, res) => {
   try {
-    const failedLoginsQuery = `
-      SELECT
-        COUNT(*) as total,
-        COUNT(*) FILTER (
-          WHERE risk_level = 'Critical'
-        ) as critical
-      FROM audit_logs
-      WHERE event_type = 'Login Failed'
-      AND created_at >= NOW() - INTERVAL '24 hours'
-    `;
-
-    const usersCountQuery = `
-      SELECT COUNT(*) as total
-      FROM users
-    `;
-
-    const mfaUsersQuery = `
-      SELECT COUNT(*) as total
-      FROM users
-      WHERE two_fa_auth = true
-    `;
-
-    const phiPoliciesQuery = `
+    const result = await req.db.query(`
       SELECT *
-      FROM phi_policies
+      FROM security_scores
+      ORDER BY updated_at DESC
       LIMIT 1
-    `;
+    `);
 
-    const allowListQuery = `
-      SELECT COUNT(*) as total
-      FROM allowed_ips
-    `;
+    if (!result.rows.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Security score not found",
+      });
+    }
 
-    const [
-      failedResult,
-      usersResult,
-      mfaResult,
-      phiResult,
-      allowListResult
-    ] = await Promise.all([
-      req.db.query(failedLoginsQuery),
-      req.db.query(usersCountQuery),
-      req.db.query(mfaUsersQuery),
-      req.db.query(phiPoliciesQuery),
-      req.db.query(allowListQuery)
-    ]);
-
-    const totalFailed =
-      parseInt(failedResult.rows[0].total || 0);
-
-    const totalCritical =
-      parseInt(failedResult.rows[0].critical || 0);
-
-    const totalUsers =
-      parseInt(usersResult.rows[0].total || 1);
-
-    const totalMfa =
-      parseInt(mfaResult.rows[0].total || 0);
-
-    const phi =
-      phiResult.rows[0] || {};
-
-    const hasAllowList =
-      parseInt(
-        allowListResult.rows[0].total || 0
-      ) > 0;
-
-    const mfaAdoption =
-      (totalMfa / totalUsers) * 100;
-
-    /**
-     * Authentication
-     */
-    let authentication = 100;
-
-    authentication -= Math.min(
-      totalFailed * 2,
-      20
-    );
-
-    authentication -= Math.min(
-      totalCritical * 5,
-      20
-    );
-
-    authentication -= Math.max(
-      0,
-      80 - mfaAdoption
-    ) * 0.5;
-
-    authentication = Math.max(
-      0,
-      Math.min(
-        100,
-        Math.round(authentication)
-      )
-    );
-
-    /**
-     * Data Protection
-     */
-    let dataProtection = 0;
-
-    if (phi.enc_rest)
-      dataProtection += 40;
-
-    if (phi.enc_transit)
-      dataProtection += 40;
-
-    if (phi.de_id_export)
-      dataProtection += 20;
-
-    /**
-     * Access Control
-     */
-    let accessControl = 0;
-
-    if (phi.dlp)
-      accessControl += 60;
-
-    if (hasAllowList)
-      accessControl += 40;
-
-    /**
-     * Audit Coverage
-     */
-    let auditCoverage = 0;
-
-    if (phi.audit_trail)
-      auditCoverage += 70;
-
-    if (phi.phi_mask)
-      auditCoverage += 30;
-
-    /**
-     * Facility Device
-     */
-    const facilityDevice = 80;
-
-    const overallScore = Math.round(
-      authentication * 0.25 +
-      dataProtection * 0.25 +
-      accessControl * 0.20 +
-      auditCoverage * 0.20 +
-      facilityDevice * 0.10
-    );
+    const score = result.rows[0];
 
     let posture = "Excellent";
 
-    if (overallScore < 90)
+    if (score.overall_score < 90)
       posture = "Good";
 
-    if (overallScore < 75)
+    if (score.overall_score < 75)
       posture = "Fair";
 
-    if (overallScore < 60)
+    if (score.overall_score < 60)
       posture = "Poor";
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: {
-        overall_score: overallScore,
+        overall_score: score.overall_score,
         max_score: 100,
+
         posture,
-        trend: "+2 this week",
+
+        risk_level: score.risk_level,
+
+        last_assessed_at: score.last_assessed_at,
 
         categories: [
           {
             label: "Authentication",
-            score: authentication,
-            weight: 25
+            score: score.authentication_score,
+            weight: 25,
           },
           {
             label: "Data Protection",
-            score: dataProtection,
-            weight: 25
+            score: score.data_protection_score,
+            weight: 25,
           },
           {
             label: "Access Control",
-            score: accessControl,
-            weight: 20
+            score: score.access_control_score,
+            weight: 20,
           },
           {
             label: "Audit Coverage",
-            score: auditCoverage,
-            weight: 20
+            score: score.audit_coverage_score,
+            weight: 20,
           },
           {
             label: "Facility/Device",
-            score: facilityDevice,
-            weight: 10
-          }
-        ]
-      }
+            score: score.facility_device_score,
+            weight: 10,
+          },
+        ],
+      },
     });
   } catch (error) {
     console.error(
@@ -598,9 +471,9 @@ exports.getSecurityScore = async (req, res) => {
       error
     );
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -609,22 +482,48 @@ exports.getPhiEncryptionControls = async (req, res) => {
   const client = req.db;
 
   try {
-    const result = await client.query(`
+    let result = await client.query(`
       SELECT *
       FROM phi_encryption_controls
       LIMIT 1
     `);
 
+    // Create default record if none exists
+    if (result.rows.length === 0) {
+      const insertResult = await client.query(`
+        INSERT INTO phi_encryption_controls (
+          encryption_at_rest,
+          encryption_in_transit,
+          phi_masking_logs,
+          full_access_audit_trail,
+          deidentify_on_export,
+          dlp_controls
+        )
+        VALUES (
+          TRUE,
+          TRUE,
+          TRUE,
+          TRUE,
+          TRUE,
+          TRUE
+        )
+        RETURNING *
+      `);
+
+      result = insertResult;
+    }
+
     return res.status(200).json({
       success: true,
-      data: result.rows[0] || null,
+      data: result.rows[0],
     });
   } catch (error) {
-    console.error(error);
+    console.error("Get PHI Controls Error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch PHI controls",
+      message: "Failed to fetch PHI & Encryption Controls",
+      error: error.message,
     });
   }
 };
@@ -642,28 +541,64 @@ exports.updatePhiEncryptionControls = async (req, res) => {
       dlp_controls,
     } = req.body;
 
-    const result = await client.query(
-      `
-      UPDATE phi_encryption_controls
-      SET
-        encryption_at_rest = COALESCE($1, encryption_at_rest),
-        encryption_in_transit = COALESCE($2, encryption_in_transit),
-        phi_masking_logs = COALESCE($3, phi_masking_logs),
-        full_access_audit_trail = COALESCE($4, full_access_audit_trail),
-        deidentify_on_export = COALESCE($5, deidentify_on_export),
-        dlp_controls = COALESCE($6, dlp_controls),
-        updated_at = CURRENT_TIMESTAMP
-      RETURNING *
-      `,
-      [
-        encryption_at_rest,
-        encryption_in_transit,
-        phi_masking_logs,
-        full_access_audit_trail,
-        deidentify_on_export,
-        dlp_controls,
-      ]
-    );
+    let existing = await client.query(`
+      SELECT id
+      FROM phi_encryption_controls
+      LIMIT 1
+    `);
+
+    let result;
+
+    // Create record if table is empty
+    if (existing.rows.length === 0) {
+      result = await client.query(
+        `
+        INSERT INTO phi_encryption_controls (
+          encryption_at_rest,
+          encryption_in_transit,
+          phi_masking_logs,
+          full_access_audit_trail,
+          deidentify_on_export,
+          dlp_controls
+        )
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING *
+        `,
+        [
+          encryption_at_rest ?? true,
+          encryption_in_transit ?? true,
+          phi_masking_logs ?? true,
+          full_access_audit_trail ?? true,
+          deidentify_on_export ?? true,
+          dlp_controls ?? true,
+        ]
+      );
+    } else {
+      result = await client.query(
+        `
+        UPDATE phi_encryption_controls
+        SET
+          encryption_at_rest = COALESCE($1, encryption_at_rest),
+          encryption_in_transit = COALESCE($2, encryption_in_transit),
+          phi_masking_logs = COALESCE($3, phi_masking_logs),
+          full_access_audit_trail = COALESCE($4, full_access_audit_trail),
+          deidentify_on_export = COALESCE($5, deidentify_on_export),
+          dlp_controls = COALESCE($6, dlp_controls),
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = $7
+        RETURNING *
+        `,
+        [
+          encryption_at_rest,
+          encryption_in_transit,
+          phi_masking_logs,
+          full_access_audit_trail,
+          deidentify_on_export,
+          dlp_controls,
+          existing.rows[0].id,
+        ]
+      );
+    }
 
     return res.status(200).json({
       success: true,
@@ -671,11 +606,12 @@ exports.updatePhiEncryptionControls = async (req, res) => {
       data: result.rows[0],
     });
   } catch (error) {
-    console.error(error);
+    console.error("Update PHI Controls Error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to update PHI controls",
+      message: "Failed to update PHI & Encryption Controls",
+      error: error.message,
     });
   }
 };
