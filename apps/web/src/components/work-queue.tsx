@@ -1,6 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
 import type { ElementType } from "react";
-import { getApiPatientsExport, useGetApiWorkQueue } from "@/api";
+import {
+  getApiPatientsExport,
+  useGetApiWorkQueue,
+  usePostApiChartAssignmentsBulkAssign,
+} from "@/api";
 import {
   Search,
   ChevronDown,
@@ -2234,6 +2238,19 @@ export function WorkQueue({
     },
   });
 
+  const bulkAssignMutation = usePostApiChartAssignmentsBulkAssign({
+    mutation: {
+      onSuccess: () => {
+        toast.success("Charts assigned successfully");
+        refetch();
+      },
+
+      onError: () => {
+        toast.error("Failed to assign charts");
+      },
+    },
+  });
+
   const effectiveRole = useMemo(() => {
     if (
       rawRole &&
@@ -3621,47 +3638,65 @@ export function WorkQueue({
             chartIds={assignModal}
             roleType={effectiveRole === "qa-analyst" ? "QA" : "Abstractor"}
             onClose={() => setAssignModal([])}
-            onAssign={async ({ userId, userName, role }) => {
-              console.log("ROLE RECEIVED =>", role);
-
-              console.log("PAYLOAD =>", {
-                userId,
-                role,
-              });
+            onAssign={async ({ userId, role }) => {
               try {
-                await Promise.all(
-                  assignModal.map(async (chartId) => {
-                    await assignPatientMutation.mutateAsync({
-                      id: chartId,
-                      data: {
-                        userId,
-                        role:
-                          role === "QA"
-                            ? "Quality Analyst"
-                            : "Chart Abstractor",
-                      },
-                    });
-                    console.log("PAYLOAD =>", {
+                const assignedRole =
+                  role === "QA" ? "Quality Analyst" : "Chart Abstractor";
+
+                // SINGLE CHART ASSIGN
+                if (assignModal.length === 1) {
+                  const chartId = assignModal[0];
+
+                  await assignPatientMutation.mutateAsync({
+                    id: chartId,
+                    data: {
                       userId,
-                      role,
-                    });
+                      role: assignedRole,
+                    },
+                  });
 
-                    // Update stage after assignment
-                    await updateStageMutation.mutateAsync({
-                      id: chartId,
-                      data: {
-                        stage: "Assigned",
+                  await updateStageMutation.mutateAsync({
+                    id: chartId,
+                    data: {
+                      stage: "Assigned",
+                    },
+                  });
+
+                  toast.success("Chart assigned successfully");
+                }
+
+                // BULK CHART ASSIGN
+                else {
+                  const payload = {
+                    chart_ids: assignModal,
+                    assigned_users: [
+                      {
+                        user_id: userId,
+                        assigned_role: assignedRole,
                       },
-                    });
-                  }),
-                );
+                    ],
+                    priority: "Medium",
+                    assignment_note: "Bulk assigned from Work Queue",
+                  };
 
-                toast.success("Charts assigned successfully");
+                  console.log("Bulk Assign Payload", payload);
+
+                  await bulkAssignMutation.mutateAsync({
+                    data: payload,
+                  });
+
+                  toast.success(
+                    `${assignModal.length} charts assigned successfully`,
+                  );
+                }
+
+                setAssignModal([]);
+                setSelected(new Set());
 
                 refetch();
-                setAssignModal([]);
               } catch (error) {
                 console.error(error);
+
                 toast.error("Failed to assign charts");
               }
             }}

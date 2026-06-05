@@ -13,123 +13,145 @@ exports.bulkAssignCharts = async (req, res) => {
   try {
     const {
       chart_ids,
-      assigned_to,
-      assigned_role,
+      assigned_users,
       priority,
       assignment_note,
     } = req.body;
 
-    // Validations
-    if (!chart_ids || !Array.isArray(chart_ids) || chart_ids.length === 0) {
+    console.log(
+      "BULK ASSIGN BODY =>",
+      JSON.stringify(req.body, null, 2)
+    );
+
+    // Validate chart ids
+    if (
+      !chart_ids ||
+      !Array.isArray(chart_ids) ||
+      chart_ids.length === 0
+    ) {
       return res.status(400).json({
         success: false,
         message: "chart_ids is required",
       });
     }
 
-    if (!assigned_to) {
+    // Validate assigned users
+    if (
+      !assigned_users ||
+      !Array.isArray(assigned_users) ||
+      assigned_users.length === 0
+    ) {
       return res.status(400).json({
         success: false,
-        message: "assigned_to is required",
+        message: "assigned_users is required",
       });
     }
 
-    if (!assigned_role) {
-      return res.status(400).json({
-        success: false,
-        message: "assigned_role is required",
-      });
-    }
-
-    // Only QA and Chart Abstractor allowed
-    const allowedRoles = ["qa", "chart_abstractor"];
-
-    if (!allowedRoles.includes(assigned_role)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid assigned_role",
-      });
-    }
-
-    // Check user exists with given role
-    const userCheckQuery = `
-      SELECT u.id, r.name as role_name
-      FROM users u
-      JOIN user_roles ur ON ur.user_id = u.id
-      JOIN roles r ON r.id = ur.role_id
-      WHERE u.id = $1
-      AND LOWER(r.name) = LOWER($2)
-      LIMIT 1
-    `;
-
-    const userCheck = await client.query(userCheckQuery, [
-      assigned_to,
-      assigned_role,
-    ]);
-
-    if (userCheck.rows.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: `Selected user is not a ${assigned_role}`,
-      });
-    }
-
-    // Insert Assignments
     const insertedAssignments = [];
 
-    for (const chartId of chart_ids) {
-      const insertQuery = `
-        INSERT INTO chart_assignments (
-          id,
-          chart_id,
-          assigned_to,
-          assigned_role,
-          priority,
-          assignment_note,
-          assigned_by,
-          assigned_at,
-          created_at,
-          updated_at
-        )
-        VALUES (
-          $1,$2,$3,$4,$5,$6,$7,NOW(),NOW(),NOW()
-        )
-        RETURNING *
-      `;
+    // Loop through assigned users
+    for (const user of assigned_users) {
+      const assigned_to = user.user_id;
+      const assigned_role = user.assigned_role;
 
-      const values = [
-        uuidv4(),
-        chartId,
-        assigned_to,
-        assigned_role,
-        priority || "medium",
-        assignment_note || null,
-        req.user.id,
+      if (!assigned_to) {
+        return res.status(400).json({
+          success: false,
+          message: "user_id is required",
+        });
+      }
+
+      if (!assigned_role) {
+        return res.status(400).json({
+          success: false,
+          message: "assigned_role is required",
+        });
+      }
+
+      // Validate role
+      const allowedRoles = [
+        "Quality Analyst",
+        "Chart Abstractor",
       ];
 
-      const result = await client.query(insertQuery, values);
+      if (!allowedRoles.includes(assigned_role)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid assigned_role: ${assigned_role}`,
+        });
+      }
 
-      insertedAssignments.push(result.rows[0]);
-
-      // Optional: Update chart status
-      await client.query(
+      // Verify user exists
+      const userCheck = await client.query(
         `
-          UPDATE charts
+        SELECT u.id
+        FROM users u
+        WHERE u.id = $1
+        LIMIT 1
+        `,
+        [assigned_to]
+      );
+
+      if (userCheck.rows.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: `User not found: ${assigned_to}`,
+        });
+      }
+
+      // Assign all selected charts
+      for (const chartId of chart_ids) {
+        const result = await client.query(
+          `
+          INSERT INTO chart_assignments (
+            id,
+            patient_chart_id,
+            assigned_to,
+            assigned_role,
+            priority,
+            assignment_note,
+            assigned_by,
+            assigned_at,
+            created_at,
+            updated_at
+          )
+          VALUES (
+            $1,$2,$3,$4,$5,$6,$7,NOW(),NOW(),NOW()
+          )
+          RETURNING *
+          `,
+          [
+            uuidv4(),
+            chartId,
+            assigned_to,
+            assigned_role,
+            priority || "Medium",
+            assignment_note || null,
+            req.user.id,
+          ]
+        );
+
+        insertedAssignments.push(result.rows[0]);
+
+        await client.query(
+          `
+          UPDATE chartser
           SET
             assigned_to = $1,
             assignment_status = 'assigned',
             updated_at = NOW()
           WHERE id = $2
-        `,
-        [assigned_to, chartId]
-      );
+          `,
+          [assigned_to, chartId]
+        );
+      }
     }
 
     await AuditLog.createAuditLog(client, {
       user_id: req.user.id,
       user_name: req.user.full_name || "System",
-      event_type: "Chart assigned",
-      details: `${chart_ids.length} charts assigned to ${assigned_role}: ${assigned_to}`,
+      event_type: "Bulk Chart Assignment",
+      details: `${chart_ids.length} charts assigned`,
       ip_address: req.ip,
       device: req.headers["user-agent"],
       risk_level: "Low",
