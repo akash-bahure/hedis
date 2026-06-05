@@ -79,7 +79,7 @@ const PRIMARY_NAV: NavItem[] = [
     badge: { count: 12, variant: "blue" },
   },
   {
-    id: "reports",
+    id: "reports-analytics",
     label: "Reports",
     icon: BarChart2,
     roles: ["program-manager", "abstractor"],
