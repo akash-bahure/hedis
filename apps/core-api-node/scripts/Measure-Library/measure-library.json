@@ -1,0 +1,2476 @@
+[
+    {
+        "id": 1,
+        "measureCode": "PBH",
+        "measureName": "Persistence of Beta-Blocker Treatment After a Heart Attack",
+        "description": "Percentage of members 18 years and older hospitalized and discharged with Acute Myocardial Infarction (AMI) who received persistent beta-blocker treatment for 180 days after discharge.",
+        "category": "Cardiovascular",
+        "measureType": "Administrative",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 18,
+                "maxAge": 999,
+                "ageCalculationDate": "December 31 of Measurement Year"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment 180 days after discharge",
+                "maximumGapAllowed": "45 Days"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Members hospitalized and discharged with AMI between July 1 prior year and June 30 measurement year.",
+            "requiredDiagnoses": [
+                {
+                    "code": "I21",
+                    "codeSystem": "ICD-10-CM",
+                    "description": "Acute Myocardial Infarction"
+                },
+                {
+                    "code": "I22",
+                    "codeSystem": "ICD-10-CM",
+                    "description": "Subsequent Myocardial Infarction"
+                }
+            ]
+        },
+        "numerator": {
+            "numeratorDefinition": "Members who remained on beta-blocker therapy for 180 days after discharge.",
+            "complianceThresholds": "180 continuous treatment days",
+            "requiredServices": [
+                "Beta Blocker Prescription Fill"
+            ],
+            "codes": [
+                {
+                    "code": "Carvedilol",
+                    "codeSystem": "RxNorm",
+                    "description": "Beta Blocker"
+                },
+                {
+                    "code": "Metoprolol",
+                    "codeSystem": "RxNorm",
+                    "description": "Beta Blocker"
+                }
+            ],
+            "serviceDateValidity": {
+                "lookbackPeriod": "180 Days After Discharge"
+            }
+        },
+        "exclusions": [
+            {
+                "reason": "Hospice",
+                "code": "Z51.5",
+                "codeSystem": "ICD-10-CM"
+            }
+        ],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Pharmacy Claims",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Medication List",
+                    "priority": "Supplemental"
+                }
+            ]
+        }
+    },
+    {
+        "id": 2,
+        "measureCode": "SPC",
+        "measureName": "Statin Therapy for Patients With Cardiovascular Disease",
+        "description": "Percentage of members with clinical ASCVD who received statin therapy and remained adherent to therapy.",
+        "category": "Cardiovascular",
+        "measureType": "Administrative",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "maleMinAge": 21,
+                "maleMaxAge": 75,
+                "femaleMinAge": 40,
+                "femaleMaxAge": 75,
+                "ageCalculationDate": "December 31 of Measurement Year"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment during measurement year",
+                "maximumGapAllowed": "45 Days"
+            },
+            "genderRules": [
+                "Male",
+                "Female"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Members diagnosed with ASCVD.",
+            "requiredDiagnoses": [
+                {
+                    "code": "I25.10",
+                    "codeSystem": "ICD-10-CM",
+                    "description": "Atherosclerotic heart disease"
+                },
+                {
+                    "code": "I63",
+                    "codeSystem": "ICD-10-CM",
+                    "description": "Cerebral infarction"
+                }
+            ]
+        },
+        "numerator": {
+            "rates": [
+                {
+                    "name": "Received Statin Therapy",
+                    "definition": "At least one high or moderate intensity statin dispensed."
+                },
+                {
+                    "name": "Statin Adherence 80%",
+                    "definition": "PDC >= 80%"
+                }
+            ],
+            "requiredServices": [
+                "Statin Prescription Fill"
+            ],
+            "codes": [
+                {
+                    "code": "Atorvastatin",
+                    "codeSystem": "RxNorm"
+                },
+                {
+                    "code": "Rosuvastatin",
+                    "codeSystem": "RxNorm"
+                },
+                {
+                    "code": "Simvastatin",
+                    "codeSystem": "RxNorm"
+                }
+            ]
+        },
+        "exclusions": [
+            {
+                "reason": "Hospice",
+                "code": "Z51.5",
+                "codeSystem": "ICD-10-CM"
+            },
+            {
+                "reason": "ESRD",
+                "code": "N18.6",
+                "codeSystem": "ICD-10-CM"
+            }
+        ],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Pharmacy Claims",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Medication History",
+                    "priority": "Preferred"
+                }
+            ],
+            "highlightRequirements": [
+                "Medication Name",
+                "Fill Date",
+                "Days Supply"
+            ]
+        }
+    },
+    {
+        "id": 3,
+        "measureCode": "CRE",
+        "measureName": "Cardiac Rehabilitation",
+        "description": "Percentage of members attending cardiac rehabilitation after a qualifying cardiac event.",
+        "category": "Cardiovascular",
+        "measureType": "Hybrid",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 18,
+                "maxAge": 999,
+                "ageCalculationDate": "December 31 of Measurement Year"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment after qualifying cardiac event",
+                "maximumGapAllowed": "45 Days"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Members with qualifying cardiac event.",
+            "requiredDiagnoses": [
+                {
+                    "code": "I21",
+                    "codeSystem": "ICD-10-CM",
+                    "description": "Acute Myocardial Infarction"
+                }
+            ],
+            "qualifyingEvents": [
+                "Myocardial Infarction",
+                "PCI",
+                "CABG",
+                "Heart Transplant",
+                "Heart Valve Repair",
+                "Heart Valve Replacement"
+            ]
+        },
+        "numerator": {
+            "rates": [
+                {
+                    "name": "Initiation",
+                    "definition": "2 or more sessions within 30 days"
+                },
+                {
+                    "name": "Engagement 1",
+                    "definition": "12 or more sessions within 90 days"
+                },
+                {
+                    "name": "Engagement 2",
+                    "definition": "24 or more sessions within 180 days"
+                },
+                {
+                    "name": "Achievement",
+                    "definition": "36 or more sessions within 180 days"
+                }
+            ],
+            "requiredServices": [
+                "Cardiac Rehabilitation Session"
+            ],
+            "codes": [
+                {
+                    "code": "93797",
+                    "codeSystem": "CPT",
+                    "description": "Physician supervised cardiac rehab"
+                },
+                {
+                    "code": "93798",
+                    "codeSystem": "CPT",
+                    "description": "Cardiac rehabilitation services"
+                }
+            ]
+        },
+        "exclusions": [
+            {
+                "reason": "Hospice",
+                "code": "Z51.5",
+                "codeSystem": "ICD-10-CM"
+            }
+        ],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Cardiac Rehab Attendance Log",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Claims",
+                    "priority": "Preferred"
+                },
+                {
+                    "type": "Provider Documentation",
+                    "priority": "Supplemental"
+                }
+            ],
+            "highlightRequirements": [
+                "Cardiac Event Date",
+                "Session Dates",
+                "Provider Signature"
+            ],
+            "commonErrorsToAvoid": [
+                "Using non-qualifying cardiac procedures",
+                "Missing rehabilitation attendance dates",
+                "Incorrect session counts"
+            ]
+        }
+    },
+    {
+        "id": 4,
+        "measureCode": "GSD",
+        "measureName": "Glycemic Status Assessment for Patients With Diabetes",
+        "description": "Percentage of members 18-75 years of age with diabetes whose most recent glycemic status was assessed during the measurement year.",
+        "category": "Diabetes Care",
+        "measureType": "Hybrid",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 18,
+                "maxAge": 75,
+                "ageCalculationDate": "December 31 of Measurement Year"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment during measurement year",
+                "maximumGapAllowed": "45 Days"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Members age 18-75 with Type 1 or Type 2 Diabetes.",
+            "requiredDiagnoses": [
+                {
+                    "code": "E10",
+                    "codeSystem": "ICD-10-CM",
+                    "description": "Type 1 Diabetes Mellitus"
+                },
+                {
+                    "code": "E11",
+                    "codeSystem": "ICD-10-CM",
+                    "description": "Type 2 Diabetes Mellitus"
+                }
+            ]
+        },
+        "numerator": {
+            "numeratorDefinition": "Most recent HbA1c or GMI result recorded during the measurement year.",
+            "complianceThresholds": [
+                {
+                    "indicator": "Glycemic Status <8.0%",
+                    "threshold": "<8.0%"
+                },
+                {
+                    "indicator": "Glycemic Status >9.0%",
+                    "threshold": ">9.0%"
+                }
+            ],
+            "requiredServices": [
+                "HbA1c Test",
+                "Glucose Management Indicator"
+            ],
+            "codes": [
+                {
+                    "code": "4548-4",
+                    "codeSystem": "LOINC",
+                    "description": "Hemoglobin A1c"
+                },
+                {
+                    "code": "97506-0",
+                    "codeSystem": "LOINC",
+                    "description": "Glucose Management Indicator"
+                }
+            ],
+            "serviceDateValidity": {
+                "lookbackPeriod": "Measurement Year"
+            }
+        },
+        "exclusions": [
+            {
+                "reason": "Hospice",
+                "code": "Z51.5",
+                "codeSystem": "ICD-10-CM"
+            }
+        ],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Lab Report",
+                    "priority": "Required"
+                },
+                {
+                    "type": "EHR Flowsheet",
+                    "priority": "Preferred"
+                }
+            ],
+            "fileRequirements": [
+                "PDF"
+            ],
+            "highlightRequirements": [
+                "HbA1c Result",
+                "Collection Date",
+                "Provider Signature"
+            ]
+        }
+    },
+    {
+        "id": 5,
+        "measureCode": "BPD",
+        "measureName": "Blood Pressure Control for Patients With Diabetes",
+        "description": "Percentage of members 18-75 years of age with diabetes whose blood pressure was adequately controlled during the measurement year.",
+        "category": "Diabetes Care",
+        "measureType": "Hybrid",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 18,
+                "maxAge": 75,
+                "ageCalculationDate": "December 31 of Measurement Year"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment during measurement year",
+                "maximumGapAllowed": "45 Days"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Members age 18-75 with Type 1 or Type 2 Diabetes.",
+            "requiredDiagnoses": [
+                {
+                    "code": "E10",
+                    "codeSystem": "ICD-10-CM"
+                },
+                {
+                    "code": "E11",
+                    "codeSystem": "ICD-10-CM"
+                }
+            ]
+        },
+        "numerator": {
+            "numeratorDefinition": "Most recent blood pressure reading is below 140/90 mmHg.",
+            "complianceThresholds": {
+                "systolic": "<140",
+                "diastolic": "<90"
+            },
+            "requiredServices": [
+                "Blood Pressure Measurement"
+            ],
+            "codes": [
+                {
+                    "code": "8480-6",
+                    "codeSystem": "LOINC",
+                    "description": "Systolic Blood Pressure"
+                },
+                {
+                    "code": "8462-4",
+                    "codeSystem": "LOINC",
+                    "description": "Diastolic Blood Pressure"
+                },
+                {
+                    "code": "55284-4",
+                    "codeSystem": "LOINC",
+                    "description": "Blood Pressure Panel"
+                }
+            ],
+            "serviceDateValidity": {
+                "lookbackPeriod": "Measurement Year"
+            }
+        },
+        "exclusions": [
+            {
+                "reason": "Hospice",
+                "code": "Z51.5",
+                "codeSystem": "ICD-10-CM"
+            }
+        ],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Office Visit Note",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Telehealth Visit",
+                    "priority": "Preferred"
+                }
+            ],
+            "fileRequirements": [
+                "PDF"
+            ],
+            "highlightRequirements": [
+                "Blood Pressure Reading",
+                "Date of Service",
+                "Provider Signature"
+            ],
+            "commonErrorsToAvoid": [
+                "Using ED blood pressure",
+                "Using older BP reading instead of most recent reading"
+            ]
+        }
+    },
+    {
+        "id": 6,
+        "measureCode": "EED",
+        "measureName": "Eye Exam for Patients With Diabetes",
+        "description": "Percentage of members 18-75 years of age with diabetes who received a retinal eye exam.",
+        "category": "Diabetes Care",
+        "measureType": "Hybrid",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 18,
+                "maxAge": 75,
+                "ageCalculationDate": "December 31 of Measurement Year"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment during measurement year",
+                "maximumGapAllowed": "45 Days"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Members age 18-75 with Type 1 or Type 2 Diabetes.",
+            "requiredDiagnoses": [
+                {
+                    "code": "E10",
+                    "codeSystem": "ICD-10-CM"
+                },
+                {
+                    "code": "E11",
+                    "codeSystem": "ICD-10-CM"
+                }
+            ]
+        },
+        "numerator": {
+            "numeratorDefinition": "Retinal eye exam performed during the measurement year.",
+            "complianceThresholds": "At least one retinal eye examination.",
+            "requiredServices": [
+                "Retinal Eye Exam"
+            ],
+            "codes": [
+                {
+                    "code": "2022F",
+                    "codeSystem": "CPT-II",
+                    "description": "Dilated Retinal Eye Exam"
+                },
+                {
+                    "code": "2024F",
+                    "codeSystem": "CPT-II",
+                    "description": "Retinal Screening"
+                },
+                {
+                    "code": "92227",
+                    "codeSystem": "CPT",
+                    "description": "Remote Retinal Imaging"
+                },
+                {
+                    "code": "92228",
+                    "codeSystem": "CPT",
+                    "description": "Retinal Imaging Interpretation"
+                }
+            ],
+            "serviceDateValidity": {
+                "lookbackPeriod": "Measurement Year"
+            }
+        },
+        "exclusions": [
+            {
+                "reason": "Hospice",
+                "code": "Z51.5",
+                "codeSystem": "ICD-10-CM"
+            }
+        ],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Ophthalmology Report",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Optometry Report",
+                    "priority": "Preferred"
+                },
+                {
+                    "type": "Claims Data",
+                    "priority": "Supplemental"
+                }
+            ],
+            "fileRequirements": [
+                "PDF",
+                "TIFF"
+            ],
+            "highlightRequirements": [
+                "Exam Date",
+                "Provider Name",
+                "Retinal Exam Result"
+            ],
+            "commonErrorsToAvoid": [
+                "Missing retinal exam date",
+                "Vision screening submitted instead of retinal exam",
+                "Provider information missing"
+            ]
+        }
+    },
+    {
+        "id": 7,
+        "measureCode": "KED",
+        "measureName": "Kidney Health Evaluation for Patients With Diabetes",
+        "description": "Percentage of members 18-85 years of age with Type 1 or Type 2 Diabetes who received both an eGFR and uACR during the measurement year.",
+        "category": "Diabetes Care",
+        "measureType": "Hybrid",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 18,
+                "maxAge": 85,
+                "ageCalculationDate": "December 31 of Measurement Year"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment during measurement year",
+                "maximumGapAllowed": "45 Days"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Members age 18-85 with Type 1 or Type 2 Diabetes.",
+            "requiredDiagnoses": [
+                {
+                    "code": "E10",
+                    "codeSystem": "ICD-10-CM",
+                    "description": "Type 1 Diabetes Mellitus"
+                },
+                {
+                    "code": "E11",
+                    "codeSystem": "ICD-10-CM",
+                    "description": "Type 2 Diabetes Mellitus"
+                }
+            ]
+        },
+        "numerator": {
+            "numeratorDefinition": "Member received BOTH eGFR and uACR during the measurement year.",
+            "requiredServices": [
+                "eGFR Test",
+                "Urine Albumin-Creatinine Ratio Test"
+            ],
+            "codes": [
+                {
+                    "code": "33914-3",
+                    "codeSystem": "LOINC",
+                    "description": "eGFR"
+                },
+                {
+                    "code": "9318-7",
+                    "codeSystem": "LOINC",
+                    "description": "Urine Albumin/Creatinine Ratio"
+                }
+            ],
+            "serviceDateValidity": {
+                "lookbackPeriod": "Measurement Year"
+            }
+        },
+        "exclusions": [
+            {
+                "reason": "Hospice",
+                "code": "Z51.5",
+                "codeSystem": "ICD-10-CM"
+            }
+        ],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Lab Report",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Claims Data",
+                    "priority": "Supplemental"
+                }
+            ],
+            "fileRequirements": [
+                "PDF"
+            ],
+            "highlightRequirements": [
+                "eGFR Result",
+                "uACR Result",
+                "Collection Date",
+                "Provider Signature"
+            ]
+        }
+    },
+    {
+        "id": 8,
+        "measureCode": "SPD",
+        "measureName": "Statin Therapy for Patients With Diabetes",
+        "description": "Percentage of members 40-75 years of age with diabetes and without ASCVD who received and adhered to statin therapy.",
+        "category": "Diabetes Care",
+        "measureType": "Administrative",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 40,
+                "maxAge": 75,
+                "ageCalculationDate": "December 31 of Measurement Year"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment during measurement year",
+                "maximumGapAllowed": "45 Days"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Members age 40-75 with diabetes and without ASCVD.",
+            "requiredDiagnoses": [
+                {
+                    "code": "E10",
+                    "codeSystem": "ICD-10-CM"
+                },
+                {
+                    "code": "E11",
+                    "codeSystem": "ICD-10-CM"
+                }
+            ]
+        },
+        "numerator": {
+            "numeratorDefinition": "Two rates reported: Received Statin Therapy and Statin Adherence 80%.",
+            "complianceThresholds": [
+                {
+                    "indicator": "Received Statin Therapy",
+                    "threshold": "At least one statin fill"
+                },
+                {
+                    "indicator": "Statin Adherence",
+                    "threshold": "PDC >= 80%"
+                }
+            ],
+            "requiredServices": [
+                "Statin Medication Dispense"
+            ],
+            "codes": [
+                {
+                    "code": "STATIN",
+                    "codeSystem": "RxNorm",
+                    "description": "Any Statin Medication"
+                }
+            ]
+        },
+        "exclusions": [
+            {
+                "reason": "ASCVD Diagnosis",
+                "code": "I25",
+                "codeSystem": "ICD-10-CM"
+            },
+            {
+                "reason": "Hospice",
+                "code": "Z51.5",
+                "codeSystem": "ICD-10-CM"
+            }
+        ],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Pharmacy Claims",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Medication List",
+                    "priority": "Supplemental"
+                }
+            ],
+            "fileRequirements": [
+                "PDF"
+            ],
+            "highlightRequirements": [
+                "Medication Name",
+                "Fill Date",
+                "Days Supply"
+            ]
+        }
+    },
+    {
+        "id": 9,
+        "measureCode": "OMW",
+        "measureName": "Osteoporosis Management in Women Who Had a Fracture",
+        "description": "Percentage of women 67-85 years of age who suffered a fracture and received osteoporosis management within 180 days.",
+        "category": "Bone Health",
+        "measureType": "Hybrid",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 67,
+                "maxAge": 85,
+                "ageCalculationDate": "December 31 of Measurement Year"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment required",
+                "maximumGapAllowed": "45 Days"
+            },
+            "genderRules": [
+                "Female"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Women 67-85 with a qualifying fracture.",
+            "requiredDiagnoses": [
+                {
+                    "code": "S72",
+                    "codeSystem": "ICD-10-CM",
+                    "description": "Hip Fracture"
+                }
+            ]
+        },
+        "numerator": {
+            "numeratorDefinition": "Bone Mineral Density test OR osteoporosis medication within 180 days after fracture.",
+            "requiredServices": [
+                "BMD Test",
+                "Osteoporosis Medication"
+            ],
+            "codes": [
+                {
+                    "code": "77080",
+                    "codeSystem": "CPT",
+                    "description": "DXA Bone Density Scan"
+                }
+            ],
+            "serviceDateValidity": {
+                "lookbackPeriod": "180 Days After Fracture"
+            }
+        },
+        "exclusions": [
+            {
+                "reason": "Hospice",
+                "code": "Z51.5",
+                "codeSystem": "ICD-10-CM"
+            }
+        ],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Radiology Report",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Pharmacy Claims",
+                    "priority": "Required"
+                }
+            ],
+            "fileRequirements": [
+                "PDF"
+            ],
+            "highlightRequirements": [
+                "Fracture Date",
+                "BMD Test Date",
+                "Medication Date"
+            ]
+        }
+    },
+    {
+        "id": 10,
+        "measureCode": "OSW",
+        "measureName": "Osteoporosis Screening in Older Women",
+        "description": "Percentage of women 65-75 years of age who received osteoporosis screening.",
+        "category": "Bone Health",
+        "measureType": "Hybrid",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 65,
+                "maxAge": 75,
+                "ageCalculationDate": "December 31 of Measurement Year"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment required",
+                "maximumGapAllowed": "45 Days"
+            },
+            "genderRules": [
+                "Female"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Women 65-75 years of age.",
+            "requiredDiagnoses": []
+        },
+        "numerator": {
+            "numeratorDefinition": "At least one osteoporosis screening during the measurement period.",
+            "requiredServices": [
+                "Bone Mineral Density Screening"
+            ],
+            "codes": [
+                {
+                    "code": "77080",
+                    "codeSystem": "CPT",
+                    "description": "DXA Bone Density Scan"
+                },
+                {
+                    "code": "77081",
+                    "codeSystem": "CPT",
+                    "description": "Peripheral DXA"
+                }
+            ],
+            "serviceDateValidity": {
+                "lookbackPeriod": "Measurement Year"
+            }
+        },
+        "exclusions": [
+            {
+                "reason": "Hospice",
+                "code": "Z51.5",
+                "codeSystem": "ICD-10-CM"
+            }
+        ],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Radiology Report",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Claims Data",
+                    "priority": "Preferred"
+                }
+            ],
+            "fileRequirements": [
+                "PDF",
+                "TIFF"
+            ],
+            "highlightRequirements": [
+                "DXA Date",
+                "Provider Name",
+                "Patient Name"
+            ],
+            "commonErrorsToAvoid": [
+                "Missing screening date",
+                "Incomplete radiology report",
+                "Incorrect patient identifier"
+            ]
+        }
+    },
+    {
+        "id": 11,
+        "measureCode": "DMH",
+        "measureName": "Diagnosed Mental Health Disorders",
+        "description": "Percentage of members age 1 year and older diagnosed with a mental health disorder during the measurement year.",
+        "category": "Behavioral Health",
+        "measureType": "Administrative",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 1,
+                "maxAge": null,
+                "ageCalculationDate": "December 31 of Measurement Year"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment during measurement year",
+                "maximumGapAllowed": "45 Days"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Members age 1 year and older enrolled during the measurement year",
+            "requiredDiagnoses": [
+                {
+                    "code": "F20-F99",
+                    "codeSystem": "ICD-10-CM",
+                    "description": "Mental and Behavioral Disorders"
+                }
+            ]
+        },
+        "numerator": {
+            "numeratorDefinition": "Member has at least one qualifying mental health diagnosis during the measurement year.",
+            "complianceThresholds": "At least one mental health diagnosis.",
+            "requiredServices": [
+                "Mental Health Evaluation",
+                "Behavioral Health Visit"
+            ]
+        },
+        "exclusions": [],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Claims",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Medical Record",
+                    "priority": "Supplemental"
+                }
+            ]
+        }
+    },
+    {
+        "id": 12,
+        "measureCode": "FUH",
+        "measureName": "Follow-Up After Hospitalization for Mental Illness",
+        "description": "Percentage of discharges for members age 6 and older hospitalized for mental illness or intentional self-harm who received follow-up care.",
+        "category": "Behavioral Health",
+        "measureType": "Administrative",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 6,
+                "maxAge": null,
+                "ageCalculationDate": "Date of Discharge"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment through 30 days after discharge",
+                "maximumGapAllowed": "No Gap"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Acute inpatient discharges with principal diagnosis of mental illness or intentional self-harm.",
+            "requiredDiagnoses": [
+                {
+                    "code": "Mental Illness Value Set",
+                    "codeSystem": "HEDIS"
+                },
+                {
+                    "code": "Intentional Self Harm Value Set",
+                    "codeSystem": "HEDIS"
+                }
+            ]
+        },
+        "numerator": {
+            "rates": [
+                {
+                    "name": "7 Day Follow-Up",
+                    "days": 7
+                },
+                {
+                    "name": "30 Day Follow-Up",
+                    "days": 30
+                }
+            ],
+            "requiredServices": [
+                "Behavioral Health Outpatient Visit",
+                "Telehealth Visit",
+                "Psychiatric Consultation",
+                "Community Mental Health Visit"
+            ]
+        },
+        "exclusions": [
+            {
+                "reason": "Direct Transfer",
+                "description": "Transfer to another acute inpatient facility."
+            }
+        ],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Claims",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Hospital Discharge Summary",
+                    "priority": "Preferred"
+                }
+            ]
+        }
+    },
+    {
+        "id": 13,
+        "measureCode": "FUM",
+        "measureName": "Follow-Up After Emergency Department Visit for Mental Illness",
+        "description": "Percentage of ED visits for members age 6 and older with mental illness or intentional self-harm diagnosis who received follow-up care.",
+        "category": "Behavioral Health",
+        "measureType": "Administrative",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 6,
+                "maxAge": null,
+                "ageCalculationDate": "Date of ED Visit"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment through 30 days after ED visit",
+                "maximumGapAllowed": "No Gap"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Emergency Department visits with principal diagnosis of mental illness or intentional self-harm.",
+            "requiredDiagnoses": [
+                {
+                    "code": "Mental Illness Value Set",
+                    "codeSystem": "HEDIS"
+                },
+                {
+                    "code": "Intentional Self Harm Value Set",
+                    "codeSystem": "HEDIS"
+                }
+            ]
+        },
+        "numerator": {
+            "rates": [
+                {
+                    "name": "7 Day Follow-Up",
+                    "days": 7
+                },
+                {
+                    "name": "30 Day Follow-Up",
+                    "days": 30
+                }
+            ],
+            "requiredServices": [
+                "Behavioral Health Visit",
+                "Telehealth Visit",
+                "Outpatient Mental Health Visit"
+            ]
+        },
+        "exclusions": [],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Claims",
+                    "priority": "Required"
+                },
+                {
+                    "type": "ED Record",
+                    "priority": "Preferred"
+                }
+            ]
+        }
+    },
+    {
+        "id": 14,
+        "measureCode": "DSU",
+        "measureName": "Diagnosed Substance Use Disorders",
+        "description": "Percentage of members age 13 years and older diagnosed with a substance use disorder during the measurement year.",
+        "category": "Behavioral Health",
+        "measureType": "Administrative",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 13,
+                "maxAge": null,
+                "ageCalculationDate": "December 31 of Measurement Year"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment during measurement year",
+                "maximumGapAllowed": "45 Days"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Members age 13 years and older enrolled during the measurement year."
+        },
+        "numerator": {
+            "rates": [
+                {
+                    "name": "Alcohol Disorder",
+                    "diagnosisCodes": [
+                        "F10.*"
+                    ]
+                },
+                {
+                    "name": "Opioid Disorder",
+                    "diagnosisCodes": [
+                        "F11.*"
+                    ]
+                },
+                {
+                    "name": "Other Drug Disorder",
+                    "diagnosisCodes": [
+                        "F12.*",
+                        "F13.*",
+                        "F14.*",
+                        "F15.*",
+                        "F16.*",
+                        "F18.*",
+                        "F19.*"
+                    ]
+                },
+                {
+                    "name": "Any Substance Use Disorder",
+                    "diagnosisCodes": [
+                        "F10.*-F19.*"
+                    ]
+                }
+            ],
+            "numeratorDefinition": "At least one qualifying substance use disorder diagnosis during the measurement year."
+        },
+        "exclusions": [],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Claims",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Medical Record",
+                    "priority": "Supplemental"
+                }
+            ]
+        }
+    },
+    {
+        "id": 15,
+        "measureCode": "FUI",
+        "measureName": "Follow-Up After High-Intensity Care for Substance Use Disorder",
+        "description": "Percentage of acute inpatient hospitalizations, residential treatment or withdrawal management visits for substance use disorder that result in a follow-up visit.",
+        "category": "Behavioral Health",
+        "measureType": "Administrative",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 13,
+                "maxAge": null,
+                "ageCalculationDate": "Date of Discharge"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment through 30 days post discharge",
+                "maximumGapAllowed": "No Gap"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Acute inpatient hospitalization, residential treatment or withdrawal management visit with SUD diagnosis.",
+            "requiredDiagnoses": [
+                {
+                    "code": "F10-F19",
+                    "codeSystem": "ICD-10-CM",
+                    "description": "Substance Use Disorders"
+                }
+            ]
+        },
+        "numerator": {
+            "rates": [
+                {
+                    "name": "Follow-Up Within 7 Days",
+                    "days": 7
+                },
+                {
+                    "name": "Follow-Up Within 30 Days",
+                    "days": 30
+                }
+            ],
+            "requiredServices": [
+                "Outpatient SUD Visit",
+                "Telehealth SUD Visit",
+                "Medication Treatment Visit",
+                "Residential Follow-Up"
+            ]
+        },
+        "exclusions": [],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Claims",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Discharge Summary",
+                    "priority": "Preferred"
+                }
+            ]
+        }
+    },
+    {
+        "id": 16,
+        "measureCode": "FUA",
+        "measureName": "Follow-Up After Emergency Department Visit for Substance Use",
+        "description": "Percentage of ED visits for substance use disorder or drug overdose followed by SUD treatment services.",
+        "category": "Behavioral Health",
+        "measureType": "Administrative",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 13,
+                "maxAge": null
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment through 30 days after ED visit",
+                "maximumGapAllowed": "No Gap"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "ED visit with principal SUD diagnosis or drug overdose diagnosis.",
+            "requiredDiagnoses": [
+                {
+                    "code": "F10-F19",
+                    "codeSystem": "ICD-10-CM"
+                },
+                {
+                    "code": "Drug Overdose Value Set",
+                    "codeSystem": "HEDIS"
+                }
+            ]
+        },
+        "numerator": {
+            "rates": [
+                {
+                    "name": "7 Day Follow-Up",
+                    "days": 7
+                },
+                {
+                    "name": "30 Day Follow-Up",
+                    "days": 30
+                }
+            ],
+            "requiredServices": [
+                "SUD Treatment Visit",
+                "Behavioral Health Follow-Up",
+                "Medication Management"
+            ]
+        },
+        "exclusions": [],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Claims",
+                    "priority": "Required"
+                },
+                {
+                    "type": "ED Record",
+                    "priority": "Preferred"
+                }
+            ]
+        }
+    },
+    {
+        "id": 17,
+        "measureCode": "POD",
+        "measureName": "Pharmacotherapy for Opioid Use Disorder",
+        "description": "Percentage of OUD pharmacotherapy events lasting at least 180 days.",
+        "category": "Behavioral Health",
+        "measureType": "Administrative",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 16,
+                "maxAge": null
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment during treatment period",
+                "maximumGapAllowed": "45 Days"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Members with a diagnosis of opioid use disorder and new pharmacotherapy event.",
+            "requiredDiagnoses": [
+                {
+                    "code": "F11.*",
+                    "codeSystem": "ICD-10-CM",
+                    "description": "Opioid Use Disorder"
+                }
+            ]
+        },
+        "numerator": {
+            "numeratorDefinition": "Pharmacotherapy maintained for at least 180 days.",
+            "complianceThresholds": "180 Days Continuous Treatment",
+            "requiredServices": [
+                "Buprenorphine",
+                "Methadone",
+                "Naltrexone"
+            ]
+        },
+        "exclusions": [
+            {
+                "reason": "Hospice"
+            }
+        ],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Pharmacy Claims",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Medication Administration Records",
+                    "priority": "Preferred"
+                }
+            ]
+        }
+    },
+    {
+        "id": 18,
+        "measureCode": "SSD",
+        "measureName": "Diabetes Screening for People With Schizophrenia or Bipolar Disorder Using Antipsychotic Medications",
+        "description": "Percentage of members with schizophrenia, schizoaffective disorder or bipolar disorder who received diabetes screening.",
+        "category": "Behavioral Health",
+        "measureType": "Administrative",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 18,
+                "maxAge": 64
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Members with schizophrenia, schizoaffective disorder or bipolar disorder dispensed antipsychotic medication.",
+            "requiredDiagnoses": [
+                {
+                    "code": "F20.*",
+                    "description": "Schizophrenia"
+                },
+                {
+                    "code": "F25.*",
+                    "description": "Schizoaffective Disorder"
+                },
+                {
+                    "code": "F31.*",
+                    "description": "Bipolar Disorder"
+                }
+            ]
+        },
+        "numerator": {
+            "requiredServices": [
+                "HbA1c Test",
+                "Glucose Test"
+            ],
+            "codes": [
+                {
+                    "code": "83036",
+                    "codeSystem": "CPT",
+                    "description": "Hemoglobin A1c"
+                },
+                {
+                    "code": "82947",
+                    "codeSystem": "CPT",
+                    "description": "Glucose Test"
+                }
+            ]
+        },
+        "exclusions": [],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Lab Results",
+                    "priority": "Required"
+                }
+            ]
+        }
+    },
+    {
+        "id": 19,
+        "measureCode": "SMD",
+        "measureName": "Diabetes Monitoring for People With Diabetes and Schizophrenia",
+        "description": "Percentage of members with schizophrenia or schizoaffective disorder and diabetes who received LDL-C and HbA1c testing.",
+        "category": "Behavioral Health",
+        "measureType": "Administrative",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 18,
+                "maxAge": 64
+            }
+        },
+        "denominator": {
+            "eligiblePopulation": "Members with diabetes and schizophrenia or schizoaffective disorder."
+        },
+        "numerator": {
+            "requiredServices": [
+                "HbA1c Test",
+                "LDL-C Test"
+            ],
+            "complianceThresholds": "Both tests required during measurement year."
+        },
+        "exclusions": [],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Lab Results",
+                    "priority": "Required"
+                }
+            ]
+        }
+    },
+    {
+        "id": 20,
+        "measureCode": "SMC",
+        "measureName": "Cardiovascular Monitoring for People With Cardiovascular Disease and Schizophrenia",
+        "description": "Percentage of members with schizophrenia or schizoaffective disorder and cardiovascular disease who received LDL-C testing.",
+        "category": "Behavioral Health",
+        "measureType": "Administrative",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 18,
+                "maxAge": 64
+            }
+        },
+        "denominator": {
+            "eligiblePopulation": "Members with schizophrenia or schizoaffective disorder and cardiovascular disease."
+        },
+        "numerator": {
+            "requiredServices": [
+                "LDL-C Test"
+            ],
+            "codes": [
+                {
+                    "code": "80061",
+                    "codeSystem": "CPT",
+                    "description": "Lipid Panel"
+                }
+            ]
+        },
+        "exclusions": [],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Laboratory Results",
+                    "priority": "Required"
+                }
+            ]
+        }
+    },
+    {
+        "id": 21,
+        "measureCode": "DBO",
+        "measureName": "Deprescribing of Benzodiazepines in Older Adults",
+        "description": "Percentage of members 67 years and older who were dispensed benzodiazepines and achieved a reduction in benzodiazepine dose during the measurement year.",
+        "category": "Medication Management",
+        "measureType": "Administrative",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicare",
+            "Medicaid"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 67,
+                "maxAge": 120,
+                "ageCalculationDate": "December 31 of Measurement Year"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment during measurement year",
+                "maximumGapAllowed": "45 Days"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Members dispensed benzodiazepine medications during measurement year.",
+            "requiredDiagnoses": [],
+            "requiredMedications": [
+                "Diazepam",
+                "Lorazepam",
+                "Alprazolam",
+                "Clonazepam",
+                "Temazepam"
+            ]
+        },
+        "numerator": {
+            "numeratorDefinition": "Members achieving ≥20% reduction in Diazepam Milligram Equivalent (DME) dose.",
+            "rates": [
+                {
+                    "name": "20 Percent Reduction",
+                    "threshold": ">=20%"
+                },
+                {
+                    "name": "50 Percent Reduction",
+                    "threshold": ">=50%"
+                }
+            ]
+        },
+        "exclusions": [
+            {
+                "reason": "Hospice",
+                "codeSystem": "HCPCS"
+            }
+        ],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Pharmacy Claims",
+                    "priority": "Required"
+                }
+            ]
+        }
+    },
+    {
+        "id": 22,
+        "measureCode": "HDO",
+        "measureName": "Use of Opioids at High Dosage",
+        "description": "Percentage of members receiving prescription opioids at high dosage during the measurement year.",
+        "category": "Medication Safety",
+        "measureType": "Administrative",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 18,
+                "maxAge": 120,
+                "ageCalculationDate": "December 31 of Measurement Year"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment during measurement year",
+                "maximumGapAllowed": "45 Days"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Members receiving opioid prescriptions for 15 or more days during measurement year.",
+            "requiredMedications": [
+                "Morphine",
+                "Hydrocodone",
+                "Oxycodone",
+                "Fentanyl",
+                "Hydromorphone"
+            ]
+        },
+        "numerator": {
+            "numeratorDefinition": "Average Morphine Milligram Equivalent (MME) dose >=90 for 15 or more days.",
+            "complianceThreshold": "MME >=90"
+        },
+        "exclusions": [
+            {
+                "reason": "Cancer",
+                "codeSystem": "ICD-10-CM"
+            },
+            {
+                "reason": "Hospice",
+                "codeSystem": "HCPCS"
+            }
+        ],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Pharmacy Claims",
+                    "priority": "Required"
+                }
+            ]
+        }
+    },
+    {
+        "id": 23,
+        "measureCode": "UOP",
+        "measureName": "Use of Opioids From Multiple Providers",
+        "description": "Percentage of members receiving prescription opioids from multiple prescribers and pharmacies.",
+        "category": "Medication Safety",
+        "measureType": "Administrative",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 18,
+                "maxAge": 120,
+                "ageCalculationDate": "December 31 of Measurement Year"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment during measurement year",
+                "maximumGapAllowed": "45 Days"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Members receiving opioid prescriptions for 15 or more days during measurement year."
+        },
+        "numerator": {
+            "rates": [
+                {
+                    "name": "Multiple Prescribers",
+                    "criteria": "4 or more distinct opioid prescribers"
+                },
+                {
+                    "name": "Multiple Pharmacies",
+                    "criteria": "4 or more distinct pharmacies"
+                },
+                {
+                    "name": "Multiple Prescribers and Pharmacies",
+                    "criteria": "4 or more prescribers and 4 or more pharmacies"
+                }
+            ]
+        },
+        "exclusions": [
+            {
+                "reason": "Cancer",
+                "codeSystem": "ICD-10-CM"
+            },
+            {
+                "reason": "Hospice",
+                "codeSystem": "HCPCS"
+            }
+        ],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Pharmacy Claims",
+                    "priority": "Required"
+                }
+            ]
+        }
+    },
+    {
+        "id": 24,
+        "measureCode": "COU",
+        "measureName": "Risk of Continued Opioid Use",
+        "description": "Percentage of members with a new episode of opioid use that places them at risk for continued opioid use.",
+        "category": "Medication Safety",
+        "measureType": "Administrative",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 18,
+                "maxAge": 120,
+                "ageCalculationDate": "December 31 of Measurement Year"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment during measurement year and prior period",
+                "maximumGapAllowed": "45 Days"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Members with a new opioid treatment episode.",
+            "requiredMedications": [
+                "Morphine",
+                "Hydrocodone",
+                "Oxycodone",
+                "Hydromorphone",
+                "Fentanyl"
+            ]
+        },
+        "numerator": {
+            "rates": [
+                {
+                    "name": "15 Days in 30 Days",
+                    "criteria": "At least 15 opioid treatment days in 30-day period"
+                },
+                {
+                    "name": "31 Days in 62 Days",
+                    "criteria": "At least 31 opioid treatment days in 62-day period"
+                }
+            ]
+        },
+        "exclusions": [
+            {
+                "reason": "Cancer",
+                "codeSystem": "ICD-10-CM"
+            },
+            {
+                "reason": "Hospice",
+                "codeSystem": "HCPCS"
+            }
+        ],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Pharmacy Claims",
+                    "priority": "Required"
+                }
+            ]
+        }
+    },
+    {
+        "id": 25,
+        "measureCode": "HOS",
+        "measureName": "Medicare Health Outcomes Survey",
+        "description": "Measures changes in physical and mental health status of Medicare Advantage members over a two-year period.",
+        "category": "Health Outcomes",
+        "measureType": "Survey",
+        "active": true,
+        "productLines": [
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 18,
+                "maxAge": 120,
+                "ageCalculationDate": "Survey Eligibility Date"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous Medicare Advantage enrollment throughout survey period",
+                "maximumGapAllowed": "NCQA/CMS Defined"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Medicare Advantage members selected for HOS survey.",
+            "requiredDiagnoses": [],
+            "productLineRules": {
+                "medicare": true
+            }
+        },
+        "numerator": {
+            "numeratorDefinition": "Members whose health status improved or remained as expected between baseline and follow-up surveys.",
+            "rates": [
+                {
+                    "name": "Better Than Expected",
+                    "description": "Physical or mental health improved beyond expected outcome."
+                },
+                {
+                    "name": "Same As Expected",
+                    "description": "Health remained stable as expected."
+                },
+                {
+                    "name": "Worse Than Expected",
+                    "description": "Health declined beyond expected outcome."
+                }
+            ],
+            "requiredServices": [
+                "Baseline Survey",
+                "Follow-Up Survey"
+            ]
+        },
+        "exclusions": [
+            {
+                "reason": "Member Death During Survey Period",
+                "codeSystem": "CMS"
+            }
+        ],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "CMS HOS Survey",
+                    "priority": "Required"
+                }
+            ],
+            "fileRequirements": [
+                "Survey Response",
+                "Member Assessment"
+            ]
+        }
+    },
+    {
+        "id": 26,
+        "measureCode": "FRM",
+        "measureName": "Fall Risk Management",
+        "description": "Measures discussion and management of fall risk among Medicare members aged 65 years and older.",
+        "category": "Older Adult Care",
+        "measureType": "Survey",
+        "active": true,
+        "productLines": [
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 65,
+                "maxAge": 120,
+                "ageCalculationDate": "December 31 of Measurement Year"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous Medicare enrollment during measurement year",
+                "maximumGapAllowed": "45 Days"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Members aged 65 and older who had at least one practitioner visit during the previous 12 months.",
+            "requiredServices": [
+                "Practitioner Visit"
+            ],
+            "productLineRules": {
+                "medicare": true
+            }
+        },
+        "numerator": {
+            "rates": [
+                {
+                    "name": "Discussing Fall Risk",
+                    "description": "Member discussed falls, balance problems, or walking difficulties with practitioner.",
+                    "requiredEvidence": [
+                        "Fall Risk Discussion",
+                        "Balance Assessment",
+                        "Walking Difficulty Assessment"
+                    ]
+                },
+                {
+                    "name": "Managing Fall Risk",
+                    "description": "Member received fall prevention recommendations or treatment plan.",
+                    "requiredEvidence": [
+                        "Fall Prevention Education",
+                        "Assistive Device Recommendation",
+                        "Physical Therapy Referral",
+                        "Home Safety Recommendation",
+                        "Balance Training"
+                    ]
+                }
+            ]
+        },
+        "exclusions": [
+            {
+                "reason": "Member Unable To Participate In Survey",
+                "codeSystem": "CMS"
+            }
+        ],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Member Survey",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Provider Documentation",
+                    "priority": "Preferred"
+                },
+                {
+                    "type": "Care Management Notes",
+                    "priority": "Supplemental"
+                }
+            ],
+            "fileRequirements": [
+                "PDF",
+                "Survey Response"
+            ],
+            "highlightRequirements": [
+                "Fall Discussion",
+                "Fall Prevention Recommendation",
+                "Practitioner Visit Date"
+            ],
+            "commonErrorsToAvoid": [
+                "No documentation of fall discussion",
+                "No documented prevention recommendation",
+                "Missing practitioner visit within last 12 months"
+            ]
+        }
+    },
+    {
+        "id": 27,
+        "measureCode": "MUI",
+        "measureName": "Management of Urinary Incontinence in Older Adults",
+        "description": "Assesses management and treatment discussion of urinary incontinence among Medicare members 65 years and older.",
+        "category": "Medicare Health Outcomes Survey",
+        "measureType": "Survey",
+        "active": true,
+        "productLines": [
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 65,
+                "maxAge": null,
+                "ageCalculationDate": "Survey Measurement Year"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Member enrolled in Medicare plan during survey period",
+                "maximumGapAllowed": "Per HOS Guidelines"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Members 65 years and older who reported urine leakage during the previous 6 months.",
+            "requiredDiagnoses": [],
+            "productLineRules": {
+                "medicare": true
+            }
+        },
+        "numerator": {
+            "numeratorDefinition": "Three rates are reported.",
+            "rates": [
+                {
+                    "rateCode": "MUI-1",
+                    "rateName": "Discussing Urinary Incontinence",
+                    "definition": "Member discussed urine leakage problem with a healthcare provider."
+                },
+                {
+                    "rateCode": "MUI-2",
+                    "rateName": "Discussing Treatment of Urinary Incontinence",
+                    "definition": "Member discussed treatment options with a healthcare provider."
+                },
+                {
+                    "rateCode": "MUI-3",
+                    "rateName": "Impact of Urinary Incontinence",
+                    "definition": "Member reported urine leakage interfered significantly with daily activities or sleep."
+                }
+            ],
+            "requiredServices": [
+                "Provider Discussion",
+                "Treatment Counseling",
+                "Survey Documentation"
+            ],
+            "serviceDateValidity": {
+                "lookbackPeriod": "Previous 6 Months"
+            },
+            "abstractionNotes": [
+                {
+                    "title": "Survey Measure",
+                    "note": "Measure is determined using Medicare HOS survey responses."
+                }
+            ]
+        },
+        "exclusions": [
+            {
+                "reason": "Survey Not Completed",
+                "description": "Member did not complete the HOS survey."
+            }
+        ],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "HOS Survey",
+                    "priority": "Required",
+                    "notes": "Primary evidence source."
+                }
+            ],
+            "fileRequirements": [
+                "Survey Response",
+                "PDF",
+                "CSV"
+            ],
+            "highlightRequirements": [
+                "Urine Leakage Question",
+                "Provider Discussion Response",
+                "Treatment Discussion Response"
+            ],
+            "commonErrorsToAvoid": [
+                "Using claims data instead of survey responses",
+                "Including members without urine leakage",
+                "Missing survey completion"
+            ]
+        }
+    },
+    {
+        "id": 28,
+        "measureCode": "PAO",
+        "measureName": "Physical Activity in Older Adults",
+        "description": "Assesses provider discussion and counseling regarding physical activity among Medicare members 65 years and older.",
+        "category": "Medicare Health Outcomes Survey",
+        "measureType": "Survey",
+        "active": true,
+        "productLines": [
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 65,
+                "maxAge": null,
+                "ageCalculationDate": "Survey Measurement Year"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Member enrolled in Medicare plan during survey year",
+                "maximumGapAllowed": "Per HOS Guidelines"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Members 65 years and older who completed the HOS survey and had a provider visit within the previous 12 months.",
+            "requiredDiagnoses": [],
+            "productLineRules": {
+                "medicare": true
+            }
+        },
+        "numerator": {
+            "numeratorDefinition": "Two rates are reported.",
+            "rates": [
+                {
+                    "rateCode": "PAO-1",
+                    "rateName": "Discussing Physical Activity",
+                    "definition": "Member discussed exercise or physical activity level with a healthcare provider."
+                },
+                {
+                    "rateCode": "PAO-2",
+                    "rateName": "Advising Physical Activity",
+                    "definition": "Member received advice to start, increase, or maintain physical activity."
+                }
+            ],
+            "requiredServices": [
+                "Provider Visit",
+                "Physical Activity Counseling"
+            ],
+            "serviceDateValidity": {
+                "lookbackPeriod": "Previous 12 Months"
+            },
+            "abstractionNotes": [
+                {
+                    "title": "Survey Measure",
+                    "note": "Compliance is based on Medicare HOS survey responses."
+                }
+            ]
+        },
+        "exclusions": [
+            {
+                "reason": "Survey Not Completed",
+                "description": "Member did not complete HOS survey."
+            }
+        ],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "HOS Survey",
+                    "priority": "Required",
+                    "notes": "Primary source for numerator and denominator calculation."
+                }
+            ],
+            "fileRequirements": [
+                "Survey Response",
+                "PDF",
+                "CSV"
+            ],
+            "highlightRequirements": [
+                "Provider Visit Question",
+                "Physical Activity Discussion Question",
+                "Physical Activity Advice Question"
+            ],
+            "commonErrorsToAvoid": [
+                "Using claims-only data",
+                "Ignoring provider visit requirement",
+                "Missing HOS survey response"
+            ]
+        }
+    },
+    {
+        "id": 29,
+        "measureCode": "IET",
+        "measureName": "Initiation and Engagement of Substance Use Disorder Treatment",
+        "description": "The percentage of new substance use disorder episodes that result in treatment initiation and engagement.",
+        "category": "Behavioral Health",
+        "measureType": "Administrative",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 13,
+                "maxAge": null,
+                "ageCalculationDate": "Index Episode Date"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment 60 days before and 47 days after diagnosis",
+                "maximumGapAllowed": "45 Days"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Members with a new episode of substance use disorder during the measurement year.",
+            "requiredDiagnoses": [
+                {
+                    "codeRange": "F10-F19",
+                    "codeSystem": "ICD-10-CM",
+                    "description": "Substance Use Disorders"
+                }
+            ],
+            "productLineRules": {
+                "commercial": true,
+                "medicaid": true,
+                "medicare": true
+            }
+        },
+        "numerator": {
+            "numeratorDefinition": "Two rates are reported.",
+            "rates": [
+                {
+                    "rateCode": "IET-1",
+                    "rateName": "Initiation",
+                    "definition": "Treatment initiated within 14 days of diagnosis."
+                },
+                {
+                    "rateCode": "IET-2",
+                    "rateName": "Engagement",
+                    "definition": "Two or more treatment encounters within 34 days after initiation."
+                }
+            ],
+            "requiredServices": [
+                "Inpatient Treatment",
+                "Outpatient SUD Visit",
+                "Intensive Outpatient Program",
+                "Partial Hospitalization",
+                "Telehealth Visit",
+                "Medication Assisted Treatment"
+            ],
+            "serviceDateValidity": {
+                "initiationWindow": "14 Days",
+                "engagementWindow": "34 Days"
+            }
+        },
+        "exclusions": [],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Claims",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Behavioral Health Encounter",
+                    "priority": "Required"
+                }
+            ]
+        }
+    },
+    {
+        "id": 30,
+        "measureCode": "PPC",
+        "measureName": "Prenatal and Postpartum Care",
+        "description": "Measures timeliness of prenatal care and postpartum care following live birth delivery.",
+        "category": "Women's Health",
+        "measureType": "Administrative",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 12,
+                "maxAge": 55,
+                "ageCalculationDate": "Delivery Date"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment through delivery and postpartum period",
+                "maximumGapAllowed": "45 Days"
+            },
+            "genderRules": [
+                "Female"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Women with live birth deliveries occurring between October 8 prior year and October 7 measurement year.",
+            "requiredDiagnoses": [
+                {
+                    "codeRange": "O80-O84",
+                    "codeSystem": "ICD-10-CM",
+                    "description": "Delivery and childbirth diagnoses"
+                }
+            ],
+            "productLineRules": {
+                "commercial": true,
+                "medicaid": true,
+                "medicare": true
+            }
+        },
+        "numerator": {
+            "rates": [
+                {
+                    "rateCode": "PPC-1",
+                    "rateName": "Timeliness of Prenatal Care",
+                    "definition": "Prenatal visit during first trimester, before enrollment, or within 42 days after enrollment."
+                },
+                {
+                    "rateCode": "PPC-2",
+                    "rateName": "Postpartum Care",
+                    "definition": "Postpartum visit between 7 and 84 days after delivery."
+                }
+            ],
+            "requiredServices": [
+                "Prenatal Visit",
+                "OB Assessment",
+                "Postpartum Visit"
+            ],
+            "serviceDateValidity": {
+                "prenatalWindow": "First Trimester",
+                "postpartumWindow": "7-84 Days After Delivery"
+            }
+        },
+        "exclusions": [],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Claims",
+                    "priority": "Required"
+                },
+                {
+                    "type": "OB Medical Record",
+                    "priority": "Preferred"
+                }
+            ],
+            "highlightRequirements": [
+                "Prenatal Visit Date",
+                "Delivery Date",
+                "Postpartum Visit Date"
+            ]
+        }
+    },
+    {
+        "id": 32,
+        "measureCode": "APP",
+        "measureName": "Use of First-Line Psychosocial Care for Children and Adolescents on Antipsychotics",
+        "description": "Children and adolescents receiving new antipsychotic prescriptions who received psychosocial care before medication initiation.",
+        "category": "Behavioral Health",
+        "measureType": "Administrative",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 1,
+                "maxAge": 17,
+                "ageCalculationDate": "Index Prescription Date"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment during lookback period",
+                "maximumGapAllowed": "45 Days"
+            },
+            "genderRules": [
+                "All"
+            ]
+        },
+        "denominator": {
+            "eligiblePopulation": "Children and adolescents receiving a new antipsychotic prescription.",
+            "requiredDiagnoses": [
+                {
+                    "codeRange": "F20-F99",
+                    "codeSystem": "ICD-10-CM",
+                    "description": "Behavioral and Mental Health Disorders"
+                }
+            ],
+            "requiredMedications": [
+                {
+                    "drugClass": "Antipsychotic Medications"
+                }
+            ],
+            "productLineRules": {
+                "commercial": true,
+                "medicaid": true,
+                "medicare": true
+            }
+        },
+        "numerator": {
+            "numeratorDefinition": "Evidence of psychosocial care before or around the initiation of antipsychotic treatment.",
+            "requiredServices": [
+                "Psychotherapy",
+                "Behavioral Therapy",
+                "Family Therapy",
+                "Psychiatric Counseling",
+                "Mental Health Assessment"
+            ],
+            "serviceDateValidity": {
+                "lookbackPeriod": "90 Days Before Antipsychotic Start"
+            }
+        },
+        "exclusions": [
+            {
+                "reason": "Previous Antipsychotic Use",
+                "description": "Members already on antipsychotic medication during lookback period."
+            }
+        ],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Claims",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Behavioral Health Records",
+                    "priority": "Preferred"
+                }
+            ],
+            "highlightRequirements": [
+                "Psychosocial Service Date",
+                "Antipsychotic Start Date",
+                "Provider Documentation"
+            ]
+        }
+    }
+]
