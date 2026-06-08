@@ -109,5 +109,6 @@ app.use("/api/security", require("./routes/securityDashboardRoutes"));
 app.use("/api/access-logs", require("./routes/phiAccessLogsRoutes"));
 app.use("/api/security-alerts", require("./routes/securityalrestRoute"));
 app.use("/api/reports-analytics", require("./routes/reportsAnalytics.routes"));
+app.use("/api/measures", require("./routes/measure.routes"));
 
 module.exports = app;

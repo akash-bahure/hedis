@@ -2472,5 +2472,715 @@
                 "Provider Documentation"
             ]
         }
+    },
+    {
+        "id": 33,
+        "measureCode": "ADD-E",
+        "measureName": "Follow-Up Care for Children Prescribed ADHD Medication",
+        "description": "Percentage of children newly prescribed ADHD medication who received appropriate follow-up care.",
+        "category": "Behavioral Health",
+        "measureType": "ECDS",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "rates": [
+            "Initiation Phase",
+            "Continuation and Maintenance Phase"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 6,
+                "maxAge": 12,
+                "ageCalculationDate": "Index Prescription Start Date"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment during required measurement period",
+                "maximumGapAllowed": "45 Days"
+            }
+        },
+        "denominator": {
+            "eligiblePopulation": "Members newly prescribed ADHD medication",
+            "requiredConditions": [
+                "New ADHD medication dispensing event"
+            ]
+        },
+        "numerator": {
+            "initiationPhase": {
+                "requirement": "One follow-up visit with prescribing practitioner within 30 days of first ADHD medication dispensing"
+            },
+            "continuationMaintenancePhase": {
+                "requirement": "At least two additional follow-up visits within 270 days after initiation phase and medication coverage for at least 210 days"
+            }
+        },
+        "exclusions": [],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Claims",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Encounter Records",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Medical Records",
+                    "priority": "Supplemental"
+                }
+            ],
+            "highlightRequirements": [
+                "ADHD Medication Dispense Date",
+                "Follow-Up Visit Dates",
+                "Prescribing Practitioner"
+            ]
+        }
+    },
+    {
+        "id": 34,
+        "measureCode": "APM-E",
+        "measureName": "Metabolic Monitoring for Children and Adolescents on Antipsychotics",
+        "description": "Percentage of children and adolescents receiving antipsychotics who received metabolic testing.",
+        "category": "Behavioral Health",
+        "measureType": "ECDS",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "rates": [
+            "Blood Glucose Testing",
+            "Cholesterol Testing",
+            "Blood Glucose and Cholesterol Testing"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 1,
+                "maxAge": 17,
+                "ageCalculationDate": "December 31 of Measurement Year"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment during measurement year",
+                "maximumGapAllowed": "45 Days"
+            }
+        },
+        "denominator": {
+            "eligiblePopulation": "Members with two or more antipsychotic medication dispensing events",
+            "requiredServices": [
+                "Antipsychotic Medication Dispensing"
+            ]
+        },
+        "numerator": {
+            "bloodGlucoseTesting": {
+                "requirement": "At least one blood glucose or HbA1c test during measurement year"
+            },
+            "cholesterolTesting": {
+                "requirement": "At least one cholesterol or LDL-C test during measurement year"
+            },
+            "combinedTesting": {
+                "requirement": "Meets both blood glucose and cholesterol testing requirements"
+            }
+        },
+        "exclusions": [],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Lab Results",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Claims",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Medical Record",
+                    "priority": "Supplemental"
+                }
+            ],
+            "highlightRequirements": [
+                "Antipsychotic Medication",
+                "HbA1c Result",
+                "Glucose Result",
+                "Cholesterol Result",
+                "LDL Result"
+            ]
+        }
+    },
+    {
+        "id": 35,
+        "measureCode": "DSF-E",
+        "measureName": "Depression Screening and Follow-Up for Adolescents and Adults",
+        "description": "Percentage of members screened for depression and receiving appropriate follow-up when screening positive.",
+        "category": "Behavioral Health",
+        "measureType": "ECDS",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "rates": [
+            "Depression Screening",
+            "Follow-Up on Positive Screen"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 12,
+                "maxAge": null,
+                "ageCalculationDate": "Start of Measurement Period"
+            }
+        },
+        "denominator": {
+            "eligiblePopulation": "Members 12 years and older"
+        },
+        "numerator": {
+            "depressionScreening": {
+                "requirement": "Completed depression screening using a standardized instrument"
+            },
+            "followUpPositiveScreen": {
+                "requirement": "Received follow-up care within 30 days of positive depression screen"
+            }
+        },
+        "standardizedTools": [
+            "PHQ-2",
+            "PHQ-9",
+            "PHQ-A"
+        ],
+        "exclusions": [],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Screening Assessment",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Encounter Record",
+                    "priority": "Required"
+                }
+            ],
+            "highlightRequirements": [
+                "Screening Date",
+                "Screening Tool",
+                "Screening Score",
+                "Follow-Up Date"
+            ]
+        }
+    },
+    {
+        "id": 36,
+        "measureCode": "DMS-E",
+        "measureName": "Utilization of the PHQ-9 to Monitor Depression Symptoms for Adolescents and Adults",
+        "description": "Percentage of members 12 years of age and older with a diagnosis of major depression or dysthymia who had an outpatient encounter with a PHQ-9 score documented during the same assessment period.",
+        "category": "Behavioral Health",
+        "measureType": "ECDS",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 12,
+                "maxAge": null,
+                "ageCalculationDate": "Date of Outpatient Encounter"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment during measurement year",
+                "maximumGapAllowed": "45 Days"
+            }
+        },
+        "denominator": {
+            "eligiblePopulation": "Members age 12 years and older with major depression or dysthymia diagnosis",
+            "requiredDiagnoses": [
+                {
+                    "codeSystem": "ICD-10-CM",
+                    "description": "Major Depression"
+                },
+                {
+                    "codeSystem": "ICD-10-CM",
+                    "description": "Dysthymia"
+                }
+            ],
+            "requiredServices": [
+                "Outpatient Encounter"
+            ]
+        },
+        "numerator": {
+            "numeratorDefinition": "Members with a PHQ-9 score documented during the same assessment period as the qualifying outpatient encounter.",
+            "requiredServices": [
+                "PHQ-9 Assessment"
+            ],
+            "assessmentTools": [
+                "PHQ-9"
+            ],
+            "complianceThresholds": "At least one PHQ-9 score documented during the assessment period."
+        },
+        "exclusions": [],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "PHQ-9 Assessment",
+                    "priority": "Required",
+                    "notes": "Assessment date and score must be documented."
+                },
+                {
+                    "type": "Medical Record",
+                    "priority": "Required",
+                    "notes": "Must contain depression diagnosis and encounter details."
+                },
+                {
+                    "type": "Claims",
+                    "priority": "Supplemental",
+                    "notes": "Used to identify qualifying encounters."
+                }
+            ],
+            "highlightRequirements": [
+                "Depression Diagnosis",
+                "Encounter Date",
+                "PHQ-9 Score",
+                "Assessment Date"
+            ],
+            "commonErrorsToAvoid": [
+                "Missing PHQ-9 score",
+                "PHQ-9 completed outside assessment period",
+                "Missing encounter documentation"
+            ]
+        }
+    },
+    {
+        "id": 37,
+        "measureCode": "DRR-E",
+        "measureName": "Depression Remission or Response for Adolescents and Adults",
+        "description": "Percentage of members 12 years of age and older with depression and an elevated PHQ-9 score who achieved remission or response within 120-240 days after the initial elevated PHQ-9 score.",
+        "category": "Behavioral Health",
+        "measureType": "ECDS",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "rates": [
+            "Follow-Up PHQ-9",
+            "Depression Remission",
+            "Depression Response"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 12,
+                "maxAge": null,
+                "ageCalculationDate": "Index PHQ-9 Assessment Date"
+            },
+            "continuousEnrollment": {
+                "enrollmentRule": "Continuous enrollment through follow-up period",
+                "maximumGapAllowed": "45 Days"
+            }
+        },
+        "denominator": {
+            "eligiblePopulation": "Members with depression diagnosis and elevated PHQ-9 score",
+            "requiredDiagnoses": [
+                {
+                    "codeSystem": "ICD-10-CM",
+                    "description": "Major Depression"
+                },
+                {
+                    "codeSystem": "ICD-10-CM",
+                    "description": "Dysthymia"
+                }
+            ],
+            "baselineAssessment": {
+                "tool": "PHQ-9",
+                "minimumScore": 10,
+                "description": "Initial elevated PHQ-9 score"
+            }
+        },
+        "numerator": {
+            "followUpPHQ9": {
+                "definition": "Follow-up PHQ-9 completed between 120 and 240 days after initial elevated PHQ-9 score."
+            },
+            "depressionRemission": {
+                "definition": "Follow-up PHQ-9 score less than 5 within 120-240 days."
+            },
+            "depressionResponse": {
+                "definition": "At least 50% reduction in PHQ-9 score from baseline within 120-240 days."
+            },
+            "assessmentTools": [
+                "PHQ-9"
+            ]
+        },
+        "serviceDateValidity": {
+            "followUpWindow": "120-240 Days After Index PHQ-9"
+        },
+        "exclusions": [],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "PHQ-9 Assessment",
+                    "priority": "Required",
+                    "notes": "Baseline and follow-up scores must be documented."
+                },
+                {
+                    "type": "Behavioral Health Record",
+                    "priority": "Required",
+                    "notes": "Must support depression diagnosis."
+                },
+                {
+                    "type": "Medical Record",
+                    "priority": "Required",
+                    "notes": "Must contain encounter dates and PHQ-9 documentation."
+                }
+            ],
+            "highlightRequirements": [
+                "Baseline PHQ-9 Score",
+                "Baseline Assessment Date",
+                "Follow-Up PHQ-9 Score",
+                "Follow-Up Assessment Date",
+                "Depression Diagnosis"
+            ],
+            "commonErrorsToAvoid": [
+                "Missing baseline PHQ-9",
+                "Follow-up completed outside 120-240 day window",
+                "Missing PHQ-9 score values",
+                "Unable to calculate 50% score reduction"
+            ]
+        }
+    },
+    {
+        "id": 38,
+        "measureCode": "ASF-E",
+        "measureName": "Unhealthy Alcohol Use Screening and Follow-Up",
+        "description": "Percentage of members 18 years and older screened for unhealthy alcohol use and receiving follow-up care when screening positive.",
+        "category": "Behavioral Health",
+        "measureType": "ECDS",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "rates": [
+            "Unhealthy Alcohol Use Screening",
+            "Follow-Up Care on Positive Screen"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 18,
+                "maxAge": null,
+                "ageCalculationDate": "Measurement Period"
+            }
+        },
+        "denominator": {
+            "eligiblePopulation": "Members age 18 years and older"
+        },
+        "numerator": {
+            "screening": {
+                "requirement": "Completed unhealthy alcohol use screening using a standardized instrument."
+            },
+            "followUpCare": {
+                "requirement": "Brief counseling or other follow-up care within 60 days of positive screening."
+            }
+        },
+        "standardizedTools": [
+            "AUDIT",
+            "AUDIT-C",
+            "Single Alcohol Screening Question"
+        ],
+        "serviceDateValidity": {
+            "followUpWindow": "60 Days"
+        },
+        "exclusions": [],
+        "documentation": {
+            "highlightRequirements": [
+                "Alcohol Screening Date",
+                "Screening Score",
+                "Positive Screening Result",
+                "Follow-Up Date"
+            ]
+        }
+    },
+    {
+        "id": 39,
+        "measureCode": "AIS-E",
+        "measureName": "Adult Immunization Status",
+        "description": "Percentage of adults 19 years and older who are up to date on recommended vaccinations.",
+        "category": "Immunizations",
+        "measureType": "ECDS",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "rates": [
+            "Influenza",
+            "Td/Tdap",
+            "Zoster",
+            "Pneumococcal",
+            "Hepatitis B"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": 19,
+                "maxAge": null,
+                "ageCalculationDate": "December 31 of Measurement Year"
+            }
+        },
+        "denominator": {
+            "eligiblePopulation": "Members age 19 years and older"
+        },
+        "numerator": {
+            "influenza": {
+                "requirement": "Current influenza vaccination."
+            },
+            "tdap": {
+                "requirement": "Current Td or Tdap vaccination."
+            },
+            "zoster": {
+                "requirement": "Current zoster vaccination."
+            },
+            "pneumococcal": {
+                "requirement": "Current pneumococcal vaccination."
+            },
+            "hepatitisB": {
+                "requirement": "Current hepatitis B vaccination."
+            }
+        },
+        "exclusions": [],
+        "documentation": {
+            "acceptedEvidenceTypes": [
+                {
+                    "type": "Immunization Registry",
+                    "priority": "Required"
+                },
+                {
+                    "type": "Medical Record",
+                    "priority": "Required"
+                }
+            ],
+            "highlightRequirements": [
+                "Vaccine Name",
+                "Administration Date",
+                "Provider Name"
+            ]
+        }
+    },
+    {
+        "id": 40,
+        "measureCode": "PRS-E",
+        "measureName": "Prenatal Immunization Status",
+        "description": "Percentage of deliveries where members received influenza and Tdap vaccinations during pregnancy.",
+        "category": "Women's Health",
+        "measureType": "ECDS",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "rates": [
+            "Influenza Vaccination",
+            "Tdap Vaccination"
+        ],
+        "eligibility": {
+            "eventCriteria": {
+                "requiredEvent": "Live Birth Delivery"
+            }
+        },
+        "denominator": {
+            "eligiblePopulation": "Members with qualifying deliveries during measurement period"
+        },
+        "numerator": {
+            "influenza": {
+                "requirement": "Influenza vaccine administered during pregnancy."
+            },
+            "tdap": {
+                "requirement": "Tdap vaccine administered during pregnancy."
+            }
+        },
+        "documentation": {
+            "highlightRequirements": [
+                "Delivery Date",
+                "Influenza Vaccine Date",
+                "Tdap Vaccine Date"
+            ]
+        }
+    },
+    {
+        "id": 41,
+        "measureCode": "PND-E",
+        "measureName": "Prenatal Depression Screening and Follow-Up",
+        "description": "Percentage of deliveries where members were screened for depression during pregnancy and received follow-up care when screening positive.",
+        "category": "Women's Health",
+        "measureType": "ECDS",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "rates": [
+            "Depression Screening",
+            "Follow-Up on Positive Screen"
+        ],
+        "eligibility": {
+            "eventCriteria": {
+                "requiredEvent": "Delivery"
+            }
+        },
+        "denominator": {
+            "eligiblePopulation": "Members with qualifying deliveries"
+        },
+        "numerator": {
+            "screening": {
+                "requirement": "Depression screening during pregnancy using standardized instrument."
+            },
+            "followUp": {
+                "requirement": "Follow-up care within 30 days after positive screening."
+            }
+        },
+        "assessmentTools": [
+            "PHQ-2",
+            "PHQ-9",
+            "EPDS"
+        ],
+        "serviceDateValidity": {
+            "followUpWindow": "30 Days"
+        },
+        "documentation": {
+            "highlightRequirements": [
+                "Pregnancy Period",
+                "Screening Date",
+                "Screening Score",
+                "Follow-Up Date"
+            ]
+        }
+    },
+    {
+        "id": 42,
+        "measureCode": "PDS-E",
+        "measureName": "Postpartum Depression Screening and Follow-Up",
+        "description": "Percentage of deliveries where members were screened for depression during postpartum period and received follow-up care when screening positive.",
+        "category": "Women's Health",
+        "measureType": "ECDS",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "rates": [
+            "Depression Screening",
+            "Follow-Up on Positive Screen"
+        ],
+        "eligibility": {
+            "eventCriteria": {
+                "requiredEvent": "Delivery"
+            }
+        },
+        "denominator": {
+            "eligiblePopulation": "Members with qualifying deliveries"
+        },
+        "numerator": {
+            "screening": {
+                "requirement": "Depression screening during postpartum period."
+            },
+            "followUp": {
+                "requirement": "Follow-up care within 30 days of positive screen."
+            }
+        },
+        "assessmentTools": [
+            "PHQ-2",
+            "PHQ-9",
+            "EPDS"
+        ],
+        "serviceDateValidity": {
+            "followUpWindow": "30 Days"
+        },
+        "documentation": {
+            "highlightRequirements": [
+                "Delivery Date",
+                "Postpartum Visit Date",
+                "Depression Screening Score",
+                "Follow-Up Date"
+            ]
+        }
+    },
+    {
+        "id": 43,
+        "measureCode": "SNS-E",
+        "measureName": "Social Need Screening and Intervention",
+        "description": "Percentage of members screened for food, housing and transportation needs and receiving interventions when screening positive.",
+        "category": "Social Determinants of Health",
+        "measureType": "ECDS",
+        "active": true,
+        "productLines": [
+            "Commercial",
+            "Medicaid",
+            "Medicare"
+        ],
+        "rates": [
+            "Food Screening",
+            "Food Intervention",
+            "Housing Screening",
+            "Housing Intervention",
+            "Transportation Screening",
+            "Transportation Intervention"
+        ],
+        "eligibility": {
+            "ageCriteria": {
+                "minAge": null,
+                "maxAge": null,
+                "ageCalculationDate": "Measurement Period"
+            }
+        },
+        "denominator": {
+            "eligiblePopulation": "All eligible members during measurement period"
+        },
+        "numerator": {
+            "foodScreening": {
+                "requirement": "Screened for food insecurity."
+            },
+            "foodIntervention": {
+                "requirement": "Intervention within 30 days of positive food insecurity screen."
+            },
+            "housingScreening": {
+                "requirement": "Screened for housing instability, homelessness or housing inadequacy."
+            },
+            "housingIntervention": {
+                "requirement": "Intervention within 30 days of positive housing screen."
+            },
+            "transportationScreening": {
+                "requirement": "Screened for transportation insecurity."
+            },
+            "transportationIntervention": {
+                "requirement": "Intervention within 30 days of positive transportation screen."
+            }
+        },
+        "screeningTools": [
+            "AHC HRSN Screening Tool",
+            "PRAPARE",
+            "Accountable Health Communities Tool"
+        ],
+        "serviceDateValidity": {
+            "interventionWindow": "30 Days"
+        },
+        "documentation": {
+            "highlightRequirements": [
+                "Screening Tool Used",
+                "Positive Screening Result",
+                "Referral Date",
+                "Community Resource",
+                "Intervention Date"
+            ],
+            "commonErrorsToAvoid": [
+                "Missing screening result",
+                "Missing intervention documentation",
+                "Intervention outside 30-day window"
+            ]
+        }
     }
 ]
