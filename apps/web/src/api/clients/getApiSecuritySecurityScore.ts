@@ -9,10 +9,7 @@ import type {
   RequestConfig,
   ResponseErrorConfig,
 } from "../../../utils/client.ts";
-import type {
-  GetApiSecurityScoreQueryResponse,
-  GetApiSecurityScore500,
-} from "../types/GetApiSecuritySecurityScore.ts";
+import type { GetApiSecurityScoreQueryResponse } from "../types/GetApiSecuritySecurityScore.ts";
 
 function getGetApiSecuritySecurityScoreUrl() {
   const res = { method: "GET", url: `/api/security/security-score` as const };
@@ -20,7 +17,7 @@ function getGetApiSecuritySecurityScoreUrl() {
 }
 
 /**
- * @summary Get security score breakdown
+ * @summary Get Security Score Dashboard
  * {@link /api/security/security-score}
  */
 export async function getApiSecuritySecurityScore(
@@ -30,7 +27,7 @@ export async function getApiSecuritySecurityScore(
 
   const res = await request<
     GetApiSecurityScoreQueryResponse,
-    ResponseErrorConfig<GetApiSecurityScore500>,
+    ResponseErrorConfig<Error>,
     unknown
   >({
     method: "GET",

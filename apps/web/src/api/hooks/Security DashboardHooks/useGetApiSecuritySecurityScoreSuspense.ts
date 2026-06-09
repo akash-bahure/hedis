@@ -14,10 +14,7 @@ import type {
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
-import type {
-  GetApiSecurityScoreQueryResponse,
-  GetApiSecurityScore500,
-} from "../../types/GetApiSecuritySecurityScore.ts";
+import type { GetApiSecurityScoreQueryResponse } from "../../types/GetApiSecuritySecurityScore.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { getApiSecuritySecurityScore } from "../../clients/getApiSecuritySecurityScore.ts";
 
@@ -34,7 +31,7 @@ export function getApiSecuritySecurityScoreSuspenseQueryOptions(
   const queryKey = getApiSecuritySecurityScoreSuspenseQueryKey();
   return queryOptions<
     GetApiSecurityScoreQueryResponse,
-    ResponseErrorConfig<GetApiSecurityScore500>,
+    ResponseErrorConfig<Error>,
     GetApiSecurityScoreQueryResponse,
     typeof queryKey
   >({
@@ -49,7 +46,7 @@ export function getApiSecuritySecurityScoreSuspenseQueryOptions(
 }
 
 /**
- * @summary Get security score breakdown
+ * @summary Get Security Score Dashboard
  * {@link /api/security/security-score}
  */
 export function useGetApiSecuritySecurityScoreSuspense<
@@ -60,7 +57,7 @@ export function useGetApiSecuritySecurityScoreSuspense<
     query?: Partial<
       UseSuspenseQueryOptions<
         GetApiSecurityScoreQueryResponse,
-        ResponseErrorConfig<GetApiSecurityScore500>,
+        ResponseErrorConfig<Error>,
         TData,
         TQueryKey
       >
@@ -80,10 +77,9 @@ export function useGetApiSecuritySecurityScoreSuspense<
       queryKey,
     } as unknown as UseSuspenseQueryOptions,
     queryClient,
-  ) as UseSuspenseQueryResult<
-    TData,
-    ResponseErrorConfig<GetApiSecurityScore500>
-  > & { queryKey: TQueryKey };
+  ) as UseSuspenseQueryResult<TData, ResponseErrorConfig<Error>> & {
+    queryKey: TQueryKey;
+  };
 
   query.queryKey = queryKey as TQueryKey;
 

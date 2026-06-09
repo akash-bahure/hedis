@@ -14,10 +14,7 @@ import type {
   QueryObserverOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
-import type {
-  GetApiSecurityScoreQueryResponse,
-  GetApiSecurityScore500,
-} from "../../types/GetApiSecuritySecurityScore.ts";
+import type { GetApiSecurityScoreQueryResponse } from "../../types/GetApiSecuritySecurityScore.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { getApiSecuritySecurityScore } from "../../clients/getApiSecuritySecurityScore.ts";
 
@@ -34,7 +31,7 @@ export function getApiSecuritySecurityScoreQueryOptions(
   const queryKey = getApiSecuritySecurityScoreQueryKey();
   return queryOptions<
     GetApiSecurityScoreQueryResponse,
-    ResponseErrorConfig<GetApiSecurityScore500>,
+    ResponseErrorConfig<Error>,
     GetApiSecurityScoreQueryResponse,
     typeof queryKey
   >({
@@ -49,7 +46,7 @@ export function getApiSecuritySecurityScoreQueryOptions(
 }
 
 /**
- * @summary Get security score breakdown
+ * @summary Get Security Score Dashboard
  * {@link /api/security/security-score}
  */
 export function useGetApiSecuritySecurityScore<
@@ -61,7 +58,7 @@ export function useGetApiSecuritySecurityScore<
     query?: Partial<
       QueryObserverOptions<
         GetApiSecurityScoreQueryResponse,
-        ResponseErrorConfig<GetApiSecurityScore500>,
+        ResponseErrorConfig<Error>,
         TData,
         TQueryData,
         TQueryKey
@@ -82,7 +79,7 @@ export function useGetApiSecuritySecurityScore<
       queryKey,
     } as unknown as QueryObserverOptions,
     queryClient,
-  ) as UseQueryResult<TData, ResponseErrorConfig<GetApiSecurityScore500>> & {
+  ) as UseQueryResult<TData, ResponseErrorConfig<Error>> & {
     queryKey: TQueryKey;
   };
 

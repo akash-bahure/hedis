@@ -4,10 +4,10 @@
  */
 
 export const dataRiskLevelEnum = {
-  Excellent: "Excellent",
-  Good: "Good",
-  Fair: "Fair",
-  Poor: "Poor",
+  Low: "Low",
+  Medium: "Medium",
+  High: "High",
+  Critical: "Critical",
 } as const;
 
 export type DataRiskLevelEnumKey =
@@ -26,14 +26,25 @@ export type GetApiSecurityScore200 = {
    */
   data?: {
     /**
-     * @description Overall security score out of 100
      * @type integer | undefined
      */
     overall_score?: number;
     /**
+     * @type integer | undefined
+     */
+    max_score?: number;
+    /**
+     * @type string | undefined
+     */
+    posture?: string;
+    /**
      * @type string | undefined
      */
     risk_level?: DataRiskLevelEnumKey;
+    /**
+     * @type string | undefined, date-time
+     */
+    last_assessed_at?: string;
     /**
      * @type integer | undefined
      */
@@ -55,20 +66,28 @@ export type GetApiSecurityScore200 = {
      */
     facility_device_score?: number;
     /**
-     * @type string | undefined, date-time
+     * @type array | undefined
      */
-    last_assessed_at?: string;
+    categories?: {
+      /**
+       * @type string | undefined
+       */
+      label?: string;
+      /**
+       * @type integer | undefined
+       */
+      score?: number;
+      /**
+       * @type integer | undefined
+       */
+      weight?: number;
+    }[];
   };
 };
-
-/**
- * @description Failed to fetch security score
- */
-export type GetApiSecurityScore500 = any;
 
 export type GetApiSecurityScoreQueryResponse = GetApiSecurityScore200;
 
 export type GetApiSecuritySecurityScoreQuery = {
   Response: GetApiSecurityScore200;
-  Errors: GetApiSecurityScore500;
+  Errors: any;
 };

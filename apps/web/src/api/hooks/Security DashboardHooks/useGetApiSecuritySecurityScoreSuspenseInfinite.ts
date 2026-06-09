@@ -15,10 +15,7 @@ import type {
   UseSuspenseInfiniteQueryOptions,
   UseSuspenseInfiniteQueryResult,
 } from "@tanstack/react-query";
-import type {
-  GetApiSecurityScoreQueryResponse,
-  GetApiSecurityScore500,
-} from "../../types/GetApiSecuritySecurityScore.ts";
+import type { GetApiSecurityScoreQueryResponse } from "../../types/GetApiSecuritySecurityScore.ts";
 import {
   infiniteQueryOptions,
   useSuspenseInfiniteQuery,
@@ -38,7 +35,7 @@ export function getApiSecuritySecurityScoreSuspenseInfiniteQueryOptions(
   const queryKey = getApiSecuritySecurityScoreSuspenseInfiniteQueryKey();
   return infiniteQueryOptions<
     GetApiSecurityScoreQueryResponse,
-    ResponseErrorConfig<GetApiSecurityScore500>,
+    ResponseErrorConfig<Error>,
     InfiniteData<GetApiSecurityScoreQueryResponse>,
     typeof queryKey,
     number
@@ -61,12 +58,12 @@ export function getApiSecuritySecurityScoreSuspenseInfiniteQueryOptions(
 }
 
 /**
- * @summary Get security score breakdown
+ * @summary Get Security Score Dashboard
  * {@link /api/security/security-score}
  */
 export function useGetApiSecuritySecurityScoreSuspenseInfinite<
   TQueryFnData = GetApiSecurityScoreQueryResponse,
-  TError = ResponseErrorConfig<GetApiSecurityScore500>,
+  TError = ResponseErrorConfig<Error>,
   TData = InfiniteData<TQueryFnData>,
   TQueryKey extends QueryKey =
     GetApiSecuritySecurityScoreSuspenseInfiniteQueryKey,
