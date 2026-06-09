@@ -785,23 +785,165 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
   `);
 
   // Seed phi_access_logs if empty
-  const countRes = await client.query(`SELECT COUNT(*) as cnt FROM ${schema}.phi_access_logs`);
+  const countRes = await client.query(
+    `SELECT COUNT(*) as cnt FROM ${schema}.phi_access_logs`
+  );
   if (parseInt(countRes.rows[0].cnt) === 0) {
     const logsToSeed = [
-      ['CHT-78421', 'Verma, Rakesh K.', 'Ankit Sharma', 'Senior Coder', 'code', '8m 32s', '172.16.8.22', 'Apollo Inpatient', '2026-02-20 10:55:00'],
-      ['CHT-78422', 'Pillai, Sreedevi N.', 'Priti Gupta', 'Coder', 'code', '12m 11s', '172.16.8.23', 'Apollo Inpatient', '2026-02-20 10:28:00'],
-      ['CHT-78399', 'Kapoor, Meera S.', 'Vinod Kumar', 'Auditor (L2)', 'audit', '18m 44s', '172.16.8.31', 'Apollo Inpatient', '2026-02-20 09:55:00'],
-      ['CHT-78401', 'Singh, Manpreet K.', 'Shruti Mehta', 'Sr. Auditor', 'audit', '22m 18s', '172.16.8.30', 'Max Healthcare', '2026-02-20 09:22:00'],
-      ['CHT-78505', 'Nambiar, Rajan T.', 'Deepa Nair', 'Coder', 'code', '14m 05s', '172.16.8.41', 'Max Healthcare', '2026-02-20 10:22:00'],
-      ['CHT-78388', 'Iyer, Krishnan T.', 'Shruti Mehta', 'Sr. Auditor', 'audit', '31m 12s', '172.16.8.30', 'Apollo Inpatient', '2026-02-20 10:38:00'],
-      ['CHT-78411', 'Pillai, Sreedevi N.', 'Mohammed Irfan', 'Coder', 'code', '9m 45s', '172.16.8.25', 'Fortis Cardiology', '2026-02-20 10:14:00'],
-      ['CHT-78366', 'Sen, Joyoti P.', 'Ankit Sharma', 'Senior Coder', 'code', '16m 20s', '172.16.8.22', 'Fortis Cardiology', '2026-02-20 08:45:00'],
-      ['CHT-78490', 'Joshi, Amit R.', 'Priti Gupta', 'Coder', 'code', '11m 02s', '172.16.8.23', 'AIIMS Oncology', '2026-02-20 08:12:00'],
-      ['CHT-78415', 'Mukherjee, S.', 'Vinod Kumar', 'Auditor (L2)', 'audit', '25m 30s', '172.16.8.31', 'AIIMS Oncology', '2026-02-20 07:55:00'],
-      ['CHT-78419', 'Bose, Subhash C.', 'Kavita Rao', 'Auditor (L2)', 'audit', '5m 12s', '192.168.1.105', 'Apollo Inpatient', '2026-02-20 02:14:00'],
-      ['CHT-78418', 'Roy, Arundhati', 'Kavita Rao', 'Auditor (L2)', 'view', '1m 05s', '192.168.1.105', 'Apollo Inpatient', '2026-02-20 02:16:00'],
-      ['CHT-78401', 'Singh, Manpreet K.', 'Shruti Mehta', 'Sr. Auditor', 'export', '0m 00s', '172.16.8.30', 'Max Healthcare', '2026-02-20 11:20:00'],
-      ['CHT-78505', 'Nambiar, Rajan T.', 'Deepa Nair', 'Coder', 'edit', '4m 12s', '172.16.8.41', 'Max Healthcare', '2026-02-20 10:45:00']
+      [
+        "CHT-78421",
+        "Verma, Rakesh K.",
+        "Ankit Sharma",
+        "Senior Coder",
+        "code",
+        "8m 32s",
+        "172.16.8.22",
+        "Apollo Inpatient",
+        "2026-02-20 10:55:00",
+      ],
+      [
+        "CHT-78422",
+        "Pillai, Sreedevi N.",
+        "Priti Gupta",
+        "Coder",
+        "code",
+        "12m 11s",
+        "172.16.8.23",
+        "Apollo Inpatient",
+        "2026-02-20 10:28:00",
+      ],
+      [
+        "CHT-78399",
+        "Kapoor, Meera S.",
+        "Vinod Kumar",
+        "Auditor (L2)",
+        "audit",
+        "18m 44s",
+        "172.16.8.31",
+        "Apollo Inpatient",
+        "2026-02-20 09:55:00",
+      ],
+      [
+        "CHT-78401",
+        "Singh, Manpreet K.",
+        "Shruti Mehta",
+        "Sr. Auditor",
+        "audit",
+        "22m 18s",
+        "172.16.8.30",
+        "Max Healthcare",
+        "2026-02-20 09:22:00",
+      ],
+      [
+        "CHT-78505",
+        "Nambiar, Rajan T.",
+        "Deepa Nair",
+        "Coder",
+        "code",
+        "14m 05s",
+        "172.16.8.41",
+        "Max Healthcare",
+        "2026-02-20 10:22:00",
+      ],
+      [
+        "CHT-78388",
+        "Iyer, Krishnan T.",
+        "Shruti Mehta",
+        "Sr. Auditor",
+        "audit",
+        "31m 12s",
+        "172.16.8.30",
+        "Apollo Inpatient",
+        "2026-02-20 10:38:00",
+      ],
+      [
+        "CHT-78411",
+        "Pillai, Sreedevi N.",
+        "Mohammed Irfan",
+        "Coder",
+        "code",
+        "9m 45s",
+        "172.16.8.25",
+        "Fortis Cardiology",
+        "2026-02-20 10:14:00",
+      ],
+      [
+        "CHT-78366",
+        "Sen, Joyoti P.",
+        "Ankit Sharma",
+        "Senior Coder",
+        "code",
+        "16m 20s",
+        "172.16.8.22",
+        "Fortis Cardiology",
+        "2026-02-20 08:45:00",
+      ],
+      [
+        "CHT-78490",
+        "Joshi, Amit R.",
+        "Priti Gupta",
+        "Coder",
+        "code",
+        "11m 02s",
+        "172.16.8.23",
+        "AIIMS Oncology",
+        "2026-02-20 08:12:00",
+      ],
+      [
+        "CHT-78415",
+        "Mukherjee, S.",
+        "Vinod Kumar",
+        "Auditor (L2)",
+        "audit",
+        "25m 30s",
+        "172.16.8.31",
+        "AIIMS Oncology",
+        "2026-02-20 07:55:00",
+      ],
+      [
+        "CHT-78419",
+        "Bose, Subhash C.",
+        "Kavita Rao",
+        "Auditor (L2)",
+        "audit",
+        "5m 12s",
+        "192.168.1.105",
+        "Apollo Inpatient",
+        "2026-02-20 02:14:00",
+      ],
+      [
+        "CHT-78418",
+        "Roy, Arundhati",
+        "Kavita Rao",
+        "Auditor (L2)",
+        "view",
+        "1m 05s",
+        "192.168.1.105",
+        "Apollo Inpatient",
+        "2026-02-20 02:16:00",
+      ],
+      [
+        "CHT-78401",
+        "Singh, Manpreet K.",
+        "Shruti Mehta",
+        "Sr. Auditor",
+        "export",
+        "0m 00s",
+        "172.16.8.30",
+        "Max Healthcare",
+        "2026-02-20 11:20:00",
+      ],
+      [
+        "CHT-78505",
+        "Nambiar, Rajan T.",
+        "Deepa Nair",
+        "Coder",
+        "edit",
+        "4m 12s",
+        "172.16.8.41",
+        "Max Healthcare",
+        "2026-02-20 10:45:00",
+      ],
     ];
 
     for (const log of logsToSeed) {
@@ -852,7 +994,7 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
 );
   `);
 
-await client.query(`
+  await client.query(`
   CREATE TABLE IF NOT EXISTS ${schema}.phi_encryption_controls (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
@@ -861,8 +1003,29 @@ await client.query(`
     phi_masking_logs BOOLEAN DEFAULT TRUE,
     full_access_audit_trail BOOLEAN DEFAULT TRUE,
     deidentify_on_export BOOLEAN DEFAULT TRUE,
-    dlp_controls BOOLEAN DEFAULT TRUE,
+    dlp_controls BOOLEAN DEFAULT TRUE, 
 
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
+  await client.query(`
+  CREATE TABLE IF NOT EXISTS ${schema}.measures (
+    id SERIAL PRIMARY KEY,
+    measure_code VARCHAR(50) UNIQUE NOT NULL,
+    measure_name VARCHAR(255) NOT NULL,
+    description TEXT,
+    category VARCHAR(100),
+    measure_type VARCHAR(100),
+    measurement_year VARCHAR(50),
+    active BOOLEAN DEFAULT TRUE,
+    product_lines JSONB DEFAULT '[]'::jsonb,
+    eligibility JSONB DEFAULT '{}'::jsonb,
+    denominator JSONB DEFAULT '{}'::jsonb,
+    numerator JSONB DEFAULT '{}'::jsonb,
+    exclusions JSONB DEFAULT '[]'::jsonb,
+    documentation JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
