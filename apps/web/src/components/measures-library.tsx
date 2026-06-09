@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
 import type { ElementType, ReactNode } from "react";
+import { toast } from "sonner";
+import { getApiMeasuresExportSpecs, getApiMeasuresMeasureidExport } from "../api";
 import {
   Search,
   ChevronDown,
@@ -2108,6 +2110,63 @@ export function MeasuresLibrary() {
   const [myFilter, setMyFilter] = useState("MY2025");
   const [activeTab, setActiveTab] = useState<MeasureTab>("eligibility");
 
+  const handleExportSpecs = async () => {
+    try {
+      toast.loading("Preparing export...", { id: "export-specs" });
+      const blob = await getApiMeasuresExportSpecs(
+        {
+          search: searchQuery || undefined,
+          category: categoryFilter === "all" ? undefined : categoryFilter,
+          productLine: productFilter === "all" ? undefined : productFilter,
+          measureYear: myFilter === "all" ? undefined : myFilter,
+          format: "csv",
+        },
+        { responseType: "blob" }
+      );
+      const url = window.URL.createObjectURL(new Blob([blob as any]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `measures_specs_${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      toast.success("Measures specifications downloaded successfully", {
+        id: "export-specs",
+      });
+    } catch (err) {
+      console.error("Export Specs failed:", err);
+      toast.error("Failed to export specifications. Please try again.", {
+        id: "export-specs",
+      });
+    }
+  };
+
+  const handleExportSingleMeasure = async (measureId: string) => {
+    try {
+      toast.loading("Preparing export...", { id: "export-single" });
+      const blob = await getApiMeasuresMeasureidExport(
+        measureId,
+        { format: "json" },
+        { responseType: "blob" }
+      );
+      const url = window.URL.createObjectURL(new Blob([blob as any]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `measure_${measureId.toLowerCase()}_export_${new Date().toISOString().split("T")[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      toast.success("Measure export downloaded successfully", {
+        id: "export-single",
+      });
+    } catch (err) {
+      console.error("Single Measure Export failed:", err);
+      toast.error("Failed to export measure. Please try again.", {
+        id: "export-single",
+      });
+    }
+  };
+
   const selected = MEASURES.find((m) => m.id === selectedId) ?? MEASURES[0];
   const catStyle =
     CATEGORY_STYLES[selected.category] ?? CATEGORY_STYLES["Cardiovascular"];
@@ -2231,7 +2290,10 @@ export function MeasuresLibrary() {
           <span className="text-[10px] text-muted-foreground">
             {filteredMeasures.length} measures
           </span>
-          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm">
+          <button
+            onClick={handleExportSpecs}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+          >
             <Download className="w-3.5 h-3.5" />
             Export Specs
           </button>
@@ -2380,7 +2442,10 @@ export function MeasuresLibrary() {
                   <ExternalLink className="w-3.5 h-3.5" />
                   NCQA Source
                 </button>
-                <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors">
+                <button
+                  onClick={() => handleExportSingleMeasure(selected.id)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors"
+                >
                   <Download className="w-3.5 h-3.5" />
                   Export
                 </button>

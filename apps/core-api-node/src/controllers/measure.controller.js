@@ -9,9 +9,61 @@ const {
 exports.exportSpecs = async (req, res) => {
   try {
     const validatedQuery = exportSpecsQuerySchema.parse(req.query);
-    const { format, ...filters } = validatedQuery;
+    const { format, measureYear, productLine, category, search, status } = validatedQuery;
 
-    const measures = measureService.getFilteredMeasures(filters);
+    const schema = req.tenant.schema_name;
+    let query = `
+      SELECT *
+      FROM ${schema}.measures 
+      WHERE 1=1
+    `;
+    const values = [];
+
+    if (status) {
+      values.push(status.toLowerCase() === "active");
+      query += ` AND active = $${values.length}`;
+    }
+
+    if (search) {
+      values.push(`%${search}%`);
+      query += ` AND (measure_name ILIKE $${values.length} OR measure_code ILIKE $${values.length} OR description ILIKE $${values.length})`;
+    }
+
+    if (category && category !== "All Categories" && category !== "all") {
+      values.push(category);
+      query += ` AND category = $${values.length}`;
+    }
+
+    if (productLine && productLine !== "All Product Lines" && productLine !== "all") {
+      values.push(`%${productLine}%`);
+      query += ` AND product_lines::text ILIKE $${values.length}`;
+    }
+
+    if (measureYear && measureYear !== "All Years" && measureYear !== "all") {
+      values.push(measureYear);
+      query += ` AND measurement_year = $${values.length}`;
+    }
+
+    query += " ORDER BY measure_name ASC";
+
+    const result = await req.db.query(query, values);
+
+    const measures = result.rows.map((m) => ({
+      id: m.id,
+      measureCode: m.measure_code,
+      measureName: m.measure_name,
+      description: m.description,
+      category: m.category,
+      measureType: m.measure_type,
+      productLines: m.product_lines,
+      active: m.active,
+      measurementYear: m.measurement_year,
+      eligibility: m.eligibility,
+      denominator: m.denominator,
+      numerator: m.numerator,
+      exclusions: m.exclusions,
+      documentation: m.documentation,
+    }));
 
     if (measures.length === 0) {
       return res.status(404).json({ message: "No measures found matching the criteria" });

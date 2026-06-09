@@ -9,21 +9,35 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SetPasswordRouteImport } from './routes/set-password'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AppLayoutRouteImport } from './routes/_appLayout'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthIndexRouteImport } from './routes/auth/index'
+import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
 import { Route as AppLayoutWorkQueueIndexRouteImport } from './routes/_appLayout/work-queue/index'
 import { Route as AppLayoutSystemLogsIndexRouteImport } from './routes/_appLayout/system-logs/index'
-import { Route as AppLayoutReportsIndexRouteImport } from './routes/_appLayout/reports/index'
+import { Route as AppLayoutReportsAnalyticsIndexRouteImport } from './routes/_appLayout/reports-analytics/index'
 import { Route as AppLayoutProjectsIndexRouteImport } from './routes/_appLayout/projects/index'
 import { Route as AppLayoutMeasureLibraryIndexRouteImport } from './routes/_appLayout/measure-library/index'
 import { Route as AppLayoutDashboardIndexRouteImport } from './routes/_appLayout/dashboard/index'
 import { Route as AppLayoutClientsIndexRouteImport } from './routes/_appLayout/clients/index'
 import { Route as AppLayoutAuditSamplingIndexRouteImport } from './routes/_appLayout/audit-sampling/index'
 import { Route as AppLayoutAdminIndexRouteImport } from './routes/_appLayout/admin/index'
+import { Route as AuthLayoutOtpRouteImport } from './routes/auth/_layout/otp'
 import { Route as AuthLayoutLogoutRouteImport } from './routes/auth/_layout/logout'
 import { Route as AuthLayoutLoginRouteImport } from './routes/auth/_layout/login'
 
+const SetPasswordRoute = SetPasswordRouteImport.update({
+  id: '/set-password',
+  path: '/set-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppLayoutRoute = AppLayoutRouteImport.update({
   id: '/_appLayout',
   getParentRoute: () => rootRouteImport,
@@ -38,6 +52,11 @@ const AuthIndexRoute = AuthIndexRouteImport.update({
   path: '/auth/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/auth/forgot-password',
+  path: '/auth/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppLayoutWorkQueueIndexRoute = AppLayoutWorkQueueIndexRouteImport.update({
   id: '/work-queue/',
   path: '/work-queue/',
@@ -49,11 +68,12 @@ const AppLayoutSystemLogsIndexRoute =
     path: '/system-logs/',
     getParentRoute: () => AppLayoutRoute,
   } as any)
-const AppLayoutReportsIndexRoute = AppLayoutReportsIndexRouteImport.update({
-  id: '/reports/',
-  path: '/reports/',
-  getParentRoute: () => AppLayoutRoute,
-} as any)
+const AppLayoutReportsAnalyticsIndexRoute =
+  AppLayoutReportsAnalyticsIndexRouteImport.update({
+    id: '/reports-analytics/',
+    path: '/reports-analytics/',
+    getParentRoute: () => AppLayoutRoute,
+  } as any)
 const AppLayoutProjectsIndexRoute = AppLayoutProjectsIndexRouteImport.update({
   id: '/projects/',
   path: '/projects/',
@@ -86,6 +106,11 @@ const AppLayoutAdminIndexRoute = AppLayoutAdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => AppLayoutRoute,
 } as any)
+const AuthLayoutOtpRoute = AuthLayoutOtpRouteImport.update({
+  id: '/auth/_layout/otp',
+  path: '/auth/otp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthLayoutLogoutRoute = AuthLayoutLogoutRouteImport.update({
   id: '/auth/_layout/logout',
   path: '/auth/logout',
@@ -99,31 +124,39 @@ const AuthLayoutLoginRoute = AuthLayoutLoginRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/set-password': typeof SetPasswordRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/': typeof AuthIndexRoute
   '/auth/login': typeof AuthLayoutLoginRoute
   '/auth/logout': typeof AuthLayoutLogoutRoute
+  '/auth/otp': typeof AuthLayoutOtpRoute
   '/admin/': typeof AppLayoutAdminIndexRoute
   '/audit-sampling/': typeof AppLayoutAuditSamplingIndexRoute
   '/clients/': typeof AppLayoutClientsIndexRoute
   '/dashboard/': typeof AppLayoutDashboardIndexRoute
   '/measure-library/': typeof AppLayoutMeasureLibraryIndexRoute
   '/projects/': typeof AppLayoutProjectsIndexRoute
-  '/reports/': typeof AppLayoutReportsIndexRoute
+  '/reports-analytics/': typeof AppLayoutReportsAnalyticsIndexRoute
   '/system-logs/': typeof AppLayoutSystemLogsIndexRoute
   '/work-queue/': typeof AppLayoutWorkQueueIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/set-password': typeof SetPasswordRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth': typeof AuthIndexRoute
   '/auth/login': typeof AuthLayoutLoginRoute
   '/auth/logout': typeof AuthLayoutLogoutRoute
+  '/auth/otp': typeof AuthLayoutOtpRoute
   '/admin': typeof AppLayoutAdminIndexRoute
   '/audit-sampling': typeof AppLayoutAuditSamplingIndexRoute
   '/clients': typeof AppLayoutClientsIndexRoute
   '/dashboard': typeof AppLayoutDashboardIndexRoute
   '/measure-library': typeof AppLayoutMeasureLibraryIndexRoute
   '/projects': typeof AppLayoutProjectsIndexRoute
-  '/reports': typeof AppLayoutReportsIndexRoute
+  '/reports-analytics': typeof AppLayoutReportsAnalyticsIndexRoute
   '/system-logs': typeof AppLayoutSystemLogsIndexRoute
   '/work-queue': typeof AppLayoutWorkQueueIndexRoute
 }
@@ -131,16 +164,20 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_appLayout': typeof AppLayoutRouteWithChildren
+  '/reset-password': typeof ResetPasswordRoute
+  '/set-password': typeof SetPasswordRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/': typeof AuthIndexRoute
   '/auth/_layout/login': typeof AuthLayoutLoginRoute
   '/auth/_layout/logout': typeof AuthLayoutLogoutRoute
+  '/auth/_layout/otp': typeof AuthLayoutOtpRoute
   '/_appLayout/admin/': typeof AppLayoutAdminIndexRoute
   '/_appLayout/audit-sampling/': typeof AppLayoutAuditSamplingIndexRoute
   '/_appLayout/clients/': typeof AppLayoutClientsIndexRoute
   '/_appLayout/dashboard/': typeof AppLayoutDashboardIndexRoute
   '/_appLayout/measure-library/': typeof AppLayoutMeasureLibraryIndexRoute
   '/_appLayout/projects/': typeof AppLayoutProjectsIndexRoute
-  '/_appLayout/reports/': typeof AppLayoutReportsIndexRoute
+  '/_appLayout/reports-analytics/': typeof AppLayoutReportsAnalyticsIndexRoute
   '/_appLayout/system-logs/': typeof AppLayoutSystemLogsIndexRoute
   '/_appLayout/work-queue/': typeof AppLayoutWorkQueueIndexRoute
 }
@@ -148,47 +185,59 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/reset-password'
+    | '/set-password'
+    | '/auth/forgot-password'
     | '/auth/'
     | '/auth/login'
     | '/auth/logout'
+    | '/auth/otp'
     | '/admin/'
     | '/audit-sampling/'
     | '/clients/'
     | '/dashboard/'
     | '/measure-library/'
     | '/projects/'
-    | '/reports/'
+    | '/reports-analytics/'
     | '/system-logs/'
     | '/work-queue/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/reset-password'
+    | '/set-password'
+    | '/auth/forgot-password'
     | '/auth'
     | '/auth/login'
     | '/auth/logout'
+    | '/auth/otp'
     | '/admin'
     | '/audit-sampling'
     | '/clients'
     | '/dashboard'
     | '/measure-library'
     | '/projects'
-    | '/reports'
+    | '/reports-analytics'
     | '/system-logs'
     | '/work-queue'
   id:
     | '__root__'
     | '/'
     | '/_appLayout'
+    | '/reset-password'
+    | '/set-password'
+    | '/auth/forgot-password'
     | '/auth/'
     | '/auth/_layout/login'
     | '/auth/_layout/logout'
+    | '/auth/_layout/otp'
     | '/_appLayout/admin/'
     | '/_appLayout/audit-sampling/'
     | '/_appLayout/clients/'
     | '/_appLayout/dashboard/'
     | '/_appLayout/measure-library/'
     | '/_appLayout/projects/'
-    | '/_appLayout/reports/'
+    | '/_appLayout/reports-analytics/'
     | '/_appLayout/system-logs/'
     | '/_appLayout/work-queue/'
   fileRoutesById: FileRoutesById
@@ -196,13 +245,31 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppLayoutRoute: typeof AppLayoutRouteWithChildren
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  SetPasswordRoute: typeof SetPasswordRoute
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthIndexRoute: typeof AuthIndexRoute
   AuthLayoutLoginRoute: typeof AuthLayoutLoginRoute
   AuthLayoutLogoutRoute: typeof AuthLayoutLogoutRoute
+  AuthLayoutOtpRoute: typeof AuthLayoutOtpRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/set-password': {
+      id: '/set-password'
+      path: '/set-password'
+      fullPath: '/set-password'
+      preLoaderRoute: typeof SetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_appLayout': {
       id: '/_appLayout'
       path: ''
@@ -224,6 +291,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/forgot-password': {
+      id: '/auth/forgot-password'
+      path: '/auth/forgot-password'
+      fullPath: '/auth/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_appLayout/work-queue/': {
       id: '/_appLayout/work-queue/'
       path: '/work-queue'
@@ -238,11 +312,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLayoutSystemLogsIndexRouteImport
       parentRoute: typeof AppLayoutRoute
     }
-    '/_appLayout/reports/': {
-      id: '/_appLayout/reports/'
-      path: '/reports'
-      fullPath: '/reports/'
-      preLoaderRoute: typeof AppLayoutReportsIndexRouteImport
+    '/_appLayout/reports-analytics/': {
+      id: '/_appLayout/reports-analytics/'
+      path: '/reports-analytics'
+      fullPath: '/reports-analytics/'
+      preLoaderRoute: typeof AppLayoutReportsAnalyticsIndexRouteImport
       parentRoute: typeof AppLayoutRoute
     }
     '/_appLayout/projects/': {
@@ -287,6 +361,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLayoutAdminIndexRouteImport
       parentRoute: typeof AppLayoutRoute
     }
+    '/auth/_layout/otp': {
+      id: '/auth/_layout/otp'
+      path: '/auth/otp'
+      fullPath: '/auth/otp'
+      preLoaderRoute: typeof AuthLayoutOtpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/_layout/logout': {
       id: '/auth/_layout/logout'
       path: '/auth/logout'
@@ -311,7 +392,7 @@ interface AppLayoutRouteChildren {
   AppLayoutDashboardIndexRoute: typeof AppLayoutDashboardIndexRoute
   AppLayoutMeasureLibraryIndexRoute: typeof AppLayoutMeasureLibraryIndexRoute
   AppLayoutProjectsIndexRoute: typeof AppLayoutProjectsIndexRoute
-  AppLayoutReportsIndexRoute: typeof AppLayoutReportsIndexRoute
+  AppLayoutReportsAnalyticsIndexRoute: typeof AppLayoutReportsAnalyticsIndexRoute
   AppLayoutSystemLogsIndexRoute: typeof AppLayoutSystemLogsIndexRoute
   AppLayoutWorkQueueIndexRoute: typeof AppLayoutWorkQueueIndexRoute
 }
@@ -323,7 +404,7 @@ const AppLayoutRouteChildren: AppLayoutRouteChildren = {
   AppLayoutDashboardIndexRoute: AppLayoutDashboardIndexRoute,
   AppLayoutMeasureLibraryIndexRoute: AppLayoutMeasureLibraryIndexRoute,
   AppLayoutProjectsIndexRoute: AppLayoutProjectsIndexRoute,
-  AppLayoutReportsIndexRoute: AppLayoutReportsIndexRoute,
+  AppLayoutReportsAnalyticsIndexRoute: AppLayoutReportsAnalyticsIndexRoute,
   AppLayoutSystemLogsIndexRoute: AppLayoutSystemLogsIndexRoute,
   AppLayoutWorkQueueIndexRoute: AppLayoutWorkQueueIndexRoute,
 }
@@ -335,9 +416,13 @@ const AppLayoutRouteWithChildren = AppLayoutRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppLayoutRoute: AppLayoutRouteWithChildren,
+  ResetPasswordRoute: ResetPasswordRoute,
+  SetPasswordRoute: SetPasswordRoute,
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthIndexRoute: AuthIndexRoute,
   AuthLayoutLoginRoute: AuthLayoutLoginRoute,
   AuthLayoutLogoutRoute: AuthLayoutLogoutRoute,
+  AuthLayoutOtpRoute: AuthLayoutOtpRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

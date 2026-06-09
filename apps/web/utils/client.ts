@@ -81,6 +81,15 @@ axiosInstance.interceptors.request.use(
       }
     }
 
+    // Remove Content-Type for GET requests as they shouldn't have a body
+    if (config.method && config.method.toUpperCase() === "GET") {
+      if (config.headers instanceof AxiosHeaders) {
+        config.headers.delete("Content-Type");
+      } else if (config.headers && "Content-Type" in config.headers) {
+        delete config.headers["Content-Type"];
+      }
+    }
+
     return config;
   },
   (error) => Promise.reject(error)
