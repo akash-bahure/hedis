@@ -111,4 +111,5 @@ app.use("/api/security-alerts", require("./routes/securityalrestRoute"));
 app.use("/api/reports-analytics", require("./routes/reportsAnalytics.routes"));
 app.use("/api/measures", require("./routes/measure.routes"));
 
+app.use("/api/measure-library", require("./routes/measureLibrary.routes"));
 module.exports = app;
