@@ -7,7 +7,6 @@ import * as z from "zod";
 import type { ToZod } from "../../.kubb/ToZod.ts";
 import type {
   GetApiSecurityScore200,
-  GetApiSecurityScore500,
   GetApiSecurityScoreQueryResponse,
 } from "../../types/GetApiSecurityScore.ts";
 
@@ -18,25 +17,28 @@ export const getApiSecurityScore200Schema = z.object({
   success: z.optional(z.boolean()),
   data: z.optional(
     z.object({
-      overall_score: z.optional(
-        z.number().int().describe("Overall security score out of 100"),
-      ),
-      risk_level: z.optional(z.enum(["Excellent", "Good", "Fair", "Poor"])),
+      overall_score: z.optional(z.number().int()),
+      max_score: z.optional(z.number().int()),
+      posture: z.optional(z.string()),
+      risk_level: z.optional(z.enum(["Low", "Medium", "High", "Critical"])),
+      last_assessed_at: z.optional(z.string().datetime({ offset: true })),
       authentication_score: z.optional(z.number().int()),
       data_protection_score: z.optional(z.number().int()),
       access_control_score: z.optional(z.number().int()),
       audit_coverage_score: z.optional(z.number().int()),
       facility_device_score: z.optional(z.number().int()),
-      last_assessed_at: z.optional(z.string().datetime({ offset: true })),
+      categories: z.optional(
+        z.array(
+          z.object({
+            label: z.optional(z.string()),
+            score: z.optional(z.number().int()),
+            weight: z.optional(z.number().int()),
+          }),
+        ),
+      ),
     }),
   ),
 }) as unknown as ToZod<GetApiSecurityScore200>;
-
-/**
- * @description Failed to fetch security score
- */
-export const getApiSecurityScore500Schema =
-  z.unknown() as unknown as ToZod<GetApiSecurityScore500>;
 
 export const getApiSecurityScoreQueryResponseSchema = z.lazy(
   () => getApiSecurityScore200Schema,
