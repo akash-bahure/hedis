@@ -103,6 +103,9 @@ app.use("/api/chart-assignments", chartAssignmentRoutes);
 
 app.use("/api/user-roles", require("./routes/userRoleRoutes"));
 
+// Unprotected routes for testing API integrations
+app.use("/api/patients", require("./routes/patientChart.routes"));
+
 // Protected Routes
 app.use(authMiddleware);
 
