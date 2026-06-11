@@ -1,4 +1,3 @@
-const pool = require("../config/db");
 const ollama = require("../config/ollama");
 const { buildBulkHEDISEvaluationPrompt } = require("../prompts/hedis_evaluation.prompt");
 
@@ -22,10 +21,18 @@ class HEDISEvaluationService {
           format: "json",
         });
 
-        const raw = response.message.content
-          .trim()
-          .replace(/^```(?:json)?\n?/, "")
-          .replace(/\n?```$/, "");
+        let raw = response.message.content.trim();
+        
+        // Robust JSON extraction: Find content between first { and last }
+        const firstBrace = raw.indexOf('{');
+        const lastBrace = raw.lastIndexOf('}');
+        
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+          raw = raw.substring(firstBrace, lastBrace + 1);
+        } else {
+          // If no braces, fall back to regex removal or just try parsing
+          raw = raw.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+        }
 
         const parsed = JSON.parse(raw);
         
@@ -47,51 +54,6 @@ class HEDISEvaluationService {
     }
 
     return allEvaluations;
-  }
-
-  /**
-   * Save evaluation result to database.
-   */
-  async saveEvaluation(patientId, evalResult) {
-    const query = `
-      INSERT INTO hedis_evaluations (
-        patient_id, measure_code, measure_name, eligible, 
-        denominator, numerator, exclusion, status, 
-        confidence, reasoning, evidence, detailed_response
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-      RETURNING *
-    `;
-
-    const values = [
-      patientId,
-      evalResult.measureCode,
-      evalResult.measureName,
-      evalResult.eligible,
-      evalResult.denominator,
-      evalResult.numerator,
-      evalResult.exclusion,
-      evalResult.status,
-      evalResult.confidence,
-      evalResult.overallReason || evalResult.reason,
-      JSON.stringify(evalResult.evidence_quotes || evalResult.evidence || []),
-      JSON.stringify(evalResult),
-    ];
-
-    const result = await pool.query(query, values);
-    return result.rows[0];
-  }
-
-  /**
-   * Get all evaluations for a patient.
-   */
-  async getEvaluationsByPatient(patientId) {
-    const query = `
-      SELECT * FROM hedis_evaluations 
-      WHERE patient_id = $1 
-      ORDER BY created_at DESC
-    `;
-    const result = await pool.query(query, [patientId]);
-    return result.rows;
   }
 }
 

@@ -3,13 +3,13 @@
  * Evaluates multiple measures in a single AI call.
  */
 function buildBulkHEDISEvaluationPrompt(chartText, measures) {
-  const measureRulesSummary = measures.map(m => ({
+  const measureRulesSummary = measures.map((m) => ({
     measureCode: m.measureCode,
     measureName: m.measureName,
     eligibility: m.eligibility,
     denominator: m.denominator,
     numerator: m.numerator,
-    exclusions: m.exclusions
+    exclusions: m.exclusions,
   }));
 
   return `
@@ -34,7 +34,8 @@ Instructions:
    - "Not Eligible": Patient does not meet base eligibility criteria (age/gender).
 7. Extract Evidence: Provide specific quotes from the chart for every finding.
 
-Return ONLY a JSON object with this structure:
+Return ONLY a valid JSON object. Do not include any preamble, explanation, or markdown code fences. The response must start with '{' and end with '}'.
+
 {
   "measureCode": "string",
   "measureName": "string",

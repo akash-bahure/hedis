@@ -27,42 +27,17 @@ exports.analyzeChart = async (req, res) => {
     const relevantMeasures = hedisService.filterMeasures(allMeasures, criteria);
     console.log(`Filtered down to ${relevantMeasures.length} relevant measures`);
 
-    // 5. Evaluate Filtered Measures (Phase 2)
+    // 5. Evaluate Filtered Measures
     console.log("Starting measure evaluations...");
     const evaluations = await hedisEvaluationService.evaluateMeasures(text, relevantMeasures);
     
-    // 6. Persist results
-    console.log("Saving evaluations to database...");
-    const savedEvaluations = [];
-    for (const evalResult of evaluations) {
-        const saved = await hedisEvaluationService.saveEvaluation(patient_id, evalResult);
-        savedEvaluations.push(saved);
-    }
-
     res.json({
       patient_id,
       criteria,
-      evaluations: savedEvaluations
-    });
-  } catch (err) {
-    console.error("HEDIS Analysis Error:", err);
-    res.status(500).json({
-      error: err.message,
-    });
-  }
-};
-
-exports.getEvaluations = async (req, res) => {
-  try {
-    const { patient_id } = req.params;
-    const evaluations = await hedisEvaluationService.getEvaluationsByPatient(patient_id);
-    
-    res.json({
-      patient_id,
       evaluations
     });
   } catch (err) {
-    console.error("Get Evaluations Error:", err);
+    console.error("HEDIS Analysis Error:", err);
     res.status(500).json({
       error: err.message,
     });
