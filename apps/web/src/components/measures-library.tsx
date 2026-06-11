@@ -1,5 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
 import type { ElementType, ReactNode } from "react";
+import { toast } from "sonner";
+import {
+  getApiMeasuresExportSpecs,
+  getApiMeasuresMeasureidExport,
+} from "../api";
 import {
   Search,
   ChevronDown,
@@ -641,7 +646,7 @@ function TabNumerator({ detail, loading }: { detail: any; loading: boolean }) {
                         {String(value)}
                       </span>
                     </div>
-                  )
+                  ),
                 )}
               </div>
             )}
@@ -1023,7 +1028,10 @@ export function MeasuresLibrary() {
           <span className="text-[10px] text-muted-foreground">
             {total} measures
           </span>
-          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm">
+          <button
+            onClick={handleExportSpecs}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+          >
             <Download className="w-3.5 h-3.5" />
             Export Specs
           </button>
@@ -1320,7 +1328,7 @@ export function MeasuresLibrary() {
                       value: detailLoading
                         ? "…"
                         : (measureDetail?.eligibility?.genderRules?.join(
-                            ", "
+                            ", ",
                           ) ?? "All"),
                     },
                     {
@@ -1423,7 +1431,7 @@ export function MeasuresLibrary() {
                             month: "short",
                             day: "numeric",
                             year: "numeric",
-                          }
+                          },
                         )
                       : "—"}
                   </span>

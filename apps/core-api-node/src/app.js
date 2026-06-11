@@ -55,7 +55,24 @@ app.use(
   })
 );
 
+// Strips content-type for GET requests to prevent body-parser from trying to parse empty bodies
+app.use((req, res, next) => {
+  if (req.method === "GET" && req.headers["content-type"]) {
+    delete req.headers["content-type"];
+  }
+  next();
+});
+
 app.use(express.json());
+
+// Handle syntax errors during JSON parsing
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
+    return res.status(400).json({ error: "Invalid JSON payload" });
+  }
+  next(err);
+});
+
 app.use(cors(corsOptions));
 
 // Routes
