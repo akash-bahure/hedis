@@ -20,7 +20,8 @@ const {
  * @swagger
  * /api/manual-chart-abstraction:
  *   post:
- *     summary: Create manual chart abstraction
+ *     summary: Create manual chart abstraction and synchronize with Evidence Timeline
+ *     description: Submits a manual chart abstraction, updates the patient chart status, and immediately cascades the abstracted evidence into the timeline_events table, avoiding duplicates.
  *     tags: [Manual Chart Abstraction]
  *     security:
  *       - bearerAuth: []

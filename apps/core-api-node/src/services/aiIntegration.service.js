@@ -34,24 +34,6 @@ async function forwardChartToAiService(patientId, file) {
   }
 }
 
-/**
- * Fetch timeline events from AI service
- * @param {string} patientId 
- */
-async function fetchTimelineFromAiService(patientId) {
-  try {
-    const response = await axios.get(`${AI_SERVICE_URL}/api/timeline/${patientId}`);
-    return response.data;
-  } catch (error) {
-    console.error("AI Service Timeline Error:", error.message);
-    if (error.response) {
-      throw new Error(`AI Service Error: ${error.response.data.error || error.response.statusText}`);
-    }
-    throw error;
-  }
-}
-
 module.exports = {
   forwardChartToAiService,
-  fetchTimelineFromAiService,
 };

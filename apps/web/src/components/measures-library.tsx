@@ -887,6 +887,11 @@ export function MeasuresLibrary() {
   >("eligibility");
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 10;
+  const [measureYear, setMeasureYear] = useState("");
+  const [productLine, setProductLine] = useState("");
+  const [category, setCategory] = useState("");
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
 
   // API Call
   const { data, isLoading, error, refetch } = useGetApiMeasureLibrary({
@@ -961,6 +966,80 @@ export function MeasuresLibrary() {
       </div>
     );
   }
+
+  const handleMeasureExport = async (measureId: string) => {
+    try {
+      const response = await getApiMeasuresMeasureidExport(measureId, {
+        format: "json",
+      });
+
+      const blob = new Blob([JSON.stringify(response, null, 2)], {
+        type: "application/json",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${measureId}.json`;
+
+      document.body.appendChild(a);
+      a.click();
+
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Measure exported successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to export measure");
+    }
+  };
+
+  const handleExportSpecs = async () => {
+    try {
+      const data = await getApiMeasuresExportSpecs({
+        measureYear,
+        productLine,
+        category,
+        search,
+        status,
+        format: "csv",
+      });
+
+      const csvContent =
+        typeof data === "string"
+          ? data
+          : [
+              Object.keys(data[0] || {}).join(","),
+              ...data.map((row) => Object.values(row).join(",")),
+            ].join("\n");
+
+      const blob = new Blob([csvContent], {
+        type: "text/csv;charset=utf-8;",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `measure-library-${new Date().toISOString().split("T")[0]}.csv`,
+      );
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Measures exported successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to export measures");
+    }
+  };
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background">
       {/* ══════════════════════════════════════════════════════
@@ -1293,7 +1372,12 @@ export function MeasuresLibrary() {
                       <ExternalLink className="w-3.5 h-3.5" />
                       NCQA Source
                     </button>
-                    <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors">
+                    <button
+                      onClick={() =>
+                        handleMeasureExport(String(selectedMeasure?.id))
+                      }
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors"
+                    >
                       <Download className="w-3.5 h-3.5" />
                       Export
                     </button>
