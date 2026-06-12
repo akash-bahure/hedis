@@ -1030,6 +1030,27 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
 `);
+
+  await client.query(`
+  CREATE TABLE IF NOT EXISTS ${schema}.hedis_evaluations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    patient_id UUID REFERENCES ${schema}.patients(id) ON DELETE CASCADE,
+    measure_code TEXT NOT NULL,
+    measure_name TEXT,
+    eligible BOOLEAN,
+    denominator BOOLEAN,
+    numerator BOOLEAN,
+    exclusion BOOLEAN,
+    status TEXT,
+    confidence FLOAT,
+    reasoning TEXT,
+    evidence JSONB,
+    detailed_response JSONB,
+    created_at TIMESTAMP DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_hedis_eval_patient ON ${schema}.hedis_evaluations(patient_id);
+`);
 }
 
 module.exports = { runMigrations };

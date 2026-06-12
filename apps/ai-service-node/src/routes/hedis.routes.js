@@ -9,6 +9,5 @@ const upload = multer({
 });
 
 router.post("/analyze", upload.single("file"), analyzeChart);
-router.get("/evaluations/:patient_id", getEvaluations);
 
 module.exports = router;
