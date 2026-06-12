@@ -26,7 +26,10 @@
             "admission_date": "2026-04-01",
             "discharge_date": "2026-04-05",
             "priority": "Medium",
-            "chart_document": { "url": "http://example.com/chart1.pdf", "pages": 15 },
+            "chart_document": {
+              "url": "http://example.com/chart1.pdf",
+              "pages": 15
+            },
             "coding_notes": "Patient has history of HTN.",
             "sla_deadline": "2026-05-25T12:00:00Z"
           }
@@ -52,7 +55,10 @@
             "admission_date": "2026-04-12",
             "discharge_date": "2026-04-12",
             "priority": "High",
-            "chart_document": { "url": "http://example.com/chart2.pdf", "pages": 5 },
+            "chart_document": {
+              "url": "http://example.com/chart2.pdf",
+              "pages": 5
+            },
             "coding_notes": "Annual checkup.",
             "sla_deadline": "2026-05-20T09:00:00Z"
           }

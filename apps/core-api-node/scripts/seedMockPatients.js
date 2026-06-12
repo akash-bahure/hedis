@@ -182,10 +182,10 @@ async function run() {
     await client.query("BEGIN");
 
     const tenant = {
-      id: "8f13c961-b44c-4685-88c7-c7b4210a3c69",
+      id: "066ef989-14fd-4e3b-a46f-d0397e390975",
       name: "Acme Corp",
-      subdomain: "acme",
-      schema_name: "acme_schema",
+      subdomain: "test123",
+      schema_name: "test123_schema",
     };
 
     const dataPath = path.join(__dirname, "mock-patients.json");
@@ -197,7 +197,7 @@ async function run() {
     await client.query("COMMIT");
     const verifyAfterCommit = await client.query(`
       SELECT *
-      FROM acme_schema.patients
+      FROM test123_schema.patients
     `);
 
     console.log("FINAL PATIENTS AFTER COMMIT:", verifyAfterCommit.rows);
