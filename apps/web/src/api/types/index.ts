@@ -120,6 +120,12 @@ export type {
   GetApiDepartmentsQueryResponse,
 } from "./GetApiDepartments.ts";
 export type {
+  GetApiHedisEvaluationsId200,
+  GetApiHedisEvaluationsIdPathParams,
+  GetApiHedisEvaluationsIdQuery,
+  GetApiHedisEvaluationsIdQueryResponse,
+} from "./GetApiHedisEvaluationsId.ts";
+export type {
   GetApiMeasureLibrary200,
   GetApiMeasureLibraryQuery,
   GetApiMeasureLibraryQueryParams,
@@ -167,6 +173,13 @@ export type {
   GetApiPatientsExportQueryParams,
   GetApiPatientsExportQueryResponse,
 } from "./GetApiPatientsExport.ts";
+export type {
+  GetApiPatientsPatientidTimeline200,
+  GetApiPatientsPatientidTimeline500,
+  GetApiPatientsPatientidTimelinePathParams,
+  GetApiPatientsPatientidTimelineQuery,
+  GetApiPatientsPatientidTimelineQueryResponse,
+} from "./GetApiPatientsPatientidTimeline.ts";
 export type {
   GetApiProfileActiveSessions200,
   GetApiProfileActiveSessionsQuery,
@@ -620,6 +633,13 @@ export type {
   PostApiDepartmentsMutationResponse,
 } from "./PostApiDepartments.ts";
 export type {
+  PostApiHedisEvaluateId200,
+  PostApiHedisEvaluateIdMutation,
+  PostApiHedisEvaluateIdMutationRequest,
+  PostApiHedisEvaluateIdMutationResponse,
+  PostApiHedisEvaluateIdPathParams,
+} from "./PostApiHedisEvaluateId.ts";
+export type {
   PostApiManualChartAbstraction201,
   PostApiManualChartAbstraction400,
   PostApiManualChartAbstraction404,
@@ -641,6 +661,15 @@ export type {
   PostApiPatientsIdAssignMutationResponse,
   PostApiPatientsIdAssignPathParams,
 } from "./PostApiPatientsIdAssign.ts";
+export type {
+  PostApiPatientsPatientidChartsUpload200,
+  PostApiPatientsPatientidChartsUpload400,
+  PostApiPatientsPatientidChartsUpload500,
+  PostApiPatientsPatientidChartsUploadMutation,
+  PostApiPatientsPatientidChartsUploadMutationRequest,
+  PostApiPatientsPatientidChartsUploadMutationResponse,
+  PostApiPatientsPatientidChartsUploadPathParams,
+} from "./PostApiPatientsPatientidChartsUpload.ts";
 export type {
   PostApiProfileActiveSessionsRevokeOthers200,
   PostApiProfileActiveSessionsRevokeOthersMutation,
