@@ -35,6 +35,10 @@ export type { GetApiDepartmentsQueryKey } from "./hooks/DepartmentsHooks/useGetA
 export type { GetApiDepartmentsSuspenseQueryKey } from "./hooks/DepartmentsHooks/useGetApiDepartmentsSuspense.ts";
 export type { GetApiDepartmentsSuspenseInfiniteQueryKey } from "./hooks/DepartmentsHooks/useGetApiDepartmentsSuspenseInfinite.ts";
 export type { PostApiDepartmentsMutationKey } from "./hooks/DepartmentsHooks/usePostApiDepartments.ts";
+export type { GetApiHedisEvaluationsIdQueryKey } from "./hooks/HEDISHooks/useGetApiHedisEvaluationsId.ts";
+export type { GetApiHedisEvaluationsIdSuspenseQueryKey } from "./hooks/HEDISHooks/useGetApiHedisEvaluationsIdSuspense.ts";
+export type { GetApiHedisEvaluationsIdSuspenseInfiniteQueryKey } from "./hooks/HEDISHooks/useGetApiHedisEvaluationsIdSuspenseInfinite.ts";
+export type { PostApiHedisEvaluateIdMutationKey } from "./hooks/HEDISHooks/usePostApiHedisEvaluateId.ts";
 export type { PostApiManualChartAbstractionMutationKey } from "./hooks/Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
 export type { GetApiMeasureLibraryQueryKey } from "./hooks/Measure LibraryHooks/useGetApiMeasureLibrary.ts";
 export type { GetApiMeasureLibraryIdQueryKey } from "./hooks/Measure LibraryHooks/useGetApiMeasureLibraryId.ts";
@@ -61,10 +65,14 @@ export type { GetApiPatientsExportQueryKey } from "./hooks/PatientsHooks/useGetA
 export type { GetApiPatientsExportSuspenseQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsExportSuspense.ts";
 export type { GetApiPatientsExportSuspenseInfiniteQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsExportSuspenseInfinite.ts";
 export type { GetApiPatientsInfiniteQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsInfinite.ts";
+export type { GetApiPatientsPatientidTimelineQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsPatientidTimeline.ts";
+export type { GetApiPatientsPatientidTimelineSuspenseQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsPatientidTimelineSuspense.ts";
+export type { GetApiPatientsPatientidTimelineSuspenseInfiniteQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsPatientidTimelineSuspenseInfinite.ts";
 export type { GetApiPatientsSuspenseQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsSuspense.ts";
 export type { GetApiPatientsSuspenseInfiniteQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsSuspenseInfinite.ts";
 export type { PatchApiPatientsIdStageMutationKey } from "./hooks/PatientsHooks/usePatchApiPatientsIdStage.ts";
 export type { PostApiPatientsIdAssignMutationKey } from "./hooks/PatientsHooks/usePostApiPatientsIdAssign.ts";
+export type { PostApiPatientsPatientidChartsUploadMutationKey } from "./hooks/PatientsHooks/usePostApiPatientsPatientidChartsUpload.ts";
 export type { DeleteApiProfileActiveSessionsSessionidMutationKey } from "./hooks/ProfileHooks/useDeleteApiProfileActiveSessionsSessionid.ts";
 export type { GetApiProfileActiveSessionsQueryKey } from "./hooks/ProfileHooks/useGetApiProfileActiveSessions.ts";
 export type { GetApiProfileActiveSessionsSuspenseQueryKey } from "./hooks/ProfileHooks/useGetApiProfileActiveSessionsSuspense.ts";
@@ -307,6 +315,12 @@ export type {
   GetApiDepartmentsQueryResponse,
 } from "./types/GetApiDepartments.ts";
 export type {
+  GetApiHedisEvaluationsId200,
+  GetApiHedisEvaluationsIdPathParams,
+  GetApiHedisEvaluationsIdQuery,
+  GetApiHedisEvaluationsIdQueryResponse,
+} from "./types/GetApiHedisEvaluationsId.ts";
+export type {
   GetApiMeasureLibrary200,
   GetApiMeasureLibraryQuery,
   GetApiMeasureLibraryQueryParams,
@@ -354,6 +368,13 @@ export type {
   GetApiPatientsExportQueryParams,
   GetApiPatientsExportQueryResponse,
 } from "./types/GetApiPatientsExport.ts";
+export type {
+  GetApiPatientsPatientidTimeline200,
+  GetApiPatientsPatientidTimeline500,
+  GetApiPatientsPatientidTimelinePathParams,
+  GetApiPatientsPatientidTimelineQuery,
+  GetApiPatientsPatientidTimelineQueryResponse,
+} from "./types/GetApiPatientsPatientidTimeline.ts";
 export type {
   GetApiProfileActiveSessions200,
   GetApiProfileActiveSessionsQuery,
@@ -807,6 +828,13 @@ export type {
   PostApiDepartmentsMutationResponse,
 } from "./types/PostApiDepartments.ts";
 export type {
+  PostApiHedisEvaluateId200,
+  PostApiHedisEvaluateIdMutation,
+  PostApiHedisEvaluateIdMutationRequest,
+  PostApiHedisEvaluateIdMutationResponse,
+  PostApiHedisEvaluateIdPathParams,
+} from "./types/PostApiHedisEvaluateId.ts";
+export type {
   PostApiManualChartAbstraction201,
   PostApiManualChartAbstraction400,
   PostApiManualChartAbstraction404,
@@ -828,6 +856,15 @@ export type {
   PostApiPatientsIdAssignMutationResponse,
   PostApiPatientsIdAssignPathParams,
 } from "./types/PostApiPatientsIdAssign.ts";
+export type {
+  PostApiPatientsPatientidChartsUpload200,
+  PostApiPatientsPatientidChartsUpload400,
+  PostApiPatientsPatientidChartsUpload500,
+  PostApiPatientsPatientidChartsUploadMutation,
+  PostApiPatientsPatientidChartsUploadMutationRequest,
+  PostApiPatientsPatientidChartsUploadMutationResponse,
+  PostApiPatientsPatientidChartsUploadPathParams,
+} from "./types/PostApiPatientsPatientidChartsUpload.ts";
 export type {
   PostApiProfileActiveSessionsRevokeOthers200,
   PostApiProfileActiveSessionsRevokeOthersMutation,
@@ -973,12 +1010,14 @@ export { getApiClientsExport } from "./clients/getApiClientsExport.ts";
 export { getApiClientsId } from "./clients/getApiClientsId.ts";
 export { getApiClientsStats } from "./clients/getApiClientsStats.ts";
 export { getApiDepartments } from "./clients/getApiDepartments.ts";
+export { getApiHedisEvaluationsId } from "./clients/getApiHedisEvaluationsId.ts";
 export { getApiMeasureLibrary } from "./clients/getApiMeasureLibrary.ts";
 export { getApiMeasureLibraryId } from "./clients/getApiMeasureLibraryId.ts";
 export { getApiMeasuresExportSpecs } from "./clients/getApiMeasuresExportSpecs.ts";
 export { getApiMeasuresMeasureidExport } from "./clients/getApiMeasuresMeasureidExport.ts";
 export { getApiPatients } from "./clients/getApiPatients.ts";
 export { getApiPatientsExport } from "./clients/getApiPatientsExport.ts";
+export { getApiPatientsPatientidTimeline } from "./clients/getApiPatientsPatientidTimeline.ts";
 export { getApiProfileActiveSessions } from "./clients/getApiProfileActiveSessions.ts";
 export { getApiProfileLoginActivity } from "./clients/getApiProfileLoginActivity.ts";
 export { getApiProfileMe } from "./clients/getApiProfileMe.ts";
@@ -1036,8 +1075,10 @@ export { postApiAuthTwoFaValidateOtp } from "./clients/postApiAuthTwoFaValidateO
 export { postApiChartAssignmentsBulkAssign } from "./clients/postApiChartAssignmentsBulkAssign.ts";
 export { postApiClients } from "./clients/postApiClients.ts";
 export { postApiDepartments } from "./clients/postApiDepartments.ts";
+export { postApiHedisEvaluateId } from "./clients/postApiHedisEvaluateId.ts";
 export { postApiManualChartAbstraction } from "./clients/postApiManualChartAbstraction.ts";
 export { postApiPatientsIdAssign } from "./clients/postApiPatientsIdAssign.ts";
+export { postApiPatientsPatientidChartsUpload } from "./clients/postApiPatientsPatientidChartsUpload.ts";
 export { postApiProfileActiveSessionsRevokeOthers } from "./clients/postApiProfileActiveSessionsRevokeOthers.ts";
 export { postApiProjects } from "./clients/postApiProjects.ts";
 export { postApiSecurityAlertsBlockUser } from "./clients/postApiSecurityAlertsBlockUser.ts";
@@ -1163,6 +1204,18 @@ export { useGetApiDepartmentsSuspenseInfinite } from "./hooks/DepartmentsHooks/u
 export { postApiDepartmentsMutationKey } from "./hooks/DepartmentsHooks/usePostApiDepartments.ts";
 export { postApiDepartmentsMutationOptions } from "./hooks/DepartmentsHooks/usePostApiDepartments.ts";
 export { usePostApiDepartments } from "./hooks/DepartmentsHooks/usePostApiDepartments.ts";
+export { getApiHedisEvaluationsIdQueryKey } from "./hooks/HEDISHooks/useGetApiHedisEvaluationsId.ts";
+export { getApiHedisEvaluationsIdQueryOptions } from "./hooks/HEDISHooks/useGetApiHedisEvaluationsId.ts";
+export { useGetApiHedisEvaluationsId } from "./hooks/HEDISHooks/useGetApiHedisEvaluationsId.ts";
+export { getApiHedisEvaluationsIdSuspenseQueryKey } from "./hooks/HEDISHooks/useGetApiHedisEvaluationsIdSuspense.ts";
+export { getApiHedisEvaluationsIdSuspenseQueryOptions } from "./hooks/HEDISHooks/useGetApiHedisEvaluationsIdSuspense.ts";
+export { useGetApiHedisEvaluationsIdSuspense } from "./hooks/HEDISHooks/useGetApiHedisEvaluationsIdSuspense.ts";
+export { getApiHedisEvaluationsIdSuspenseInfiniteQueryKey } from "./hooks/HEDISHooks/useGetApiHedisEvaluationsIdSuspenseInfinite.ts";
+export { getApiHedisEvaluationsIdSuspenseInfiniteQueryOptions } from "./hooks/HEDISHooks/useGetApiHedisEvaluationsIdSuspenseInfinite.ts";
+export { useGetApiHedisEvaluationsIdSuspenseInfinite } from "./hooks/HEDISHooks/useGetApiHedisEvaluationsIdSuspenseInfinite.ts";
+export { postApiHedisEvaluateIdMutationKey } from "./hooks/HEDISHooks/usePostApiHedisEvaluateId.ts";
+export { postApiHedisEvaluateIdMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisEvaluateId.ts";
+export { usePostApiHedisEvaluateId } from "./hooks/HEDISHooks/usePostApiHedisEvaluateId.ts";
 export { postApiManualChartAbstractionMutationKey } from "./hooks/Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
 export { postApiManualChartAbstractionMutationOptions } from "./hooks/Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
 export { usePostApiManualChartAbstraction } from "./hooks/Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
@@ -1241,6 +1294,15 @@ export { useGetApiPatientsExportSuspenseInfinite } from "./hooks/PatientsHooks/u
 export { getApiPatientsInfiniteQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsInfinite.ts";
 export { getApiPatientsInfiniteQueryOptions } from "./hooks/PatientsHooks/useGetApiPatientsInfinite.ts";
 export { useGetApiPatientsInfinite } from "./hooks/PatientsHooks/useGetApiPatientsInfinite.ts";
+export { getApiPatientsPatientidTimelineQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsPatientidTimeline.ts";
+export { getApiPatientsPatientidTimelineQueryOptions } from "./hooks/PatientsHooks/useGetApiPatientsPatientidTimeline.ts";
+export { useGetApiPatientsPatientidTimeline } from "./hooks/PatientsHooks/useGetApiPatientsPatientidTimeline.ts";
+export { getApiPatientsPatientidTimelineSuspenseQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsPatientidTimelineSuspense.ts";
+export { getApiPatientsPatientidTimelineSuspenseQueryOptions } from "./hooks/PatientsHooks/useGetApiPatientsPatientidTimelineSuspense.ts";
+export { useGetApiPatientsPatientidTimelineSuspense } from "./hooks/PatientsHooks/useGetApiPatientsPatientidTimelineSuspense.ts";
+export { getApiPatientsPatientidTimelineSuspenseInfiniteQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsPatientidTimelineSuspenseInfinite.ts";
+export { getApiPatientsPatientidTimelineSuspenseInfiniteQueryOptions } from "./hooks/PatientsHooks/useGetApiPatientsPatientidTimelineSuspenseInfinite.ts";
+export { useGetApiPatientsPatientidTimelineSuspenseInfinite } from "./hooks/PatientsHooks/useGetApiPatientsPatientidTimelineSuspenseInfinite.ts";
 export { getApiPatientsSuspenseQueryKey } from "./hooks/PatientsHooks/useGetApiPatientsSuspense.ts";
 export { getApiPatientsSuspenseQueryOptions } from "./hooks/PatientsHooks/useGetApiPatientsSuspense.ts";
 export { useGetApiPatientsSuspense } from "./hooks/PatientsHooks/useGetApiPatientsSuspense.ts";
@@ -1253,6 +1315,9 @@ export { usePatchApiPatientsIdStage } from "./hooks/PatientsHooks/usePatchApiPat
 export { postApiPatientsIdAssignMutationKey } from "./hooks/PatientsHooks/usePostApiPatientsIdAssign.ts";
 export { postApiPatientsIdAssignMutationOptions } from "./hooks/PatientsHooks/usePostApiPatientsIdAssign.ts";
 export { usePostApiPatientsIdAssign } from "./hooks/PatientsHooks/usePostApiPatientsIdAssign.ts";
+export { postApiPatientsPatientidChartsUploadMutationKey } from "./hooks/PatientsHooks/usePostApiPatientsPatientidChartsUpload.ts";
+export { postApiPatientsPatientidChartsUploadMutationOptions } from "./hooks/PatientsHooks/usePostApiPatientsPatientidChartsUpload.ts";
+export { usePostApiPatientsPatientidChartsUpload } from "./hooks/PatientsHooks/usePostApiPatientsPatientidChartsUpload.ts";
 export { deleteApiProfileActiveSessionsSessionidMutationKey } from "./hooks/ProfileHooks/useDeleteApiProfileActiveSessionsSessionid.ts";
 export { deleteApiProfileActiveSessionsSessionidMutationOptions } from "./hooks/ProfileHooks/useDeleteApiProfileActiveSessionsSessionid.ts";
 export { useDeleteApiProfileActiveSessionsSessionid } from "./hooks/ProfileHooks/useDeleteApiProfileActiveSessionsSessionid.ts";
@@ -1824,6 +1889,17 @@ export {
   postApiDepartmentsMutationResponseSchema,
 } from "./zod/DepartmentsSchemas/postApiDepartmentsSchema.ts";
 export {
+  getApiHedisEvaluationsId200Schema,
+  getApiHedisEvaluationsIdPathParamsSchema,
+  getApiHedisEvaluationsIdQueryResponseSchema,
+} from "./zod/HEDISSchemas/getApiHedisEvaluationsIdSchema.ts";
+export {
+  postApiHedisEvaluateId200Schema,
+  postApiHedisEvaluateIdMutationRequestSchema,
+  postApiHedisEvaluateIdMutationResponseSchema,
+  postApiHedisEvaluateIdPathParamsSchema,
+} from "./zod/HEDISSchemas/postApiHedisEvaluateIdSchema.ts";
+export {
   postApiManualChartAbstraction201Schema,
   postApiManualChartAbstraction400Schema,
   postApiManualChartAbstraction404Schema,
@@ -1922,6 +1998,12 @@ export {
   getApiPatientsExportQueryResponseSchema,
 } from "./zod/PatientsSchemas/getApiPatientsExportSchema.ts";
 export {
+  getApiPatientsPatientidTimeline200Schema,
+  getApiPatientsPatientidTimeline500Schema,
+  getApiPatientsPatientidTimelinePathParamsSchema,
+  getApiPatientsPatientidTimelineQueryResponseSchema,
+} from "./zod/PatientsSchemas/getApiPatientsPatientidTimelineSchema.ts";
+export {
   getApiPatients200Schema,
   getApiPatientsQueryParamsSchema,
   getApiPatientsQueryResponseSchema,
@@ -1938,6 +2020,14 @@ export {
   postApiPatientsIdAssignMutationResponseSchema,
   postApiPatientsIdAssignPathParamsSchema,
 } from "./zod/PatientsSchemas/postApiPatientsIdAssignSchema.ts";
+export {
+  postApiPatientsPatientidChartsUpload200Schema,
+  postApiPatientsPatientidChartsUpload400Schema,
+  postApiPatientsPatientidChartsUpload500Schema,
+  postApiPatientsPatientidChartsUploadMutationRequestSchema,
+  postApiPatientsPatientidChartsUploadMutationResponseSchema,
+  postApiPatientsPatientidChartsUploadPathParamsSchema,
+} from "./zod/PatientsSchemas/postApiPatientsPatientidChartsUploadSchema.ts";
 export {
   deleteApiProfileActiveSessionsSessionid200Schema,
   deleteApiProfileActiveSessionsSessionidMutationResponseSchema,
