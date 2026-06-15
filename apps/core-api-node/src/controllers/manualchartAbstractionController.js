@@ -60,6 +60,7 @@ const createManualAbstraction = async (req, res) => {
     }
 
     // INSERT
+    console.log(`[Manual Abstraction] Saving record for Patient: ${patient_id}`);
     const result = await client.query(
       `
       INSERT INTO manual_chart_abstractions (
@@ -86,7 +87,9 @@ const createManualAbstraction = async (req, res) => {
         abstraction_status,
 
         created_by,
-        assigned_qa
+        assigned_qa,
+        abstracted_by,
+        abstracted_at
 
       )
       VALUES (
@@ -97,7 +100,7 @@ const createManualAbstraction = async (req, res) => {
         $10,$11,
         $12,$13,
         $14,
-        $15,$16
+        $15,$16,$17,NOW()
       )
       RETURNING *
       `,
@@ -125,8 +128,43 @@ const createManualAbstraction = async (req, res) => {
 
         req.user.id,
         assigned_qa,
+        req.user.id,
       ]
     );
+
+    // SYNCHRONIZE WITH TIMELINE_EVENTS
+    console.log(`[Manual Abstraction] Synchronizing with Timeline Events...`);
+    const synthesizedEvidence = `${evidence_type} - ${notes || ''} ${systolic ? `BP: ${systolic}/${diastolic}` : ''} ${cpt_code ? `CPT: ${cpt_code}` : ''}`.trim();
+
+    // Deduplication Check
+    const existingTimeline = await client.query(
+      `SELECT id FROM timeline_events WHERE patient_id = $1 AND measure = $2 AND event_date = $3`,
+      [patient_id, screening_type, service_date]
+    );
+
+    if (existingTimeline.rows.length > 0) {
+      console.log(`[Manual Abstraction] Updating existing timeline event ID: ${existingTimeline.rows[0].id}`);
+      await client.query(
+        `
+        UPDATE timeline_events
+        SET evidence = $1, is_manual = TRUE, chart_id = $2, updated_by = $3, updated_at = NOW()
+        WHERE id = $4
+        `,
+        [synthesizedEvidence, patient_chart_id, req.user.id, existingTimeline.rows[0].id]
+      );
+    } else {
+      console.log(`[Manual Abstraction] Creating new timeline event`);
+      await client.query(
+        `
+        INSERT INTO timeline_events (
+          patient_id, chart_id, measure, event_type, evidence, event_date,
+          confidence, is_manual, abstracted_by, created_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, 100, TRUE, $7, NOW())
+        `,
+        [patient_id, patient_chart_id, screening_type, evidence_type, synthesizedEvidence, service_date, req.user.id]
+      );
+    }
 
     // UPDATE CHART STATUS
     await client.query(

@@ -1051,6 +1051,43 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
 
   CREATE INDEX IF NOT EXISTS idx_hedis_eval_patient ON ${schema}.hedis_evaluations(patient_id);
 `);
+  await client.query(`
+  CREATE TABLE IF NOT EXISTS ${schema}.timeline_events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    patient_id UUID REFERENCES ${schema}.patients(id) ON DELETE CASCADE,
+    measure TEXT,
+    event_type TEXT,
+    evidence TEXT,
+    provider TEXT,
+    event_date DATE,
+    confidence FLOAT,
+    source_text TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_timeline_events_patient ON ${schema}.timeline_events(patient_id);
+`);
+
+  try {
+    await client.query(`
+      ALTER TABLE ${schema}.manual_chart_abstractions
+        ADD COLUMN IF NOT EXISTS abstracted_by UUID REFERENCES ${schema}.users(id),
+        ADD COLUMN IF NOT EXISTS abstracted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        ADD COLUMN IF NOT EXISTS updated_by UUID REFERENCES ${schema}.users(id),
+        ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+    `);
+  } catch (err) {}
+
+  try {
+    await client.query(`
+      ALTER TABLE ${schema}.timeline_events
+        ADD COLUMN IF NOT EXISTS is_manual BOOLEAN DEFAULT FALSE,
+        ADD COLUMN IF NOT EXISTS chart_id UUID REFERENCES ${schema}.patient_charts(id) ON DELETE CASCADE,
+        ADD COLUMN IF NOT EXISTS abstracted_by UUID REFERENCES ${schema}.users(id),
+        ADD COLUMN IF NOT EXISTS updated_by UUID REFERENCES ${schema}.users(id),
+        ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+    `);
+  } catch (err) {}
 }
 
 module.exports = { runMigrations };
