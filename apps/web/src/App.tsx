@@ -65,6 +65,8 @@ export default function App() {
   const [previousView, setPreviousView] = useState("dashboard");
   const [role, setRole] = useState<UserRole>("program-manager");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+  const [selectedChartId, setSelectedChartId] = useState<string | null>(null);
 
   /* Apply dark mode class */
   useEffect(() => {
@@ -103,15 +105,29 @@ export default function App() {
         return (
           <WorkQueue
             role={role}
-            onStartAbstraction={() => navigate("start-coding")}
-            onOpenPatient360={() => navigate("patient-360")}
-            onOpenQAReview={() => navigate("qa-review")}
+            onStartAbstraction={(patientId, chartId) => {
+              setSelectedPatientId(patientId || null);
+              setSelectedChartId(chartId || null);
+              navigate("patient-360");
+            }}
+            onOpenPatient360={(patientId, chartId) => {
+              setSelectedPatientId(patientId || null);
+              setSelectedChartId(chartId || null);
+              navigate("patient-360");
+            }}
+            onOpenQAReview={(patientId, chartId) => {
+              setSelectedPatientId(patientId || null);
+              setSelectedChartId(chartId || null);
+              navigate("qa-review");
+            }}
           />
         );
 
       case "patient-360":
         return (
           <Patient360
+            patientId={selectedPatientId || ""}
+            chartId={selectedChartId || ""}
             onBack={() => navigate(previousView)}
             onOpenWorkspace={() => navigate("abstraction")}
           />
