@@ -23,7 +23,8 @@ function getPostApiManualChartAbstractionUrl() {
 }
 
 /**
- * @summary Create manual chart abstraction
+ * @description Submits a manual chart abstraction, updates the patient chart status, and immediately cascades the abstracted evidence into the timeline_events table, avoiding duplicates.
+ * @summary Create manual chart abstraction and synchronize with Evidence Timeline
  * {@link /api/manual-chart-abstraction}
  */
 export async function postApiManualChartAbstraction(
