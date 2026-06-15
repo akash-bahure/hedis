@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import type { ElementType, ReactNode } from "react";
 import {
   Search,
@@ -43,6 +43,8 @@ import {
   Upload,
   ArrowLeft,
 } from "lucide-react";
+import { useGetApiHedisEvaluationsId, usePostApiHedisEvaluateId } from "@/api";
+import { toast } from "sonner";
 
 /* ─────────────────────────────────────────────────────────────
    TYPES
@@ -174,35 +176,14 @@ const MEASURE_STATUS_META: Record<
   },
 };
 
-/* ─────────────────────────────────────────────────────────────
-   PATIENT & MEASURE DATA
-───────────────────────────────────────────────────────────── */
-const PATIENT = {
-  name: "Gonzalez, Maria L.",
-  dob: "03/14/1967",
-  age: 58,
-  gender: "Female",
-  memberId: "MBR-789456",
-  pcp: "Dr. Sarah Chen, MD",
-  plan: "Medicare Advantage",
-  riskScore: 2.4,
-  lastVisit: "Jan 18, 2026",
-  address: "Phoenix, AZ 85001",
-  phone: "(602) 555-0142",
-};
-
-const MEASURES: { id: MeasureId; name: string; status: MeasureStatus }[] = [
-  { id: "CBP", name: "Controlling Blood Pressure", status: "gap" },
-  { id: "HbA1c", name: "HbA1c Testing (CDC)", status: "complete" },
-  { id: "BCS", name: "Breast Cancer Screening", status: "pending" },
-  { id: "COL", name: "Colorectal Screening", status: "gap" },
-  { id: "CIS", name: "Child Immunization Status", status: "not-eligible" },
-];
-
 interface MeasureDetail {
   eligibility: { label: string; met: boolean; note: string }[];
   numerator: { label: string; met: boolean; note: string }[];
+  denominator?: { label: string; met: boolean; note: string }[];
+  exclusion?: { label: string; met: boolean; note: string }[];
   missing: { text: string; severity: "high" | "medium" | "low" }[];
+  recommendations?: string[];
+  overallReason?: string;
   lastAction?: string;
 }
 
@@ -727,7 +708,8 @@ function MeasureBadge({
   selected?: boolean;
   onClick?: () => void;
 }) {
-  const m = MEASURE_STATUS_META[status];
+  const m = MEASURE_STATUS_META[status] ?? MEASURE_STATUS_META["gap"];
+
   const Icon = m.icon;
   return (
     <button
@@ -1438,21 +1420,32 @@ function MeasurePanel({
   selectedMeasure,
   onMeasureChange,
   onOpenWorkspace,
+  measures,
+  detail,
+  onRecalculate,
+  isRecalculating,
 }: {
-  selectedMeasure: MeasureId;
-  onMeasureChange: (m: MeasureId) => void;
+  selectedMeasure: string;
+  onMeasureChange: (m: string) => void;
   onOpenWorkspace?: () => void;
+  measures: { id: string; name: string; status: MeasureStatus }[];
+  detail: MeasureDetail | null;
+  onRecalculate?: () => void;
+  isRecalculating?: boolean;
 }) {
-  const measure = MEASURES.find((m) => m.id === selectedMeasure)!;
-  const detail = MEASURE_DETAIL[selectedMeasure];
-  const statusMeta = MEASURE_STATUS_META[measure.status];
+  const measure = measures.find((m) => m.id === selectedMeasure);
+  if (!measure) return null;
+
+  const statusMeta =
+    MEASURE_STATUS_META[measure.status] ?? MEASURE_STATUS_META["gap"];
+
   const StatusIcon = statusMeta.icon;
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Measure tabs */}
       <div className="flex-shrink-0 border-b border-border bg-muted/30 p-2 flex flex-col gap-1">
-        {MEASURES.map((m) => {
+        {measures.map((m) => {
           const sm = MEASURE_STATUS_META[m.status];
           const Icon = sm.icon;
           const active = m.id === selectedMeasure;
@@ -1483,21 +1476,30 @@ function MeasurePanel({
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Status header */}
         <div
-          className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border ${statusMeta.pill}`}
+          className={`flex flex-col gap-1 px-3 py-2.5 rounded-xl border ${statusMeta.pill}`}
         >
-          <StatusIcon className="w-4 h-4" />
-          <div className="flex-1">
-            <p className="text-[12px] font-bold">
-              {measure.id} — {statusMeta.label}
-            </p>
-            <p className="text-[10px] opacity-80 leading-tight">
-              {measure.name}
-            </p>
+          <div className="flex items-center gap-2">
+            <StatusIcon className="w-4 h-4" />
+            <div className="flex-1">
+              <p className="text-[12px] font-bold">
+                {measure.id} — {statusMeta.label}
+              </p>
+              <p className="text-[10px] opacity-80 leading-tight">
+                {measure.name}
+              </p>
+            </div>
           </div>
+          {/* {detail?.overallReason && (
+            <div className="mt-1 pt-1 border-t border-current/10">
+              <p className="text-[10px] leading-tight opacity-90">
+                {detail.overallReason}
+              </p>
+            </div>
+          )} */}
         </div>
 
         {/* Eligibility */}
-        {detail.eligibility.length > 0 && (
+        {detail && detail.eligibility && detail.eligibility.length > 0 && (
           <div>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
               Eligibility
@@ -1525,7 +1527,7 @@ function MeasurePanel({
         )}
 
         {/* Numerator */}
-        {detail.numerator.length > 0 && (
+        {detail && detail.numerator && detail.numerator.length > 0 && (
           <div className="border-t border-border pt-3">
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
               Numerator Status
@@ -1552,8 +1554,64 @@ function MeasurePanel({
           </div>
         )}
 
+        {/* Denominator */}
+        {detail && detail.denominator && detail.denominator.length > 0 && (
+          <div className="border-t border-border pt-3">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
+              Denominator Details
+            </p>
+            <div className="space-y-2">
+              {detail.denominator.map((d, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  {d.met ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                  ) : (
+                    <XCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" />
+                  )}
+                  <div>
+                    <p className="text-[11px] font-semibold text-foreground">
+                      {d.label}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {d.note}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Exclusion */}
+        {detail && detail.exclusion && detail.exclusion.length > 0 && (
+          <div className="border-t border-border pt-3">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
+              Exclusion Details
+            </p>
+            <div className="space-y-2">
+              {detail.exclusion.map((e, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  {e.met ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                  ) : (
+                    <Info className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
+                  )}
+                  <div>
+                    <p className="text-[11px] font-semibold text-foreground">
+                      {e.label}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {e.note}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Missing Evidence */}
-        {detail.missing.length > 0 && (
+        {detail && detail.missing && detail.missing.length > 0 && (
           <div className="border-t border-border pt-3">
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
               Missing Evidence
@@ -1561,7 +1619,7 @@ function MeasurePanel({
             <div className="space-y-2">
               {detail.missing.map((miss, i) => {
                 const sevCls =
-                  miss.severity === "high"
+                  miss.severity === "critical" || miss.severity === "high"
                     ? "bg-red-50 border-red-200 text-red-700"
                     : miss.severity === "medium"
                       ? "bg-amber-50 border-amber-200 text-amber-700"
@@ -1580,8 +1638,29 @@ function MeasurePanel({
           </div>
         )}
 
+        {/* Recommendations */}
+        {detail &&
+          detail.recommendations &&
+          detail.recommendations.length > 0 && (
+            <div className="border-t border-border pt-3">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                Recommendations
+              </p>
+              <div className="space-y-1">
+                {detail.recommendations.map((rec, i) => (
+                  <div key={i} className="flex items-start gap-2">
+                    <div className="w-1 h-1 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                    <p className="text-[10px] text-muted-foreground leading-tight italic">
+                      {rec}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
         {/* Last action */}
-        {detail.lastAction && (
+        {detail && detail.lastAction && (
           <div className="border-t border-border pt-3">
             <p className="text-[10px] text-muted-foreground italic">
               {detail.lastAction}
@@ -1601,8 +1680,15 @@ function MeasurePanel({
             <button className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-primary/30 text-primary text-[12px] font-semibold hover:bg-primary/5 transition-colors">
               <Send className="w-3.5 h-3.5" /> Send to QA
             </button>
-            <button className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-violet-200 text-violet-600 text-[12px] font-semibold hover:bg-violet-50 transition-colors">
-              <RefreshCw className="w-3.5 h-3.5" /> Trigger Re-calculation
+            <button
+              onClick={onRecalculate}
+              disabled={isRecalculating}
+              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-violet-200 text-violet-600 text-[12px] font-semibold hover:bg-violet-50 transition-colors disabled:opacity-50"
+            >
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${isRecalculating ? "animate-spin" : ""}`}
+              />
+              {isRecalculating ? "Recalculating..." : "Trigger Re-calculation"}
             </button>
           </div>
         )}
@@ -1735,13 +1821,209 @@ function TimelineCenter({
 export function Patient360({
   onBack,
   onOpenWorkspace,
+  patientId,
+  chartId,
+  // New props from WorkQueue
+  patientName,
+  dob,
+  mrn,
+  gender,
+  plan,
+  riskScore,
 }: {
   onBack?: () => void;
   onOpenWorkspace?: () => void;
+  patientId: string;
+  chartId: string;
+  patientName?: string;
+  dob?: string;
+  mrn?: string;
+  gender?: string;
+  plan?: string;
+  riskScore?: number;
 }) {
-  const [selectedMeasure, setSelectedMeasure] = useState<MeasureId>("BCS");
+  // Dynamic Patient Data (with fallbacks)
+  const patient = {
+    name: patientName || "Unknown Patient",
+    dob: dob || "—",
+    age: dob ? calculateAge(dob) : 58,
+    gender: gender || "Female",
+    memberId: mrn || "—",
+    pcp: "Dr. Sarah Chen, MD", // Can be extended later
+    plan: plan || "Medicare Advantage",
+    riskScore: riskScore || 2.4,
+    lastVisit: "Jan 18, 2026",
+  };
+
+  // Age calculator helper
+  function calculateAge(dobString: string): number {
+    if (!dobString) return 0;
+    const birthDate = new Date(dobString);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+    return age;
+  }
+  const {
+    data: evaluationResponse,
+    isLoading: evalLoading,
+    refetch: refetchEval,
+  } = useGetApiHedisEvaluationsId(patientId);
+  const evaluateMutation = usePostApiHedisEvaluateId();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const evaluations = useMemo(() => {
+    if (!evaluationResponse?.evaluations) return [];
+
+    // Filter non-eligible first
+    let filtered = evaluationResponse.evaluations.filter(
+      (ev: any) =>
+        ev.status !== "Not Eligible" && ev.eligible !== false && ev.measure_code // must have a code
+    );
+
+    // Deduplicate by measure_code (keep the one with highest confidence or latest)
+    const seen = new Map<string, any>();
+
+    filtered.forEach((ev: any) => {
+      const code = ev.measure_code;
+      const existing = seen.get(code);
+
+      if (
+        !existing ||
+        (ev.confidence &&
+          (!existing.confidence || ev.confidence > existing.confidence))
+      ) {
+        seen.set(code, ev);
+      }
+    });
+
+    return Array.from(seen.values());
+  }, [evaluationResponse]);
+
+  const dynamicMeasures = useMemo(() => {
+    return evaluations.map((ev: any) => {
+      let status: MeasureStatus = "pending";
+
+      if (ev.status === "Complete" || ev.status === "Compliant") {
+        status = "complete";
+      } else if (ev.status === "Gap") {
+        status = "gap";
+      } else if (ev.status?.toLowerCase().includes("pending")) {
+        status = "pending";
+      }
+
+      return {
+        id: ev.measure_code as MeasureId,
+        name: ev.measure_name || `Measure ${ev.measure_code}`,
+        status,
+      };
+    });
+  }, [evaluations]);
+
+  const [selectedMeasure, setSelectedMeasure] = useState<string>("");
+
+  useEffect(() => {
+    if (dynamicMeasures.length > 0 && !selectedMeasure) {
+      setSelectedMeasure(dynamicMeasures[0].id);
+    }
+  }, [dynamicMeasures, selectedMeasure]);
+
+  // Safe Recalculation Handler
+  // FIXED: Safe Recalculation Handler
+  const handleRecalculate = async (file?: File) => {
+    if (!file) {
+      fileInputRef.current?.click();
+      return;
+    }
+
+    try {
+      toast.loading("Recalculating HEDIS measures...", { id: "recalculating" });
+
+      // Explicitly create clean payload to prevent circular structure
+      const payload = {
+        id: patientId,
+        data: {
+          file: file, // File object only
+        },
+      };
+
+      await evaluateMutation.mutateAsync(payload);
+
+      await refetchEval();
+      toast.success("Recalculation complete ✅", { id: "recalculating" });
+    } catch (err: any) {
+      console.error("Recalculation failed:", err);
+
+      const message =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to process chart. Please try again.";
+
+      toast.error(message, { id: "recalculating" });
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleRecalculate(file);
+    }
+    // Reset input immediately
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+  const selectedEval = evaluations.find(
+    (ev: any) => ev.measure_code === selectedMeasure
+  );
+
+  // Map dynamic evaluation to MeasureDetail format
+  // Improved dynamicDetail mapping
+  const dynamicDetail: MeasureDetail | null = useMemo(() => {
+    if (!selectedEval) return null;
+
+    const dr = selectedEval.detailed_response || {};
+
+    return {
+      eligibility: (dr.eligibility_details || []).map((d: any) => ({
+        label: d.label || d.criterion || "Eligibility",
+        met: d.status === "Pass" || d.met === true,
+        note: d.detail || d.note || "",
+      })),
+      numerator: (dr.numerator_details || []).map((d: any) => ({
+        label: d.label || d.criterion || "Numerator",
+        met: d.status === "Pass" || d.met === true,
+        note: d.detail || d.note || "",
+      })),
+      denominator: (dr.denominator_details || []).map((d: any) => ({
+        label: d.label || d.criterion || "Denominator",
+        met: d.status === "Pass" || d.met === true,
+        note: d.detail || d.note || "",
+      })),
+      exclusion: (dr.exclusion_details || []).map((d: any) => ({
+        label: d.label || d.criterion || "Exclusion",
+        met: d.status === "Pass" || d.met === true,
+        note: d.detail || d.note || "",
+      })),
+      missing: (dr.missing_evidence || dr.gaps || []).map((m: any) => ({
+        text: m.message || m.text || "Missing evidence",
+        severity: (m.severity as "high" | "medium" | "low") || "medium",
+      })),
+      recommendations: dr.recommendations || [],
+      overallReason: dr.overallReason || dr.reasoning || selectedEval.reasoning,
+      lastAction: selectedEval.last_action
+        ? `Updated: ${selectedEval.last_action}`
+        : `Analyzed by AI Engine · Confidence: ${Math.round((selectedEval.confidence || 0) * 100)}%`,
+    };
+  }, [selectedEval]);
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(
-    null,
+    null
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [acceptedEvents, setAcceptedEvents] = useState<Set<string>>(new Set());
@@ -1779,13 +2061,10 @@ export function Patient360({
       <div className="flex-shrink-0 bg-card border-b border-border px-5 py-3">
         <div className="flex items-start justify-between gap-4">
           {/* Demographics */}
+          {/* Demographics */}
           <div className="flex items-center gap-4">
             {onBack && (
-              <button
-                onClick={onBack}
-                className="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors flex-shrink-0"
-                title="Go back"
-              >
+              <button onClick={onBack} className="...">
                 <ArrowLeft className="w-4 h-4" />
               </button>
             )}
@@ -1795,22 +2074,22 @@ export function Patient360({
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-[15px] font-bold text-foreground">
-                  {PATIENT.name}
+                  {patient.name}
                 </h1>
                 <span
                   className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full
-                  ${PATIENT.riskScore >= 2 ? "bg-red-50 text-red-700 border border-red-200" : "bg-amber-50 text-amber-700 border border-amber-200"}`}
+                  ${patient.riskScore >= 2 ? "bg-red-50 text-red-700 border border-red-200" : "bg-amber-50 text-amber-700 border border-amber-200"}`}
                 >
                   <Shield className="w-2.5 h-2.5" />
-                  Risk {PATIENT.riskScore}
+                  Risk {patient.riskScore}
                 </span>
               </div>
               <div className="flex items-center gap-3 mt-1 flex-wrap">
                 {[
-                  `DOB: ${PATIENT.dob}`,
-                  `Age ${PATIENT.age}`,
-                  PATIENT.gender,
-                  PATIENT.memberId,
+                  `DOB: ${patient.dob}`,
+                  `Age ${patient.age}`,
+                  patient.gender,
+                  patient.memberId,
                 ].map((item, i) => (
                   <span key={i} className="text-[11px] text-muted-foreground">
                     {item}
@@ -1819,9 +2098,9 @@ export function Patient360({
               </div>
               <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                 {[
-                  { icon: User, val: PATIENT.pcp },
-                  { icon: Star, val: PATIENT.plan },
-                  { icon: Calendar, val: `Last Visit: ${PATIENT.lastVisit}` },
+                  { icon: User, val: patient.pcp },
+                  { icon: Star, val: patient.plan },
+                  { icon: Calendar, val: `Last Visit: ${patient.lastVisit}` },
                 ].map(({ icon: Icon, val }, i) => (
                   <span
                     key={i}
@@ -1840,16 +2119,17 @@ export function Patient360({
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               HEDIS Measures
             </p>
-            <div className="flex items-center gap-1.5 flex-wrap justify-end">
-              {MEASURES.map((m) => (
+            {/* <div className="flex items-center gap-1.5 flex-wrap justify-end">
+              {dynamicMeasures.map((m) => (
                 <MeasureBadge
                   key={m.id}
                   {...m}
+                  id={m.id as any}
                   selected={selectedMeasure === m.id}
                   onClick={() => setSelectedMeasure(m.id)}
                 />
               ))}
-            </div>
+            </div> */}
             <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
               {Object.entries(MEASURE_STATUS_META).map(([s, meta]) => (
                 <span key={s} className="flex items-center gap-1">
@@ -1926,6 +2206,10 @@ export function Patient360({
               selectedMeasure={selectedMeasure}
               onMeasureChange={setSelectedMeasure}
               onOpenWorkspace={onOpenWorkspace}
+              measures={dynamicMeasures}
+              detail={dynamicDetail}
+              onRecalculate={handleRecalculate}
+              isRecalculating={evaluateMutation.isLoading}
             />
           </div>
         </div>
@@ -1950,6 +2234,14 @@ export function Patient360({
           </>
         )}
       </div>
+      {/* Hidden file input for HEDIS re-calculation */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept="application/pdf"
+        className="hidden"
+      />
     </div>
   );
 }

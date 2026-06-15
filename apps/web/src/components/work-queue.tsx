@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import type { ElementType } from "react";
 import {
   getApiPatientsExport,
@@ -60,6 +60,7 @@ import {
   useGetApiUsers,
   usePatchApiPatientsIdStage,
   usePostApiPatientsIdAssign,
+  usePostApiHedisEvaluateId,
 } from "@/api";
 import { toast } from "sonner";
 
@@ -1254,53 +1255,104 @@ function RowAction({
   onOpen,
   onOpenWorkspace,
   onOpenQAReview,
+  onEvaluate,
   role,
+  currentUserName,
 }: {
   row: ChartRow;
   onOpen: () => void;
-  onOpenWorkspace?: () => void;
-  onOpenQAReview?: () => void;
+  onOpenWorkspace?: (patientId: string, chartId: string) => void;
+  onOpenQAReview?: (patientId: string, chartId: string) => void;
+  onEvaluate?: (patientId: string, chartId: string) => Promise<void>;
   role?: "program-manager" | "abstractor" | "qa-analyst";
+  currentUserName?: string;
 }) {
   const [phase, setPhase] = useState<"idle" | "loading" | "ready">("idle");
   const [launching, setLaunching] = useState(false);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const evaluateMutation = usePostApiHedisEvaluateId();
+
   // ===================== PROGRAM MANAGER / ADMIN =====================
   if (role === "program-manager") {
-    // Only show Assign button (mainly for Not Started / Unassigned charts)
-    if (row.step === 1 || row.assignedTo === "—") {
-      return (
-        <button
-          onClick={onOpen}
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-bold text-blue-600 hover:bg-blue-50 border-blue-200 transition-colors"
-        >
-          <UserPlus className="w-3 h-3" />
-          Assign
-        </button>
-      );
-    }
-
-    // For other stages - simple View button
     return (
-      // <button
-      //   onClick={onOpen}
-      //   className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-bold text-slate-600 hover:bg-slate-50 border-slate-200 transition-colors"
-      // >
-      //   <Eye className="w-3 h-3" />
-      //   View
-      // </button>
-      <div className="flex items-center justify-center py-2">
-        <span className="text-slate-400 text-base font-light">—</span>
-      </div>
+      <button
+        onClick={onOpen}
+        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-bold text-blue-600 hover:bg-blue-50 border-blue-200 transition-colors"
+      >
+        <UserPlus className="w-3 h-3" />
+        Assign
+      </button>
     );
   }
 
   /* ── Step 2: multi-phase "Begin Review" ── */
   if (row.step === 2) {
+    const isAssignedToMe =
+      row.assignedTo === currentUserName || row.assignedTo === "Assigned";
+
+    // For Abstractor - only show Begin if assigned to them
+    if (role === "abstractor" && !isAssignedToMe) {
+      return (
+        <div className="flex items-center justify-center py-2">
+          <span className="text-slate-300 text-[10px] italic">
+            Assigned to {row.assignedTo}
+          </span>
+        </div>
+      );
+    }
+
+    const isQA = role === "qa-analyst";
+
+    // ===================== QA ANALYST - DIRECT OPEN =====================
+    if (isQA) {
+      return (
+        <button
+          onClick={() => onOpenQAReview?.(row.patientId, row.chartId)}
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-bold text-violet-600 hover:bg-violet-50 border-violet-200 transition-colors"
+        >
+          <Play className="w-3 h-3" />
+          Begin QA Review
+        </button>
+      );
+    }
+
     const handleBeginClick = () => {
       if (phase !== "idle") return;
-      setPhase("loading");
-      setTimeout(() => setPhase("ready"), 1100);
+      fileInputRef.current?.click();
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      try {
+        setPhase("loading");
+        toast.info("Starting Evaluation...", {
+          description: `Evaluating chart for ${row.patientName}`,
+        });
+
+        await evaluateMutation.mutateAsync({
+          id: row.id,
+          data: { file },
+        });
+
+        toast.success("Evaluation Complete", {
+          description: "Chart is now ready for abstraction.",
+        });
+        setPhase("ready");
+      } catch (err) {
+        console.error("Evaluation failed:", err);
+        toast.error("Evaluation Failed", {
+          description:
+            "There was an error processing the chart. Please try again.",
+        });
+        setPhase("idle");
+      } finally {
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      }
     };
     const handleLaunch = () => {
       if (launching) return;
@@ -1309,9 +1361,9 @@ function RowAction({
         setPhase("idle");
         setLaunching(false);
         if (role === "qa-analyst") {
-          onOpenQAReview?.();
+          onOpenQAReview?.(row.patientId, row.chartId);
         } else {
-          onOpenWorkspace?.();
+          onOpenWorkspace?.(row.patientId, row.chartId);
         }
       }, 900);
     };
@@ -1322,6 +1374,13 @@ function RowAction({
 
     return (
       <>
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept=".pdf"
+          className="hidden"
+        />
         <button
           onClick={handleBeginClick}
           disabled={phase === "loading"}
@@ -1354,7 +1413,7 @@ function RowAction({
                   d="M4 12a8 8 0 018-8v8z"
                 />
               </svg>
-              Opening…
+              Evaluating…
             </>
           ) : phase === "ready" ? (
             <>
@@ -1362,7 +1421,7 @@ function RowAction({
             </>
           ) : (
             <>
-              <Play className="w-3 h-3" /> Begin Review
+              <Play className="w-3 h-3" /> Begin Chart Review
             </>
           )}
         </button>
@@ -1559,7 +1618,33 @@ function RowAction({
       },
     };
   const c = cfg[row.step];
+  if (!c) {
+    // Fallback View button if step doesn't match config
+    return (
+      <button
+        onClick={onOpen}
+        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-bold text-slate-600 hover:bg-slate-50 border-slate-200 transition-colors"
+      >
+        <Eye className="w-3 h-3" />
+        View
+      </button>
+    );
+  }
   const Icon = c.icon;
+
+  // For Abstractors, if it's step 1, they shouldn't see "Assign"
+  if (role === "abstractor" && row.step === 1) {
+    return (
+      <button
+        onClick={onOpen}
+        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-bold text-slate-600 hover:bg-slate-50 border-slate-200 transition-colors"
+      >
+        <Eye className="w-3 h-3" />
+        View
+      </button>
+    );
+  }
+
   return (
     <button
       onClick={onOpen}
@@ -1753,7 +1838,7 @@ function AssignModal({
           };
         },
       },
-    },
+    }
   );
 
   const users = usersResponse?.results || [];
@@ -2182,9 +2267,20 @@ export function WorkQueue({
   onOpenQAReview,
 }: {
   role?: "program-manager" | "abstractor" | "qa-analyst";
-  onStartAbstraction: () => void;
-  onOpenPatient360: () => void;
-  onOpenQAReview?: () => void;
+  onStartAbstraction: (patientId: string, chartId: string) => void;
+  onOpenPatient360: (
+    patientId: string,
+    chartId: string,
+    patientData?: {
+      patientName?: string;
+      dob?: string;
+      mrn?: string;
+      gender?: string;
+      plan?: string;
+      riskScore?: number;
+    }
+  ) => void;
+  onOpenQAReview?: (patientId: string, chartId: string) => void;
 }) {
   // Component state
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -2192,6 +2288,12 @@ export function WorkQueue({
   const [filterStage, setFilterStage] = useState<Status | "All">("All");
   const [filterPriority, setFilterPriority] = useState("All");
   const [filterAssignee, setFilterAssignee] = useState("All");
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pendingSelection, setPendingSelection] = useState<{
+    patientId: string;
+    chartId: string;
+  } | null>(null);
   const [filterMeasure, setFilterMeasure] = useState("All");
   const [filterPlan, setFilterPlan] = useState("All Plans");
   const [myWorkQueue, setMyWorkQueue] = useState(false);
@@ -2237,7 +2339,6 @@ export function WorkQueue({
       },
     },
   });
-
   const bulkAssignMutation = usePostApiChartAssignmentsBulkAssign({
     mutation: {
       onSuccess: () => {
@@ -2251,20 +2352,87 @@ export function WorkQueue({
     },
   });
 
+  const evaluateMutation = usePostApiHedisEvaluateId();
+
+  const handleEvaluateAndNavigate = async (
+    patientId: string,
+    chartId: string,
+    file?: File
+  ) => {
+    if (!file) {
+      setPendingSelection({ patientId, chartId });
+      fileInputRef.current?.click();
+      return;
+    }
+
+    try {
+      toast.loading("Starting evaluation...", { id: "evaluating" });
+      await evaluateMutation.mutateAsync({
+        id: patientId,
+        data: { file },
+      });
+
+      toast.success("Evaluation complete", { id: "evaluating" });
+
+      // Find patient data to pass forward
+      const row = workQueueData.find(
+        (r) => r.patientId === patientId || r.id === patientId
+      );
+
+      const patientData = row
+        ? {
+            patientName: row.patientName,
+            dob: row.dob,
+            mrn: row.mrn,
+            plan: row.plan,
+            riskScore: row.riskScore,
+          }
+        : undefined;
+
+      onOpenPatient360(patientId, chartId, patientData);
+    } catch (err) {
+      console.error("Evaluation failed:", err);
+      toast.error("Evaluation failed. Please try again.", {
+        id: "evaluating",
+      });
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && pendingSelection) {
+      handleEvaluateAndNavigate(
+        pendingSelection.patientId,
+        pendingSelection.chartId,
+        file
+      );
+    }
+    setPendingSelection(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const effectiveRole = useMemo(() => {
+    if (!rawRole) return role || "abstractor";
+
+    const r = rawRole.toLowerCase().trim();
     if (
-      rawRole &&
-      ["admin", "super admin", "operations/program manager"].includes(rawRole)
+      [
+        "admin",
+        "super admin",
+        "operations/program manager",
+        "program manager",
+        "manager",
+      ].includes(r)
     )
       return "program-manager";
-    if (rawRole === "chart abstractor") return "abstractor";
-    if (rawRole === "quality analyst") return "qa-analyst";
+    if (r.includes("abstractor")) return "abstractor";
+    if (r.includes("quality analyst") || r.includes("qa")) return "qa-analyst";
+
     return role || "abstractor";
   }, [rawRole, role]);
 
-  // Current user - in a real app this would come from auth context
-  // const currentUser = userDetail?.full_name || "S. Johnson";
-  const currentUser = "S. Johnson";
+  // Current user from auth context
+  const currentUser = userDetail?.full_name || "S. Johnson";
 
   useEffect(() => {
     const handleResize = () => {
@@ -2343,7 +2511,7 @@ export function WorkQueue({
         keepPreviousData: true,
         refetchOnWindowFocus: false,
       },
-    },
+    }
   );
 
   const apiPatients = workQueueResponse?.data ?? [];
@@ -2367,7 +2535,7 @@ export function WorkQueue({
           );
         },
       },
-    },
+    }
   );
 
   const ASSIGNEES = useMemo(() => {
@@ -2402,9 +2570,7 @@ export function WorkQueue({
         priority: item?.priority || "Medium",
 
         status: item?.stage || "Not Started",
-
-        step: item?.step || 1,
-
+        step: item?.step || getPipeline(item?.stage || "Not Started").step,
         assignedTo:
           item?.abstractor_name ||
           item?.assigned_to_name ||
@@ -2428,7 +2594,7 @@ export function WorkQueue({
 
         overdue: item?.overdue || false,
       })),
-    [apiPatients],
+    [apiPatients]
   );
 
   /* ── Pipeline counts ── */
@@ -2499,6 +2665,12 @@ export function WorkQueue({
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return workQueueData.filter((r) => {
+      // NEW ROLE-BASED AUTO FILTERING
+      if (effectiveRole === "abstractor" || effectiveRole === "qa-analyst") {
+        if (r.assignedTo !== currentUser && r.assignedTo !== "Assigned") {
+          return false;
+        }
+      }
       if (
         q &&
         !r.patientName.toLowerCase().includes(q) &&
@@ -2547,7 +2719,7 @@ export function WorkQueue({
         if (sortCol === "due") cmp = a.dueDate.localeCompare(b.dueDate);
         return sortDir === "asc" ? cmp : -cmp;
       }),
-    [filtered, sortCol, sortDir],
+    [filtered, sortCol, sortDir]
   );
 
   const totalRecords = workQueueResponse?.total || sorted.length;
@@ -2581,14 +2753,39 @@ export function WorkQueue({
       return n;
     });
 
-  const handleRowOpen = (row: ChartRow) => {
-    if (row.step === 1) {
-      setAssignModal([row.id]);
+  const handleRowOpen = (row: any) => {
+    // PROGRAM MANAGER - Always open Assign Modal
+    if (effectiveRole === "program-manager") {
+      setAssignModal([row.id || row.chartId]);
       return;
     }
-    onStartAbstraction();
-  };
 
+    // Step 1 - Show Assign Modal
+    if (row.step === 1) {
+      setAssignModal([row.id || row.chartId]);
+      return;
+    }
+
+    const patientData = {
+      patientName: row.patientName,
+      dob: row.dob,
+      mrn: row.mrn,
+      plan: row.plan,
+      riskScore: row.riskScore,
+    };
+
+    // For Abstractor on Step 2 → Go through evaluation flow
+    if (row.step === 2 && effectiveRole === "abstractor") {
+      handleEvaluateAndNavigate(row.patientId || row.id, row.chartId || row.id);
+    } else {
+      // Direct open for QA Analyst, Completed stages, etc.
+      onOpenPatient360(
+        row.patientId || row.id,
+        row.chartId || row.id,
+        patientData
+      );
+    }
+  };
   const handleStageChange = async (patientId: string, stage: string) => {
     try {
       await updateStageMutation.mutateAsync({
@@ -2642,7 +2839,7 @@ export function WorkQueue({
         },
         {
           responseType: "blob",
-        },
+        }
       );
 
       // Create downloadable link
@@ -2750,7 +2947,7 @@ export function WorkQueue({
                     key={client.id}
                     onClick={() =>
                       setSelectedClient(
-                        client.id === selectedClient ? null : client.id,
+                        client.id === selectedClient ? null : client.id
                       )
                     }
                     className={`w-full text-left px-3 py-2.5 border-b border-border hover:bg-muted/50 transition-colors ${selectedClient === client.id ? "bg-primary/5" : ""}`}
@@ -3011,8 +3208,7 @@ export function WorkQueue({
                   }`}
                 >
                   {workQueueData.filter(
-                    (r) =>
-                      r.status === "Rework" && r.assignedTo === currentUser,
+                    (r) => r.status === "Rework" && r.assignedTo === currentUser
                   ).length > 0 && (
                     <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
                       <span
@@ -3025,8 +3221,7 @@ export function WorkQueue({
                   )}
                   Rework
                   {workQueueData.filter(
-                    (r) =>
-                      r.status === "Rework" && r.assignedTo === currentUser,
+                    (r) => r.status === "Rework" && r.assignedTo === currentUser
                   ).length > 0 && (
                     <span
                       className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
@@ -3039,7 +3234,7 @@ export function WorkQueue({
                         workQueueData.filter(
                           (r) =>
                             r.status === "Rework" &&
-                            r.assignedTo === currentUser,
+                            r.assignedTo === currentUser
                         ).length
                       }
                     </span>
@@ -3353,16 +3548,27 @@ export function WorkQueue({
                       </td>
 
                       {/* Chart ID */}
+                      {/* Chart ID */}
                       <td className="px-3 py-3">
                         <div className="flex flex-col gap-0.5">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              onOpenPatient360();
+                              onOpenPatient360(
+                                row.patientId || row.id,
+                                row.chartId || row.id,
+                                {
+                                  patientName: row.patientName,
+                                  dob: row.dob,
+                                  mrn: row.mrn,
+                                  plan: row.plan,
+                                  riskScore: row.riskScore,
+                                }
+                              );
                             }}
                             className="text-[11px] font-bold text-primary hover:underline cursor-pointer text-left"
                           >
-                            {row.chartId}
+                            {row.chartId || row.id}
                           </button>
                           <span className="text-[9px] text-muted-foreground font-medium">
                             {row.mrn}
@@ -3473,7 +3679,7 @@ export function WorkQueue({
                             <button
                               onClick={() =>
                                 setShowQaNote(
-                                  showQaNote === row.id ? null : row.id,
+                                  showQaNote === row.id ? null : row.id
                                 )
                               }
                               title={row.qaNote}
@@ -3511,10 +3717,12 @@ export function WorkQueue({
                           onOpen={() => handleRowOpen(row)}
                           onOpenWorkspace={onStartAbstraction}
                           onOpenQAReview={onOpenQAReview}
+                          onEvaluate={handleEvaluateAndNavigate}
                           role={effectiveRole}
+                          currentUserName={currentUser}
                         />
                       </td>
-                    </tr>,
+                    </tr>
                   );
 
                   if (showQaNote === row.id && row.qaNote) {
@@ -3541,7 +3749,7 @@ export function WorkQueue({
                             </button>
                           </div>
                         </td>
-                      </tr>,
+                      </tr>
                     );
                   }
 
@@ -3686,7 +3894,7 @@ export function WorkQueue({
                   });
 
                   toast.success(
-                    `${assignModal.length} charts assigned successfully`,
+                    `${assignModal.length} charts assigned successfully`
                   );
                 }
 
@@ -3714,6 +3922,14 @@ export function WorkQueue({
           />
         )}
       </div>
+      {/* Hidden file input for HEDIS evaluation */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept="application/pdf"
+        className="hidden"
+      />
     </div>
   );
 }
