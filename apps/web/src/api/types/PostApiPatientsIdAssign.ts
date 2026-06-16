@@ -25,13 +25,23 @@ export type PostApiPatientsIdAssignMutationRequestRoleEnumKey =
 
 export type PostApiPatientsIdAssignMutationRequest = {
   /**
-   * @type string, uuid
+   * @type string | undefined, uuid
    */
-  userId: string;
+  abstractorId?: string;
   /**
-   * @type string
+   * @type string | undefined, uuid
    */
-  role: PostApiPatientsIdAssignMutationRequestRoleEnumKey;
+  qaId?: string;
+  /**
+   * @description Legacy field for single assignment
+   * @type string | undefined, uuid
+   */
+  userId?: string;
+  /**
+   * @description Legacy field for single assignment
+   * @type string | undefined
+   */
+  role?: PostApiPatientsIdAssignMutationRequestRoleEnumKey;
 };
 
 export type PostApiPatientsIdAssignMutationResponse =

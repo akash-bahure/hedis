@@ -23,8 +23,14 @@ export const postApiPatientsIdAssign200Schema =
   z.unknown() as unknown as ToZod<PostApiPatientsIdAssign200>;
 
 export const postApiPatientsIdAssignMutationRequestSchema = z.object({
-  userId: z.string().uuid(),
-  role: z.enum(["Abstractor", "QA"]),
+  abstractorId: z.optional(z.string().uuid()),
+  qaId: z.optional(z.string().uuid()),
+  userId: z.optional(
+    z.string().uuid().describe("Legacy field for single assignment"),
+  ),
+  role: z.optional(
+    z.enum(["Abstractor", "QA"]).describe("Legacy field for single assignment"),
+  ),
 }) as unknown as ToZod<PostApiPatientsIdAssignMutationRequest>;
 
 export const postApiPatientsIdAssignMutationResponseSchema = z.lazy(

@@ -126,6 +126,12 @@ export type {
   GetApiHedisEvaluationsIdQueryResponse,
 } from "./GetApiHedisEvaluationsId.ts";
 export type {
+  GetApiHedisQaQueue200,
+  GetApiHedisQaQueueQuery,
+  GetApiHedisQaQueueQueryParams,
+  GetApiHedisQaQueueQueryResponse,
+} from "./GetApiHedisQaQueue.ts";
+export type {
   GetApiMeasureLibrary200,
   GetApiMeasureLibraryQuery,
   GetApiMeasureLibraryQueryParams,
@@ -639,6 +645,18 @@ export type {
   PostApiHedisEvaluateIdMutationResponse,
   PostApiHedisEvaluateIdPathParams,
 } from "./PostApiHedisEvaluateId.ts";
+export type {
+  PostApiHedisMarkAsReviewed200,
+  PostApiHedisMarkAsReviewedMutation,
+  PostApiHedisMarkAsReviewedMutationRequest,
+  PostApiHedisMarkAsReviewedMutationResponse,
+} from "./PostApiHedisMarkAsReviewed.ts";
+export type {
+  PostApiHedisSendToQa201,
+  PostApiHedisSendToQaMutation,
+  PostApiHedisSendToQaMutationRequest,
+  PostApiHedisSendToQaMutationResponse,
+} from "./PostApiHedisSendToQa.ts";
 export type {
   PostApiManualChartAbstraction201,
   PostApiManualChartAbstraction400,

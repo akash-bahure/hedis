@@ -15,6 +15,7 @@ export { getApiClientsId } from "./getApiClientsId.ts";
 export { getApiClientsStats } from "./getApiClientsStats.ts";
 export { getApiDepartments } from "./getApiDepartments.ts";
 export { getApiHedisEvaluationsId } from "./getApiHedisEvaluationsId.ts";
+export { getApiHedisQaQueue } from "./getApiHedisQaQueue.ts";
 export { getApiMeasureLibrary } from "./getApiMeasureLibrary.ts";
 export { getApiMeasureLibraryId } from "./getApiMeasureLibraryId.ts";
 export { getApiMeasuresExportSpecs } from "./getApiMeasuresExportSpecs.ts";
@@ -80,6 +81,8 @@ export { postApiChartAssignmentsBulkAssign } from "./postApiChartAssignmentsBulk
 export { postApiClients } from "./postApiClients.ts";
 export { postApiDepartments } from "./postApiDepartments.ts";
 export { postApiHedisEvaluateId } from "./postApiHedisEvaluateId.ts";
+export { postApiHedisMarkAsReviewed } from "./postApiHedisMarkAsReviewed.ts";
+export { postApiHedisSendToQa } from "./postApiHedisSendToQa.ts";
 export { postApiManualChartAbstraction } from "./postApiManualChartAbstraction.ts";
 export { postApiPatientsIdAssign } from "./postApiPatientsIdAssign.ts";
 export { postApiPatientsPatientidChartsUpload } from "./postApiPatientsPatientidChartsUpload.ts";
