@@ -10,6 +10,10 @@ const seedSuperAdmin = require("./src/db/seedSuperAdmin");
 require("./src/workers/externalDataImport.worker");
 require("./src/jobs/externalDataImport.cron");
 
+// Chart Processing Queue Workers and Jobs
+require("./src/workers/chart.worker");
+require("./src/jobs/chart-ingestion.job");
+
 async function startServer() {
   await initDB();
   await seedSuperAdmin();

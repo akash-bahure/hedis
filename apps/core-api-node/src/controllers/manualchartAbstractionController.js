@@ -138,7 +138,7 @@ const createManualAbstraction = async (req, res) => {
 
     // Deduplication Check
     const existingTimeline = await client.query(
-      `SELECT id FROM timeline_events WHERE patient_id = $1 AND measure = $2 AND event_date = $3`,
+      `SELECT id FROM ${req.tenant.schema_name}.clinical_timeline_events WHERE patient_id = $1 AND measure = $2 AND event_date = $3`,
       [patient_id, screening_type, service_date]
     );
 
@@ -146,8 +146,8 @@ const createManualAbstraction = async (req, res) => {
       console.log(`[Manual Abstraction] Updating existing timeline event ID: ${existingTimeline.rows[0].id}`);
       await client.query(
         `
-        UPDATE timeline_events
-        SET evidence = $1, is_manual = TRUE, chart_id = $2, updated_by = $3, updated_at = NOW()
+        UPDATE ${req.tenant.schema_name}.clinical_timeline_events
+        SET evidence = $1, source_type = 'MANUAL', review_status = 'ACCEPTED', chart_id = $2, reviewed_by = $3, reviewed_at = NOW(), updated_at = NOW()
         WHERE id = $4
         `,
         [synthesizedEvidence, patient_chart_id, req.user.id, existingTimeline.rows[0].id]
@@ -156,11 +156,11 @@ const createManualAbstraction = async (req, res) => {
       console.log(`[Manual Abstraction] Creating new timeline event`);
       await client.query(
         `
-        INSERT INTO timeline_events (
+        INSERT INTO ${req.tenant.schema_name}.clinical_timeline_events (
           patient_id, chart_id, measure, event_type, evidence, event_date,
-          confidence, is_manual, abstracted_by, created_at
+          source_type, review_status, reviewed_by, reviewed_at, created_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6, 100, TRUE, $7, NOW())
+        VALUES ($1, $2, $3, $4, $5, $6, 'MANUAL', 'ACCEPTED', $7, NOW(), NOW())
         `,
         [patient_id, patient_chart_id, screening_type, evidence_type, synthesizedEvidence, service_date, req.user.id]
       );
