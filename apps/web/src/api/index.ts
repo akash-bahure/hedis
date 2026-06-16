@@ -38,7 +38,12 @@ export type { PostApiDepartmentsMutationKey } from "./hooks/DepartmentsHooks/use
 export type { GetApiHedisEvaluationsIdQueryKey } from "./hooks/HEDISHooks/useGetApiHedisEvaluationsId.ts";
 export type { GetApiHedisEvaluationsIdSuspenseQueryKey } from "./hooks/HEDISHooks/useGetApiHedisEvaluationsIdSuspense.ts";
 export type { GetApiHedisEvaluationsIdSuspenseInfiniteQueryKey } from "./hooks/HEDISHooks/useGetApiHedisEvaluationsIdSuspenseInfinite.ts";
+export type { GetApiHedisQaQueueQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaQueue.ts";
+export type { GetApiHedisQaQueueSuspenseQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaQueueSuspense.ts";
+export type { GetApiHedisQaQueueSuspenseInfiniteQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaQueueSuspenseInfinite.ts";
 export type { PostApiHedisEvaluateIdMutationKey } from "./hooks/HEDISHooks/usePostApiHedisEvaluateId.ts";
+export type { PostApiHedisMarkAsReviewedMutationKey } from "./hooks/HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
+export type { PostApiHedisSendToQaMutationKey } from "./hooks/HEDISHooks/usePostApiHedisSendToQa.ts";
 export type { PostApiManualChartAbstractionMutationKey } from "./hooks/Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
 export type { GetApiMeasureLibraryQueryKey } from "./hooks/Measure LibraryHooks/useGetApiMeasureLibrary.ts";
 export type { GetApiMeasureLibraryIdQueryKey } from "./hooks/Measure LibraryHooks/useGetApiMeasureLibraryId.ts";
@@ -320,6 +325,12 @@ export type {
   GetApiHedisEvaluationsIdQuery,
   GetApiHedisEvaluationsIdQueryResponse,
 } from "./types/GetApiHedisEvaluationsId.ts";
+export type {
+  GetApiHedisQaQueue200,
+  GetApiHedisQaQueueQuery,
+  GetApiHedisQaQueueQueryParams,
+  GetApiHedisQaQueueQueryResponse,
+} from "./types/GetApiHedisQaQueue.ts";
 export type {
   GetApiMeasureLibrary200,
   GetApiMeasureLibraryQuery,
@@ -835,6 +846,18 @@ export type {
   PostApiHedisEvaluateIdPathParams,
 } from "./types/PostApiHedisEvaluateId.ts";
 export type {
+  PostApiHedisMarkAsReviewed200,
+  PostApiHedisMarkAsReviewedMutation,
+  PostApiHedisMarkAsReviewedMutationRequest,
+  PostApiHedisMarkAsReviewedMutationResponse,
+} from "./types/PostApiHedisMarkAsReviewed.ts";
+export type {
+  PostApiHedisSendToQa201,
+  PostApiHedisSendToQaMutation,
+  PostApiHedisSendToQaMutationRequest,
+  PostApiHedisSendToQaMutationResponse,
+} from "./types/PostApiHedisSendToQa.ts";
+export type {
   PostApiManualChartAbstraction201,
   PostApiManualChartAbstraction400,
   PostApiManualChartAbstraction404,
@@ -1011,6 +1034,7 @@ export { getApiClientsId } from "./clients/getApiClientsId.ts";
 export { getApiClientsStats } from "./clients/getApiClientsStats.ts";
 export { getApiDepartments } from "./clients/getApiDepartments.ts";
 export { getApiHedisEvaluationsId } from "./clients/getApiHedisEvaluationsId.ts";
+export { getApiHedisQaQueue } from "./clients/getApiHedisQaQueue.ts";
 export { getApiMeasureLibrary } from "./clients/getApiMeasureLibrary.ts";
 export { getApiMeasureLibraryId } from "./clients/getApiMeasureLibraryId.ts";
 export { getApiMeasuresExportSpecs } from "./clients/getApiMeasuresExportSpecs.ts";
@@ -1076,6 +1100,8 @@ export { postApiChartAssignmentsBulkAssign } from "./clients/postApiChartAssignm
 export { postApiClients } from "./clients/postApiClients.ts";
 export { postApiDepartments } from "./clients/postApiDepartments.ts";
 export { postApiHedisEvaluateId } from "./clients/postApiHedisEvaluateId.ts";
+export { postApiHedisMarkAsReviewed } from "./clients/postApiHedisMarkAsReviewed.ts";
+export { postApiHedisSendToQa } from "./clients/postApiHedisSendToQa.ts";
 export { postApiManualChartAbstraction } from "./clients/postApiManualChartAbstraction.ts";
 export { postApiPatientsIdAssign } from "./clients/postApiPatientsIdAssign.ts";
 export { postApiPatientsPatientidChartsUpload } from "./clients/postApiPatientsPatientidChartsUpload.ts";
@@ -1213,9 +1239,24 @@ export { useGetApiHedisEvaluationsIdSuspense } from "./hooks/HEDISHooks/useGetAp
 export { getApiHedisEvaluationsIdSuspenseInfiniteQueryKey } from "./hooks/HEDISHooks/useGetApiHedisEvaluationsIdSuspenseInfinite.ts";
 export { getApiHedisEvaluationsIdSuspenseInfiniteQueryOptions } from "./hooks/HEDISHooks/useGetApiHedisEvaluationsIdSuspenseInfinite.ts";
 export { useGetApiHedisEvaluationsIdSuspenseInfinite } from "./hooks/HEDISHooks/useGetApiHedisEvaluationsIdSuspenseInfinite.ts";
+export { getApiHedisQaQueueQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaQueue.ts";
+export { getApiHedisQaQueueQueryOptions } from "./hooks/HEDISHooks/useGetApiHedisQaQueue.ts";
+export { useGetApiHedisQaQueue } from "./hooks/HEDISHooks/useGetApiHedisQaQueue.ts";
+export { getApiHedisQaQueueSuspenseQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaQueueSuspense.ts";
+export { getApiHedisQaQueueSuspenseQueryOptions } from "./hooks/HEDISHooks/useGetApiHedisQaQueueSuspense.ts";
+export { useGetApiHedisQaQueueSuspense } from "./hooks/HEDISHooks/useGetApiHedisQaQueueSuspense.ts";
+export { getApiHedisQaQueueSuspenseInfiniteQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaQueueSuspenseInfinite.ts";
+export { getApiHedisQaQueueSuspenseInfiniteQueryOptions } from "./hooks/HEDISHooks/useGetApiHedisQaQueueSuspenseInfinite.ts";
+export { useGetApiHedisQaQueueSuspenseInfinite } from "./hooks/HEDISHooks/useGetApiHedisQaQueueSuspenseInfinite.ts";
 export { postApiHedisEvaluateIdMutationKey } from "./hooks/HEDISHooks/usePostApiHedisEvaluateId.ts";
 export { postApiHedisEvaluateIdMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisEvaluateId.ts";
 export { usePostApiHedisEvaluateId } from "./hooks/HEDISHooks/usePostApiHedisEvaluateId.ts";
+export { postApiHedisMarkAsReviewedMutationKey } from "./hooks/HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
+export { postApiHedisMarkAsReviewedMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
+export { usePostApiHedisMarkAsReviewed } from "./hooks/HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
+export { postApiHedisSendToQaMutationKey } from "./hooks/HEDISHooks/usePostApiHedisSendToQa.ts";
+export { postApiHedisSendToQaMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisSendToQa.ts";
+export { usePostApiHedisSendToQa } from "./hooks/HEDISHooks/usePostApiHedisSendToQa.ts";
 export { postApiManualChartAbstractionMutationKey } from "./hooks/Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
 export { postApiManualChartAbstractionMutationOptions } from "./hooks/Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
 export { usePostApiManualChartAbstraction } from "./hooks/Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
@@ -1894,11 +1935,26 @@ export {
   getApiHedisEvaluationsIdQueryResponseSchema,
 } from "./zod/HEDISSchemas/getApiHedisEvaluationsIdSchema.ts";
 export {
+  getApiHedisQaQueue200Schema,
+  getApiHedisQaQueueQueryParamsSchema,
+  getApiHedisQaQueueQueryResponseSchema,
+} from "./zod/HEDISSchemas/getApiHedisQaQueueSchema.ts";
+export {
   postApiHedisEvaluateId200Schema,
   postApiHedisEvaluateIdMutationRequestSchema,
   postApiHedisEvaluateIdMutationResponseSchema,
   postApiHedisEvaluateIdPathParamsSchema,
 } from "./zod/HEDISSchemas/postApiHedisEvaluateIdSchema.ts";
+export {
+  postApiHedisMarkAsReviewed200Schema,
+  postApiHedisMarkAsReviewedMutationRequestSchema,
+  postApiHedisMarkAsReviewedMutationResponseSchema,
+} from "./zod/HEDISSchemas/postApiHedisMarkAsReviewedSchema.ts";
+export {
+  postApiHedisSendToQa201Schema,
+  postApiHedisSendToQaMutationRequestSchema,
+  postApiHedisSendToQaMutationResponseSchema,
+} from "./zod/HEDISSchemas/postApiHedisSendToQaSchema.ts";
 export {
   postApiManualChartAbstraction201Schema,
   postApiManualChartAbstraction400Schema,
