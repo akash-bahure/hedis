@@ -1052,6 +1052,30 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
   CREATE INDEX IF NOT EXISTS idx_hedis_eval_patient ON ${schema}.hedis_evaluations(patient_id);
 `);
   await client.query(`
+  CREATE TABLE IF NOT EXISTS ${schema}.hedis_qa_queue (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    patient_id UUID REFERENCES ${schema}.patients(id) ON DELETE CASCADE,
+    patient_name TEXT,
+    chart_id TEXT,
+    measure_code TEXT,
+    measure_name TEXT,
+    status TEXT DEFAULT 'Pending QA',
+    sent_by UUID REFERENCES ${schema}.users(id),
+    sent_at TIMESTAMP DEFAULT NOW(),
+    qa_assignee UUID REFERENCES ${schema}.users(id),
+    reviewed_at TIMESTAMP,
+    reviewed_by UUID REFERENCES ${schema}.users(id),
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_hedis_qa_patient ON ${schema}.hedis_qa_queue(patient_id);
+  CREATE INDEX IF NOT EXISTS idx_hedis_qa_measure ON ${schema}.hedis_qa_queue(measure_code);
+  CREATE INDEX IF NOT EXISTS idx_hedis_qa_status ON ${schema}.hedis_qa_queue(status);
+  `);
+
+  await client.query(`
   CREATE TABLE IF NOT EXISTS ${schema}.timeline_events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     patient_id UUID REFERENCES ${schema}.patients(id) ON DELETE CASCADE,
@@ -1076,7 +1100,7 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
         ADD COLUMN IF NOT EXISTS updated_by UUID REFERENCES ${schema}.users(id),
         ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
     `);
-  } catch (err) {}
+  } catch (err) { }
 
   try {
     await client.query(`
@@ -1087,7 +1111,7 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
         ADD COLUMN IF NOT EXISTS updated_by UUID REFERENCES ${schema}.users(id),
         ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
     `);
-  } catch (err) {}
+  } catch (err) { }
 }
 
 module.exports = { runMigrations };

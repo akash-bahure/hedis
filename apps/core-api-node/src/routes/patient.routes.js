@@ -68,16 +68,21 @@ router.get("/", controller.getPatients);
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - userId
- *               - role
  *             properties:
+ *               abstractorId:
+ *                 type: string
+ *                 format: uuid
+ *               qaId:
+ *                 type: string
+ *                 format: uuid
  *               userId:
  *                 type: string
  *                 format: uuid
+ *                 description: Legacy field for single assignment
  *               role:
  *                 type: string
  *                 enum: [Abstractor, QA]
+ *                 description: Legacy field for single assignment
  *     responses:
  *       200:
  *         description: Patient assigned successfully
