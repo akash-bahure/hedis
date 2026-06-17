@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { ElementType } from "react";
 import {
   Search,
@@ -37,7 +37,7 @@ import {
   Calendar,
   ChevronUp,
 } from "lucide-react";
-import { useGetApiHedisQaQueue } from "@/api";
+import { useGetApiHedisQaQueuePatientid } from "@/api";
 /* ─────────────────────────────────────────────────────────────
    TYPES
 ───────────────────────────────────────────────────────────── */
@@ -1022,6 +1022,7 @@ export function QAReview({
   patientId?: string;
   onOpenPatient360: () => void;
 }) {
+  console.log("🔍 QAReview component mounted with patientId:", patientId);
   const [selectedId, setSelectedId] = useState("qr-031");
   const [queueSearch, setQueueSearch] = useState("");
   const [queueFilter, setQueueFilter] = useState<
@@ -1042,56 +1043,93 @@ export function QAReview({
   const [queueCollapsed, setQueueCollapsed] = useState(false);
 
   // Fetch QA queue for this patient
-  const { data, isLoading, error } = useGetApiHedisQaQueue({
-    page: 1,
-    limit: 50,
-    search: patientId ? undefined : queueSearch, // search works globally too
-    status:
-      queueFilter === "all"
-        ? undefined
-        : queueFilter === "pending"
-          ? "Pending QA"
-          : queueFilter,
-  });
+  const { data, isLoading, error, refetch } = useGetApiHedisQaQueuePatientid(
+    patientId || "",
+    {
+      page: 1,
+      limit: 50,
+      search: queueSearch || undefined,
+      status:
+        queueFilter === "all"
+          ? undefined
+          : queueFilter === "pending"
+            ? "Pending QA"
+            : queueFilter === "in-review"
+              ? "In Review"
+              : queueFilter,
+    },
+    {
+      query: {
+        enabled: true,
+      },
+    }
+  );
 
-  // Map API data to QueueCase
+  // Map API data
   const QUEUE: QueueCase[] = useMemo(() => {
-    if (!data?.data) return [];
-    return data.data
-      .filter((item: any) => !patientId || item.patient_id === patientId) // Safety filter
-      .map((item: any) => ({
-        id: item.id,
-        caseRef: item.id.slice(-8).toUpperCase(), // or use chart_id if available
-        member: item.patient_name || "Unknown Patient",
-        memberId: item.patient_id,
-        measureCode: item.measure_code || "N/A",
-        measureName: item.measure_name || "Unknown Measure",
-        abstractor: item.sent_by || item.qa_assignee || "System",
-        submittedAt: new Date(
-          item.sent_at || item.created_at
-        ).toLocaleDateString("en-US", {
+    if (!data?.data || !Array.isArray(data.data)) return [];
+
+    return data.data.map((item: any) => ({
+      id: item.id,
+      caseRef: item.chart_id || item.id?.slice(-8).toUpperCase() || "N/A",
+      member: item.patient_name || "Unknown Patient",
+      memberId: item.patient_id,
+      measureCode: item.measure_code || "N/A",
+      measureName: item.measure_name || "Unknown Measure",
+      abstractor: item.sent_by_name || item.sent_by || "System",
+      submittedAt: new Date(item.sent_at || item.created_at).toLocaleDateString(
+        "en-US",
+        {
           month: "short",
           day: "numeric",
           hour: "numeric",
           minute: "2-digit",
-        }),
-        dueBy: undefined, // Add logic if backend provides
-        hoursRemaining: 24, // Placeholder – compute from due date if available
-        priority: "medium",
-        status: (item.status?.toLowerCase().includes("pending")
-          ? "pending"
-          : item.status?.toLowerCase().includes("review")
-            ? "in-review"
-            : item.status?.toLowerCase().includes("return")
-              ? "returned"
-              : "pending") as QueueStatus,
-        qaSampled: false,
-        fieldCount: parseInt(item.total_count || "0"),
-        discrepancies: 0,
-      }));
-  }, [data, patientId]);
+        }
+      ),
+      dueBy: "TBD",
+      hoursRemaining: 24,
+      priority: "medium" as Priority,
+      status: item.status?.toLowerCase().includes("pending")
+        ? "pending"
+        : item.status?.toLowerCase().includes("review")
+          ? "in-review"
+          : item.status?.toLowerCase().includes("return")
+            ? "returned"
+            : "pending",
+      qaSampled: false,
+      fieldCount: 0,
+      discrepancies: 0,
+    }));
+  }, [data]);
 
-  const selectedCase = QUEUE.find((q) => q.id === selectedId) || QUEUE[0];
+  //  Auto-select first item when QUEUE changes
+  useEffect(() => {
+    if (
+      QUEUE.length > 0 &&
+      (!selectedId || !QUEUE.some((q) => q.id === selectedId))
+    ) {
+      setSelectedId(QUEUE[0].id);
+    }
+  }, [QUEUE, selectedId]);
+
+  // SAFE SELECTED CASE + MAP API FIELDS
+  const selectedCase = QUEUE.find((q) => q.id === selectedId) ||
+    QUEUE[0] || {
+      id: "",
+      status: "pending" as QueueStatus,
+      qaSampled: false,
+      discrepancies: 0,
+      caseRef: "N/A",
+      member: "Unknown Patient",
+      memberId: "",
+      measureCode: "N/A",
+      measureName: "No Measure Selected",
+      abstractor: "System",
+      submittedAt: "",
+      dueBy: "TBD",
+      hoursRemaining: 0,
+      priority: "medium" as Priority,
+    };
 
   const filteredQueue = useMemo(() => {
     return QUEUE.filter((item) => {
@@ -1108,15 +1146,59 @@ export function QAReview({
     });
   }, [QUEUE, queueFilter, queueSearch]);
 
-  // Auto-select first item
-  useState(() => {
-    if (!selectedId && QUEUE.length > 0) setSelectedId(QUEUE[0].id);
-  });
+  // ==================== LEFT PANEL ONLY RENDERING ====================
+  // ==================== LEFT PANEL RENDER ====================
+  const renderLeftQueue = () => {
+    if (isLoading) {
+      return (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">Loading measures...</p>
+          </div>
+        </div>
+      );
+    }
 
-  if (isLoading)
-    return <div className="p-8 text-center">Loading QA queue...</div>;
-  if (error) return <div className="p-8 text-red-600">Error loading queue</div>;
+    if (error) {
+      return (
+        <div className="flex-1 flex items-center justify-center p-4 text-red-600">
+          Error loading QA queue
+        </div>
+      );
+    }
 
+    if (QUEUE.length === 0) {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center py-12 text-muted-foreground">
+          <ClipboardCheck className="w-12 h-12 mb-4 opacity-50" />
+          <p className="font-medium">No QA Measures</p>
+          <p className="text-sm text-center mt-1 px-6">
+            No measures have been sent to QA for this patient yet.
+          </p>
+        </div>
+      );
+    }
+
+    if (filteredQueue.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+          <Search className="w-7 h-7 opacity-30 mb-2" />
+          <p>No matching measures found</p>
+        </div>
+      );
+    }
+
+    return filteredQueue.map((item) => (
+      <QueueCard
+        key={item.id}
+        item={item}
+        selected={item.id === selectedId}
+        onClick={() => setSelectedId(item.id)}
+        onOpenPatient360={onOpenPatient360}
+      />
+    ));
+  };
   const passCount = checklist.filter((c) => c.state === "pass").length;
   const failCount = checklist.filter((c) => c.state === "fail").length;
   const warnCount = checklist.filter((c) => c.state === "warn").length;
@@ -1296,24 +1378,9 @@ export function QAReview({
             </div>
 
             {/* Queue list */}
-            <div className="flex-1 overflow-y-auto">
-              {filteredQueue.map((item) => (
-                <QueueCard
-                  key={item.id}
-                  item={item}
-                  selected={item.id === selectedId}
-                  onClick={() => setSelectedId(item.id)}
-                  onOpenPatient360={onOpenPatient360}
-                />
-              ))}
-              {filteredQueue.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                  <Search className="w-7 h-7 opacity-30 mb-2" />
-                  <p className="text-[12px]">
-                    No measures found for this patient
-                  </p>
-                </div>
-              )}
+            {/* Queue List Area */}
+            <div className="flex-1 overflow-y-auto relative">
+              {renderLeftQueue()}
             </div>
 
             {/* Queue stats footer */}
@@ -1362,15 +1429,21 @@ export function QAReview({
             {/* Avatar + patient / case info */}
             <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className="w-10 h-10 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center flex-shrink-0">
-                <span className="text-[11px] font-bold text-primary">SW</span>
+                <span className="text-[11px] font-bold text-primary">
+                  {selectedCase.member
+                    ?.split(",")[0]
+                    ?.trim()
+                    .substring(0, 2)
+                    .toUpperCase() || "JD"}
+                </span>
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap mb-0.5">
                   <h1 className="text-sm font-bold text-foreground">
-                    {phiVisible ? CASE_DETAIL.member : "████████████"}
+                    {phiVisible ? selectedCase.member : "████████████"}
                   </h1>
                   <span className="text-[11px] text-muted-foreground font-mono">
-                    {phiVisible ? CASE_DETAIL.memberId : "██████████"}
+                    {phiVisible ? selectedCase.memberId : "██████████"}
                   </span>
                   <span
                     className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-bold ${
@@ -1380,7 +1453,9 @@ export function QAReview({
                           ? "bg-red-50 text-red-700 border-red-200"
                           : decision === "revision"
                             ? "bg-amber-50 text-amber-700 border-amber-200"
-                            : STATUS_STYLES[selectedCase.status].badge
+                            : STATUS_STYLES[selectedCase.status as QueueStatus]
+                                ?.badge ||
+                              "bg-amber-50 text-amber-700 border-amber-200"
                     }`}
                   >
                     {decision === "pass"
@@ -1389,7 +1464,8 @@ export function QAReview({
                         ? "QA Failed"
                         : decision === "revision"
                           ? "Revision Requested"
-                          : STATUS_STYLES[selectedCase.status].label}
+                          : STATUS_STYLES[selectedCase.status as QueueStatus]
+                              ?.label || "Pending QA"}
                   </span>
                   {selectedCase.qaSampled && (
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
@@ -1398,33 +1474,29 @@ export function QAReview({
                     </span>
                   )}
                 </div>
+
                 <div className="flex items-center gap-3 flex-wrap">
                   <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold border border-primary/20">
-                      {CASE_DETAIL.measureCode}
+                      {selectedCase.measureCode}
                     </span>
-                    {CASE_DETAIL.measureName}
+                    {selectedCase.measureName}
                   </span>
                   <span className="text-muted-foreground/40">·</span>
                   <span className="text-[11px] text-muted-foreground">
                     <span className="font-semibold text-foreground">
-                      {CASE_DETAIL.abstractor}
+                      {selectedCase.abstractor}
                     </span>{" "}
-                    · Submitted {CASE_DETAIL.submittedAt}
-                  </span>
-                  <span className="text-muted-foreground/40">·</span>
-                  <span className="text-[11px] text-muted-foreground">
-                    {CASE_DETAIL.measurementYear} · {CASE_DETAIL.productLine}
+                    · Submitted {selectedCase.submittedAt || "—"}
                   </span>
                   <span className="text-muted-foreground/40">·</span>
                   <span className="text-[11px] text-muted-foreground flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    Due {CASE_DETAIL.dueBy}
+                    Due {selectedCase.dueBy}
                   </span>
                 </div>
               </div>
             </div>
-
             {/* Action buttons */}
             <div className="flex items-center gap-2 flex-shrink-0">
               <button

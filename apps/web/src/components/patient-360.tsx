@@ -43,7 +43,11 @@ import {
   Upload,
   ArrowLeft,
 } from "lucide-react";
-import { useGetApiHedisEvaluationsId, usePostApiHedisEvaluateId } from "@/api";
+import {
+  useGetApiHedisEvaluationsId,
+  usePostApiHedisEvaluateId,
+  usePostApiHedisSendToQa,
+} from "@/api";
 import { toast } from "sonner";
 
 /* ─────────────────────────────────────────────────────────────
@@ -1424,14 +1428,18 @@ function MeasurePanel({
   detail,
   onRecalculate,
   isRecalculating,
+  onSendToQA, // ← Added
+  isSendingToQA, // ← Added
 }: {
   selectedMeasure: string;
   onMeasureChange: (m: string) => void;
   onOpenWorkspace?: () => void;
   measures: { id: string; name: string; status: MeasureStatus }[];
   detail: MeasureDetail | null;
-  onRecalculate?: () => void;
+  onRecalculate: (file?: File) => void;
   isRecalculating?: boolean;
+  onSendToQA?: () => void; // ← Added
+  isSendingToQA?: boolean; // ← Added
 }) {
   const measure = measures.find((m) => m.id === selectedMeasure);
   if (!measure) return null;
@@ -1677,8 +1685,13 @@ function MeasurePanel({
             <button className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border text-foreground text-[12px] font-semibold hover:bg-muted transition-colors">
               <Eye className="w-3.5 h-3.5" /> Mark Reviewed
             </button>
-            <button className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-primary/30 text-primary text-[12px] font-semibold hover:bg-primary/5 transition-colors">
-              <Send className="w-3.5 h-3.5" /> Send to QA
+            <button
+              onClick={onSendToQA}
+              disabled={isSendingToQA}
+              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-primary/30 text-primary text-[12px] font-semibold hover:bg-primary/5 transition-colors disabled:opacity-50"
+            >
+              <Send className="w-3.5 h-3.5" />{" "}
+              {isSendingToQA ? "Sending..." : "Send to QA"}
             </button>
             <button
               onClick={onRecalculate}
@@ -1979,9 +1992,39 @@ export function Patient360({
       fileInputRef.current.value = "";
     }
   };
+
+  const sendToQaMutation = usePostApiHedisSendToQa();
   const selectedEval = evaluations.find(
     (ev: any) => ev.measure_code === selectedMeasure
   );
+  const handleSendToQa = async () => {
+    if (!selectedEval) return;
+
+    try {
+      toast.loading("Sending to QA...", { id: "send-to-qa" });
+
+      await sendToQaMutation.mutateAsync({
+        data: {
+          patientId: patientId,
+          measureCode: selectedEval.measure_code,
+          measureName: selectedEval.measure_name,
+        },
+      });
+
+      toast.success("Successfully sent to QA ", { id: "send-to-qa" });
+      refetchEval(); // Refresh to show last action
+    } catch (err: any) {
+      console.error("Failed to send to QA:", err);
+
+      const message =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to send to QA. Please try again.";
+
+      toast.error(message, { id: "send-to-qa" });
+    }
+  };
 
   // Map dynamic evaluation to MeasureDetail format
   // Improved dynamicDetail mapping
@@ -2210,6 +2253,8 @@ export function Patient360({
               detail={dynamicDetail}
               onRecalculate={handleRecalculate}
               isRecalculating={evaluateMutation.isLoading}
+              onSendToQA={handleSendToQa}
+              isSendingToQA={sendToQaMutation.isLoading}
             />
           </div>
         </div>
