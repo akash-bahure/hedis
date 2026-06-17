@@ -15,34 +15,35 @@ import type {
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
 import type {
-  GetApiHedisQaQueueQueryResponse,
-  GetApiHedisQaQueueQueryParams,
-} from "../../types/GetApiHedisQaQueue.ts";
+  GetApiChartsJobsJobidQueryResponse,
+  GetApiChartsJobsJobidPathParams,
+} from "../../types/GetApiChartsJobsJobid.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { getApiHedisQaQueue } from "../../clients/getApiHedisQaQueue.ts";
+import { getApiChartsJobsJobid } from "../../clients/getApiChartsJobsJobid.ts";
 
-export const getApiHedisQaQueueSuspenseQueryKey = (
-  params?: GetApiHedisQaQueueQueryParams,
-) => [{ url: "/api/hedis/qa-queue" }, ...(params ? [params] : [])] as const;
+export const getApiChartsJobsJobidSuspenseQueryKey = (
+  jobId: GetApiChartsJobsJobidPathParams["jobId"] | undefined,
+) => [{ url: "/api/charts/jobs/:jobId", params: { jobId: jobId } }] as const;
 
-export type GetApiHedisQaQueueSuspenseQueryKey = ReturnType<
-  typeof getApiHedisQaQueueSuspenseQueryKey
+export type GetApiChartsJobsJobidSuspenseQueryKey = ReturnType<
+  typeof getApiChartsJobsJobidSuspenseQueryKey
 >;
 
-export function getApiHedisQaQueueSuspenseQueryOptions(
-  params?: GetApiHedisQaQueueQueryParams,
+export function getApiChartsJobsJobidSuspenseQueryOptions(
+  jobId: GetApiChartsJobsJobidPathParams["jobId"] | undefined,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
-  const queryKey = getApiHedisQaQueueSuspenseQueryKey(params);
+  const queryKey = getApiChartsJobsJobidSuspenseQueryKey(jobId);
   return queryOptions<
-    GetApiHedisQaQueueQueryResponse,
+    GetApiChartsJobsJobidQueryResponse,
     ResponseErrorConfig<Error>,
-    GetApiHedisQaQueueQueryResponse,
+    GetApiChartsJobsJobidQueryResponse,
     typeof queryKey
   >({
+    enabled: !!jobId,
     queryKey,
     queryFn: async ({ signal }) => {
-      return getApiHedisQaQueue(params, {
+      return getApiChartsJobsJobid(jobId!, {
         ...config,
         signal: config.signal ?? signal,
       });
@@ -51,18 +52,18 @@ export function getApiHedisQaQueueSuspenseQueryOptions(
 }
 
 /**
- * @summary Fetch all patient+measure entries in QA queue with filters and pagination
- * {@link /api/hedis/qa-queue}
+ * @summary Get queue job status
+ * {@link /api/charts/jobs/:jobId}
  */
-export function useGetApiHedisQaQueueSuspense<
-  TData = GetApiHedisQaQueueQueryResponse,
-  TQueryKey extends QueryKey = GetApiHedisQaQueueSuspenseQueryKey,
+export function useGetApiChartsJobsJobidSuspense<
+  TData = GetApiChartsJobsJobidQueryResponse,
+  TQueryKey extends QueryKey = GetApiChartsJobsJobidSuspenseQueryKey,
 >(
-  params?: GetApiHedisQaQueueQueryParams,
+  jobId: GetApiChartsJobsJobidPathParams["jobId"] | undefined,
   options: {
     query?: Partial<
       UseSuspenseQueryOptions<
-        GetApiHedisQaQueueQueryResponse,
+        GetApiChartsJobsJobidQueryResponse,
         ResponseErrorConfig<Error>,
         TData,
         TQueryKey
@@ -74,11 +75,11 @@ export function useGetApiHedisQaQueueSuspense<
   const { query: queryConfig = {}, client: config = {} } = options ?? {};
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
-    resolvedOptions?.queryKey ?? getApiHedisQaQueueSuspenseQueryKey(params);
+    resolvedOptions?.queryKey ?? getApiChartsJobsJobidSuspenseQueryKey(jobId);
 
   const query = useSuspenseQuery(
     {
-      ...getApiHedisQaQueueSuspenseQueryOptions(params, config),
+      ...getApiChartsJobsJobidSuspenseQueryOptions(jobId, config),
       ...resolvedOptions,
       queryKey,
     } as unknown as UseSuspenseQueryOptions,

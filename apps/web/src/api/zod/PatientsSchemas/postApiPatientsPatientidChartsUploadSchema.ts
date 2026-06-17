@@ -19,10 +19,13 @@ export const postApiPatientsPatientidChartsUploadPathParamsSchema = z.object({
 }) as unknown as ToZod<PostApiPatientsPatientidChartsUploadPathParams>;
 
 /**
- * @description Chart uploaded and processed successfully
+ * @description Chart queued successfully
  */
-export const postApiPatientsPatientidChartsUpload200Schema =
-  z.unknown() as unknown as ToZod<PostApiPatientsPatientidChartsUpload200>;
+export const postApiPatientsPatientidChartsUpload200Schema = z.object({
+  status: z.optional(z.string()),
+  chartId: z.optional(z.string()),
+  jobId: z.optional(z.string()),
+}) as unknown as ToZod<PostApiPatientsPatientidChartsUpload200>;
 
 /**
  * @description No file uploaded

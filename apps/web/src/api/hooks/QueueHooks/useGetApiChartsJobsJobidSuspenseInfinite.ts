@@ -16,43 +16,39 @@ import type {
   UseSuspenseInfiniteQueryResult,
 } from "@tanstack/react-query";
 import type {
-  GetApiHedisQaQueueQueryResponse,
-  GetApiHedisQaQueueQueryParams,
-} from "../../types/GetApiHedisQaQueue.ts";
+  GetApiChartsJobsJobidQueryResponse,
+  GetApiChartsJobsJobidPathParams,
+} from "../../types/GetApiChartsJobsJobid.ts";
 import {
   infiniteQueryOptions,
   useSuspenseInfiniteQuery,
 } from "@tanstack/react-query";
-import { getApiHedisQaQueue } from "../../clients/getApiHedisQaQueue.ts";
+import { getApiChartsJobsJobid } from "../../clients/getApiChartsJobsJobid.ts";
 
-export const getApiHedisQaQueueSuspenseInfiniteQueryKey = (
-  params?: GetApiHedisQaQueueQueryParams,
-) => [{ url: "/api/hedis/qa-queue" }, ...(params ? [params] : [])] as const;
+export const getApiChartsJobsJobidSuspenseInfiniteQueryKey = (
+  jobId: GetApiChartsJobsJobidPathParams["jobId"] | undefined,
+) => [{ url: "/api/charts/jobs/:jobId", params: { jobId: jobId } }] as const;
 
-export type GetApiHedisQaQueueSuspenseInfiniteQueryKey = ReturnType<
-  typeof getApiHedisQaQueueSuspenseInfiniteQueryKey
+export type GetApiChartsJobsJobidSuspenseInfiniteQueryKey = ReturnType<
+  typeof getApiChartsJobsJobidSuspenseInfiniteQueryKey
 >;
 
-export function getApiHedisQaQueueSuspenseInfiniteQueryOptions(
-  params?: GetApiHedisQaQueueQueryParams,
+export function getApiChartsJobsJobidSuspenseInfiniteQueryOptions(
+  jobId: GetApiChartsJobsJobidPathParams["jobId"] | undefined,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
-  const queryKey = getApiHedisQaQueueSuspenseInfiniteQueryKey(params);
+  const queryKey = getApiChartsJobsJobidSuspenseInfiniteQueryKey(jobId);
   return infiniteQueryOptions<
-    GetApiHedisQaQueueQueryResponse,
+    GetApiChartsJobsJobidQueryResponse,
     ResponseErrorConfig<Error>,
-    InfiniteData<GetApiHedisQaQueueQueryResponse>,
+    InfiniteData<GetApiChartsJobsJobidQueryResponse>,
     typeof queryKey,
-    NonNullable<GetApiHedisQaQueueQueryParams["page_no"]>
+    number
   >({
+    enabled: !!jobId,
     queryKey,
-    queryFn: async ({ signal, pageParam }) => {
-      params = {
-        ...(params ?? {}),
-        ["page_no"]:
-          pageParam as unknown as GetApiHedisQaQueueQueryParams["page_no"],
-      } as GetApiHedisQaQueueQueryParams;
-      return getApiHedisQaQueue(params, {
+    queryFn: async ({ signal }) => {
+      return getApiChartsJobsJobid(jobId!, {
         ...config,
         signal: config.signal ?? signal,
       });
@@ -68,17 +64,17 @@ export function getApiHedisQaQueueSuspenseInfiniteQueryOptions(
 }
 
 /**
- * @summary Fetch all patient+measure entries in QA queue with filters and pagination
- * {@link /api/hedis/qa-queue}
+ * @summary Get queue job status
+ * {@link /api/charts/jobs/:jobId}
  */
-export function useGetApiHedisQaQueueSuspenseInfinite<
-  TQueryFnData = GetApiHedisQaQueueQueryResponse,
+export function useGetApiChartsJobsJobidSuspenseInfinite<
+  TQueryFnData = GetApiChartsJobsJobidQueryResponse,
   TError = ResponseErrorConfig<Error>,
   TData = InfiniteData<TQueryFnData>,
-  TQueryKey extends QueryKey = GetApiHedisQaQueueSuspenseInfiniteQueryKey,
-  TPageParam = NonNullable<GetApiHedisQaQueueQueryParams["page_no"]>,
+  TQueryKey extends QueryKey = GetApiChartsJobsJobidSuspenseInfiniteQueryKey,
+  TPageParam = number,
 >(
-  params?: GetApiHedisQaQueueQueryParams,
+  jobId: GetApiChartsJobsJobidPathParams["jobId"] | undefined,
   options: {
     query?: Partial<
       UseSuspenseInfiniteQueryOptions<
@@ -96,11 +92,11 @@ export function useGetApiHedisQaQueueSuspenseInfinite<
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
     resolvedOptions?.queryKey ??
-    getApiHedisQaQueueSuspenseInfiniteQueryKey(params);
+    getApiChartsJobsJobidSuspenseInfiniteQueryKey(jobId);
 
   const query = useSuspenseInfiniteQuery(
     {
-      ...getApiHedisQaQueueSuspenseInfiniteQueryOptions(params, config),
+      ...getApiChartsJobsJobidSuspenseInfiniteQueryOptions(jobId, config),
       ...resolvedOptions,
       queryKey,
     } as unknown as UseSuspenseInfiniteQueryOptions<
