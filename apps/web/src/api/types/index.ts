@@ -84,6 +84,12 @@ export type {
   GetApiAuditLogsExportQueryResponse,
 } from "./GetApiAuditLogsExport.ts";
 export type {
+  GetApiChartsJobsJobid200,
+  GetApiChartsJobsJobidPathParams,
+  GetApiChartsJobsJobidQuery,
+  GetApiChartsJobsJobidQueryResponse,
+} from "./GetApiChartsJobsJobid.ts";
+export type {
   GetApiClients200,
   GetApiClients500,
   GetApiClientsQuery,
@@ -126,11 +132,12 @@ export type {
   GetApiHedisEvaluationsIdQueryResponse,
 } from "./GetApiHedisEvaluationsId.ts";
 export type {
-  GetApiHedisQaQueue200,
-  GetApiHedisQaQueueQuery,
-  GetApiHedisQaQueueQueryParams,
-  GetApiHedisQaQueueQueryResponse,
-} from "./GetApiHedisQaQueue.ts";
+  GetApiHedisQaQueuePatientid200,
+  GetApiHedisQaQueuePatientidPathParams,
+  GetApiHedisQaQueuePatientidQuery,
+  GetApiHedisQaQueuePatientidQueryParams,
+  GetApiHedisQaQueuePatientidQueryResponse,
+} from "./GetApiHedisQaQueuePatientid.ts";
 export type {
   GetApiMeasureLibrary200,
   GetApiMeasureLibraryQuery,
@@ -718,6 +725,18 @@ export type {
   PostApiSecurityAllowedIpsMutationResponse,
 } from "./PostApiSecurityAllowedIps.ts";
 export type {
+  PostApiTimelineEventidAccept200,
+  PostApiTimelineEventidAcceptMutation,
+  PostApiTimelineEventidAcceptMutationResponse,
+  PostApiTimelineEventidAcceptPathParams,
+} from "./PostApiTimelineEventidAccept.ts";
+export type {
+  PostApiTimelineEventidReject200,
+  PostApiTimelineEventidRejectMutation,
+  PostApiTimelineEventidRejectMutationResponse,
+  PostApiTimelineEventidRejectPathParams,
+} from "./PostApiTimelineEventidReject.ts";
+export type {
   PostApiUserRoles201,
   PostApiUserRoles400,
   PostApiUserRoles500,
@@ -815,6 +834,13 @@ export type {
   PutApiSecuritySessionManagementV2MutationRequestSessionTimeoutEnumKey,
   PutApiSecuritySessionManagementV2MutationResponse,
 } from "./PutApiSecuritySessionManagementV2.ts";
+export type {
+  PutApiTimelineEventid200,
+  PutApiTimelineEventidMutation,
+  PutApiTimelineEventidMutationRequest,
+  PutApiTimelineEventidMutationResponse,
+  PutApiTimelineEventidPathParams,
+} from "./PutApiTimelineEventid.ts";
 export type { ShiftScheduleMatrix } from "./ShiftScheduleMatrix.ts";
 export type { User } from "./User.ts";
 export { auditLogRiskLevelEnum } from "./AuditLog.ts";

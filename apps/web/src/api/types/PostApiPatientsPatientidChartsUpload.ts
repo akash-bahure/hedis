@@ -12,9 +12,22 @@ export type PostApiPatientsPatientidChartsUploadPathParams = {
 };
 
 /**
- * @description Chart uploaded and processed successfully
+ * @description Chart queued successfully
  */
-export type PostApiPatientsPatientidChartsUpload200 = any;
+export type PostApiPatientsPatientidChartsUpload200 = {
+  /**
+   * @type string | undefined
+   */
+  status?: string;
+  /**
+   * @type string | undefined
+   */
+  chartId?: string;
+  /**
+   * @type string | undefined
+   */
+  jobId?: string;
+};
 
 /**
  * @description No file uploaded
