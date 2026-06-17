@@ -1286,13 +1286,44 @@ function RowAction({
     );
   }
 
-  /* ── Step 2: multi-phase "Begin Review" ── */
-  if (row.step === 2) {
-    const isAssignedToMe =
-      row.assignedTo === currentUserName || row.assignedTo === "Assigned";
+  // ===================== QA ANALYST =====================
+  if (role === "qa-analyst") {
+    // Show Begin QA Review for Assigned, In Progress, Pending QA stages
+    if ([2, 3, 4].includes(row.step)) {
+      return (
+        <button
+          onClick={() =>
+            onOpenQAReview?.(row.patientId || row.id, row.chartId || row.id)
+          }
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-bold text-violet-600 hover:bg-violet-50 border-violet-200 transition-colors"
+        >
+          <Play className="w-3 h-3" />
+          Begin QA Review
+        </button>
+      );
+    }
+    // Fallback for other stages
+    return (
+      <button
+        onClick={onOpen}
+        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-bold text-slate-600 hover:bg-slate-50 border-slate-200 transition-colors"
+      >
+        <Eye className="w-3 h-3" />
+        View
+      </button>
+    );
+  }
 
-    // For Abstractor - only show Begin if assigned to them
-    if (role === "abstractor" && !isAssignedToMe) {
+  /* ── Step 2: multi-phase "Begin Review" ── */
+  if (row.step === 2 && role === "abstractor") {
+    const isAssignedToMe =
+      row.assignedTo === currentUserName ||
+      row.assignedTo
+        .toLowerCase()
+        .includes(currentUserName?.toLowerCase() || "") ||
+      row.assignedTo === "Assigned";
+
+    if (!isAssignedToMe) {
       return (
         <div className="flex items-center justify-center py-2">
           <span className="text-slate-300 text-[10px] italic">
@@ -1360,11 +1391,7 @@ function RowAction({
       setTimeout(() => {
         setPhase("idle");
         setLaunching(false);
-        if (role === "qa-analyst") {
-          onOpenQAReview?.(row.patientId, row.chartId);
-        } else {
-          onOpenWorkspace?.(row.patientId, row.chartId);
-        }
+        onOpenWorkspace?.(row.patientId || row.id, row.chartId || row.id);
       }, 900);
     };
     const handleCancel = () => {
@@ -1802,18 +1829,20 @@ function AssignModal({
   chartIds,
   onClose,
   onAssign,
-  roleType = "Abstractor",
+  roleType,
 }: {
   chartIds: string[];
   onClose: () => void;
   onAssign: (payload: {
-    userId: string;
-    userName: string;
-    role: "Abstractor" | "QA";
+    abstractorId?: string;
+    qaId?: string;
+    note?: string;
+    priority?: Priority;
   }) => void;
   roleType?: "Abstractor" | "QA";
 }) {
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedAbstractor, setSelectedAbstractor] = useState<any>(null);
+  const [selectedQA, setSelectedQA] = useState<any>(null);
   const [priority, setPriority] = useState<Priority>("High");
   const [note, setNote] = useState("");
   const { data: usersResponse, isLoading } = useGetApiUsers(
@@ -1842,6 +1871,21 @@ function AssignModal({
   );
 
   const users = usersResponse?.results || [];
+
+  const abstractors = useMemo(
+    () =>
+      users.filter((u: any) =>
+        ["Chart Abstractor", "Abstractor"].includes(u?.user_role?.name?.trim())
+      ),
+    [users]
+  );
+  const qas = useMemo(
+    () =>
+      users.filter((u: any) =>
+        ["Quality Analyst", "QA"].includes(u?.user_role?.name?.trim())
+      ),
+    [users]
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -1882,37 +1926,87 @@ function AssignModal({
             ))}
           </div>
 
-          {/* Assignee */}
-          <div>
-            <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block mb-1.5">
-              Assign To
-            </label>
+          {/* Assignee Selection */}
+          <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+            {/* Abstractors */}
+            <div>
+              <label className="text-[10px] font-bold text-primary uppercase tracking-wider block mb-2 flex items-center gap-1.5">
+                <Users className="w-3 h-3" /> Chart Abstractor
+              </label>
+              {isLoading ? (
+                <div className="text-[11px] text-muted-foreground italic">
+                  Loading users...
+                </div>
+              ) : abstractors.length === 0 ? (
+                <div className="text-[11px] text-muted-foreground italic">
+                  No abstractors found
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  {abstractors.map((user: any) => (
+                    <button
+                      key={user?.id}
+                      onClick={() =>
+                        setSelectedAbstractor(
+                          selectedAbstractor?.id === user?.id ? null : user
+                        )
+                      }
+                      className={`px-3 py-2 rounded-xl border text-[11px] font-semibold text-left transition-all ${
+                        selectedAbstractor?.id === user?.id
+                          ? "border-primary bg-primary/5 text-primary shadow-sm"
+                          : "border-border text-foreground hover:border-primary/40 bg-card/50"
+                      }`}
+                    >
+                      <div className="font-bold truncate">
+                        {user?.full_name}
+                      </div>
+                      <div className="text-[9px] text-muted-foreground mt-0.5">
+                        {user?.employee_id || "Abstractor"}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
-            {isLoading ? (
-              <div className="text-[12px] text-muted-foreground">
-                Loading users...
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                {users.map((user: any) => (
-                  <button
-                    key={user?.id}
-                    onClick={() => setSelectedUser(user)}
-                    className={`px-3 py-2 rounded-xl border text-[11px] font-semibold text-left transition-all ${
-                      selectedUser?.id === user?.id
-                        ? "border-primary bg-primary/5 text-primary"
-                        : "border-border text-foreground hover:border-primary/40"
-                    }`}
-                  >
-                    <div className="font-semibold">{user?.full_name}</div>
-
-                    <div className="text-[10px] text-muted-foreground mt-0.5">
-                      {user?.user_role?.name}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
+            {/* QAs */}
+            <div>
+              <label className="text-[10px] font-bold text-amber-600 uppercase tracking-wider block mb-2 flex items-center gap-1.5">
+                <Shield className="w-3 h-3" /> Quality Analyst
+              </label>
+              {isLoading ? (
+                <div className="text-[11px] text-muted-foreground italic">
+                  Loading...
+                </div>
+              ) : qas.length === 0 ? (
+                <div className="text-[11px] text-muted-foreground italic">
+                  No Quality Analysts found
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  {qas.map((user: any) => (
+                    <button
+                      key={user?.id}
+                      onClick={() =>
+                        setSelectedQA(selectedQA?.id === user?.id ? null : user)
+                      }
+                      className={`px-3 py-2 rounded-xl border text-[11px] font-semibold text-left transition-all ${
+                        selectedQA?.id === user?.id
+                          ? "border-amber-500 bg-amber-500/5 text-amber-600 shadow-sm"
+                          : "border-border text-foreground hover:border-amber-500/40 bg-card/50"
+                      }`}
+                    >
+                      <div className="font-bold truncate">
+                        {user?.full_name}
+                      </div>
+                      <div className="text-[9px] text-muted-foreground mt-0.5">
+                        {user?.employee_id || "QA"}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Priority */}
@@ -1959,14 +2053,15 @@ function AssignModal({
               Cancel
             </button>
             <button
-              disabled={!selectedUser}
+              disabled={!selectedAbstractor && !selectedQA}
               onClick={() => {
-                if (!selectedUser) return;
+                if (!selectedAbstractor && !selectedQA) return;
 
                 onAssign({
-                  userId: selectedUser?.id,
-                  userName: selectedUser?.full_name,
-                  role: roleType,
+                  abstractorId: selectedAbstractor?.id,
+                  qaId: selectedQA?.id,
+                  note,
+                  priority,
                 });
 
                 onClose();
@@ -2544,59 +2639,62 @@ export function WorkQueue({
     return ["All", ...users.map((user: any) => `${user.full_name}`)];
   }, [usersResponse]);
 
-  const workQueueData = useMemo(
-    () =>
-      apiPatients.map((item: any) => ({
-        id: item?.patient_uuid,
+  const workQueueData = useMemo(() => {
+    return apiPatients.map((item: any) => {
+      const abstractorName =
+        item.abstractor_name || item.assigned_to_name || "";
+      const qaName = item.qa_name || "";
 
+      let assignedTo = "—";
+
+      if (abstractorName && qaName) {
+        assignedTo = `${abstractorName} (A) + ${qaName} (QA)`;
+      } else if (abstractorName) {
+        assignedTo = abstractorName;
+      } else if (qaName) {
+        assignedTo = `${qaName} (QA)`;
+      } else if (item.assigned_to || item.assigned_to_name) {
+        assignedTo = item.assigned_to || item.assigned_to_name;
+      }
+
+      return {
+        id: item?.patient_uuid || item?.chart_uuid,
         patientId: item?.patient_uuid,
-
-        chartId: item?.chart_id,
-
+        chartId: item?.chart_id || item?.chart_uuid,
         mrn: item?.mrn || "—",
-
         patientName:
           item?.patient_name ||
-          `${item?.last_name || ""}, ${item?.first_name || ""}`,
-
+          `${item?.last_name || ""}, ${item?.first_name || ""}`.trim() ||
+          "Unknown Patient",
         dob: item?.dob ? new Date(item.dob).toLocaleDateString() : "—",
-
         measureCode: item?.measure || "—",
-
-        measure: item?.measure || "—",
-
+        measure: item?.measure || "HEDIS Measure",
         plan: item?.plan || "—",
-
-        priority: item?.priority || "Medium",
-
+        priority: item?.patient_priority || item?.chart_priority || "Medium",
         status: item?.stage || "Not Started",
         step: item?.step || getPipeline(item?.stage || "Not Started").step,
-        assignedTo:
-          item?.abstractor_name ||
-          item?.assigned_to_name ||
-          (item?.stage === "Assigned" ? "Assigned" : "—"),
-
-        dueDate: item?.due_date
-          ? new Date(item.due_date).toLocaleDateString()
-          : "—",
-
+        assignedTo,
+        // Add these for better filtering
+        abstractor_name: abstractorName,
+        qa_name: qaName,
+        dueDate:
+          item?.patient_due_date || item?.sla_deadline
+            ? new Date(
+                item.patient_due_date || item.sla_deadline
+              ).toLocaleDateString()
+            : "—",
         slaHoursLeft: item?.sla_hours_left || 0,
-
         qaFlag: item?.qa_flag || false,
-
         qaNote: item?.qa_note || "",
-
         auditSample: item?.audit_sample || false,
-
         lastActivity: item?.updated_at
           ? new Date(item.updated_at).toLocaleString()
           : "—",
-
         overdue: item?.overdue || false,
-      })),
-    [apiPatients]
-  );
-
+        riskScore: 2.0,
+      };
+    });
+  }, [apiPatients]);
   /* ── Pipeline counts ── */
   const counts = workQueueResponse?.counts;
 
@@ -2664,13 +2762,37 @@ export function WorkQueue({
   /* ── Filter + sort ── */
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
+    const currentUserLower = currentUser.toLowerCase().trim();
+
     return workQueueData.filter((r) => {
-      // NEW ROLE-BASED AUTO FILTERING
+      // === ROLE-BASED FILTERING ===
       if (effectiveRole === "abstractor" || effectiveRole === "qa-analyst") {
-        if (r.assignedTo !== currentUser && r.assignedTo !== "Assigned") {
-          return false;
+        const assignedLower = r.assignedTo.toLowerCase();
+
+        let isMyChart = false;
+
+        // Abstractor checks
+        if (effectiveRole === "abstractor") {
+          isMyChart =
+            assignedLower.includes(currentUserLower) ||
+            assignedLower.includes("(a)") || // e.g. "John Doe (A) + ..."
+            r.assignedTo === "Assigned" ||
+            (r.abstractor_name &&
+              r.abstractor_name.toLowerCase().includes(currentUserLower)); // fallback
         }
+
+        // QA Analyst checks
+        if (effectiveRole === "qa-analyst") {
+          isMyChart =
+            assignedLower.includes(currentUserLower) ||
+            assignedLower.includes("(qa)") ||
+            (r.qa_name && r.qa_name.toLowerCase().includes(currentUserLower));
+        }
+
+        if (!isMyChart) return false;
       }
+
+      // Search filter
       if (
         q &&
         !r.patientName.toLowerCase().includes(q) &&
@@ -2679,31 +2801,26 @@ export function WorkQueue({
       )
         return false;
 
-      // For abstractor role, always filter to current user's assignments
-      // if (effectiveRole === "abstractor" && r.assignedTo !== currentUser)
-      //   return false;
-
-      // if (myWorkQueue && r.assignedTo !== currentUser) return false;
-      // if (filterStage !== "All" && r.status !== filterStage) return false;
+      // Other filters
       if (filterPriority !== "All" && r.priority !== filterPriority)
         return false;
-      if (filterAssignee !== "All" && r.assignedTo !== filterAssignee)
+      if (filterAssignee !== "All" && !r.assignedTo.includes(filterAssignee))
         return false;
       if (filterMeasure !== "All" && r.measureCode !== filterMeasure)
         return false;
       if (filterPlan !== "All Plans" && r.plan !== filterPlan) return false;
+
       return true;
     });
   }, [
+    workQueueData,
     search,
-    myWorkQueue,
+    effectiveRole,
     currentUser,
-    filterStage,
     filterPriority,
     filterAssignee,
     filterMeasure,
     filterPlan,
-    role,
   ]);
 
   const sorted = useMemo(
@@ -3171,6 +3288,11 @@ export function WorkQueue({
                   onClick={() => {
                     setMyWorkQueue(true);
                     setFilterStage("All");
+                    setFilterPriority("All");
+                    setFilterAssignee("All");
+                    setFilterMeasure("All");
+                    setFilterPlan("All Plans");
+                    setSearch("");
                     setPage(1);
                   }}
                   className={`flex items-center gap-1.5 px-4 py-3 text-xs font-semibold border-b-2 whitespace-nowrap transition-colors flex-shrink-0 ${
@@ -3649,13 +3771,10 @@ export function WorkQueue({
                           <div className="flex items-center gap-1.5">
                             <div className="w-5 h-5 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
                               <span className="text-[8px] font-bold text-secondary-foreground">
-                                {row.assignedTo
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")}
+                                {row.assignedTo.substring(0, 2).toUpperCase()}
                               </span>
                             </div>
-                            <span className="text-[11px] font-semibold text-foreground">
+                            <span className="text-[11px] font-semibold text-foreground leading-tight">
                               {row.assignedTo}
                             </span>
                           </div>
@@ -3846,11 +3965,8 @@ export function WorkQueue({
             chartIds={assignModal}
             roleType={effectiveRole === "qa-analyst" ? "QA" : "Abstractor"}
             onClose={() => setAssignModal([])}
-            onAssign={async ({ userId, role }) => {
+            onAssign={async ({ abstractorId, qaId }) => {
               try {
-                const assignedRole =
-                  role === "QA" ? "Quality Analyst" : "Chart Abstractor";
-
                 // SINGLE CHART ASSIGN
                 if (assignModal.length === 1) {
                   const chartId = assignModal[0];
@@ -3858,8 +3974,8 @@ export function WorkQueue({
                   await assignPatientMutation.mutateAsync({
                     id: chartId,
                     data: {
-                      userId,
-                      role: assignedRole,
+                      abstractorId,
+                      qaId,
                     },
                   });
 
@@ -3875,19 +3991,26 @@ export function WorkQueue({
 
                 // BULK CHART ASSIGN
                 else {
+                  const assigned_users = [];
+                  if (abstractorId) {
+                    assigned_users.push({
+                      user_id: abstractorId,
+                      assigned_role: "Chart Abstractor",
+                    });
+                  }
+                  if (qaId) {
+                    assigned_users.push({
+                      user_id: qaId,
+                      assigned_role: "Quality Analyst",
+                    });
+                  }
+
                   const payload = {
                     chart_ids: assignModal,
-                    assigned_users: [
-                      {
-                        user_id: userId,
-                        assigned_role: assignedRole,
-                      },
-                    ],
+                    assigned_users,
                     priority: "Medium",
                     assignment_note: "Bulk assigned from Work Queue",
                   };
-
-                  console.log("Bulk Assign Payload", payload);
 
                   await bulkAssignMutation.mutateAsync({
                     data: payload,
@@ -3904,7 +4027,6 @@ export function WorkQueue({
                 refetch();
               } catch (error) {
                 console.error(error);
-
                 toast.error("Failed to assign charts");
               }
             }}

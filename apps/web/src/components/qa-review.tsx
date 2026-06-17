@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { ElementType } from "react";
 import {
   Search,
@@ -37,7 +37,7 @@ import {
   Calendar,
   ChevronUp,
 } from "lucide-react";
-
+import { useGetApiHedisQaQueue } from "@/api";
 /* ─────────────────────────────────────────────────────────────
    TYPES
 ───────────────────────────────────────────────────────────── */
@@ -1016,8 +1016,10 @@ function CheckItem({
    MAIN COMPONENT
 ───────────────────────────────────────────────────────────── */
 export function QAReview({
+  patientId,
   onOpenPatient360,
 }: {
+  patientId?: string;
   onOpenPatient360: () => void;
 }) {
   const [selectedId, setSelectedId] = useState("qr-031");
@@ -1031,7 +1033,7 @@ export function QAReview({
   const [checklist, setChecklist] =
     useState<ChecklistItem[]>(INITIAL_CHECKLIST);
   const [expanded, setExpanded] = useState<Set<string>>(
-    new Set(["ev2", "dc2"]),
+    new Set(["ev2", "dc2"])
   );
   const [decision, setDecision] = useState<Decision>(null);
   const [failReason, setFailReason] = useState("");
@@ -1039,19 +1041,81 @@ export function QAReview({
   const [phiVisible, setPhiVisible] = useState(true);
   const [queueCollapsed, setQueueCollapsed] = useState(false);
 
-  const selectedCase = QUEUE.find((q) => q.id === selectedId)!;
-  const filteredQueue = QUEUE.filter((item) => {
-    if (queueFilter !== "all" && item.status !== queueFilter) return false;
-    if (queueSearch) {
-      const q = queueSearch.toLowerCase();
-      return (
-        item.member.toLowerCase().includes(q) ||
-        item.caseRef.toLowerCase().includes(q) ||
-        item.measureCode.toLowerCase().includes(q)
-      );
-    }
-    return true;
+  // Fetch QA queue for this patient
+  const { data, isLoading, error } = useGetApiHedisQaQueue({
+    page: 1,
+    limit: 50,
+    search: patientId ? undefined : queueSearch, // search works globally too
+    status:
+      queueFilter === "all"
+        ? undefined
+        : queueFilter === "pending"
+          ? "Pending QA"
+          : queueFilter,
   });
+
+  // Map API data to QueueCase
+  const QUEUE: QueueCase[] = useMemo(() => {
+    if (!data?.data) return [];
+    return data.data
+      .filter((item: any) => !patientId || item.patient_id === patientId) // Safety filter
+      .map((item: any) => ({
+        id: item.id,
+        caseRef: item.id.slice(-8).toUpperCase(), // or use chart_id if available
+        member: item.patient_name || "Unknown Patient",
+        memberId: item.patient_id,
+        measureCode: item.measure_code || "N/A",
+        measureName: item.measure_name || "Unknown Measure",
+        abstractor: item.sent_by || item.qa_assignee || "System",
+        submittedAt: new Date(
+          item.sent_at || item.created_at
+        ).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        }),
+        dueBy: undefined, // Add logic if backend provides
+        hoursRemaining: 24, // Placeholder – compute from due date if available
+        priority: "medium",
+        status: (item.status?.toLowerCase().includes("pending")
+          ? "pending"
+          : item.status?.toLowerCase().includes("review")
+            ? "in-review"
+            : item.status?.toLowerCase().includes("return")
+              ? "returned"
+              : "pending") as QueueStatus,
+        qaSampled: false,
+        fieldCount: parseInt(item.total_count || "0"),
+        discrepancies: 0,
+      }));
+  }, [data, patientId]);
+
+  const selectedCase = QUEUE.find((q) => q.id === selectedId) || QUEUE[0];
+
+  const filteredQueue = useMemo(() => {
+    return QUEUE.filter((item) => {
+      if (queueFilter !== "all" && item.status !== queueFilter) return false;
+      if (queueSearch) {
+        const q = queueSearch.toLowerCase();
+        return (
+          item.member.toLowerCase().includes(q) ||
+          item.measureCode.toLowerCase().includes(q) ||
+          item.measureName.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [QUEUE, queueFilter, queueSearch]);
+
+  // Auto-select first item
+  useState(() => {
+    if (!selectedId && QUEUE.length > 0) setSelectedId(QUEUE[0].id);
+  });
+
+  if (isLoading)
+    return <div className="p-8 text-center">Loading QA queue...</div>;
+  if (error) return <div className="p-8 text-red-600">Error loading queue</div>;
 
   const passCount = checklist.filter((c) => c.state === "pass").length;
   const failCount = checklist.filter((c) => c.state === "fail").length;
@@ -1065,7 +1129,7 @@ export function QAReview({
         if (item.id !== id) return item;
         const idx = order.indexOf(item.state);
         return { ...item, state: order[(idx + 1) % order.length] };
-      }),
+      })
     );
   };
   const toggleExpand = (id: string) => {
@@ -1164,7 +1228,7 @@ export function QAReview({
               <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full border border-amber-200">
                 {
                   QUEUE.filter(
-                    (q) => q.status === "pending" || q.status === "in-review",
+                    (q) => q.status === "pending" || q.status === "in-review"
                   ).length
                 }
               </span>
@@ -1184,7 +1248,7 @@ export function QAReview({
                     {
                       QUEUE.filter(
                         (q) =>
-                          q.status === "pending" || q.status === "in-review",
+                          q.status === "pending" || q.status === "in-review"
                       ).length
                     }
                   </span>
@@ -1226,7 +1290,7 @@ export function QAReview({
                           ? "In Review"
                           : f.charAt(0).toUpperCase() + f.slice(1)}
                     </button>
-                  ),
+                  )
                 )}
               </div>
             </div>
@@ -1245,7 +1309,9 @@ export function QAReview({
               {filteredQueue.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                   <Search className="w-7 h-7 opacity-30 mb-2" />
-                  <p className="text-[12px]">No cases found</p>
+                  <p className="text-[12px]">
+                    No measures found for this patient
+                  </p>
                 </div>
               )}
             </div>
@@ -1267,7 +1333,7 @@ export function QAReview({
                   {
                     label: "At Risk",
                     count: QUEUE.filter(
-                      (q) => q.hoursRemaining > 0 && q.hoursRemaining <= 8,
+                      (q) => q.hoursRemaining > 0 && q.hoursRemaining <= 8
                     ).length,
                     cls: "text-red-600",
                   },
