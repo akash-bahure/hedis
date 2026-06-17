@@ -10,7 +10,9 @@ exports.evaluateChart = async (req, res) => {
       return res.status(400).json({ error: "No chart file uploaded." });
     }
 
-    console.log(`Evaluating chart for patient ${patientId} in tenant ${subdomain}`);
+    console.log(
+      `Evaluating chart for patient ${patientId} in tenant ${subdomain}`
+    );
 
     // Verify patient exists before proceeding
     const patientCheck = await req.db.query(
@@ -20,7 +22,7 @@ exports.evaluateChart = async (req, res) => {
 
     if (patientCheck.rows.length === 0) {
       return res.status(404).json({
-        error: `Patient with ID ${patientId} not found in this organization.`
+        error: `Patient with ID ${patientId} not found in this organization.`,
       });
     }
 
@@ -34,7 +36,7 @@ exports.evaluateChart = async (req, res) => {
     res.json({
       message: "Chart evaluation completed successfully",
       patient_id: patientId,
-      evaluations
+      evaluations,
     });
   } catch (err) {
     console.error("HEDIS Evaluation Error:", err);
@@ -56,7 +58,7 @@ exports.getEvaluations = async (req, res) => {
 
     if (patientCheck.rows.length === 0) {
       return res.status(404).json({
-        error: `Patient with ID ${patientId} not found in this organization.`
+        error: `Patient with ID ${patientId} not found in this organization.`,
       });
     }
 
@@ -64,7 +66,7 @@ exports.getEvaluations = async (req, res) => {
 
     res.json({
       patient_id: patientId,
-      evaluations
+      evaluations,
     });
   } catch (err) {
     console.error("Get HEDIS Evaluations Error:", err);
@@ -76,13 +78,7 @@ exports.getEvaluations = async (req, res) => {
 
 exports.sendToQA = async (req, res) => {
   try {
-    const { 
-      patientId, 
-      chartId, 
-      measureCode, 
-      measureName, 
-      notes 
-    } = req.body;
+    const { patientId, chartId, measureCode, measureName, notes } = req.body;
 
     // Fetch patient details and assigned QA
     const patientResult = await req.db.query(
@@ -92,7 +88,7 @@ exports.sendToQA = async (req, res) => {
 
     if (patientResult.rows.length === 0) {
       return res.status(404).json({
-        error: `Patient with ID ${patientId} not found.`
+        error: `Patient with ID ${patientId} not found.`,
       });
     }
 
@@ -102,7 +98,8 @@ exports.sendToQA = async (req, res) => {
 
     if (!qa_assignee) {
       return res.status(400).json({
-        error: "No Quality Analyst assigned to this patient. Please assign a QA before sending to QA queue."
+        error:
+          "No Quality Analyst assigned to this patient. Please assign a QA before sending to QA queue.",
       });
     }
 
@@ -117,21 +114,21 @@ exports.sendToQA = async (req, res) => {
 
     const values = [
       uuidv4(),
-      patientId, 
-      patientName, 
-      chartId || null, 
-      measureCode, 
-      measureName, 
-      qa_assignee, 
+      patientId,
+      patientName,
+      chartId || null,
+      measureCode,
+      measureName,
+      qa_assignee,
       notes || null,
-      req.user?.id || null
+      req.user?.id || null,
     ];
 
     const result = await req.db.query(query, values);
 
     res.status(201).json({
       message: "Measure successfully sent to QA",
-      data: result.rows[0]
+      data: result.rows[0],
     });
   } catch (err) {
     console.error("Send to QA Error:", err);
@@ -163,15 +160,15 @@ exports.markAsReviewed = async (req, res) => {
         RETURNING *
       `;
       const insertResult = await req.db.query(insertQuery, [
-        uuidv4(), 
-        patientId, 
-        measureCode, 
-        notes || null, 
-        req.user?.id || null
+        uuidv4(),
+        patientId,
+        measureCode,
+        notes || null,
+        req.user?.id || null,
       ]);
       return res.json({
         message: "Measure marked as in review",
-        data: insertResult.rows[0]
+        data: insertResult.rows[0],
       });
     }
 
@@ -186,14 +183,14 @@ exports.markAsReviewed = async (req, res) => {
       RETURNING *
     `;
     const updateResult = await req.db.query(updateQuery, [
-      req.user?.id || null, 
-      notes || null, 
-      findResult.rows[0].id
+      req.user?.id || null,
+      notes || null,
+      findResult.rows[0].id,
     ]);
 
     res.json({
       message: "Measure marked as in review",
-      data: updateResult.rows[0]
+      data: updateResult.rows[0],
     });
   } catch (err) {
     console.error("Mark as Reviewed Error (Setting to In Review):", err);
@@ -205,16 +202,29 @@ exports.markAsReviewed = async (req, res) => {
 
 exports.getQAQueue = async (req, res) => {
   try {
+    const { id: patientId } = req.params; // Now required as path
     const { page = 1, limit = 10, search = "", status = "" } = req.query;
     const offset = (page - 1) * limit;
+
+    // Verify patient exists
+    const patientCheck = await req.db.query(
+      `SELECT id FROM patients WHERE id = $1`,
+      [patientId]
+    );
+
+    if (patientCheck.rows.length === 0) {
+      return res.status(404).json({
+        error: `Patient with ID ${patientId} not found in this organization.`,
+      });
+    }
 
     let query = `
       SELECT *, COUNT(*) OVER() as total_count
       FROM hedis_qa_queue
-      WHERE 1=1
+      WHERE patient_id = $1
     `;
-    const values = [];
-    let paramIndex = 1;
+    const values = [patientId];
+    let paramIndex = 2;
 
     if (search) {
       query += ` AND (patient_name ILIKE $${paramIndex} OR measure_code ILIKE $${paramIndex})`;
@@ -222,7 +232,7 @@ exports.getQAQueue = async (req, res) => {
       paramIndex++;
     }
 
-    if (status && status !== 'All') {
+    if (status && status !== "All") {
       query += ` AND status = $${paramIndex}`;
       values.push(status);
       paramIndex++;
@@ -232,19 +242,20 @@ exports.getQAQueue = async (req, res) => {
     values.push(limit, offset);
 
     const result = await req.db.query(query, values);
-    
+
     const data = result.rows;
     const total = data.length > 0 ? parseInt(data[0].total_count) : 0;
     const pages = Math.ceil(total / limit);
 
     res.json({
+      patient_id: patientId,
       data,
       metadata: {
         total,
         pages,
         current_page: parseInt(page),
-        limit: parseInt(limit)
-      }
+        limit: parseInt(limit),
+      },
     });
   } catch (err) {
     console.error("Get QA Queue Error:", err);
