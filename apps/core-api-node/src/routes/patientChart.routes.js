@@ -31,7 +31,19 @@ const chartController = require("../controllers/patientChart.controller");
  *                 description: PDF chart file
  *     responses:
  *       200:
- *         description: Chart uploaded and processed successfully
+ *         description: Chart queued successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "QUEUED"
+ *                 chartId:
+ *                   type: string
+ *                 jobId:
+ *                   type: string
  *       400:
  *         description: No file uploaded
  *       500:

@@ -1092,6 +1092,25 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
   CREATE INDEX IF NOT EXISTS idx_timeline_events_patient ON ${schema}.timeline_events(patient_id);
 `);
 
+  await client.query(`
+  CREATE TABLE IF NOT EXISTS ${schema}.clinical_timeline_events (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      patient_id UUID REFERENCES ${schema}.patients(id) ON DELETE CASCADE,
+      chart_id UUID REFERENCES ${schema}.patient_charts(id) ON DELETE CASCADE,
+      event_date DATE,
+      event_type TEXT,
+      measure TEXT,
+      provider TEXT,
+      evidence TEXT,
+      source_type TEXT CHECK (source_type IN ('AI', 'MANUAL')),
+      review_status TEXT CHECK (review_status IN ('PENDING', 'ACCEPTED', 'REJECTED', 'EDITED')),
+      reviewed_by UUID REFERENCES ${schema}.users(id),
+      reviewed_at TIMESTAMP,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+  );
+  `);
+
   try {
     await client.query(`
       ALTER TABLE ${schema}.manual_chart_abstractions

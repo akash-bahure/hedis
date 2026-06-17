@@ -105,6 +105,8 @@ app.use("/api/user-roles", require("./routes/userRoleRoutes"));
 
 // Unprotected routes for testing API integrations
 app.use("/api/patients", require("./routes/patientChart.routes"));
+app.use("/api/timeline", require("./routes/timeline.routes"));
+app.use("/api/charts", require("./routes/queue.routes"));
 
 // Protected Routes
 app.use(authMiddleware);
