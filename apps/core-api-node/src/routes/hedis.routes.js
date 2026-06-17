@@ -34,7 +34,11 @@ const upload = multer({
  *       200:
  *         description: Evaluation completed
  */
-router.post("/evaluate/:id", upload.single("file"), hedisController.evaluateChart);
+router.post(
+  "/evaluate/:id",
+  upload.single("file"),
+  hedisController.evaluateChart
+);
 
 /**
  * @swagger
@@ -90,11 +94,18 @@ router.post("/send-to-qa", hedisController.sendToQA);
 
 /**
  * @swagger
- * /api/hedis/qa-queue:
+ * /api/hedis/qa-queue/{patientId}:
  *   get:
- *     summary: Fetch all patient+measure entries in QA queue with filters and pagination
+ *     summary: Fetch QA queue entries for a specific patient with filters and pagination
  *     tags: [HEDIS]
  *     parameters:
+ *       - in: path
+ *         name: patientId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Patient ID to filter QA queue
  *       - in: query
  *         name: page
  *         schema:
@@ -114,12 +125,12 @@ router.post("/send-to-qa", hedisController.sendToQA);
  *         name: status
  *         schema:
  *           type: string
- *         description: Filter by status (Pending QA, In Review, Returned, etc.)
+ *         description: Filter by status (Pending QA, In Review, etc.)
  *     responses:
  *       200:
- *         description: List of QA entries fetched successfully
+ *         description: List of QA entries for the patient fetched successfully
  */
-router.get("/qa-queue", hedisController.getQAQueue);
+router.get("/qa-queue/:id", hedisController.getQAQueue);
 
 /**
  * @swagger
