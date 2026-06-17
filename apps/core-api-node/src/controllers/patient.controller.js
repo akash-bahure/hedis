@@ -146,39 +146,57 @@ exports.getPatients = async (req, res) => {
 exports.assignPatient = async (req, res) => {
   try {
     const { id } = req.params;
-    const { userId, role } = req.body;
+    const { abstractorId, qaId, userId, role } = req.body;
 
-    if (!userId || !role) {
-      return res
-        .status(400)
-        .json({ error: "Missing required fields: userId and role" });
+    // Support legacy format (userId + role) or new format (abstractorId and/or qaId)
+    let updates = [];
+    let values = [];
+    let paramIndex = 1;
+
+    if (userId && role) {
+      if (role.toLowerCase() === "quality analyst" || role.toLowerCase() === "qa") {
+        updates.push(`qa_id = $${paramIndex++}`);
+        values.push(userId);
+      } else if (role.toLowerCase() === "chart abstractor" || role.toLowerCase() === "abstractor") {
+        updates.push(`abstractor_id = $${paramIndex++}`);
+        values.push(userId);
+      } else {
+        return res.status(400).json({ error: "Invalid role. Use 'QA' or 'Abstractor'" });
+      }
     }
 
-    let column;
-    if (role.toLowerCase() === "quality analyst") {
-      column = "qa_id";
-    } else if (role.toLowerCase() === "chart abstractor") {
-      column = "abstractor_id";
-    } else {
-      return res
-        .status(400)
-        .json({ error: "Invalid role. Use 'QA' or 'Abstractor'" });
+    if (abstractorId) {
+      updates.push(`abstractor_id = $${paramIndex++}`);
+      values.push(abstractorId);
     }
+
+    if (qaId) {
+      updates.push(`qa_id = $${paramIndex++}`);
+      values.push(qaId);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: "Missing assignment data (abstractorId, qaId, or userId/role)" });
+    }
+
+    const schema = req.tenant.schema_name;
+    values.push(id);
 
     const query = `
-          UPDATE patients 
-          SET ${column} = $1, updated_at = NOW() 
-          WHERE id = $2 
-          RETURNING *
-        `;
-    const result = await req.db.query(query, [userId, id]);
+      UPDATE ${schema}.patients 
+      SET ${updates.join(", ")}, updated_at = NOW() 
+      WHERE id = $${paramIndex} 
+      RETURNING *
+    `;
+
+    const result = await req.db.query(query, values);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Patient not found" });
     }
 
     res.json({
-      message: `Patient successfully assigned to ${role}`,
+      message: "Patient assignment updated successfully",
       data: result.rows[0],
     });
   } catch (err) {
