@@ -43,6 +43,7 @@ services:
 
     volumes:
       - ./tmp-pages:/app/tmp-pages
+      - ../core-api-node/src/uploads:/app/uploads
 
 volumes:
   postgres_data:

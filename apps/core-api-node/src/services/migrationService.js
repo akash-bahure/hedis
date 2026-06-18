@@ -1119,7 +1119,7 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
         ADD COLUMN IF NOT EXISTS updated_by UUID REFERENCES ${schema}.users(id),
         ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
     `);
-  } catch (err) { }
+  } catch (err) {}
 
   try {
     await client.query(`
@@ -1130,7 +1130,26 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
         ADD COLUMN IF NOT EXISTS updated_by UUID REFERENCES ${schema}.users(id),
         ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
     `);
-  } catch (err) { }
+  } catch (err) {}
+
+  // QA Review Analyses: stores AI-generated analysis results for each QA review
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.hedis_qa_review_analyses (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      qa_queue_id UUID NOT NULL REFERENCES  ${schema}.hedis_qa_queue(id) ON DELETE CASCADE,
+      patient_id UUID,
+      measure_code VARCHAR(50),
+      measure_name TEXT,
+      pdf_path TEXT,
+      extracted_evidence JSONB,
+      validation_checklist JSONB,
+      summary JSONB,
+      abstractor_evidence JSONB,
+      measure_rules JSONB,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
 }
 
 module.exports = { runMigrations };

@@ -1,6 +1,7 @@
 const { extractPdfText } = require("../services/pdf.service");
 const hedisService = require("../services/hedis.service");
 const hedisEvaluationService = require("../services/hedis_evaluation.service");
+const { buildQAReviewAnalysisPrompt } = require("../prompts/qa_review.prompt");
 
 exports.analyzeChart = async (req, res) => {
   try {
@@ -41,5 +42,48 @@ exports.analyzeChart = async (req, res) => {
     res.status(500).json({
       error: err.message,
     });
+  }
+};
+
+exports.qaReviewAnalysis = async (req, res) => {
+  try {
+    const { patientId, measureCode, pdfPath, measureRules, abstractorEvidence } = req.body;
+
+    console.log(`Starting QA Review Analysis for Patient: ${patientId}, Measure: ${measureCode}`);
+
+    // 1. Extract Text from PDF
+    console.log(`Extracting text from: ${pdfPath}`);
+    const text = await extractPdfText(pdfPath);
+    console.log(`Extraction complete. Text length: ${text.length}`);
+
+    // 2. Build Prompt
+    const prompt = buildQAReviewAnalysisPrompt(text, measureRules, abstractorEvidence);
+
+    // 3. Call LLM
+    console.log("Calling LLM for QA Review Analysis...");
+    const ollama = require("../config/ollama");
+    const response = await ollama.chat({
+      model: "gemma4:31b-cloud",
+      messages: [{ role: "user", content: prompt }],
+      format: "json",
+    });
+    console.log("LLM response received.");
+
+    let raw = response.message.content.trim();
+    
+    // Robust JSON extraction
+    const firstBrace = raw.indexOf('{');
+    const lastBrace = raw.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      raw = raw.substring(firstBrace, lastBrace + 1);
+    }
+
+    const validationResult = JSON.parse(raw);
+
+    res.json(validationResult);
+
+  } catch (err) {
+    console.error("QA Review Analysis Error:", err);
+    res.status(500).json({ error: err.message });
   }
 };
