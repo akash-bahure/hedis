@@ -7,11 +7,19 @@ const redisConnection = new IORedis({
 });
 
 redisConnection.on("connect", () => {
-  console.log("Redis connected");
+  console.log("[REDIS] Connected");
 });
 
 redisConnection.on("error", (err) => {
-  console.error("Redis Error:", err.message);
+  console.error("[REDIS] Connection Error:", err.message);
+});
+
+redisConnection.on("end", () => {
+  console.log("[REDIS] Disconnected");
+});
+
+redisConnection.on("reconnecting", () => {
+  console.log("[REDIS] Reconnecting");
 });
 
 module.exports = redisConnection;

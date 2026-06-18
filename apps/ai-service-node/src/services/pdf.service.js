@@ -48,19 +48,25 @@ async function pdfToImages(pdfPath) {
 }
 
 async function ocrImage(imagePath) {
-  const imageBase64 = fs.readFileSync(imagePath).toString("base64");
+  try {
+    const imageBase64 = fs.readFileSync(imagePath).toString("base64");
 
-  console.log(
-    "Image MB:",
-    (fs.statSync(imagePath).size / 1024 / 1024).toFixed(2)
-  );
+    console.log(
+      "Image MB:",
+      (fs.statSync(imagePath).size / 1024 / 1024).toFixed(2)
+    );
 
-  const response = await ollama.chat({
-    model: "gemma4:31b-cloud",
-    messages: [
-      {
-        role: "user",
-        content: `You are a medical OCR system.
+    console.log("[AI] Using Host:", process.env.OLLAMA_CLOUD_URL);
+    console.log("[AI] Using Model:", "gemma4:31b-cloud");
+    console.log("[AI] Starting OCR Request...");
+    console.log("[AI] Image Path:", imagePath);
+
+    const response = await ollama.chat({
+      model: "gemma4:31b-cloud",
+      messages: [
+        {
+          role: "user",
+          content: `You are a medical OCR system.
 
 Extract every visible word.
 
@@ -79,18 +85,27 @@ Do not infer.
 Do not explain.
 
 Return plain text only.`,
-        images: [imageBase64],
-      },
-    ],
-  });
+          images: [imageBase64],
+        },
+      ],
+    });
 
-  return response.message.content;
+    console.log("[AI] OCR Response Received");
+
+    return response.message.content;
+  } catch (error) {
+    console.error("[AI OCR ERROR]");
+    console.error(error);
+
+    throw error;
+  }
 }
 
 async function extractPdfText(pdfPath) {
   const imagePaths = await pdfToImages(pdfPath);
 
-  console.log(`Generated ${imagePaths.length} pages`);
+  console.log(`[AI] Extraction Started`);
+  console.log(`[AI] Total Pages: ${imagePaths.length}`);
 
   let combinedText = "";
 
@@ -101,6 +116,9 @@ async function extractPdfText(pdfPath) {
 
     combinedText += `\n===== PAGE =====\n\n${pageText}\n\n`;
   }
+
+  console.log(`[AI] Raw Text Length: ${combinedText.length}`);
+  console.log(`[AI] Extraction Completed`);
 
   return combinedText;
 }
