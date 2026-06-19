@@ -264,3 +264,139 @@ exports.getQAQueue = async (req, res) => {
     });
   }
 };
+
+exports.getQAReviewDetails = async (req, res) => {
+  try {
+    const { qaQueueId } = req.params;
+    const schema = req.tenant.schema_name;
+
+    // 1. Get QA Queue record
+    const qaResult = await req.db.query(
+      `SELECT * FROM hedis_qa_queue WHERE id = $1`,
+      [qaQueueId]
+    );
+
+    if (qaResult.rows.length === 0) {
+      return res.status(404).json({ error: "QA Queue record not found" });
+    }
+
+    const qaRecord = qaResult.rows[0];
+    const { patient_id, measure_code, measure_name } = qaRecord;
+
+    // 2. Get patient chart path
+    const chartResult = await req.db.query(
+      `
+      SELECT chart_document 
+      FROM ${schema}.patient_charts 
+      WHERE patient_id = $1 
+      LIMIT 1
+    `,
+      [patient_id]
+    );
+
+    const chartDoc = chartResult.rows[0]?.chart_document || {};
+    const filePath = chartDoc.filePath || `charts/${chartDoc.fileName}`;
+
+    const chartPdfUrl = `${req.protocol}://${req.get("host")}/uploads/${filePath}`;
+    const pdfPath = `/app/uploads/${filePath}`; // This is what AI service expects
+    // 3. Check if analysis already exists in DB (cache)
+    const cachedResult = await req.db.query(
+      `SELECT * FROM ${schema}.hedis_qa_review_analyses WHERE qa_queue_id = $1 ORDER BY created_at DESC LIMIT 1`,
+      [qaQueueId]
+    );
+
+    if (cachedResult.rows.length > 0) {
+      const cached = cachedResult.rows[0];
+      console.log(`Returning cached QA analysis for queue: ${qaQueueId}`);
+      return res.json({
+        pdfUrl: chartPdfUrl,
+        measure: {
+          measureCode: cached.measure_code,
+          measureName: cached.measure_name,
+        },
+        abstractorEvidence: cached.abstractor_evidence,
+        measureRules: cached.measure_rules,
+        extractedEvidence: cached.extracted_evidence,
+        validationChecklist: cached.validation_checklist,
+        summary: cached.summary,
+      });
+    }
+
+    // 4. Fetch measure rules from Measure Library
+    const measureResult = await req.db.query(
+      `SELECT * FROM ${schema}.measures WHERE measure_code = $1`,
+      [measure_code]
+    );
+    const measureRules = measureResult.rows[0] || {};
+
+    // 5. Mock abstraction data
+    const mockAbstractionData = {
+      serviceDate: "2025-08-15",
+      screeningType: "Bilateral Mammogram",
+      cptCode: "77067",
+      icd10: "Z12.31",
+      provider: "Dr. Torres",
+      facility: "Advanced Imaging Center",
+      result: "BI-RADS 1 - Negative",
+    };
+
+    // 6. Call AI Service (ai-service-node)
+    const aiServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8001";
+    console.log(
+      `Calling AI Service at ${aiServiceUrl}/api/hedis/qa-review-analysis`
+    );
+    const axios = require("axios");
+
+    const aiResponse = await axios.post(
+      `${aiServiceUrl}/api/hedis/qa-review-analysis`,
+      {
+        patientId: patient_id,
+        measureCode: measure_code,
+        pdfPath: pdfPath,
+        measureRules: measureRules,
+        abstractorEvidence: mockAbstractionData,
+      },
+      {
+        timeout: 300000, // 5 minutes
+      }
+    );
+
+    const analysisData = aiResponse.data;
+
+    // 7. Persist result to DB
+    await req.db.query(
+      `INSERT INTO ${schema}.hedis_qa_review_analyses
+        (qa_queue_id, patient_id, measure_code, measure_name, pdf_path,
+         extracted_evidence, validation_checklist, summary,
+         abstractor_evidence, measure_rules)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [
+        qaQueueId,
+        patient_id,
+        measure_code,
+        measure_name,
+        pdfPath,
+        JSON.stringify(analysisData.extractedEvidence || []),
+        JSON.stringify(analysisData.validationChecklist || {}),
+        JSON.stringify(analysisData.summary || {}),
+        JSON.stringify(mockAbstractionData),
+        JSON.stringify(measureRules),
+      ]
+    );
+
+    // 8. Return normalized response
+    res.json({
+      pdfUrl: chartPdfUrl,
+      measure: {
+        measureCode: measure_code,
+        measureName: measure_name,
+      },
+      abstractorEvidence: mockAbstractionData,
+      measureRules: measureRules,
+      ...analysisData,
+    });
+  } catch (err) {
+    console.error("Get QA Review Details Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};

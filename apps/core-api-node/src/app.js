@@ -75,6 +75,9 @@ app.use((err, req, res, next) => {
 
 app.use(cors(corsOptions));
 
+// Correct - Serve uploads at root level /uploads
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 // Routes
 app.get("/", (req, res) => {
   res.send("Server running");

@@ -157,4 +157,23 @@ router.get("/qa-queue/:id", hedisController.getQAQueue);
  */
 router.post("/mark-as-reviewed", hedisController.markAsReviewed);
 
+/**
+ * @swagger
+ * /api/hedis/qa-review/{qaQueueId}:
+ *   get:
+ *     summary: Get detailed HEDIS QA review data including AI analysis and evidence
+ *     tags: [HEDIS]
+ *     parameters:
+ *       - in: path
+ *         name: qaQueueId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: QA review details fetched successfully
+ */
+router.get("/qa-review/:qaQueueId", hedisController.getQAReviewDetails);
+
 module.exports = router;

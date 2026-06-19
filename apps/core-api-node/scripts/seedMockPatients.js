@@ -6,6 +6,7 @@ require("dotenv").config({
 });
 
 const pool = require("../src/config/db");
+
 async function syncMockData(client, tenant, data) {
   // Set tenant schema
   await client.query(`SET search_path TO ${tenant.schema_name}, public`);
@@ -112,7 +113,7 @@ INSERT INTO ${tenant.schema_name}.patients (
         [
           `PAT-${patient.id.slice(0, 6)}`,
           patient.id,
-          internalProjectId, //  UUID
+          internalProjectId,
           patient.first_name,
           patient.last_name,
           patient.dob,
@@ -131,14 +132,31 @@ INSERT INTO ${tenant.schema_name}.patients (
       console.log(
         ` Patient: ${patient.first_name} ${patient.last_name} (${internalPatientId})`
       );
-      const verifyPatients = await client.query(`
-        SELECT id, first_name, last_name
-        FROM ${tenant.schema_name}.patients
-      `);
-
-      console.log("VERIFY PATIENTS:", verifyPatients.rows);
 
       for (const chart of patient.charts) {
+        // === IMPROVED CHART DOCUMENT SEEDING ===
+        let chartDoc = chart.chart_document || {};
+
+        // Handle if chart_document is already stringified
+        if (typeof chartDoc === "string") {
+          try {
+            chartDoc = JSON.parse(chartDoc);
+          } catch (e) {
+            chartDoc = {};
+          }
+        }
+
+        // Standardize chart_document structure for consistency with getQAReviewDetails
+        const documentMetadata = {
+          fileName: chartDoc.fileName || "Patient_upload_chart_short.pdf",
+          filePath:
+            chartDoc.filePath || "charts/Patient_upload_chart_short.pdf",
+          mimeType: "application/pdf",
+          pages: chartDoc.pages || 15,
+          uploadedAt: new Date().toISOString(),
+          size: chartDoc.size || null,
+        };
+
         await client.query(
           `
 INSERT INTO ${tenant.schema_name}.patient_charts (
@@ -149,7 +167,10 @@ INSERT INTO ${tenant.schema_name}.patient_charts (
           )
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
           ON CONFLICT (external_chart_id) 
-          DO UPDATE SET status = EXCLUDED.status, updated_at = NOW()
+          DO UPDATE SET 
+            status = EXCLUDED.status, 
+            chart_document = EXCLUDED.chart_document,
+            updated_at = NOW()
         `,
           [
             internalPatientId,
@@ -157,13 +178,13 @@ INSERT INTO ${tenant.schema_name}.patient_charts (
             chart.chart_id,
             chart.status,
             chart.encounter_type,
-            chart.specialty,
+            chart.speciality || chart.specialty, // Support both spellings
             chart.facility,
             chart.encounter_date,
             chart.admission_date,
             chart.discharge_date,
             chart.priority,
-            JSON.stringify(chart.chart_document),
+            JSON.stringify(documentMetadata), // ← Improved
             chart.coding_notes,
             chart.sla_deadline,
           ]
@@ -182,10 +203,10 @@ async function run() {
     await client.query("BEGIN");
 
     const tenant = {
-      id: "066ef989-14fd-4e3b-a46f-d0397e390975",
+      id: "c182f8cf-794b-4b2f-9dc0-fe2f3fee1656",
       name: "Acme Corp",
-      subdomain: "test123",
-      schema_name: "test123_schema",
+      subdomain: "testmeasures5",
+      schema_name: "testmeasures5_schema",
     };
 
     const dataPath = path.join(__dirname, "mock-patients.json");
@@ -195,22 +216,22 @@ async function run() {
     await syncMockData(client, tenant, data);
 
     await client.query("COMMIT");
+
+    // Better verification
     const verifyAfterCommit = await client.query(`
-      SELECT *
-      FROM test123_schema.patients
+      SELECT p.first_name, p.last_name, 
+             pc.chart_id, 
+             pc.chart_document->>'fileName' as pdf_name,
+             pc.chart_document->>'filePath' as pdf_path
+      FROM ${tenant.schema_name}.patients p
+      JOIN ${tenant.schema_name}.patient_charts pc ON pc.patient_id = p.id
+      LIMIT 5
     `);
 
-    console.log("FINAL PATIENTS AFTER COMMIT:", verifyAfterCommit.rows);
-    const dbCheck = await client.query(`
-      SELECT current_database(), current_schema(), inet_server_addr(), inet_server_port()
-    `);
-
-    console.log("SEED DB:", dbCheck.rows);
-
+    console.log("FINAL PATIENTS WITH CHARTS:", verifyAfterCommit.rows);
     console.log(" Transaction committed");
   } catch (err) {
     await client.query("ROLLBACK");
-
     console.error(" Sync Error:", err.message);
     console.error(err);
   } finally {
