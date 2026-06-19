@@ -84,6 +84,18 @@ export type {
   GetApiAuditLogsExportQueryResponse,
 } from "./GetApiAuditLogsExport.ts";
 export type {
+  GetApiChartsChartidAbstractionSummary200,
+  GetApiChartsChartidAbstractionSummaryPathParams,
+  GetApiChartsChartidAbstractionSummaryQuery,
+  GetApiChartsChartidAbstractionSummaryQueryResponse,
+} from "./GetApiChartsChartidAbstractionSummary.ts";
+export type {
+  GetApiChartsChartidEvidenceTimeline200,
+  GetApiChartsChartidEvidenceTimelinePathParams,
+  GetApiChartsChartidEvidenceTimelineQuery,
+  GetApiChartsChartidEvidenceTimelineQueryResponse,
+} from "./GetApiChartsChartidEvidenceTimeline.ts";
+export type {
   GetApiChartsJobsJobid200,
   GetApiChartsJobsJobidPathParams,
   GetApiChartsJobsJobidQuery,
@@ -119,6 +131,17 @@ export type {
   GetApiClientsStatsQueryResponse,
 } from "./GetApiClientsStats.ts";
 export type {
+  GetApiClinicalTimelineEventidReviewEvidence200,
+  GetApiClinicalTimelineEventidReviewEvidencePathParams,
+  GetApiClinicalTimelineEventidReviewEvidenceQuery,
+  GetApiClinicalTimelineEventidReviewEvidenceQueryResponse,
+} from "./GetApiClinicalTimelineEventidReviewEvidence.ts";
+export type {
+  GetApiClinicalTimelineFilters200,
+  GetApiClinicalTimelineFiltersQuery,
+  GetApiClinicalTimelineFiltersQueryResponse,
+} from "./GetApiClinicalTimelineFilters.ts";
+export type {
   GetApiDepartments200,
   GetApiDepartments500,
   GetApiDepartmentsQuery,
@@ -138,6 +161,12 @@ export type {
   GetApiHedisQaQueuePatientidQueryParams,
   GetApiHedisQaQueuePatientidQueryResponse,
 } from "./GetApiHedisQaQueuePatientid.ts";
+export type {
+  GetApiHedisQaReviewQaqueueid200,
+  GetApiHedisQaReviewQaqueueidPathParams,
+  GetApiHedisQaReviewQaqueueidQuery,
+  GetApiHedisQaReviewQaqueueidQueryResponse,
+} from "./GetApiHedisQaReviewQaqueueid.ts";
 export type {
   GetApiMeasureLibrary200,
   GetApiMeasureLibraryQuery,
@@ -187,12 +216,12 @@ export type {
   GetApiPatientsExportQueryResponse,
 } from "./GetApiPatientsExport.ts";
 export type {
-  GetApiPatientsPatientidTimeline200,
-  GetApiPatientsPatientidTimeline500,
-  GetApiPatientsPatientidTimelinePathParams,
-  GetApiPatientsPatientidTimelineQuery,
-  GetApiPatientsPatientidTimelineQueryResponse,
-} from "./GetApiPatientsPatientidTimeline.ts";
+  GetApiPatientsPatientidClinicalTimeline200,
+  GetApiPatientsPatientidClinicalTimeline500,
+  GetApiPatientsPatientidClinicalTimelinePathParams,
+  GetApiPatientsPatientidClinicalTimelineQuery,
+  GetApiPatientsPatientidClinicalTimelineQueryResponse,
+} from "./GetApiPatientsPatientidClinicalTimeline.ts";
 export type {
   GetApiProfileActiveSessions200,
   GetApiProfileActiveSessionsQuery,
@@ -626,6 +655,18 @@ export type {
   PostApiChartAssignmentsBulkAssignMutationResponse,
 } from "./PostApiChartAssignmentsBulkAssign.ts";
 export type {
+  PostApiChartsChartidMarkNotFoundMutation,
+  PostApiChartsChartidMarkNotFoundMutationResponse,
+} from "./PostApiChartsChartidMarkNotFound.ts";
+export type {
+  PostApiChartsChartidSaveDraftMutation,
+  PostApiChartsChartidSaveDraftMutationResponse,
+} from "./PostApiChartsChartidSaveDraft.ts";
+export type {
+  PostApiChartsChartidSubmitQaMutation,
+  PostApiChartsChartidSubmitQaMutationResponse,
+} from "./PostApiChartsChartidSubmitQa.ts";
+export type {
   PostApiClients201,
   PostApiClients500,
   PostApiClientsMutation,
@@ -771,6 +812,13 @@ export type {
   PostApiUsersDeactivateMutationRequest,
   PostApiUsersDeactivateMutationResponse,
 } from "./PostApiUsersDeactivate.ts";
+export type {
+  PutApiClinicalTimelineEventid200,
+  PutApiClinicalTimelineEventidMutation,
+  PutApiClinicalTimelineEventidMutationRequest,
+  PutApiClinicalTimelineEventidMutationResponse,
+  PutApiClinicalTimelineEventidPathParams,
+} from "./PutApiClinicalTimelineEventid.ts";
 export type {
   DataAuthTokenLifetimeEnum2Key,
   DataForceReauthenticationEnum2Key,
