@@ -16,46 +16,47 @@ import type {
   UseSuspenseInfiniteQueryResult,
 } from "@tanstack/react-query";
 import type {
-  GetApiPatientsPatientidTimelineQueryResponse,
-  GetApiPatientsPatientidTimelinePathParams,
-  GetApiPatientsPatientidTimeline500,
-} from "../../types/GetApiPatientsPatientidTimeline.ts";
+  GetApiChartsChartidEvidenceTimelineQueryResponse,
+  GetApiChartsChartidEvidenceTimelinePathParams,
+} from "../../types/GetApiChartsChartidEvidenceTimeline.ts";
 import {
   infiniteQueryOptions,
   useSuspenseInfiniteQuery,
 } from "@tanstack/react-query";
-import { getApiPatientsPatientidTimeline } from "../../clients/getApiPatientsPatientidTimeline.ts";
+import { getApiChartsChartidEvidenceTimeline } from "../../clients/getApiChartsChartidEvidenceTimeline.ts";
 
-export const getApiPatientsPatientidTimelineSuspenseInfiniteQueryKey = (
-  patientId: GetApiPatientsPatientidTimelinePathParams["patientId"] | undefined,
+export const getApiChartsChartidEvidenceTimelineSuspenseInfiniteQueryKey = (
+  chartId: GetApiChartsChartidEvidenceTimelinePathParams["chartId"] | undefined,
 ) =>
   [
     {
-      url: "/api/patients/:patientId/timeline",
-      params: { patientId: patientId },
+      url: "/api/charts/:chartId/evidence-timeline",
+      params: { chartId: chartId },
     },
   ] as const;
 
-export type GetApiPatientsPatientidTimelineSuspenseInfiniteQueryKey =
-  ReturnType<typeof getApiPatientsPatientidTimelineSuspenseInfiniteQueryKey>;
+export type GetApiChartsChartidEvidenceTimelineSuspenseInfiniteQueryKey =
+  ReturnType<
+    typeof getApiChartsChartidEvidenceTimelineSuspenseInfiniteQueryKey
+  >;
 
-export function getApiPatientsPatientidTimelineSuspenseInfiniteQueryOptions(
-  patientId: GetApiPatientsPatientidTimelinePathParams["patientId"] | undefined,
+export function getApiChartsChartidEvidenceTimelineSuspenseInfiniteQueryOptions(
+  chartId: GetApiChartsChartidEvidenceTimelinePathParams["chartId"] | undefined,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
   const queryKey =
-    getApiPatientsPatientidTimelineSuspenseInfiniteQueryKey(patientId);
+    getApiChartsChartidEvidenceTimelineSuspenseInfiniteQueryKey(chartId);
   return infiniteQueryOptions<
-    GetApiPatientsPatientidTimelineQueryResponse,
-    ResponseErrorConfig<GetApiPatientsPatientidTimeline500>,
-    InfiniteData<GetApiPatientsPatientidTimelineQueryResponse>,
+    GetApiChartsChartidEvidenceTimelineQueryResponse,
+    ResponseErrorConfig<Error>,
+    InfiniteData<GetApiChartsChartidEvidenceTimelineQueryResponse>,
     typeof queryKey,
     number
   >({
-    enabled: !!patientId,
+    enabled: !!chartId,
     queryKey,
     queryFn: async ({ signal }) => {
-      return getApiPatientsPatientidTimeline(patientId!, {
+      return getApiChartsChartidEvidenceTimeline(chartId!, {
         ...config,
         signal: config.signal ?? signal,
       });
@@ -71,18 +72,18 @@ export function getApiPatientsPatientidTimelineSuspenseInfiniteQueryOptions(
 }
 
 /**
- * @summary Retrieve patient timeline evidence from AI service (Unprotected for testing)
- * {@link /api/patients/:patientId/timeline}
+ * @summary Retrieve chronological evidence timeline including workflow actions
+ * {@link /api/charts/:chartId/evidence-timeline}
  */
-export function useGetApiPatientsPatientidTimelineSuspenseInfinite<
-  TQueryFnData = GetApiPatientsPatientidTimelineQueryResponse,
-  TError = ResponseErrorConfig<GetApiPatientsPatientidTimeline500>,
+export function useGetApiChartsChartidEvidenceTimelineSuspenseInfinite<
+  TQueryFnData = GetApiChartsChartidEvidenceTimelineQueryResponse,
+  TError = ResponseErrorConfig<Error>,
   TData = InfiniteData<TQueryFnData>,
   TQueryKey extends QueryKey =
-    GetApiPatientsPatientidTimelineSuspenseInfiniteQueryKey,
+    GetApiChartsChartidEvidenceTimelineSuspenseInfiniteQueryKey,
   TPageParam = number,
 >(
-  patientId: GetApiPatientsPatientidTimelinePathParams["patientId"] | undefined,
+  chartId: GetApiChartsChartidEvidenceTimelinePathParams["chartId"] | undefined,
   options: {
     query?: Partial<
       UseSuspenseInfiniteQueryOptions<
@@ -100,12 +101,12 @@ export function useGetApiPatientsPatientidTimelineSuspenseInfinite<
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
     resolvedOptions?.queryKey ??
-    getApiPatientsPatientidTimelineSuspenseInfiniteQueryKey(patientId);
+    getApiChartsChartidEvidenceTimelineSuspenseInfiniteQueryKey(chartId);
 
   const query = useSuspenseInfiniteQuery(
     {
-      ...getApiPatientsPatientidTimelineSuspenseInfiniteQueryOptions(
-        patientId,
+      ...getApiChartsChartidEvidenceTimelineSuspenseInfiniteQueryOptions(
+        chartId,
         config,
       ),
       ...resolvedOptions,
