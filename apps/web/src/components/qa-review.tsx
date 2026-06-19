@@ -37,7 +37,14 @@ import {
   Calendar,
   ChevronUp,
 } from "lucide-react";
-import { useGetApiHedisQaQueuePatientid } from "@/api";
+import {
+  useGetApiHedisQaQueuePatientid,
+  useGetApiHedisQaReviewQaqueueid,
+} from "@/api";
+import { Document, Page, pdfjs } from "react-pdf";
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 /* ─────────────────────────────────────────────────────────────
    TYPES
 ───────────────────────────────────────────────────────────── */
@@ -89,409 +96,6 @@ interface ComparisonField {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   MOCK DATA — QUEUE (8 cases)
-───────────────────────────────────────────────────────────── */
-const QUEUE: QueueCase[] = [
-  {
-    id: "qr-031",
-    caseRef: "CASE-20250720-0031",
-    member: "Williams, Sandra B.",
-    memberId: "MBR-567123",
-    measureCode: "BCS",
-    measureName: "Breast Cancer Screening",
-    abstractor: "Kim, Jenny",
-    submittedAt: "Jul 20 · 3:15 PM",
-    dueBy: "Jul 21",
-    hoursRemaining: 2,
-    priority: "critical",
-    status: "in-review",
-    qaSampled: true,
-    fieldCount: 6,
-    discrepancies: 2,
-  },
-  {
-    id: "qr-042",
-    caseRef: "CASE-20250721-0042",
-    member: "Anderson, Jennifer K.",
-    memberId: "MBR-789456",
-    measureCode: "CDC",
-    measureName: "Comprehensive Diabetes Care",
-    abstractor: "Torres, Maria",
-    submittedAt: "Jul 21 · 11:08 AM",
-    dueBy: "Jul 22",
-    hoursRemaining: 14,
-    priority: "high",
-    status: "pending",
-    qaSampled: false,
-    fieldCount: 10,
-    discrepancies: 1,
-  },
-  {
-    id: "qr-039",
-    caseRef: "CASE-20250721-0039",
-    member: "Nguyen, Robert T.",
-    memberId: "MBR-234891",
-    measureCode: "CBP",
-    measureName: "Controlling High Blood Pressure",
-    abstractor: "Patel, Ravi",
-    submittedAt: "Jul 21 · 9:42 AM",
-    dueBy: "Jul 22",
-    hoursRemaining: 8,
-    priority: "critical",
-    status: "pending",
-    qaSampled: true,
-    fieldCount: 8,
-    discrepancies: 0,
-  },
-  {
-    id: "qr-028",
-    caseRef: "CASE-20250720-0028",
-    member: "Martinez, Carlos R.",
-    memberId: "MBR-112334",
-    measureCode: "COL",
-    measureName: "Colorectal Cancer Screening",
-    abstractor: "Torres, Maria",
-    submittedAt: "Jul 20 · 1:00 PM",
-    dueBy: "Jul 21",
-    hoursRemaining: 4,
-    priority: "high",
-    status: "pending",
-    qaSampled: false,
-    fieldCount: 7,
-    discrepancies: 0,
-  },
-  {
-    id: "qr-019",
-    caseRef: "CASE-20250719-0019",
-    member: "Johnson, Patricia A.",
-    memberId: "MBR-889043",
-    measureCode: "W34",
-    measureName: "Well-Child Visits (Ages 3–6)",
-    abstractor: "Okonkwo, Emeka",
-    submittedAt: "Jul 19 · 4:30 PM",
-    dueBy: "Jul 22",
-    hoursRemaining: 38,
-    priority: "medium",
-    status: "pending",
-    qaSampled: false,
-    fieldCount: 5,
-    discrepancies: 0,
-  },
-  {
-    id: "qr-015",
-    caseRef: "CASE-20250719-0015",
-    member: "Davis, Thomas W.",
-    memberId: "MBR-344782",
-    measureCode: "AMR",
-    measureName: "Asthma Medication Ratio",
-    abstractor: "Kim, Jenny",
-    submittedAt: "Jul 19 · 10:20 AM",
-    dueBy: "Jul 21",
-    hoursRemaining: 6,
-    priority: "high",
-    status: "pending",
-    qaSampled: false,
-    fieldCount: 9,
-    discrepancies: 3,
-  },
-  {
-    id: "qr-008",
-    caseRef: "CASE-20250718-0008",
-    member: "Wilson, Grace M.",
-    memberId: "MBR-667234",
-    measureCode: "CDC",
-    measureName: "Comprehensive Diabetes Care",
-    abstractor: "Patel, Ravi",
-    submittedAt: "Jul 18 · 2:45 PM",
-    dueBy: "Jul 20",
-    hoursRemaining: 0,
-    priority: "high",
-    status: "approved",
-    qaSampled: true,
-    fieldCount: 10,
-    discrepancies: 0,
-  },
-  {
-    id: "qr-005",
-    caseRef: "CASE-20250718-0005",
-    member: "Brown, Michael S.",
-    memberId: "MBR-451287",
-    measureCode: "CBP",
-    measureName: "Controlling High Blood Pressure",
-    abstractor: "Okonkwo, Emeka",
-    submittedAt: "Jul 18 · 9:00 AM",
-    dueBy: "Jul 19",
-    hoursRemaining: 0,
-    priority: "medium",
-    status: "returned",
-    qaSampled: false,
-    fieldCount: 8,
-    discrepancies: 3,
-  },
-];
-
-/* ─────────────────────────────────────────────────────────────
-   MOCK DATA — SELECTED CASE DETAIL
-───────────────────────────────────────────────────────────── */
-const CASE_DETAIL = {
-  caseRef: "CASE-20250720-0031",
-  member: "Williams, Sandra B.",
-  memberId: "MBR-567123",
-  dob: "Mar 15, 1973",
-  age: 52,
-  measureCode: "BCS",
-  measureName: "Breast Cancer Screening",
-  measurementYear: "MY 2025",
-  productLine: "Medicare",
-  abstractor: "Kim, Jenny",
-  submittedAt: "Jul 20, 2025 · 3:15 PM",
-  dueBy: "Jul 21, 2025 · 3:15 PM",
-  facility: "Advanced Imaging Center, Boston, MA",
-  reviewer: "Dr. Sarah Chen, RHIA",
-  reviewStarted: "Jul 21, 2025 · 10:02 AM",
-};
-
-/* ─────────────────────────────────────────────────────────────
-   MOCK DATA — VALIDATION CHECKLIST
-───────────────────────────────────────────────────────────── */
-const INITIAL_CHECKLIST: ChecklistItem[] = [
-  // ELIGIBILITY
-  {
-    id: "el1",
-    group: "eligibility",
-    label: "Age Criteria (50–74 years)",
-    description:
-      "Member must be 50–74 years old as of Dec 31 of the measurement year.",
-    ncqaRef: "BCS Technical Spec §2.1",
-    abstractorValue: "Age 52 (DOB: Mar 15, 1973)",
-    documentValue: "Verified via claims eligibility file",
-    state: "pass",
-  },
-  {
-    id: "el2",
-    group: "eligibility",
-    label: "Continuous Enrollment Verified",
-    description:
-      "Member must have continuous enrollment with no gaps > 45 days during the measurement year.",
-    ncqaRef: "General Eligibility §1.3",
-    abstractorValue: "No enrollment gaps found",
-    documentValue: "Eligibility file 2025 — confirmed",
-    state: "pass",
-  },
-  {
-    id: "el3",
-    group: "eligibility",
-    label: "Product Line: Medicare",
-    description: "Product line must match the measure-eligible population.",
-    ncqaRef: "BCS Technical Spec §1.1",
-    abstractorValue: "Medicare",
-    documentValue: "Medicare Plan M-567123",
-    state: "pass",
-  },
-  {
-    id: "el4",
-    group: "eligibility",
-    label: "No Bilateral Mastectomy Exclusion",
-    description:
-      "Members with a history of bilateral mastectomy are excluded from this measure.",
-    ncqaRef: "BCS Technical Spec §3.2 — Exclusions",
-    abstractorValue: "No exclusion found",
-    documentValue: "No mastectomy codes in claims history",
-    state: "pass",
-  },
-  // EVIDENCE
-  {
-    id: "ev1",
-    group: "evidence",
-    label: "Mammography Screening Found in Chart",
-    description:
-      "At least one mammography screening must be documented in the 2-year lookback window.",
-    ncqaRef: "BCS Technical Spec §4.1",
-    abstractorValue: "Mammography report dated 2024-08-15",
-    documentValue: "Mammogram_567123_20240815.pdf — confirmed",
-    state: "pass",
-  },
-  {
-    id: "ev2",
-    group: "evidence",
-    label: "Service Date Valid in Lookback Period",
-    description:
-      "Service date must fall within Oct 1 of the prior year through Dec 31 of the measurement year (Oct 2023–Dec 2025).",
-    ncqaRef: "BCS Technical Spec §4.2",
-    abstractorValue: "Aug 15, 2025 (abstractor entry)",
-    documentValue: "Aug 15, 2024 (source document)",
-    state: "warn",
-    discrepancy:
-      "Year discrepancy: abstractor entered 2025 but source document clearly shows 2024. Both dates fall within the lookback window but the entry must match the source document exactly.",
-  },
-  {
-    id: "ev3",
-    group: "evidence",
-    label: "Lookback Period Met (Oct 2023–Dec 2025)",
-    description:
-      "The documented service must occur within the defined 2-year lookback window for BCS.",
-    ncqaRef: "BCS Technical Spec §4.2",
-    abstractorValue: "2024-08-15 — within window",
-    documentValue: "Aug 2024 — confirmed within Oct 2023–Dec 2025",
-    state: "pass",
-  },
-  {
-    id: "ev4",
-    group: "evidence",
-    label: "Bilateral Notation Present",
-    description:
-      "Bilateral or unilateral notation must be documented. Bilateral (CPT 77067) satisfies the numerator.",
-    ncqaRef: "BCS Technical Spec §4.3",
-    abstractorValue: "Bilateral (CPT 77067)",
-    documentValue: "Report confirms bilateral mammography",
-    state: "pass",
-  },
-  // DOCUMENTATION
-  {
-    id: "dc1",
-    group: "documentation",
-    label: "Source Document Uploaded",
-    description:
-      "The original source document used for abstraction must be attached to the case.",
-    ncqaRef: "HEDIS Documentation Standards §2.0",
-    abstractorValue: "Mammogram_567123_20240815.pdf attached",
-    documentValue: "File present and readable",
-    state: "pass",
-  },
-  {
-    id: "dc2",
-    group: "documentation",
-    label: "Abstractor Entry Matches Source",
-    description:
-      "All abstracted fields must be accurately transcribed from the source document.",
-    ncqaRef: "HEDIS Documentation Standards §3.1",
-    abstractorValue: "Service date: 2025-08-15",
-    documentValue: "Source date: 2024-08-15",
-    state: "fail",
-    discrepancy:
-      'Service year is incorrect. Abstractor entered "2025" but source document shows "2024". This is a data entry error that must be corrected before numerator closure.',
-  },
-  {
-    id: "dc3",
-    group: "documentation",
-    label: "Highlight / Annotation Present",
-    description:
-      "Relevant evidence must be highlighted or annotated within the source document.",
-    ncqaRef: "HEDIS Documentation Standards §2.3",
-    abstractorValue: "Annotation ANN-567-001 on page 2",
-    documentValue: "Yellow highlight visible on exam date line — valid",
-    state: "pass",
-  },
-  {
-    id: "dc4",
-    group: "documentation",
-    label: "Provider Signature & Credentials",
-    description:
-      "Interpreting radiologist must be credentialed and signature must be present on the report.",
-    ncqaRef: "BCS Technical Spec §5.0",
-    abstractorValue: "Dr. Michael Torres, MD — signed",
-    documentValue: "Signature on page 3 — verified",
-    state: "pass",
-  },
-  // CODING
-  {
-    id: "co1",
-    group: "coding",
-    label: "CPT 77067 — Bilateral Screening Mammography",
-    description:
-      "CPT 77067 is the correct code for bilateral screening mammography. Verify against documentation.",
-    ncqaRef: "BCS Technical Spec §6.1 — CPT Code Table",
-    abstractorValue: "CPT 77067",
-    documentValue: "Report confirms bilateral — CPT 77067 appropriate",
-    state: "pass",
-  },
-  {
-    id: "co2",
-    group: "coding",
-    label: "ICD-10 Z12.31 — Screening Diagnosis",
-    description:
-      "Diagnosis code Z12.31 (encounter for screening mammogram) must be present or supportable.",
-    ncqaRef: "BCS Technical Spec §6.2",
-    abstractorValue: "Z12.31 — Encounter for screening mammogram",
-    documentValue: "ICD-10 Z12.31 documented in report header",
-    state: "pass",
-  },
-  {
-    id: "co3",
-    group: "coding",
-    label: "Rendering Provider NPI Documented",
-    description:
-      "NPI of the rendering/interpreting provider must be present for claims-based verification.",
-    ncqaRef: "HEDIS Documentation Standards §4.0",
-    abstractorValue: "NPI: 1234567890",
-    documentValue: "NPI present on report letterhead",
-    state: "pass",
-  },
-];
-
-/* ─────────────────────────────────────────────────────────────
-   MOCK DATA — FIELD COMPARISON TABLE
-────────────���──────────────────────────────────────────────── */
-const COMPARISON: ComparisonField[] = [
-  {
-    field: "Service Date",
-    abstractorValue: "2025-08-15",
-    documentValue: "2024-08-15",
-    aiValue: "2024-08-15",
-    match: "discrepancy",
-  },
-  {
-    field: "Screening Type",
-    abstractorValue: "Bilateral Mammogram",
-    documentValue: "Bilateral Mammogram",
-    aiValue: "Bilateral Mammogram",
-    match: "match",
-  },
-  {
-    field: "CPT Code",
-    abstractorValue: "77067",
-    documentValue: "77067",
-    aiValue: "77067",
-    match: "match",
-  },
-  {
-    field: "ICD-10 Code",
-    abstractorValue: "Z12.31",
-    documentValue: "Z12.31",
-    aiValue: "Z12.31",
-    match: "match",
-  },
-  {
-    field: "BI-RADS Result",
-    abstractorValue: "Negative (BI-RADS 1)",
-    documentValue: "BI-RADS 1 — No abnormality",
-    aiValue: "Negative",
-    match: "match",
-  },
-  {
-    field: "Ordering Physician",
-    abstractorValue: "Dr. Torres, Michael MD",
-    documentValue: "Michael Torres, MD",
-    aiValue: "Dr. Michael Torres",
-    match: "match",
-  },
-  {
-    field: "Facility",
-    abstractorValue: "Advanced Imaging Center",
-    documentValue: "Advanced Imaging Center, Boston MA",
-    aiValue: "Advanced Imaging Center",
-    match: "match",
-  },
-  {
-    field: "LOINC Code",
-    abstractorValue: "N/A",
-    documentValue: "N/A",
-    aiValue: "N/A",
-    match: "na",
-  },
-];
-
-/* ─────────────────────────────────────────────────────────────
    CONSTANTS / STYLE MAPS
 ───────────────────────────────────────────────────────────── */
 const PRIORITY_STYLES: Record<Priority, string> = {
@@ -521,6 +125,19 @@ const STATUS_STYLES: Record<QueueStatus, { badge: string; label: string }> = {
     badge: "bg-purple-50 text-purple-700 border-purple-200",
     label: "Escalated",
   },
+};
+
+/* Helper for icons in Evidence Cards */
+const getIconForField = (field: string): ElementType => {
+  const lower = field.toLowerCase();
+  if (lower.includes("date")) return Calendar;
+  if (lower.includes("type") || lower.includes("screening")) return Stethoscope;
+  if (lower.includes("cpt") || lower.includes("code")) return Hash;
+  if (lower.includes("icd")) return Hash;
+  if (lower.includes("result") || lower.includes("bi-rads")) return ShieldCheck;
+  if (lower.includes("physician") || lower.includes("provider")) return User;
+  if (lower.includes("facility")) return FileText;
+  return CheckCircle2;
 };
 const CHECK_CFG: Record<
   CheckState,
@@ -1029,10 +646,10 @@ export function QAReview({
     "all" | "pending" | "in-review" | "returned"
   >("all");
   const [centerTab, setCenterTab] = useState<CenterTab>("evidence");
-  const [pdfPage, setPdfPage] = useState(2);
+  const [numPages, setNumPages] = useState<number | null>(null);
+  const [pdfPage, setPdfPage] = useState(1); // already exists
   const [pdfZoom, setPdfZoom] = useState(100);
-  const [checklist, setChecklist] =
-    useState<ChecklistItem[]>(INITIAL_CHECKLIST);
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [expanded, setExpanded] = useState<Set<string>>(
     new Set(["ev2", "dc2"])
   );
@@ -1064,6 +681,102 @@ export function QAReview({
       },
     }
   );
+
+  // === NEW: Fetch QA Review Details for selected case ===
+  const {
+    data: reviewData,
+    isLoading: reviewLoading,
+    error: reviewError,
+  } = useGetApiHedisQaReviewQaqueueid(selectedId, {
+    query: {
+      enabled: !!selectedId,
+    },
+  });
+
+  // Derived states from API (fallback to mock for now if needed)
+  const detail = reviewData?.data ?? reviewData ?? null;
+  const pdfUrl = detail?.pdfUrl || null;
+
+  // VALIDATION CHECKLIST — Pure API Mapping (No Mock Fallback)
+  const apiChecklist = useMemo(() => {
+    if (!detail?.validationChecklist) return [];
+
+    const mapped: ChecklistItem[] = [];
+    const groups = [
+      "eligibility",
+      "evidence",
+      "documentation",
+      "coding",
+    ] as const;
+
+    groups.forEach((group) => {
+      const items = detail.validationChecklist[group] || [];
+      items.forEach((item: any, idx: number) => {
+        mapped.push({
+          id: `${group[0]}${idx + 1}`,
+          group,
+          label: item.rule || "Validation Rule",
+          description: item.message || "",
+          ncqaRef: "HEDIS Spec",
+          abstractorValue: item.abstractorEntry || "N/A",
+          documentValue: item.sourceDocument || "Not Found",
+          state: (item.status?.toLowerCase() as CheckState) || "pending",
+          discrepancy: item.status === "FAIL" ? item.message : undefined,
+        });
+      });
+    });
+
+    return mapped;
+  }, [detail]);
+
+  // Sync API data
+  useEffect(() => {
+    setChecklist(apiChecklist);
+  }, [apiChecklist]);
+
+  // 2. EXTRACTED EVIDENCE CARDS
+  const EVIDENCE_CARDS = useMemo(() => {
+    if (!detail?.extractedEvidence?.length) return [];
+
+    return detail.extractedEvidence.map((ev: any) => ({
+      label: ev.field,
+      abstractor: ev.abstractorValue || "N/A",
+      document: ev.sourceDocumentValue || "Not Found",
+      discrepancy:
+        ev.status === "MISSING_IN_SOURCE" ||
+        ev.status?.includes("DISCREPANCY") ||
+        ev.status === "FAIL",
+      icon: getIconForField(ev.field),
+    }));
+  }, [detail]);
+
+  // 3. FIELD COMPARISON
+  const COMPARISON_FIELDS: ComparisonField[] = useMemo(() => {
+    if (!detail?.extractedEvidence?.length) return [];
+
+    return detail.extractedEvidence.map((item: any) => ({
+      field: item.field,
+      abstractorValue: item.abstractorValue || "",
+      documentValue: item.sourceDocumentValue || "",
+      aiValue: item.aiValue || item.abstractorValue || "",
+      match:
+        item.status === "MISSING_IN_SOURCE" ||
+        item.status?.includes("DISCREPANCY") ||
+        item.status === "FAIL"
+          ? "discrepancy"
+          : "match",
+    }));
+  }, [detail]);
+
+  // PDF Load Success
+  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+    setNumPages(numPages);
+    setPdfPage(1); // reset to first page
+  };
+
+  const onDocumentLoadError = (error: Error) => {
+    console.error("PDF Load Error:", error);
+  };
 
   // Map API data
   const QUEUE: QueueCase[] = useMemo(() => {
@@ -1227,65 +940,6 @@ export function QAReview({
   const canSave =
     decision !== null &&
     ((decision !== "fail" && decision !== "revision") || !!failReason);
-
-  const EVIDENCE_CARDS = [
-    {
-      label: "Service Date",
-      abstractor: "Aug 15, 2025",
-      document: "Aug 15, 2024",
-      discrepancy: true,
-      icon: Calendar,
-    },
-    {
-      label: "Screening Type",
-      abstractor: "Bilateral Mammogram",
-      document: "Bilateral Mammogram",
-      discrepancy: false,
-      icon: Stethoscope,
-    },
-    {
-      label: "CPT Code",
-      abstractor: "77067",
-      document: "77067",
-      discrepancy: false,
-      icon: Hash,
-    },
-    {
-      label: "ICD-10 Diagnosis",
-      abstractor: "Z12.31",
-      document: "Z12.31",
-      discrepancy: false,
-      icon: Hash,
-    },
-    {
-      label: "BI-RADS Result",
-      abstractor: "BI-RADS 1 — Negative",
-      document: "BI-RADS 1 — No abnormality",
-      discrepancy: false,
-      icon: ShieldCheck,
-    },
-    {
-      label: "Ordering Physician",
-      abstractor: "Dr. Torres, Michael MD",
-      document: "Michael Torres, MD",
-      discrepancy: false,
-      icon: User,
-    },
-    {
-      label: "Facility",
-      abstractor: "Advanced Imaging Center",
-      document: "Advanced Imaging Center, Boston",
-      discrepancy: false,
-      icon: FileText,
-    },
-    {
-      label: "Report Status",
-      abstractor: "Final",
-      document: "FINAL",
-      discrepancy: false,
-      icon: CheckCircle2,
-    },
-  ];
 
   return (
     <div className="flex h-full overflow-hidden bg-background">
@@ -1650,13 +1304,13 @@ export function QAReview({
                       <div className="flex items-center gap-1.5 min-w-0">
                         <FileText className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                         <span className="text-[11px] font-semibold text-foreground truncate">
-                          Mammogram_567123_20240815.pdf
+                          {pdfUrl ? pdfUrl.split("/").pop() : "Document.pdf"}
                         </span>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <button
                           onClick={() =>
-                            setPdfZoom((z) => Math.max(75, z - 25))
+                            setPdfZoom((z) => Math.max(50, z - 25))
                           }
                           className="w-6 h-6 flex items-center justify-center rounded hover:bg-muted text-muted-foreground transition-colors"
                         >
@@ -1667,7 +1321,7 @@ export function QAReview({
                         </span>
                         <button
                           onClick={() =>
-                            setPdfZoom((z) => Math.min(150, z + 25))
+                            setPdfZoom((z) => Math.min(200, z + 25))
                           }
                           className="w-6 h-6 flex items-center justify-center rounded hover:bg-muted text-muted-foreground transition-colors"
                         >
@@ -1682,61 +1336,74 @@ export function QAReview({
                     </div>
 
                     {/* Document area */}
-                    <div className="flex-1 overflow-auto bg-slate-200/80 p-4">
-                      <div
-                        className="bg-white shadow-lg rounded mx-auto p-6 transition-all origin-top"
-                        style={{
-                          maxWidth: 500,
-                          transform: `scale(${pdfZoom / 100})`,
-                          transformOrigin: "top center",
-                        }}
-                      >
-                        <div className="flex items-center justify-between mb-3 text-[9px] text-gray-400 uppercase tracking-widest">
-                          <span>Page {pdfPage} of 3</span>
-                          <span className="font-semibold">
-                            {
-                              [
-                                "Patient Information",
-                                "Radiologist Report",
-                                "Provider Attestation",
-                              ][pdfPage - 1]
-                            }
-                          </span>
+                    <div className="flex-1 overflow-auto bg-slate-200/80 p-4 flex items-start justify-center">
+                      {!pdfUrl ? (
+                        <div className="text-center py-12 text-muted-foreground">
+                          <FileText className="w-12 h-12 mx-auto mb-4 opacity-40" />
+                          <p>No PDF available for this case</p>
                         </div>
-                        <PDFPage page={pdfPage} />
-                      </div>
+                      ) : (
+                        <Document
+                          file={pdfUrl}
+                          onLoadSuccess={onDocumentLoadSuccess}
+                          onLoadError={onDocumentLoadError}
+                          loading={
+                            <div className="flex items-center justify-center h-96">
+                              <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+                            </div>
+                          }
+                          className="shadow-lg rounded"
+                        >
+                          <Page
+                            pageNumber={pdfPage}
+                            scale={pdfZoom / 100}
+                            className="bg-white shadow-md"
+                            renderTextLayer={true}
+                            renderAnnotationLayer={true}
+                          />
+                        </Document>
+                      )}
                     </div>
 
                     {/* Page navigation */}
-                    <div className="flex-shrink-0 border-t border-border bg-card flex items-center justify-between px-4 py-2">
-                      <button
-                        onClick={() => setPdfPage((p) => Math.max(1, p - 1))}
-                        disabled={pdfPage === 1}
-                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                        Previous
-                      </button>
-                      <div className="flex items-center gap-1">
-                        {[1, 2, 3].map((p) => (
-                          <button
-                            key={p}
-                            onClick={() => setPdfPage(p)}
-                            className={`w-7 h-7 rounded-lg text-[11px] font-bold transition-colors ${pdfPage === p ? "bg-primary text-white" : "border border-border text-muted-foreground hover:bg-muted"}`}
-                          >
-                            {p}
-                          </button>
-                        ))}
+                    {pdfUrl && numPages && (
+                      <div className="flex-shrink-0 border-t border-border bg-card flex items-center justify-between px-4 py-2">
+                        <button
+                          onClick={() => setPdfPage((p) => Math.max(1, p - 1))}
+                          disabled={pdfPage === 1}
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                          Previous
+                        </button>
+
+                        <div className="flex items-center gap-2 text-sm">
+                          <span>Page</span>
+                          <input
+                            type="number"
+                            value={pdfPage}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value);
+                              if (val >= 1 && val <= (numPages || 1))
+                                setPdfPage(val);
+                            }}
+                            className="w-12 text-center border border-border rounded px-2 py-1 text-sm"
+                          />
+                          <span>of {numPages}</span>
+                        </div>
+
+                        <button
+                          onClick={() =>
+                            setPdfPage((p) => Math.min(numPages || 1, p + 1))
+                          }
+                          disabled={pdfPage === numPages}
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+                        >
+                          Next
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
                       </div>
-                      <button
-                        onClick={() => setPdfPage((p) => Math.min(3, p + 1))}
-                        disabled={pdfPage === 3}
-                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
-                      >
-                        Next
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </div>
+                    )}
                   </div>
 
                   {/* Extracted Evidence */}
@@ -1756,66 +1423,77 @@ export function QAReview({
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                      {EVIDENCE_CARDS.map((ev) => {
-                        const Icon = ev.icon;
-                        return (
-                          <div
-                            key={ev.label}
-                            className={`rounded-lg border p-2.5 ${ev.discrepancy ? "border-red-200 bg-red-50/30" : "border-border bg-card"}`}
-                          >
-                            <div className="flex items-center justify-between mb-1.5">
-                              <div className="flex items-center gap-1.5">
-                                <Icon
-                                  className={`w-3.5 h-3.5 ${ev.discrepancy ? "text-red-500" : "text-muted-foreground"}`}
-                                />
-                                <span
-                                  className={`text-[10px] font-bold uppercase tracking-wider ${ev.discrepancy ? "text-red-700" : "text-muted-foreground"}`}
-                                >
-                                  {ev.label}
-                                </span>
+                      {reviewLoading ? (
+                        <div className="flex items-center justify-center h-64">
+                          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+                        </div>
+                      ) : EVIDENCE_CARDS.length > 0 ? (
+                        EVIDENCE_CARDS.map((ev: any) => {
+                          const Icon = ev.icon;
+                          return (
+                            <div
+                              key={ev.label}
+                              className={`rounded-lg border p-2.5 ${ev.discrepancy ? "border-red-200 bg-red-50/30" : "border-border bg-card"}`}
+                            >
+                              <div className="flex items-center justify-between mb-1.5">
+                                <div className="flex items-center gap-1.5">
+                                  <Icon
+                                    className={`w-3.5 h-3.5 ${ev.discrepancy ? "text-red-500" : "text-muted-foreground"}`}
+                                  />
+                                  <span
+                                    className={`text-[10px] font-bold uppercase tracking-wider ${ev.discrepancy ? "text-red-700" : "text-muted-foreground"}`}
+                                  >
+                                    {ev.label}
+                                  </span>
+                                </div>
+                                {ev.discrepancy ? (
+                                  <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-red-600 bg-red-100 border border-red-200 px-1.5 py-0.5 rounded-full">
+                                    <AlertTriangle className="w-2.5 h-2.5" />
+                                    Discrepancy
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">
+                                    <Check className="w-2.5 h-2.5" />
+                                    Match
+                                  </span>
+                                )}
                               </div>
-                              {ev.discrepancy ? (
-                                <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-red-600 bg-red-100 border border-red-200 px-1.5 py-0.5 rounded-full">
-                                  <AlertTriangle className="w-2.5 h-2.5" />
-                                  Discrepancy
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">
-                                  <Check className="w-2.5 h-2.5" />
-                                  Match
-                                </span>
+                              <div className="grid grid-cols-2 gap-1.5">
+                                <div className="bg-background rounded p-1.5 border border-border">
+                                  <p className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
+                                    Abstractor
+                                  </p>
+                                  <p
+                                    className={`text-[11px] font-semibold mt-0.5 ${ev.discrepancy ? "text-red-700" : "text-foreground"}`}
+                                  >
+                                    {ev.abstractor}
+                                  </p>
+                                </div>
+                                <div className="bg-background rounded p-1.5 border border-border">
+                                  <p className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
+                                    Source Doc
+                                  </p>
+                                  <p className="text-[11px] font-semibold text-foreground mt-0.5">
+                                    {ev.document}
+                                  </p>
+                                </div>
+                              </div>
+                              {ev.discrepancy && (
+                                <p className="text-[10px] text-red-600 mt-1.5 flex items-start gap-1">
+                                  <AlertCircle className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                                  Year mismatch: abstractor entered 2025,
+                                  document shows 2024. Requires correction
+                                  before closure.
+                                </p>
                               )}
                             </div>
-                            <div className="grid grid-cols-2 gap-1.5">
-                              <div className="bg-background rounded p-1.5 border border-border">
-                                <p className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
-                                  Abstractor
-                                </p>
-                                <p
-                                  className={`text-[11px] font-semibold mt-0.5 ${ev.discrepancy ? "text-red-700" : "text-foreground"}`}
-                                >
-                                  {ev.abstractor}
-                                </p>
-                              </div>
-                              <div className="bg-background rounded p-1.5 border border-border">
-                                <p className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
-                                  Source Doc
-                                </p>
-                                <p className="text-[11px] font-semibold text-foreground mt-0.5">
-                                  {ev.document}
-                                </p>
-                              </div>
-                            </div>
-                            {ev.discrepancy && (
-                              <p className="text-[10px] text-red-600 mt-1.5 flex items-start gap-1">
-                                <AlertCircle className="w-3 h-3 flex-shrink-0 mt-0.5" />
-                                Year mismatch: abstractor entered 2025, document
-                                shows 2024. Requires correction before closure.
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
+                          );
+                        })
+                      ) : (
+                        <div className="text-center py-12 text-muted-foreground">
+                          No extracted evidence available
+                        </div>
+                      )}
 
                       {/* AI Insight */}
                       <div className="border border-primary/20 rounded-lg p-2.5 bg-primary/5">
@@ -1844,99 +1522,121 @@ export function QAReview({
                 </div>
               ) : (
                 /* FIELD COMPARISON TABLE */
+                /* FIELD COMPARISON TABLE */
                 <div className="flex-1 overflow-auto p-5">
-                  <div className="bg-card border border-border rounded-xl overflow-hidden">
-                    <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-                      <div>
-                        <h3 className="text-[13px] font-bold text-foreground">
-                          Abstraction vs. Source Document Comparison
-                        </h3>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
-                          {CASE_DETAIL.caseRef} · {CASE_DETAIL.measureCode} ·
-                          Abstractor: {CASE_DETAIL.abstractor}
+                  {reviewLoading ? (
+                    <div className="flex items-center justify-center h-full py-20">
+                      <div className="text-center">
+                        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-3" />
+                        <p className="text-sm text-muted-foreground">
+                          Loading field comparison...
                         </p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">
-                          <AlertTriangle className="w-3 h-3" />1 discrepancy
-                        </span>
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                          <Check className="w-3 h-3" />7 matches
-                        </span>
+                    </div>
+                  ) : COMPARISON_FIELDS.length > 0 ? (
+                    <div className="bg-card border border-border rounded-xl overflow-hidden">
+                      <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+                        <div>
+                          <h3 className="text-[13px] font-bold text-foreground">
+                            Abstraction vs. Source Document Comparison
+                          </h3>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                            {selectedCase.caseRef} · {selectedCase.measureCode}{" "}
+                            · Abstractor: {selectedCase.abstractor}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">
+                            <AlertTriangle className="w-3 h-3" />
+                            {
+                              COMPARISON_FIELDS.filter(
+                                (r) => r.match === "discrepancy"
+                              ).length
+                            }{" "}
+                            discrepancy
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                            <Check className="w-3 h-3" />
+                            {
+                              COMPARISON_FIELDS.filter(
+                                (r) => r.match === "match"
+                              ).length
+                            }{" "}
+                            matches
+                          </span>
+                        </div>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="bg-muted/40 border-b border-border">
+                            <tr>
+                              {[
+                                "Data Field",
+                                "Abstractor Entry",
+                                "Source Document",
+                                "AI Extracted",
+                                "Status",
+                              ].map((h) => (
+                                <th
+                                  key={h}
+                                  className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap"
+                                >
+                                  {h}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-border">
+                            {COMPARISON_FIELDS.map((row, i) => (
+                              <tr
+                                key={i}
+                                className={`hover:bg-muted/20 transition-colors ${row.match === "discrepancy" ? "bg-red-50/30" : ""}`}
+                              >
+                                <td className="px-5 py-3 text-[12px] font-semibold text-foreground">
+                                  {row.field}
+                                </td>
+                                <td
+                                  className={`px-5 py-3 text-[12px] ${row.match === "discrepancy" ? "text-red-700 font-bold" : "text-foreground"}`}
+                                >
+                                  {row.abstractorValue}
+                                  {row.match === "discrepancy" && (
+                                    <AlertTriangle className="w-3.5 h-3.5 text-red-500 inline ml-1.5" />
+                                  )}
+                                </td>
+                                <td className="px-5 py-3 text-[12px] text-foreground">
+                                  {row.documentValue}
+                                </td>
+                                <td className="px-5 py-3 text-[12px]">
+                                  <span className="inline-flex items-center gap-1.5 text-foreground">
+                                    <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
+                                    {row.aiValue}
+                                  </span>
+                                </td>
+                                <td className="px-5 py-3">
+                                  {row.match === "discrepancy" && (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">
+                                      <AlertTriangle className="w-3 h-3" />{" "}
+                                      Discrepancy
+                                    </span>
+                                  )}
+                                  {row.match === "match" && (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                                      <Check className="w-3 h-3" /> Match
+                                    </span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className="bg-muted/40 border-b border-border">
-                          <tr>
-                            {[
-                              "Data Field",
-                              "Abstractor Entry",
-                              "Source Document",
-                              "AI Extracted",
-                              "Status",
-                            ].map((h) => (
-                              <th
-                                key={h}
-                                className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap"
-                              >
-                                {h}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                          {COMPARISON.map((row, i) => (
-                            <tr
-                              key={i}
-                              className={`hover:bg-muted/20 transition-colors ${row.match === "discrepancy" ? "bg-red-50/30" : ""}`}
-                            >
-                              <td className="px-5 py-3 text-[12px] font-semibold text-foreground">
-                                {row.field}
-                              </td>
-                              <td
-                                className={`px-5 py-3 text-[12px] ${row.match === "discrepancy" ? "text-red-700 font-bold" : "text-foreground"}`}
-                              >
-                                {row.abstractorValue}
-                                {row.match === "discrepancy" && (
-                                  <AlertTriangle className="w-3.5 h-3.5 text-red-500 inline ml-1.5" />
-                                )}
-                              </td>
-                              <td className="px-5 py-3 text-[12px] text-foreground">
-                                {row.documentValue}
-                              </td>
-                              <td className="px-5 py-3 text-[12px]">
-                                <span className="inline-flex items-center gap-1.5 text-foreground">
-                                  <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
-                                  {row.aiValue}
-                                </span>
-                              </td>
-                              <td className="px-5 py-3">
-                                {row.match === "discrepancy" && (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">
-                                    <AlertTriangle className="w-3 h-3" />
-                                    Discrepancy
-                                  </span>
-                                )}
-                                {row.match === "match" && (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                                    <Check className="w-3 h-3" />
-                                    Match
-                                  </span>
-                                )}
-                                {row.match === "na" && (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-500 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-full">
-                                    <Minus className="w-3 h-3" />
-                                    N/A
-                                  </span>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-96 text-muted-foreground">
+                      <Layers className="w-12 h-12 mb-4 opacity-40" />
+                      <p>No comparison data available for this case</p>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1999,59 +1699,84 @@ export function QAReview({
             </div>
 
             {/* Checklist groups (scrollable) */}
+            {/* Checklist groups (scrollable) */}
             <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
-              {(
-                ["eligibility", "evidence", "documentation", "coding"] as const
-              ).map((group) => {
-                const meta = GROUP_META[group];
-                const Icon = meta.icon;
-                const items = byGroup(group);
-                const gPass = items.filter((i) => i.state === "pass").length;
-                const gFail = items.filter((i) => i.state === "fail").length;
-                const gWarn = items.filter((i) => i.state === "warn").length;
-                return (
-                  <div key={group}>
-                    <div className="flex items-center justify-between mb-2">
-                      <div
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md ${meta.bg}`}
-                      >
-                        <Icon className={`w-3.5 h-3.5 ${meta.color}`} />
-                        <span
-                          className={`text-[10px] font-bold uppercase tracking-wider ${meta.color}`}
-                        >
-                          {meta.label}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-[10px]">
-                        {gFail > 0 && (
-                          <span className="text-red-600 font-bold">
-                            {gFail} fail
-                          </span>
-                        )}
-                        {gWarn > 0 && (
-                          <span className="text-amber-600 font-bold">
-                            {gWarn} warn
-                          </span>
-                        )}
-                        <span className="text-emerald-600 font-bold">
-                          {gPass} pass
-                        </span>
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      {items.map((item) => (
-                        <CheckItem
-                          key={item.id}
-                          item={item}
-                          onToggle={toggleCheck}
-                          expanded={expanded.has(item.id)}
-                          onExpand={toggleExpand}
-                        />
-                      ))}
-                    </div>
+              {reviewLoading ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-center">
+                    <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-3" />
+                    <p>Analyzing chart against rules...</p>
                   </div>
-                );
-              })}
+                </div>
+              ) : checklist.length > 0 ? (
+                (
+                  [
+                    "eligibility",
+                    "evidence",
+                    "documentation",
+                    "coding",
+                  ] as const
+                ).map((group) => {
+                  const meta = GROUP_META[group];
+                  const Icon = meta.icon;
+                  const items = byGroup(group);
+                  const gPass = items.filter((i) => i.state === "pass").length;
+                  const gFail = items.filter((i) => i.state === "fail").length;
+                  const gWarn = items.filter((i) => i.state === "warn").length;
+
+                  return (
+                    <div key={group}>
+                      <div className="flex items-center justify-between mb-2">
+                        <div
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md ${meta.bg}`}
+                        >
+                          <Icon className={`w-3.5 h-3.5 ${meta.color}`} />
+                          <span
+                            className={`text-[10px] font-bold uppercase tracking-wider ${meta.color}`}
+                          >
+                            {meta.label}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px]">
+                          {gFail > 0 && (
+                            <span className="text-red-600 font-bold">
+                              {gFail} fail
+                            </span>
+                          )}
+                          {gWarn > 0 && (
+                            <span className="text-amber-600 font-bold">
+                              {gWarn} warn
+                            </span>
+                          )}
+                          <span className="text-emerald-600 font-bold">
+                            {gPass} pass
+                          </span>
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        {items.map((item) => (
+                          <CheckItem
+                            key={item.id}
+                            item={item}
+                            onToggle={toggleCheck}
+                            expanded={expanded.has(item.id)}
+                            onExpand={toggleExpand}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                  <Shield className="w-12 h-12 mb-4 opacity-40" />
+                  <p className="font-medium">No Validation Checklist</p>
+                  <p className="text-sm text-center mt-2 max-w-xs">
+                    The QA review API did not return any checklist items for
+                    this case.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Decision section (pinned) */}
@@ -2148,14 +1873,14 @@ export function QAReview({
               <span>
                 Reviewer:{" "}
                 <span className="font-semibold text-foreground">
-                  {CASE_DETAIL.reviewer}
+                  {/* {CASE_DETAIL.reviewer} */}
                 </span>
               </span>
             </div>
             <span className="text-muted-foreground/40">·</span>
             <span className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
-              Review started {CASE_DETAIL.reviewStarted}
+              {/* Review started {CASE_DETAIL.reviewStarted} */}
             </span>
             <span className="text-muted-foreground/40">·</span>
             <span className="flex items-center gap-1">
