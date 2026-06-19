@@ -65,7 +65,9 @@ export default function App() {
   const [previousView, setPreviousView] = useState("dashboard");
   const [role, setRole] = useState<UserRole>("program-manager");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(
+    null
+  );
   const [selectedChartId, setSelectedChartId] = useState<string | null>(null);
 
   /* Apply dark mode class */
@@ -146,7 +148,12 @@ export default function App() {
       case "audit-sampling":
         return <AuditReview onOpenPatient360={() => navigate("patient-360")} />;
       case "qa-review":
-        return <QAReview onOpenPatient360={() => navigate("patient-360")} />;
+        return (
+          <QAReview
+            patientId={selectedPatientId || undefined}
+            onOpenPatient360={() => navigate("patient-360")}
+          />
+        );
       case "measure-library":
         return <MeasuresLibrary />;
 
