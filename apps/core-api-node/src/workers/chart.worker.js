@@ -5,16 +5,20 @@ const { forwardChartToAiService } = require('../services/aiIntegration.service')
 
 const worker = new Worker('chart-processing', async (job) => {
   const { patientId, chartId, filePath, schema } = job.data;
-  console.log(`[Worker] Picked up job ${job.id} for patient ${patientId}`);
+  console.log(`[WORKER] Job Started: ${job.id}`);
+  console.log(`[WORKER] Chart ID: ${chartId}`);
+  console.log(`[WORKER] File Path: ${filePath}`);
 
   try {
     // 1. Send PDF to ai-service-node
-    console.log(`[Worker] Sending PDF to AI service...`);
+    console.log(`[WORKER] Calling AI Service...`);
     const aiResponse = await forwardChartToAiService(patientId, { path: filePath, originalname: job.data.originalname || 'document.pdf' });
+    console.log(`[WORKER] AI Response Received`);
+    console.log(`[WORKER] Events Count: ${aiResponse.events?.length || 0}`);
 
     // 2. Save timeline events
     if (aiResponse.events && aiResponse.events.length > 0) {
-      console.log(`[Worker] Received ${aiResponse.events.length} events. Saving to clinical_timeline_events...`);
+      console.log(`[WORKER] Saving Timeline Events...`);
       
       const client = await pool.connect();
       try {
@@ -54,18 +58,37 @@ const worker = new Worker('chart-processing', async (job) => {
         );
         
         await client.query('COMMIT');
-        console.log(`[Worker] Successfully completed job ${job.id}`);
+        console.log(`[WORKER] Timeline Saved`);
+        console.log(`[WORKER] Chart Marked Completed (With Events)`);
       } catch (err) {
         await client.query('ROLLBACK');
         throw err;
       } finally {
         client.release();
       }
+    } else {
+      console.log(`[WORKER] No events returned from AI. Marking chart as completed anyway.`);
+      const client = await pool.connect();
+      try {
+        await client.query(
+          `
+          UPDATE ${schema}.patient_charts
+          SET status = 'COMPLETED', updated_at = NOW()
+          WHERE id = $1
+          `,
+          [chartId]
+        );
+      } catch (err) {
+        console.error(`[Worker] Failed to update chart status for empty events:`, err.message);
+      } finally {
+        client.release();
+      }
     }
   } catch (error) {
-    console.error(`[Worker] Job ${job.id} failed:`, error.message);
+    console.error(`[WORKER] Job ${job.id} failed:`, error.message);
     
     // Mark chart as failed
+    console.log(`[WORKER] Chart Marked Failed`);
     const client = await pool.connect();
     try {
       await client.query(

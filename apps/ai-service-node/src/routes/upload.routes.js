@@ -9,6 +9,12 @@ const upload = multer({
   dest: "uploads/",
 });
 
-router.post("/chart", upload.single("file"), uploadChart);
+router.post("/chart", (req, res, next) => {
+  console.log(`[AI] Upload Request Connection Initialized`);
+  next();
+}, upload.single("file"), (req, res, next) => {
+  console.log(`[AI] Upload Request Body Parsed`);
+  next();
+}, uploadChart);
 
 module.exports = router;

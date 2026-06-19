@@ -5,9 +5,12 @@ const { extractTimelineEvents } = require("../services/extraction.service");
 exports.uploadChart = async (req, res) => {
   try {
     if (!req.file || !req.file.path) {
-      console.error("[Upload] No file uploaded or file path missing");
+      console.error("[AI ERROR] No file uploaded or file path missing");
       return res.status(400).json({ error: "No file uploaded" });
     }
+
+    console.log(`[AI] PDF Received. File Path: ${req.file.path}`);
+    console.log(`[AI] File Size: ${req.file.size} bytes`);
 
     // 1. PDF Extraction
     console.log("[Upload] Starting PDF extraction...");
@@ -37,11 +40,13 @@ exports.uploadChart = async (req, res) => {
       events = await extractTimelineEvents(chunks);
       console.log(`[Upload] Extracted ${events.length} timeline events`);
     } catch (err) {
-      console.error("[Upload] AI extraction failed:", err.message);
-      throw new Error(`AI extraction failed: ${err.message}`);
+      console.error("[Upload] AI extraction failed:", err);
+      throw new Error(`AI extraction failed: ${err}`);
     }
 
     // 4. Validate, Normalize, and Deduplicate
+    console.log(`[AI] Timeline Events Created`);
+    console.log(`[AI] Deduplication Started`);
     const normalizedEvents = [];
     const seenEvents = new Set();
 
@@ -76,14 +81,15 @@ exports.uploadChart = async (req, res) => {
       });
     }
 
-    console.log(`[Upload] Final validated events: ${normalizedEvents.length}`);
+    console.log(`[AI] Final Event Count: ${normalizedEvents.length}`);
+    console.log(`[AI] Sending Response To Core API`);
 
     res.json({
       extracted_text: text,
       events: normalizedEvents,
     });
   } catch (err) {
-    console.error("[Upload] Chart upload process failed:", err.message);
+    console.error(`[AI ERROR]\nMessage: ${err.message}\nStack Trace: ${err.stack}\nChart ID: ${req.body.chart_id}\nPatient ID: ${req.body.patient_id}`);
     res.status(500).json({
       error: err.message,
     });

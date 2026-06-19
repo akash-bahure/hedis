@@ -1102,14 +1102,38 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
       measure TEXT,
       provider TEXT,
       evidence TEXT,
-      source_type TEXT CHECK (source_type IN ('AI', 'MANUAL')),
-      review_status TEXT CHECK (review_status IN ('PENDING', 'ACCEPTED', 'REJECTED', 'EDITED')),
+      source_type TEXT CHECK (source_type IN ('AI', 'MANUAL', 'EMR', 'EHR')),
+      review_status TEXT CHECK (review_status IN ('PASS', 'FAIL', 'DISCREPANCY', 'PENDING', 'NO_STATUS', 'REVIEW_REQUIRED', 'ACCEPTED', 'REJECTED', 'EDITED')),
       reviewed_by UUID REFERENCES ${schema}.users(id),
       reviewed_at TIMESTAMP,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW()
   );
   `);
+
+  try {
+    // Drop the old constraints if they exist
+    await client.query(`
+      ALTER TABLE ${schema}.clinical_timeline_events 
+      DROP CONSTRAINT IF EXISTS clinical_timeline_events_source_type_check;
+      
+      ALTER TABLE ${schema}.clinical_timeline_events 
+      DROP CONSTRAINT IF EXISTS clinical_timeline_events_review_status_check;
+    `);
+    
+    // Add the updated constraints
+    await client.query(`
+      ALTER TABLE ${schema}.clinical_timeline_events 
+      ADD CONSTRAINT clinical_timeline_events_source_type_check 
+      CHECK (source_type IN ('AI', 'MANUAL', 'EMR', 'EHR'));
+      
+      ALTER TABLE ${schema}.clinical_timeline_events 
+      ADD CONSTRAINT clinical_timeline_events_review_status_check 
+      CHECK (review_status IN ('PASS', 'FAIL', 'DISCREPANCY', 'PENDING', 'NO_STATUS', 'REVIEW_REQUIRED', 'ACCEPTED', 'REJECTED', 'EDITED'));
+    `);
+  } catch (err) {
+    console.warn(`[Migration] Could not update constraints for ${schema}:`, err.message);
+  }
 
   try {
     await client.query(`

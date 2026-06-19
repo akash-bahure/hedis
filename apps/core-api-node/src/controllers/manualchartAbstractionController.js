@@ -147,7 +147,7 @@ const createManualAbstraction = async (req, res) => {
       await client.query(
         `
         UPDATE ${req.tenant.schema_name}.clinical_timeline_events
-        SET evidence = $1, source_type = 'MANUAL', review_status = 'ACCEPTED', chart_id = $2, reviewed_by = $3, reviewed_at = NOW(), updated_at = NOW()
+        SET evidence = $1, source_type = 'MANUAL', review_status = 'REVIEW_REQUIRED', chart_id = $2, reviewed_by = $3, reviewed_at = NOW(), updated_at = NOW()
         WHERE id = $4
         `,
         [synthesizedEvidence, patient_chart_id, req.user.id, existingTimeline.rows[0].id]
@@ -160,7 +160,7 @@ const createManualAbstraction = async (req, res) => {
           patient_id, chart_id, measure, event_type, evidence, event_date,
           source_type, review_status, reviewed_by, reviewed_at, created_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6, 'MANUAL', 'ACCEPTED', $7, NOW(), NOW())
+        VALUES ($1, $2, $3, $4, $5, $6, 'MANUAL', 'REVIEW_REQUIRED', $7, NOW(), NOW())
         `,
         [patient_id, patient_chart_id, screening_type, evidence_type, synthesizedEvidence, service_date, req.user.id]
       );
