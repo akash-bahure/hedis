@@ -92,6 +92,7 @@ export { postApiDepartments } from "./postApiDepartments.ts";
 export { postApiHedisEvaluateId } from "./postApiHedisEvaluateId.ts";
 export { postApiHedisMarkAsReviewed } from "./postApiHedisMarkAsReviewed.ts";
 export { postApiHedisSendToQa } from "./postApiHedisSendToQa.ts";
+export { postApiHedisUpdateQaStatus } from "./postApiHedisUpdateQaStatus.ts";
 export { postApiManualChartAbstraction } from "./postApiManualChartAbstraction.ts";
 export { postApiPatientsIdAssign } from "./postApiPatientsIdAssign.ts";
 export { postApiPatientsPatientidChartsUpload } from "./postApiPatientsPatientidChartsUpload.ts";

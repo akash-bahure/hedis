@@ -181,6 +181,13 @@ export {
   postApiHedisSendToQaMutationResponseSchema,
 } from "./HEDISSchemas/postApiHedisSendToQaSchema.ts";
 export {
+  postApiHedisUpdateQaStatus200Schema,
+  postApiHedisUpdateQaStatus400Schema,
+  postApiHedisUpdateQaStatus500Schema,
+  postApiHedisUpdateQaStatusMutationRequestSchema,
+  postApiHedisUpdateQaStatusMutationResponseSchema,
+} from "./HEDISSchemas/postApiHedisUpdateQaStatusSchema.ts";
+export {
   postApiManualChartAbstraction201Schema,
   postApiManualChartAbstraction400Schema,
   postApiManualChartAbstraction404Schema,

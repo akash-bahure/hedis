@@ -706,6 +706,15 @@ export type {
   PostApiHedisSendToQaMutationResponse,
 } from "./PostApiHedisSendToQa.ts";
 export type {
+  PostApiHedisUpdateQaStatus200,
+  PostApiHedisUpdateQaStatus400,
+  PostApiHedisUpdateQaStatus500,
+  PostApiHedisUpdateQaStatusMutation,
+  PostApiHedisUpdateQaStatusMutationRequest,
+  PostApiHedisUpdateQaStatusMutationRequestActionEnumKey,
+  PostApiHedisUpdateQaStatusMutationResponse,
+} from "./PostApiHedisUpdateQaStatus.ts";
+export type {
   PostApiManualChartAbstraction201,
   PostApiManualChartAbstraction400,
   PostApiManualChartAbstraction404,
@@ -942,6 +951,7 @@ export { postApiClientsMutationRequestMeasureYearEnum } from "./PostApiClients.t
 export { postApiClientsMutationRequestPlanTierEnum } from "./PostApiClients.ts";
 export { postApiClientsMutationRequestRegionEnum } from "./PostApiClients.ts";
 export { postApiClientsMutationRequestStatusEnum } from "./PostApiClients.ts";
+export { postApiHedisUpdateQaStatusMutationRequestActionEnum } from "./PostApiHedisUpdateQaStatus.ts";
 export { postApiManualChartAbstractionMutationRequestCptCodeEnum } from "./PostApiManualChartAbstraction.ts";
 export { postApiManualChartAbstractionMutationRequestEvidenceTypeEnum } from "./PostApiManualChartAbstraction.ts";
 export { postApiManualChartAbstractionMutationRequestIcd10CodeEnum } from "./PostApiManualChartAbstraction.ts";
