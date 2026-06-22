@@ -1044,6 +1044,8 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
     status TEXT,
     confidence FLOAT,
     reasoning TEXT,
+    stage TEXT,
+    reason TEXT,
     evidence JSONB,
     detailed_response JSONB,
     created_at TIMESTAMP DEFAULT NOW()
@@ -1051,6 +1053,14 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
 
   CREATE INDEX IF NOT EXISTS idx_hedis_eval_patient ON ${schema}.hedis_evaluations(patient_id);
 `);
+
+  try {
+    await client.query(`
+      ALTER TABLE ${schema}.hedis_evaluations
+        ADD COLUMN IF NOT EXISTS stage TEXT,
+        ADD COLUMN IF NOT EXISTS reason TEXT;
+    `);
+  } catch (err) {}
   await client.query(`
   CREATE TABLE IF NOT EXISTS ${schema}.hedis_qa_queue (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

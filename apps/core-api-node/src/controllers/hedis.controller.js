@@ -400,3 +400,40 @@ exports.getQAReviewDetails = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.updateQAStatus = async (req, res) => {
+  try {
+    const { qaQueueIds, action, reason, additionalNotes } = req.body;
+
+    if (!qaQueueIds || !Array.isArray(qaQueueIds) || qaQueueIds.length === 0) {
+      return res.status(400).json({
+        error: "qaQueueIds is required and must be a non-empty array.",
+      });
+    }
+
+    if (!action) {
+      return res.status(400).json({
+        error: "action is required.",
+      });
+    }
+
+    const updatedEvaluations = await hedisService.updateQAStatus(
+      req.db,
+      qaQueueIds,
+      action,
+      reason,
+      additionalNotes
+    );
+
+    res.json({
+      message: "QA status updated successfully",
+      updated_count: updatedEvaluations.length,
+      data: updatedEvaluations,
+    });
+  } catch (err) {
+    console.error("Update QA Status Error:", err);
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+};
