@@ -60,6 +60,7 @@ export type { GetApiHedisQaReviewQaqueueidSuspenseInfiniteQueryKey } from "./hoo
 export type { PostApiHedisEvaluateIdMutationKey } from "./hooks/HEDISHooks/usePostApiHedisEvaluateId.ts";
 export type { PostApiHedisMarkAsReviewedMutationKey } from "./hooks/HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
 export type { PostApiHedisSendToQaMutationKey } from "./hooks/HEDISHooks/usePostApiHedisSendToQa.ts";
+export type { PostApiHedisUpdateQaStatusMutationKey } from "./hooks/HEDISHooks/usePostApiHedisUpdateQaStatus.ts";
 export type { PostApiManualChartAbstractionMutationKey } from "./hooks/Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
 export type { GetApiMeasureLibraryQueryKey } from "./hooks/Measure LibraryHooks/useGetApiMeasureLibrary.ts";
 export type { GetApiMeasureLibraryIdQueryKey } from "./hooks/Measure LibraryHooks/useGetApiMeasureLibraryId.ts";
@@ -931,6 +932,15 @@ export type {
   PostApiHedisSendToQaMutationResponse,
 } from "./types/PostApiHedisSendToQa.ts";
 export type {
+  PostApiHedisUpdateQaStatus200,
+  PostApiHedisUpdateQaStatus400,
+  PostApiHedisUpdateQaStatus500,
+  PostApiHedisUpdateQaStatusMutation,
+  PostApiHedisUpdateQaStatusMutationRequest,
+  PostApiHedisUpdateQaStatusMutationRequestActionEnumKey,
+  PostApiHedisUpdateQaStatusMutationResponse,
+} from "./types/PostApiHedisUpdateQaStatus.ts";
+export type {
   PostApiManualChartAbstraction201,
   PostApiManualChartAbstraction400,
   PostApiManualChartAbstraction404,
@@ -1210,6 +1220,7 @@ export { postApiDepartments } from "./clients/postApiDepartments.ts";
 export { postApiHedisEvaluateId } from "./clients/postApiHedisEvaluateId.ts";
 export { postApiHedisMarkAsReviewed } from "./clients/postApiHedisMarkAsReviewed.ts";
 export { postApiHedisSendToQa } from "./clients/postApiHedisSendToQa.ts";
+export { postApiHedisUpdateQaStatus } from "./clients/postApiHedisUpdateQaStatus.ts";
 export { postApiManualChartAbstraction } from "./clients/postApiManualChartAbstraction.ts";
 export { postApiPatientsIdAssign } from "./clients/postApiPatientsIdAssign.ts";
 export { postApiPatientsPatientidChartsUpload } from "./clients/postApiPatientsPatientidChartsUpload.ts";
@@ -1417,6 +1428,9 @@ export { usePostApiHedisMarkAsReviewed } from "./hooks/HEDISHooks/usePostApiHedi
 export { postApiHedisSendToQaMutationKey } from "./hooks/HEDISHooks/usePostApiHedisSendToQa.ts";
 export { postApiHedisSendToQaMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisSendToQa.ts";
 export { usePostApiHedisSendToQa } from "./hooks/HEDISHooks/usePostApiHedisSendToQa.ts";
+export { postApiHedisUpdateQaStatusMutationKey } from "./hooks/HEDISHooks/usePostApiHedisUpdateQaStatus.ts";
+export { postApiHedisUpdateQaStatusMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisUpdateQaStatus.ts";
+export { usePostApiHedisUpdateQaStatus } from "./hooks/HEDISHooks/usePostApiHedisUpdateQaStatus.ts";
 export { postApiManualChartAbstractionMutationKey } from "./hooks/Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
 export { postApiManualChartAbstractionMutationOptions } from "./hooks/Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
 export { usePostApiManualChartAbstraction } from "./hooks/Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
@@ -1957,6 +1971,7 @@ export { postApiClientsMutationRequestMeasureYearEnum } from "./types/PostApiCli
 export { postApiClientsMutationRequestPlanTierEnum } from "./types/PostApiClients.ts";
 export { postApiClientsMutationRequestRegionEnum } from "./types/PostApiClients.ts";
 export { postApiClientsMutationRequestStatusEnum } from "./types/PostApiClients.ts";
+export { postApiHedisUpdateQaStatusMutationRequestActionEnum } from "./types/PostApiHedisUpdateQaStatus.ts";
 export { postApiManualChartAbstractionMutationRequestCptCodeEnum } from "./types/PostApiManualChartAbstraction.ts";
 export { postApiManualChartAbstractionMutationRequestEvidenceTypeEnum } from "./types/PostApiManualChartAbstraction.ts";
 export { postApiManualChartAbstractionMutationRequestIcd10CodeEnum } from "./types/PostApiManualChartAbstraction.ts";
@@ -2171,6 +2186,13 @@ export {
   postApiHedisSendToQaMutationRequestSchema,
   postApiHedisSendToQaMutationResponseSchema,
 } from "./zod/HEDISSchemas/postApiHedisSendToQaSchema.ts";
+export {
+  postApiHedisUpdateQaStatus200Schema,
+  postApiHedisUpdateQaStatus400Schema,
+  postApiHedisUpdateQaStatus500Schema,
+  postApiHedisUpdateQaStatusMutationRequestSchema,
+  postApiHedisUpdateQaStatusMutationResponseSchema,
+} from "./zod/HEDISSchemas/postApiHedisUpdateQaStatusSchema.ts";
 export {
   postApiManualChartAbstraction201Schema,
   postApiManualChartAbstraction400Schema,

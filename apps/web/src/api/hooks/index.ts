@@ -60,6 +60,7 @@ export type { GetApiHedisQaReviewQaqueueidSuspenseInfiniteQueryKey } from "./HED
 export type { PostApiHedisEvaluateIdMutationKey } from "./HEDISHooks/usePostApiHedisEvaluateId.ts";
 export type { PostApiHedisMarkAsReviewedMutationKey } from "./HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
 export type { PostApiHedisSendToQaMutationKey } from "./HEDISHooks/usePostApiHedisSendToQa.ts";
+export type { PostApiHedisUpdateQaStatusMutationKey } from "./HEDISHooks/usePostApiHedisUpdateQaStatus.ts";
 export type { PostApiManualChartAbstractionMutationKey } from "./Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
 export type { GetApiMeasureLibraryQueryKey } from "./Measure LibraryHooks/useGetApiMeasureLibrary.ts";
 export type { GetApiMeasureLibraryIdQueryKey } from "./Measure LibraryHooks/useGetApiMeasureLibraryId.ts";
@@ -409,6 +410,9 @@ export { usePostApiHedisMarkAsReviewed } from "./HEDISHooks/usePostApiHedisMarkA
 export { postApiHedisSendToQaMutationKey } from "./HEDISHooks/usePostApiHedisSendToQa.ts";
 export { postApiHedisSendToQaMutationOptions } from "./HEDISHooks/usePostApiHedisSendToQa.ts";
 export { usePostApiHedisSendToQa } from "./HEDISHooks/usePostApiHedisSendToQa.ts";
+export { postApiHedisUpdateQaStatusMutationKey } from "./HEDISHooks/usePostApiHedisUpdateQaStatus.ts";
+export { postApiHedisUpdateQaStatusMutationOptions } from "./HEDISHooks/usePostApiHedisUpdateQaStatus.ts";
+export { usePostApiHedisUpdateQaStatus } from "./HEDISHooks/usePostApiHedisUpdateQaStatus.ts";
 export { postApiManualChartAbstractionMutationKey } from "./Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
 export { postApiManualChartAbstractionMutationOptions } from "./Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
 export { usePostApiManualChartAbstraction } from "./Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
