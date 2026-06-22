@@ -27,8 +27,8 @@
             "discharge_date": "2026-04-05",
             "priority": "Medium",
            "chart_document":{
-            "fileName": "Patient_upload_chart_short.pdf",
-            "filePath": "charts/Patient_upload_chart_short.pdf",
+            "fileName": "ENP_Enrollment_Sandra_Williams.pdf",
+            "filePath": "charts/ENP_Enrollment_Sandra_Williams.pdf",
             "pages": 15
           },
             "coding_notes": "Patient has history of HTN.",

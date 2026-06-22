@@ -148,9 +148,9 @@ INSERT INTO ${tenant.schema_name}.patients (
 
         // Standardize chart_document structure for consistency with getQAReviewDetails
         const documentMetadata = {
-          fileName: chartDoc.fileName || "Patient_upload_chart_short.pdf",
+          fileName: chartDoc.fileName || "Patient_upload_chart_short1.pdf",
           filePath:
-            chartDoc.filePath || "charts/Patient_upload_chart_short.pdf",
+            chartDoc.filePath || "charts/Patient_upload_chart_short1.pdf",
           mimeType: "application/pdf",
           pages: chartDoc.pages || 15,
           uploadedAt: new Date().toISOString(),
@@ -203,10 +203,10 @@ async function run() {
     await client.query("BEGIN");
 
     const tenant = {
-      id: "c182f8cf-794b-4b2f-9dc0-fe2f3fee1656",
+      id: "8f8828c3-658f-4cf4-9764-12f8e461d661",
       name: "Acme Corp",
-      subdomain: "testmeasures5",
-      schema_name: "testmeasures5_schema",
+      subdomain: "testmeasures7",
+      schema_name: "testmeasures7_schema",
     };
 
     const dataPath = path.join(__dirname, "mock-patients.json");
