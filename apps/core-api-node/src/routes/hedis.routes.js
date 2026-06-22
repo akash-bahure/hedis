@@ -176,4 +176,48 @@ router.post("/mark-as-reviewed", hedisController.markAsReviewed);
  */
 router.get("/qa-review/:qaQueueId", hedisController.getQAReviewDetails);
 
+/**
+ * @swagger
+ * /api/hedis/update-qa-status:
+ *   post:
+ *     summary: Update QA status for selected QA queue records
+ *     tags: [HEDIS]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - qaQueueIds
+ *               - action
+ *             properties:
+ *               qaQueueIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: uuid
+ *                 description: Selected QA queue record IDs
+ *               action:
+ *                 type: string
+ *                 enum:
+ *                   - requestRevision
+ *                   - qaFail
+ *                   - qaPass
+ *               reason:
+ *                 type: string
+ *                 nullable: true
+ *               additionalNotes:
+ *                 type: string
+ *                 nullable: true
+ *     responses:
+ *       200:
+ *         description: QA status updated successfully
+ *       400:
+ *         description: Invalid request
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/update-qa-status", hedisController.updateQAStatus);
+
 module.exports = router;
