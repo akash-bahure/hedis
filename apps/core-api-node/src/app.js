@@ -88,8 +88,6 @@ app.get("/api-docs.json", (req, res) => {
   res.send(swaggerSpec);
 });
 
-const manualChartAbstractionRoutes = require("./routes/manualChartAbstractionRoutes");
-
 const chartAssignmentRoutes = require("./routes/chartsAssignmentRoute");
 
 // Admin routes
@@ -101,15 +99,16 @@ app.use("/admin/orgs", require("./routes/orgRoutes"));
 app.use(tenantMiddleware);
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/measure-library", require("./routes/measureLibrary.routes"));
-app.use("/api/manual-chart-abstraction", manualChartAbstractionRoutes);
+
 app.use("/api/chart-assignments", chartAssignmentRoutes);
 
 app.use("/api/user-roles", require("./routes/userRoleRoutes"));
 
 // Unprotected routes for testing API integrations
 app.use("/api/patients", require("./routes/patientChart.routes"));
-app.use("/api/timeline", require("./routes/timeline.routes"));
+app.use("/api/clinical-timeline/evidence", require("./routes/timeline.routes"));
 app.use("/api/charts", require("./routes/queue.routes"));
+app.use("/api/qa", require("./routes/qa.routes"));
 
 // Protected Routes
 app.use(authMiddleware);

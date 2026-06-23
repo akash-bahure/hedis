@@ -1147,6 +1147,19 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
 
   try {
     await client.query(`
+      ALTER TABLE ${schema}.clinical_timeline_events
+        ADD COLUMN IF NOT EXISTS source_excerpt TEXT,
+        ADD COLUMN IF NOT EXISTS review_comment TEXT,
+        ADD COLUMN IF NOT EXISTS rejection_reason TEXT,
+        ADD COLUMN IF NOT EXISTS extracted_evidence JSONB,
+        ADD COLUMN IF NOT EXISTS ai_confidence_score DECIMAL;
+    `);
+  } catch (err) {
+    console.warn(`[Migration] Could not add new fields to clinical_timeline_events in ${schema}:`, err.message);
+  }
+
+  try {
+    await client.query(`
       ALTER TABLE ${schema}.timeline_events
         ADD COLUMN IF NOT EXISTS is_manual BOOLEAN DEFAULT FALSE,
         ADD COLUMN IF NOT EXISTS chart_id UUID REFERENCES ${schema}.patient_charts(id) ON DELETE CASCADE,
@@ -1170,6 +1183,26 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
       summary JSONB,
       abstractor_evidence JSONB,
       measure_rules JSONB,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.qa_evidence_requests (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      chart_id UUID REFERENCES ${schema}.patient_charts(id) ON DELETE CASCADE,
+      measure_code TEXT,
+      requested_evidence_type TEXT,
+      requested_evidence_source TEXT,
+      request_reason TEXT,
+      request_comment TEXT,
+      status TEXT CHECK (status IN ('OPEN', 'IN_PROGRESS', 'RESOLVED', 'REJECTED')),
+      requested_by UUID REFERENCES ${schema}.users(id),
+      requested_at TIMESTAMP DEFAULT NOW(),
+      resolved_by UUID REFERENCES ${schema}.users(id),
+      resolved_at TIMESTAMP,
+      submitted_evidence_id UUID,
+      document_id UUID,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW()
     );

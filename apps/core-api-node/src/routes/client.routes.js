@@ -140,14 +140,14 @@ router.post("/", controller.createClient);
  *         description: Filter by contract type
  *
  *       - in: query
- *         name: page_no
+ *         name: page
  *         schema:
  *           type: integer
  *           default: 1
  *         description: Current page number
  *
  *       - in: query
- *         name: page_size
+ *         name: limit
  *         schema:
  *           type: integer
  *           default: 10
@@ -169,17 +169,21 @@ router.post("/", controller.createClient);
  *                   type: string
  *                   example: Clients fetched successfully
  *
- *                 page_no:
+ *                 currentPage:
  *                   type: integer
  *                   example: 1
  *
- *                 page_size:
+ *                 pageSize:
  *                   type: integer
  *                   example: 10
  *
- *                 total_count:
+ *                 totalCount:
  *                   type: integer
  *                   example: 100
+ *
+ *                 totalPages:
+ *                   type: integer
+ *                   example: 10
  *
  *                 data:
  *                   type: array

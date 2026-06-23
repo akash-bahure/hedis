@@ -66,10 +66,10 @@ exports.getWorkQueue = async (req, res) => {
         COUNT(CASE WHEN p.stage IN ('Not Started', 'Unassigned') THEN 1 END) AS total_not_started,
         COUNT(CASE WHEN p.stage = 'Assigned' THEN 1 END) AS total_assigned,
         COUNT(CASE WHEN p.stage = 'In Progress' THEN 1 END) AS total_in_progress,
-        COUNT(CASE WHEN p.stage = 'Pending QA' THEN 1 END) AS total_pending_qa,
-        COUNT(CASE WHEN p.stage IN ('QA Returned', 'QA Return') THEN 1 END) AS total_qa_returned,
-        COUNT(CASE WHEN p.stage = 'Rework' THEN 1 END) AS total_rework,
-        COUNT(CASE WHEN p.stage = 'Completed' THEN 1 END) AS total_completed,
+        COUNT(CASE WHEN p.stage IN ('Pending QA', 'Ready for QA Review', 'READY_FOR_QA_REVIEW') OR pc.status IN ('Pending QA', 'Ready for QA Review', 'READY_FOR_QA_REVIEW') THEN 1 END) AS total_pending_qa,
+        COUNT(CASE WHEN p.stage IN ('QA Returned', 'QA Return', 'QA_REJECTED') OR pc.status IN ('QA Returned', 'QA Return', 'QA_REJECTED') THEN 1 END) AS total_qa_returned,
+        COUNT(CASE WHEN p.stage IN ('Rework', 'QA Evidence Requested', 'QA_EVIDENCE_REQUESTED') OR pc.status IN ('Rework', 'QA Evidence Requested', 'QA_EVIDENCE_REQUESTED') THEN 1 END) AS total_rework,
+        COUNT(CASE WHEN p.stage IN ('Completed', 'QA Approved', 'QA_APPROVED') OR pc.status IN ('Completed', 'QA Approved', 'QA_APPROVED') THEN 1 END) AS total_completed,
         COUNT(CASE WHEN p.stage IN ('Audit Sample', 'Audit') THEN 1 END) AS total_audit,
         COUNT(CASE WHEN p.stage IN ('Submission Ready', 'Ready') THEN 1 END) AS total_ready
       FROM ${schema}.patients p
@@ -120,7 +120,7 @@ exports.getWorkQueue = async (req, res) => {
       case "pending-qa":
       case "pending_qa":
       case "pendingqa":
-        tabWhere += ` AND p.stage = 'Pending QA'`;
+        tabWhere += ` AND (p.stage IN ('Pending QA', 'Ready for QA Review', 'READY_FOR_QA_REVIEW') OR pc.status IN ('Pending QA', 'Ready for QA Review', 'READY_FOR_QA_REVIEW'))`;
         break;
       case "qa-returned":
       case "qa_returned":
@@ -128,13 +128,13 @@ exports.getWorkQueue = async (req, res) => {
       case "qa-return":
       case "qa_return":
       case "qareturn":
-        tabWhere += ` AND p.stage IN ('QA Returned', 'QA Return')`;
+        tabWhere += ` AND (p.stage IN ('QA Returned', 'QA Return', 'QA_REJECTED') OR pc.status IN ('QA Returned', 'QA Return', 'QA_REJECTED'))`;
         break;
       case "rework":
-        tabWhere += ` AND p.stage = 'Rework'`;
+        tabWhere += ` AND (p.stage IN ('Rework', 'QA Evidence Requested', 'QA_EVIDENCE_REQUESTED') OR pc.status IN ('Rework', 'QA Evidence Requested', 'QA_EVIDENCE_REQUESTED'))`;
         break;
       case "completed":
-        tabWhere += ` AND p.stage = 'Completed'`;
+        tabWhere += ` AND (p.stage IN ('Completed', 'QA Approved', 'QA_APPROVED') OR pc.status IN ('Completed', 'QA Approved', 'QA_APPROVED'))`;
         break;
       case "audit-sample":
       case "audit_sample":
