@@ -192,7 +192,14 @@ Thoroughly analyze the chart for all relevant evidence. Then return **ONLY** a v
     "warnings": 0,
     "failed": 0,
     "confidence": 85
-  }
+  },
+  "allEvidence": [
+    {
+      "content": "quote or summary of evidence",
+      "pageNumber": 1,
+      "relevance": "description of why this is relevant to the measure"
+    }
+  ]
 }
 
 **CRITICAL INSTRUCTIONS:**

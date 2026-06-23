@@ -40,10 +40,12 @@ import {
 import {
   useGetApiHedisQaQueuePatientid,
   useGetApiHedisQaReviewQaqueueid,
+  usePostApiHedisUpdateQaStatus,
 } from "@/api";
+import { toast } from "sonner";
 import { Document, Page, pdfjs } from "react-pdf";
-import 'react-pdf/dist/Page/AnnotationLayer.css';
-import 'react-pdf/dist/Page/TextLayer.css';
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 /* ─────────────────────────────────────────────────────────────
    TYPES
@@ -56,7 +58,7 @@ type QueueStatus =
   | "escalated";
 type Priority = "critical" | "high" | "medium" | "low";
 type CheckState = "pass" | "fail" | "warn" | "na" | "pending";
-type Decision = null | "pass" | "fail" | "revision";
+type Decision = null | "qaPass" | "qaFail" | "requestRevision";
 type CenterTab = "evidence" | "comparison";
 
 interface QueueCase {
@@ -859,6 +861,67 @@ export function QAReview({
     });
   }, [QUEUE, queueFilter, queueSearch]);
 
+  const updateQaStatus = usePostApiHedisUpdateQaStatus({
+    mutation: {
+      onSuccess: () => {
+        refetch(); // Refresh QA Queue
+
+        // Reset form
+        setDecision(null);
+        setFailReason("");
+        setReviewNotes("");
+
+        toast.success("QA Status updated successfully");
+      },
+
+      onError: (error: any) => {
+        console.error("Failed to update QA status:", error);
+
+        const errorMessage =
+          error?.response?.data?.message ||
+          error?.message ||
+          "An unexpected error occurred while updating QA status.";
+
+        toast.error("Failed to update QA status", {
+          description: errorMessage,
+        });
+      },
+    },
+  });
+
+  // Improved Decision Handler
+  const handleQaDecision = async (
+    action: "qaPass" | "qaFail" | "requestRevision"
+  ) => {
+    if (!selectedId) {
+      toast.error("No case selected");
+      return;
+    }
+
+    // Validation for Fail and Revision
+    if (
+      (action === "qaFail" || action === "requestRevision") &&
+      !failReason?.trim()
+    ) {
+      toast.error("Reason is required", {
+        description: "Please select a reason for Fail or Revision request.",
+      });
+      return;
+    }
+
+    try {
+      await updateQaStatus.mutateAsync({
+        data: {
+          qaQueueIds: [selectedId],
+          action,
+          reason: failReason || null,
+          additionalNotes: reviewNotes?.trim() || null,
+        },
+      });
+    } catch (err) {
+      // Error is already handled in onError
+    }
+  };
   // ==================== LEFT PANEL ONLY RENDERING ====================
   // ==================== LEFT PANEL RENDER ====================
   const renderLeftQueue = () => {
@@ -939,7 +1002,7 @@ export function QAReview({
     checklist.filter((c) => c.group === g);
   const canSave =
     decision !== null &&
-    ((decision !== "fail" && decision !== "revision") || !!failReason);
+    ((decision !== "qaFail" && decision !== "qaRevision") || !!failReason);
 
   return (
     <div className="flex h-full overflow-hidden bg-background">
@@ -1101,22 +1164,22 @@ export function QAReview({
                   </span>
                   <span
                     className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-bold ${
-                      decision === "pass"
+                      decision === "qaPass"
                         ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                        : decision === "fail"
+                        : decision === "qaFail"
                           ? "bg-red-50 text-red-700 border-red-200"
-                          : decision === "revision"
+                          : decision === "requestRevision"
                             ? "bg-amber-50 text-amber-700 border-amber-200"
                             : STATUS_STYLES[selectedCase.status as QueueStatus]
                                 ?.badge ||
                               "bg-amber-50 text-amber-700 border-amber-200"
                     }`}
                   >
-                    {decision === "pass"
+                    {decision === "qaPass"
                       ? "QA Passed"
-                      : decision === "fail"
+                      : decision === "qaFail"
                         ? "QA Failed"
-                        : decision === "revision"
+                        : decision === "requestRevision"
                           ? "Revision Requested"
                           : STATUS_STYLES[selectedCase.status as QueueStatus]
                               ?.label || "Pending QA"}
@@ -1167,7 +1230,7 @@ export function QAReview({
               <div className="w-px h-5 bg-border" />
               <button
                 onClick={() => {
-                  setDecision("revision");
+                  setDecision("requestRevision");
                   setFailReason("");
                   setReviewNotes("");
                 }}
@@ -1178,7 +1241,7 @@ export function QAReview({
               </button>
               <button
                 onClick={() => {
-                  setDecision("fail");
+                  setDecision("qaFail");
                   setFailReason("");
                   setReviewNotes("");
                 }}
@@ -1189,7 +1252,7 @@ export function QAReview({
               </button>
               <button
                 onClick={() => {
-                  setDecision("pass");
+                  setDecision("qaPass");
                   setFailReason("");
                   setReviewNotes("");
                 }}
@@ -1202,7 +1265,7 @@ export function QAReview({
           </div>
 
           {/* Fail/Revision reason bar */}
-          {(decision === "fail" || decision === "revision") && (
+          {(decision === "qaFail" || decision === "requestRevision") && (
             <div
               className={`flex items-center gap-3 px-4 py-2.5 border-t ${decision === "fail" ? "bg-red-50 border-red-100" : "bg-amber-50 border-amber-100"}`}
             >
@@ -1801,27 +1864,27 @@ export function QAReview({
 
               {decision && (
                 <div
-                  className={`flex items-center gap-2 p-2.5 rounded-lg border ${decision === "pass" ? "border-emerald-200 bg-emerald-50" : decision === "fail" ? "border-red-200 bg-red-50" : "border-amber-200 bg-amber-50"}`}
+                  className={`flex items-center gap-2 p-2.5 rounded-lg border ${decision === "qaPass" ? "border-emerald-200 bg-emerald-50" : decision === "qaFail" ? "border-red-200 bg-red-50" : "border-amber-200 bg-amber-50"}`}
                 >
-                  {decision === "pass" && (
+                  {decision === "qaPass" && (
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
                   )}
-                  {decision === "fail" && (
+                  {decision === "qaFail" && (
                     <XCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
                   )}
-                  {decision === "revision" && (
+                  {decision === "requestRevision" && (
                     <RotateCcw className="w-4 h-4 text-amber-600 flex-shrink-0" />
                   )}
                   <p
-                    className={`text-[11px] font-bold leading-tight ${decision === "pass" ? "text-emerald-700" : decision === "fail" ? "text-red-700" : "text-amber-700"}`}
+                    className={`text-[11px] font-bold leading-tight ${decision === "qaPass" ? "text-emerald-700" : decision === "qaFail" ? "text-red-700" : "text-amber-700"}`}
                   >
-                    {decision === "pass"
+                    {decision === "qaPass"
                       ? "QA Pass — Ready for numerator closure"
                       : ""}
-                    {decision === "fail"
+                    {decision === "qaFail"
                       ? "QA Fail — Abstraction rejected"
                       : ""}
-                    {decision === "revision"
+                    {decision === "requestRevision"
                       ? "Revision Requested — Returned to abstractor"
                       : ""}
                   </p>
@@ -1830,30 +1893,45 @@ export function QAReview({
 
               <div className="grid grid-cols-3 gap-1.5">
                 <button
-                  onClick={() => setDecision("pass")}
-                  className={`inline-flex items-center justify-center gap-1 py-2 rounded-lg border text-[11px] font-bold transition-all ${decision === "pass" ? "bg-emerald-600 text-white border-emerald-600 shadow-sm" : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"}`}
+                  onClick={() => handleQaDecision("qaPass")}
+                  disabled={updateQaStatus.isPending}
+                  className={`inline-flex items-center justify-center gap-1 py-2 rounded-lg border text-[11px] font-bold transition-all ${
+                    decision === "qaPass"
+                      ? "bg-emerald-600 text-white border-emerald-600"
+                      : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                  }`}
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   Pass
                 </button>
+
                 <button
-                  onClick={() => {
-                    setDecision("revision");
-                    setFailReason("");
-                    setReviewNotes("");
-                  }}
-                  className={`inline-flex items-center justify-center gap-1 py-2 rounded-lg border text-[11px] font-bold transition-all ${decision === "revision" ? "bg-amber-500 text-white border-amber-500 shadow-sm" : "border-amber-300 text-amber-700 hover:bg-amber-50"}`}
+                  onClick={() => handleQaDecision("requestRevision")}
+                  disabled={
+                    updateQaStatus.isPending ||
+                    (decision === "requestRevision" && !failReason)
+                  }
+                  className={`inline-flex items-center justify-center gap-1 py-2 rounded-lg border text-[11px] font-bold transition-all ${
+                    decision === "requestRevision"
+                      ? "bg-amber-500 text-white border-amber-500"
+                      : "border-amber-300 text-amber-700 hover:bg-amber-50"
+                  }`}
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   Revise
                 </button>
+
                 <button
-                  onClick={() => {
-                    setDecision("fail");
-                    setFailReason("");
-                    setReviewNotes("");
-                  }}
-                  className={`inline-flex items-center justify-center gap-1 py-2 rounded-lg border text-[11px] font-bold transition-all ${decision === "fail" ? "bg-red-600 text-white border-red-600 shadow-sm" : "border-red-300 text-red-700 hover:bg-red-50"}`}
+                  onClick={() => handleQaDecision("qaFail")}
+                  disabled={
+                    updateQaStatus.isPending ||
+                    (decision === "qaFail" && !failReason)
+                  }
+                  className={`inline-flex items-center justify-center gap-1 py-2 rounded-lg border text-[11px] font-bold transition-all ${
+                    decision === "qaFail"
+                      ? "bg-red-600 text-white border-red-600"
+                      : "border-red-300 text-red-700 hover:bg-red-50"
+                  }`}
                 >
                   <XCircle className="w-3.5 h-3.5" />
                   Fail
@@ -1895,11 +1973,18 @@ export function QAReview({
               </span>
             )}
             <button
-              disabled={!canSave}
+              onClick={() => handleQaDecision(decision!)} // or keep separate if you want
+              disabled={!canSave || updateQaStatus.isPending}
               className="inline-flex items-center gap-1.5 px-4 py-2 text-[12px] font-bold rounded-lg transition-all bg-primary text-white hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
             >
-              <Send className="w-3.5 h-3.5" />
-              Save Decision
+              {updateQaStatus.isPending ? (
+                <>Processing...</>
+              ) : (
+                <>
+                  <Send className="w-3.5 h-3.5" />
+                  Save Decision
+                </>
+              )}
             </button>
           </div>
         </div>

@@ -5,16 +5,18 @@ const { buildQAReviewAnalysisPrompt } = require("../prompts/qa_review.prompt");
 
 exports.analyzeChart = async (req, res) => {
   try {
-    const { patient_id, tenant_subdomain = "default" } = req.body;
+    const { patient_id, tenant_subdomain = "default", pdfPath } = req.body;
 
-    if (!req.file) {
-      return res.status(400).json({ error: "No chart file uploaded." });
+    if (!req.file && !pdfPath) {
+      return res.status(400).json({ error: "No chart file uploaded or pdfPath provided." });
     }
 
-    console.log(`Starting HEDIS analysis for Patient: ${patient_id}, Tenant: ${tenant_subdomain}`);
+    const chartPath = pdfPath || req.file.path;
+
+    console.log(`Starting HEDIS analysis for Patient: ${patient_id}, Tenant: ${tenant_subdomain}, Path: ${chartPath}`);
 
     // 1. Extract Text from PDF (OCR)
-    const text = await extractPdfText(req.file.path);
+    const text = await extractPdfText(chartPath);
 
     // 2. Extract Demographics and Conditions from Text
     const criteria = await hedisService.extractCriteria(text);

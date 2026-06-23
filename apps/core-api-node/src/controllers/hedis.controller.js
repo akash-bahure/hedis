@@ -1,54 +1,12 @@
 const hedisService = require("../services/hedis.service");
 const { v4: uuidv4 } = require("uuid");
 
-exports.evaluateChart = async (req, res) => {
-  try {
-    const { id: patientId } = req.params;
-    const { subdomain } = req.tenant;
 
-    if (!req.file) {
-      return res.status(400).json({ error: "No chart file uploaded." });
-    }
-
-    console.log(
-      `Evaluating chart for patient ${patientId} in tenant ${subdomain}`
-    );
-
-    // Verify patient exists before proceeding
-    const patientCheck = await req.db.query(
-      `SELECT id FROM patients WHERE id = $1`,
-      [patientId]
-    );
-
-    if (patientCheck.rows.length === 0) {
-      return res.status(404).json({
-        error: `Patient with ID ${patientId} not found in this organization.`,
-      });
-    }
-
-    const evaluations = await hedisService.evaluatePatientChart(
-      patientId,
-      req.file,
-      subdomain,
-      req.db
-    );
-
-    res.json({
-      message: "Chart evaluation completed successfully",
-      patient_id: patientId,
-      evaluations,
-    });
-  } catch (err) {
-    console.error("HEDIS Evaluation Error:", err);
-    res.status(500).json({
-      error: err.message,
-    });
-  }
-};
 
 exports.getEvaluations = async (req, res) => {
   try {
     const { id: patientId } = req.params;
+    const { subdomain, schema_name: schema } = req.tenant;
 
     // Verify patient exists before proceeding
     const patientCheck = await req.db.query(
@@ -62,7 +20,34 @@ exports.getEvaluations = async (req, res) => {
       });
     }
 
-    const evaluations = await hedisService.getEvaluations(req.db, patientId);
+    let evaluations = await hedisService.getEvaluations(req.db, patientId);
+
+    // If no evaluations exist, try to trigger AI analysis from patient chart
+    if (evaluations.length === 0) {
+      console.log(`No evaluations found for patient ${patientId}. Checking for chart to trigger AI analysis...`);
+
+      const chartResult = await req.db.query(
+        `SELECT chart_document FROM ${schema}.patient_charts WHERE patient_id = $1 LIMIT 1`,
+        [patientId]
+      );
+
+      if (chartResult.rows.length > 0) {
+        const chartDoc = chartResult.rows[0].chart_document || {};
+        const filePath = chartDoc.filePath || `charts/${chartDoc.fileName}`;
+        const pdfPath = `/app/uploads/${filePath}`;
+
+        console.log(`Triggering internal HEDIS analysis for Patient: ${patientId}, Path: ${pdfPath}`);
+
+        evaluations = await hedisService.evaluatePatientChartByPath(
+          patientId,
+          pdfPath,
+          subdomain,
+          req.db
+        );
+      } else {
+        console.log(`No chart found for patient ${patientId}. Cannot trigger AI analysis.`);
+      }
+    }
 
     res.json({
       patient_id: patientId,
@@ -267,21 +252,21 @@ exports.getQAQueue = async (req, res) => {
 
 exports.getQAReviewDetails = async (req, res) => {
   try {
-    const { qaQueueId } = req.params;
+    const { evaluationId } = req.params;
     const schema = req.tenant.schema_name;
 
-    // 1. Get QA Queue record
-    const qaResult = await req.db.query(
-      `SELECT * FROM hedis_qa_queue WHERE id = $1`,
-      [qaQueueId]
+    // 1. Get Evaluation record
+    const evalResult = await req.db.query(
+      `SELECT * FROM ${schema}.hedis_evaluations WHERE id = $1`,
+      [evaluationId]
     );
 
-    if (qaResult.rows.length === 0) {
-      return res.status(404).json({ error: "QA Queue record not found" });
+    if (evalResult.rows.length === 0) {
+      return res.status(404).json({ error: "Evaluation record not found" });
     }
 
-    const qaRecord = qaResult.rows[0];
-    const { patient_id, measure_code, measure_name } = qaRecord;
+    const evaluation = evalResult.rows[0];
+    const { patient_id, measure_code, measure_name } = evaluation;
 
     // 2. Get patient chart path
     const chartResult = await req.db.query(
@@ -299,18 +284,20 @@ exports.getQAReviewDetails = async (req, res) => {
 
     const chartPdfUrl = `${req.protocol}://${req.get("host")}/uploads/${filePath}`;
     const pdfPath = `/app/uploads/${filePath}`; // This is what AI service expects
+
     // 3. Check if analysis already exists in DB (cache)
     const cachedResult = await req.db.query(
-      `SELECT * FROM ${schema}.hedis_qa_review_analyses WHERE qa_queue_id = $1 ORDER BY created_at DESC LIMIT 1`,
-      [qaQueueId]
+      `SELECT * FROM ${schema}.hedis_qa_review_analyses WHERE evaluation_id = $1 ORDER BY created_at DESC LIMIT 1`,
+      [evaluationId]
     );
 
     if (cachedResult.rows.length > 0) {
       const cached = cachedResult.rows[0];
-      console.log(`Returning cached QA analysis for queue: ${qaQueueId}`);
+      console.log(`Returning cached QA analysis for evaluation: ${evaluationId}`);
       return res.json({
         pdfUrl: chartPdfUrl,
         measure: {
+          id: evaluationId,
           measureCode: cached.measure_code,
           measureName: cached.measure_name,
         },
@@ -319,6 +306,7 @@ exports.getQAReviewDetails = async (req, res) => {
         extractedEvidence: cached.extracted_evidence,
         validationChecklist: cached.validation_checklist,
         summary: cached.summary,
+        all_evidences: cached.all_evidences || [],
       });
     }
 
@@ -366,12 +354,12 @@ exports.getQAReviewDetails = async (req, res) => {
     // 7. Persist result to DB
     await req.db.query(
       `INSERT INTO ${schema}.hedis_qa_review_analyses
-        (qa_queue_id, patient_id, measure_code, measure_name, pdf_path,
+        (evaluation_id, patient_id, measure_code, measure_name, pdf_path,
          extracted_evidence, validation_checklist, summary,
-         abstractor_evidence, measure_rules)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+         abstractor_evidence, measure_rules, all_evidences)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
       [
-        qaQueueId,
+        evaluationId,
         patient_id,
         measure_code,
         measure_name,
@@ -381,6 +369,7 @@ exports.getQAReviewDetails = async (req, res) => {
         JSON.stringify(analysisData.summary || {}),
         JSON.stringify(mockAbstractionData),
         JSON.stringify(measureRules),
+        JSON.stringify(analysisData.allEvidence || []),
       ]
     );
 
@@ -388,12 +377,14 @@ exports.getQAReviewDetails = async (req, res) => {
     res.json({
       pdfUrl: chartPdfUrl,
       measure: {
+        id: evaluationId,
         measureCode: measure_code,
         measureName: measure_name,
       },
       abstractorEvidence: mockAbstractionData,
       measureRules: measureRules,
       ...analysisData,
+      all_evidences: analysisData.allEvidence || [],
     });
   } catch (err) {
     console.error("Get QA Review Details Error:", err);
@@ -432,6 +423,135 @@ exports.updateQAStatus = async (req, res) => {
     });
   } catch (err) {
     console.error("Update QA Status Error:", err);
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+};
+
+exports.assignAbstractor = async (req, res) => {
+  const client = req.db;
+  try {
+    const { patientId, chartId, decisions } = req.body;
+    const schema = req.tenant.schema_name;
+
+    if (!patientId || !decisions || !Array.isArray(decisions)) {
+      return res.status(400).json({
+        error: "Missing required fields: patientId, decisions",
+      });
+    }
+
+    // Fetch abstractor
+    const patientResult = await client.query(
+      `SELECT abstractor_id FROM ${schema}.patients WHERE id = $1`,
+      [patientId]
+    );
+
+    if (patientResult.rows.length === 0) {
+      return res.status(404).json({ error: "Patient not found" });
+    }
+
+    const assignedAbstractorId = patientResult.rows[0].abstractor_id;
+
+    if (!assignedAbstractorId) {
+      return res.status(400).json({
+        error: "No abstractor assigned to this patient in the system.",
+      });
+    }
+
+    await client.query("BEGIN");
+
+    let finalStage = "QA Passed";
+    let hasRevision = false;
+    let hasFail = false;
+
+    const processedMeasures = [];
+
+    for (const decision of decisions) {
+      const {
+        measureId,
+        measureCode,
+        measureName,
+        qaStatus,
+        reasons,
+      } = decision;
+
+      await client.query(
+        `INSERT INTO ${schema}.hedis_qa_measure_decisions
+         (patient_id, chart_id, measure_id, measure_code, measure_name, qa_status, reasons, assigned_abstractor_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [
+          patientId,
+          chartId || null,
+          measureId || null,
+          measureCode,
+          measureName,
+          qaStatus,
+          JSON.stringify(reasons || []),
+          assignedAbstractorId,
+        ]
+      );
+
+      if (measureId) {
+        await client.query(
+          `UPDATE ${schema}.hedis_evaluations
+           SET status = $1, stage = $2, reason = $3
+           WHERE id = $4`,
+          [qaStatus, "QA Review", (reasons || []).join(", "), measureId]
+        );
+      }
+
+      if (qaStatus === "REQUEST_REVISION") hasRevision = true;
+      if (qaStatus === "QA_FAIL") hasFail = true;
+
+      processedMeasures.push({
+        measureId,
+        measureCode,
+        measureName,
+        qaStatus,
+        reasons: reasons || [],
+      });
+    }
+
+    if (hasFail) finalStage = "QA Failed";
+    else if (hasRevision) finalStage = "Revision Required";
+
+    await client.query(
+      `UPDATE ${schema}.patients
+       SET assigned_to = $1, stage = $2, updated_at = NOW()
+       WHERE id = $3`,
+      [assignedAbstractorId, finalStage, patientId]
+    );
+
+    if (chartId) {
+      await client.query(
+        `INSERT INTO ${schema}.chart_assignments
+         (patient_chart_id, assigned_to, assigned_role, assignment_status, assigned_by)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [
+          chartId,
+          assignedAbstractorId,
+          "Chart Abstractor",
+          "Assigned",
+          req.user?.id || null,
+        ]
+      );
+    }
+
+    await client.query("COMMIT");
+
+    res.status(200).json({
+      message: "Patient assigned back to abstractor and decisions persisted",
+      patientId,
+      chartId,
+      abstractorId: assignedAbstractorId,
+      finalStage,
+      totalMeasures: processedMeasures.length,
+      measures: processedMeasures,
+    });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("Assign Abstractor Error:", err);
     res.status(500).json({
       error: err.message,
     });
