@@ -9,7 +9,10 @@ import type {
   RequestConfig,
   ResponseErrorConfig,
 } from "../../../utils/client.ts";
-import type { PostApiChartsChartidSubmitQaMutationResponse } from "../types/PostApiChartsChartidSubmitQa.ts";
+import type {
+  PostApiChartsChartidSubmitQaMutationRequest,
+  PostApiChartsChartidSubmitQaMutationResponse,
+} from "../types/PostApiChartsChartidSubmitQa.ts";
 
 function getPostApiChartsChartidSubmitQaUrl() {
   const res = {
@@ -24,17 +27,23 @@ function getPostApiChartsChartidSubmitQaUrl() {
  * {@link /api/charts/:chartId/submit-qa}
  */
 export async function postApiChartsChartidSubmitQa(
-  config: Partial<RequestConfig> & { client?: Client } = {},
+  data?: PostApiChartsChartidSubmitQaMutationRequest,
+  config: Partial<
+    RequestConfig<PostApiChartsChartidSubmitQaMutationRequest>
+  > & { client?: Client } = {},
 ) {
   const { client: request = fetch, ...requestConfig } = config;
+
+  const requestData = data;
 
   const res = await request<
     PostApiChartsChartidSubmitQaMutationResponse,
     ResponseErrorConfig<Error>,
-    unknown
+    PostApiChartsChartidSubmitQaMutationRequest
   >({
     method: "POST",
     url: getPostApiChartsChartidSubmitQaUrl().url.toString(),
+    data: requestData,
     ...requestConfig,
   });
   return res.data;

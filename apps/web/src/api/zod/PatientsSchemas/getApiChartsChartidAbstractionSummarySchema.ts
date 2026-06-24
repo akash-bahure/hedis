@@ -7,6 +7,8 @@ import * as z from "zod";
 import type { ToZod } from "../../.kubb/ToZod.ts";
 import type {
   GetApiChartsChartidAbstractionSummary200,
+  GetApiChartsChartidAbstractionSummary404,
+  GetApiChartsChartidAbstractionSummary500,
   GetApiChartsChartidAbstractionSummaryPathParams,
   GetApiChartsChartidAbstractionSummaryQueryResponse,
 } from "../../types/GetApiChartsChartidAbstractionSummary.ts";
@@ -18,8 +20,32 @@ export const getApiChartsChartidAbstractionSummaryPathParamsSchema = z.object({
 /**
  * @description Chart summary retrieved successfully
  */
-export const getApiChartsChartidAbstractionSummary200Schema =
-  z.unknown() as unknown as ToZod<GetApiChartsChartidAbstractionSummary200>;
+export const getApiChartsChartidAbstractionSummary200Schema = z.object({
+  success: z.optional(z.boolean()),
+  data: z.optional(
+    z.object({
+      chart_id: z.optional(z.string()),
+      measureName: z.optional(z.string()),
+      eligibilityStatus: z.optional(z.string()),
+      availableEvidenceCount: z.optional(z.number().int()),
+      missingEvidenceCount: z.optional(z.number().int()),
+      missingEvidenceList: z.optional(z.array(z.string())),
+      gapToCloseDetails: z.optional(z.array(z.string())),
+    }),
+  ),
+}) as unknown as ToZod<GetApiChartsChartidAbstractionSummary200>;
+
+/**
+ * @description Chart or patient not found
+ */
+export const getApiChartsChartidAbstractionSummary404Schema =
+  z.unknown() as unknown as ToZod<GetApiChartsChartidAbstractionSummary404>;
+
+/**
+ * @description Internal server error
+ */
+export const getApiChartsChartidAbstractionSummary500Schema =
+  z.unknown() as unknown as ToZod<GetApiChartsChartidAbstractionSummary500>;
 
 export const getApiChartsChartidAbstractionSummaryQueryResponseSchema = z.lazy(
   () => getApiChartsChartidAbstractionSummary200Schema,

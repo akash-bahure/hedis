@@ -5,7 +5,29 @@
 
 import * as z from "zod";
 import type { ToZod } from "../../.kubb/ToZod.ts";
-import type { PostApiChartsChartidSubmitQaMutationResponse } from "../../types/PostApiChartsChartidSubmitQa.ts";
+import type {
+  PostApiChartsChartidSubmitQa200,
+  PostApiChartsChartidSubmitQaMutationRequest,
+  PostApiChartsChartidSubmitQaMutationResponse,
+} from "../../types/PostApiChartsChartidSubmitQa.ts";
 
-export const postApiChartsChartidSubmitQaMutationResponseSchema =
-  z.unknown() as unknown as ToZod<PostApiChartsChartidSubmitQaMutationResponse>;
+/**
+ * @description Submitted for QA
+ */
+export const postApiChartsChartidSubmitQa200Schema =
+  z.unknown() as unknown as ToZod<PostApiChartsChartidSubmitQa200>;
+
+export const postApiChartsChartidSubmitQaMutationRequestSchema = z.object({
+  service_date: z.optional(z.string().date()),
+  screening_type: z.optional(z.string()),
+  evidence_type: z.optional(z.string()),
+  systolic: z.optional(z.number().int()),
+  diastolic: z.optional(z.number().int()),
+  cpt_code: z.optional(z.string()),
+  icd_10_code: z.optional(z.string()),
+  notes: z.optional(z.string()),
+}) as unknown as ToZod<PostApiChartsChartidSubmitQaMutationRequest>;
+
+export const postApiChartsChartidSubmitQaMutationResponseSchema = z.lazy(
+  () => postApiChartsChartidSubmitQa200Schema,
+) as unknown as ToZod<PostApiChartsChartidSubmitQaMutationResponse>;

@@ -5,7 +5,22 @@
 
 import * as z from "zod";
 import type { ToZod } from "../../.kubb/ToZod.ts";
-import type { PostApiChartsChartidMarkNotFoundMutationResponse } from "../../types/PostApiChartsChartidMarkNotFound.ts";
+import type {
+  PostApiChartsChartidMarkNotFound200,
+  PostApiChartsChartidMarkNotFoundMutationRequest,
+  PostApiChartsChartidMarkNotFoundMutationResponse,
+} from "../../types/PostApiChartsChartidMarkNotFound.ts";
 
-export const postApiChartsChartidMarkNotFoundMutationResponseSchema =
-  z.unknown() as unknown as ToZod<PostApiChartsChartidMarkNotFoundMutationResponse>;
+/**
+ * @description Marked not found
+ */
+export const postApiChartsChartidMarkNotFound200Schema =
+  z.unknown() as unknown as ToZod<PostApiChartsChartidMarkNotFound200>;
+
+export const postApiChartsChartidMarkNotFoundMutationRequestSchema = z.object({
+  notes: z.optional(z.string()),
+}) as unknown as ToZod<PostApiChartsChartidMarkNotFoundMutationRequest>;
+
+export const postApiChartsChartidMarkNotFoundMutationResponseSchema = z.lazy(
+  () => postApiChartsChartidMarkNotFound200Schema,
+) as unknown as ToZod<PostApiChartsChartidMarkNotFoundMutationResponse>;

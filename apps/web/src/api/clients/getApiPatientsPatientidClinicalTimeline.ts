@@ -12,6 +12,7 @@ import type {
 import type {
   GetApiPatientsPatientidClinicalTimelineQueryResponse,
   GetApiPatientsPatientidClinicalTimelinePathParams,
+  GetApiPatientsPatientidClinicalTimelineQueryParams,
   GetApiPatientsPatientidClinicalTimeline500,
 } from "../types/GetApiPatientsPatientidClinicalTimeline.ts";
 
@@ -31,6 +32,7 @@ function getGetApiPatientsPatientidClinicalTimelineUrl(
  */
 export async function getApiPatientsPatientidClinicalTimeline(
   patientId: GetApiPatientsPatientidClinicalTimelinePathParams["patientId"],
+  params?: GetApiPatientsPatientidClinicalTimelineQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
   const { client: request = fetch, ...requestConfig } = config;
@@ -44,6 +46,7 @@ export async function getApiPatientsPatientidClinicalTimeline(
     url: getGetApiPatientsPatientidClinicalTimelineUrl(
       patientId,
     ).url.toString(),
+    params,
     ...requestConfig,
   });
   return res.data;

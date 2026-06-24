@@ -3,9 +3,51 @@
  * Do not edit manually.
  */
 
-export type PostApiChartsChartidSubmitQaMutationResponse = any;
+/**
+ * @description Submitted for QA
+ */
+export type PostApiChartsChartidSubmitQa200 = any;
+
+export type PostApiChartsChartidSubmitQaMutationRequest = {
+  /**
+   * @type string | undefined, date
+   */
+  service_date?: string;
+  /**
+   * @type string | undefined
+   */
+  screening_type?: string;
+  /**
+   * @type string | undefined
+   */
+  evidence_type?: string;
+  /**
+   * @type integer | undefined
+   */
+  systolic?: number;
+  /**
+   * @type integer | undefined
+   */
+  diastolic?: number;
+  /**
+   * @type string | undefined
+   */
+  cpt_code?: string;
+  /**
+   * @type string | undefined
+   */
+  icd_10_code?: string;
+  /**
+   * @type string | undefined
+   */
+  notes?: string;
+};
+
+export type PostApiChartsChartidSubmitQaMutationResponse =
+  PostApiChartsChartidSubmitQa200;
 
 export type PostApiChartsChartidSubmitQaMutation = {
-  Response: any;
+  Response: PostApiChartsChartidSubmitQa200;
+  Request: PostApiChartsChartidSubmitQaMutationRequest;
   Errors: any;
 };

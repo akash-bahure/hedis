@@ -18,6 +18,8 @@ import type {
 import type {
   GetApiChartsChartidAbstractionSummaryQueryResponse,
   GetApiChartsChartidAbstractionSummaryPathParams,
+  GetApiChartsChartidAbstractionSummary404,
+  GetApiChartsChartidAbstractionSummary500,
 } from "../../types/GetApiChartsChartidAbstractionSummary.ts";
 import {
   infiniteQueryOptions,
@@ -52,7 +54,10 @@ export function getApiChartsChartidAbstractionSummarySuspenseInfiniteQueryOption
     getApiChartsChartidAbstractionSummarySuspenseInfiniteQueryKey(chartId);
   return infiniteQueryOptions<
     GetApiChartsChartidAbstractionSummaryQueryResponse,
-    ResponseErrorConfig<Error>,
+    ResponseErrorConfig<
+      | GetApiChartsChartidAbstractionSummary404
+      | GetApiChartsChartidAbstractionSummary500
+    >,
     InfiniteData<GetApiChartsChartidAbstractionSummaryQueryResponse>,
     typeof queryKey,
     number
@@ -81,7 +86,10 @@ export function getApiChartsChartidAbstractionSummarySuspenseInfiniteQueryOption
  */
 export function useGetApiChartsChartidAbstractionSummarySuspenseInfinite<
   TQueryFnData = GetApiChartsChartidAbstractionSummaryQueryResponse,
-  TError = ResponseErrorConfig<Error>,
+  TError = ResponseErrorConfig<
+    | GetApiChartsChartidAbstractionSummary404
+    | GetApiChartsChartidAbstractionSummary500
+  >,
   TData = InfiniteData<TQueryFnData>,
   TQueryKey extends QueryKey =
     GetApiChartsChartidAbstractionSummarySuspenseInfiniteQueryKey,

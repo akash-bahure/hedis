@@ -13,7 +13,10 @@ import type {
   UseMutationResult,
   QueryClient,
 } from "@tanstack/react-query";
-import type { PostApiChartsChartidSubmitQaMutationResponse } from "../../types/PostApiChartsChartidSubmitQa.ts";
+import type {
+  PostApiChartsChartidSubmitQaMutationRequest,
+  PostApiChartsChartidSubmitQaMutationResponse,
+} from "../../types/PostApiChartsChartidSubmitQa.ts";
 import { mutationOptions, useMutation } from "@tanstack/react-query";
 import { postApiChartsChartidSubmitQa } from "../../clients/postApiChartsChartidSubmitQa.ts";
 
@@ -25,18 +28,20 @@ export type PostApiChartsChartidSubmitQaMutationKey = ReturnType<
 >;
 
 export function postApiChartsChartidSubmitQaMutationOptions<TContext = unknown>(
-  config: Partial<RequestConfig> & { client?: Client } = {},
+  config: Partial<
+    RequestConfig<PostApiChartsChartidSubmitQaMutationRequest>
+  > & { client?: Client } = {},
 ) {
   const mutationKey = postApiChartsChartidSubmitQaMutationKey();
   return mutationOptions<
     PostApiChartsChartidSubmitQaMutationResponse,
     ResponseErrorConfig<Error>,
-    void,
+    { data?: PostApiChartsChartidSubmitQaMutationRequest },
     TContext
   >({
     mutationKey,
-    mutationFn: async () => {
-      return postApiChartsChartidSubmitQa(config);
+    mutationFn: async ({ data }) => {
+      return postApiChartsChartidSubmitQa(data, config);
     },
   });
 }
@@ -50,10 +55,12 @@ export function usePostApiChartsChartidSubmitQa<TContext>(
     mutation?: UseMutationOptions<
       PostApiChartsChartidSubmitQaMutationResponse,
       ResponseErrorConfig<Error>,
-      void,
+      { data?: PostApiChartsChartidSubmitQaMutationRequest },
       TContext
     > & { client?: QueryClient };
-    client?: Partial<RequestConfig> & { client?: Client };
+    client?: Partial<
+      RequestConfig<PostApiChartsChartidSubmitQaMutationRequest>
+    > & { client?: Client };
   } = {},
 ) {
   const { mutation = {}, client: config = {} } = options ?? {};
@@ -66,14 +73,14 @@ export function usePostApiChartsChartidSubmitQa<TContext>(
   ) as UseMutationOptions<
     PostApiChartsChartidSubmitQaMutationResponse,
     ResponseErrorConfig<Error>,
-    void,
+    { data?: PostApiChartsChartidSubmitQaMutationRequest },
     TContext
   >;
 
   return useMutation<
     PostApiChartsChartidSubmitQaMutationResponse,
     ResponseErrorConfig<Error>,
-    void,
+    { data?: PostApiChartsChartidSubmitQaMutationRequest },
     TContext
   >(
     {
@@ -85,7 +92,7 @@ export function usePostApiChartsChartidSubmitQa<TContext>(
   ) as UseMutationResult<
     PostApiChartsChartidSubmitQaMutationResponse,
     ResponseErrorConfig<Error>,
-    void,
+    { data?: PostApiChartsChartidSubmitQaMutationRequest },
     TContext
   >;
 }

@@ -13,7 +13,55 @@ export type GetApiChartsChartidAbstractionSummaryPathParams = {
 /**
  * @description Chart summary retrieved successfully
  */
-export type GetApiChartsChartidAbstractionSummary200 = any;
+export type GetApiChartsChartidAbstractionSummary200 = {
+  /**
+   * @type boolean | undefined
+   */
+  success?: boolean;
+  /**
+   * @type object | undefined
+   */
+  data?: {
+    /**
+     * @type string | undefined
+     */
+    chart_id?: string;
+    /**
+     * @type string | undefined
+     */
+    measureName?: string;
+    /**
+     * @type string | undefined
+     */
+    eligibilityStatus?: string;
+    /**
+     * @type integer | undefined
+     */
+    availableEvidenceCount?: number;
+    /**
+     * @type integer | undefined
+     */
+    missingEvidenceCount?: number;
+    /**
+     * @type array | undefined
+     */
+    missingEvidenceList?: string[];
+    /**
+     * @type array | undefined
+     */
+    gapToCloseDetails?: string[];
+  };
+};
+
+/**
+ * @description Chart or patient not found
+ */
+export type GetApiChartsChartidAbstractionSummary404 = any;
+
+/**
+ * @description Internal server error
+ */
+export type GetApiChartsChartidAbstractionSummary500 = any;
 
 export type GetApiChartsChartidAbstractionSummaryQueryResponse =
   GetApiChartsChartidAbstractionSummary200;
@@ -21,5 +69,7 @@ export type GetApiChartsChartidAbstractionSummaryQueryResponse =
 export type GetApiChartsChartidAbstractionSummaryQuery = {
   Response: GetApiChartsChartidAbstractionSummary200;
   PathParams: GetApiChartsChartidAbstractionSummaryPathParams;
-  Errors: any;
+  Errors:
+    | GetApiChartsChartidAbstractionSummary404
+    | GetApiChartsChartidAbstractionSummary500;
 };

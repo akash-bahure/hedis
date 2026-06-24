@@ -9,7 +9,10 @@ import type {
   RequestConfig,
   ResponseErrorConfig,
 } from "../../../utils/client.ts";
-import type { PostApiChartsChartidSaveDraftMutationResponse } from "../types/PostApiChartsChartidSaveDraft.ts";
+import type {
+  PostApiChartsChartidSaveDraftMutationRequest,
+  PostApiChartsChartidSaveDraftMutationResponse,
+} from "../types/PostApiChartsChartidSaveDraft.ts";
 
 function getPostApiChartsChartidSaveDraftUrl() {
   const res = {
@@ -24,17 +27,23 @@ function getPostApiChartsChartidSaveDraftUrl() {
  * {@link /api/charts/:chartId/save-draft}
  */
 export async function postApiChartsChartidSaveDraft(
-  config: Partial<RequestConfig> & { client?: Client } = {},
+  data?: PostApiChartsChartidSaveDraftMutationRequest,
+  config: Partial<
+    RequestConfig<PostApiChartsChartidSaveDraftMutationRequest>
+  > & { client?: Client } = {},
 ) {
   const { client: request = fetch, ...requestConfig } = config;
+
+  const requestData = data;
 
   const res = await request<
     PostApiChartsChartidSaveDraftMutationResponse,
     ResponseErrorConfig<Error>,
-    unknown
+    PostApiChartsChartidSaveDraftMutationRequest
   >({
     method: "POST",
     url: getPostApiChartsChartidSaveDraftUrl().url.toString(),
+    data: requestData,
     ...requestConfig,
   });
   return res.data;

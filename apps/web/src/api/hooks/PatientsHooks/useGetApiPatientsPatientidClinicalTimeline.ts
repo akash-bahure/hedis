@@ -17,6 +17,7 @@ import type {
 import type {
   GetApiPatientsPatientidClinicalTimelineQueryResponse,
   GetApiPatientsPatientidClinicalTimelinePathParams,
+  GetApiPatientsPatientidClinicalTimelineQueryParams,
   GetApiPatientsPatientidClinicalTimeline500,
 } from "../../types/GetApiPatientsPatientidClinicalTimeline.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
@@ -26,12 +27,14 @@ export const getApiPatientsPatientidClinicalTimelineQueryKey = (
   patientId:
     | GetApiPatientsPatientidClinicalTimelinePathParams["patientId"]
     | undefined,
+  params?: GetApiPatientsPatientidClinicalTimelineQueryParams,
 ) =>
   [
     {
       url: "/api/patients/:patientId/clinical-timeline",
       params: { patientId: patientId },
     },
+    ...(params ? [params] : []),
   ] as const;
 
 export type GetApiPatientsPatientidClinicalTimelineQueryKey = ReturnType<
@@ -42,9 +45,13 @@ export function getApiPatientsPatientidClinicalTimelineQueryOptions(
   patientId:
     | GetApiPatientsPatientidClinicalTimelinePathParams["patientId"]
     | undefined,
+  params?: GetApiPatientsPatientidClinicalTimelineQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
-  const queryKey = getApiPatientsPatientidClinicalTimelineQueryKey(patientId);
+  const queryKey = getApiPatientsPatientidClinicalTimelineQueryKey(
+    patientId,
+    params,
+  );
   return queryOptions<
     GetApiPatientsPatientidClinicalTimelineQueryResponse,
     ResponseErrorConfig<GetApiPatientsPatientidClinicalTimeline500>,
@@ -54,7 +61,7 @@ export function getApiPatientsPatientidClinicalTimelineQueryOptions(
     enabled: !!patientId,
     queryKey,
     queryFn: async ({ signal }) => {
-      return getApiPatientsPatientidClinicalTimeline(patientId!, {
+      return getApiPatientsPatientidClinicalTimeline(patientId!, params, {
         ...config,
         signal: config.signal ?? signal,
       });
@@ -74,6 +81,7 @@ export function useGetApiPatientsPatientidClinicalTimeline<
   patientId:
     | GetApiPatientsPatientidClinicalTimelinePathParams["patientId"]
     | undefined,
+  params?: GetApiPatientsPatientidClinicalTimelineQueryParams,
   options: {
     query?: Partial<
       QueryObserverOptions<
@@ -91,11 +99,15 @@ export function useGetApiPatientsPatientidClinicalTimeline<
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
     resolvedOptions?.queryKey ??
-    getApiPatientsPatientidClinicalTimelineQueryKey(patientId);
+    getApiPatientsPatientidClinicalTimelineQueryKey(patientId, params);
 
   const query = useQuery(
     {
-      ...getApiPatientsPatientidClinicalTimelineQueryOptions(patientId, config),
+      ...getApiPatientsPatientidClinicalTimelineQueryOptions(
+        patientId,
+        params,
+        config,
+      ),
       ...resolvedOptions,
       queryKey,
     } as unknown as QueryObserverOptions,

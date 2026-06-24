@@ -26,7 +26,6 @@ export type { GetApiClientsExportSuspenseInfiniteQueryKey } from "./hooks/Client
 export type { GetApiClientsIdQueryKey } from "./hooks/ClientsHooks/useGetApiClientsId.ts";
 export type { GetApiClientsIdSuspenseQueryKey } from "./hooks/ClientsHooks/useGetApiClientsIdSuspense.ts";
 export type { GetApiClientsIdSuspenseInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsIdSuspenseInfinite.ts";
-export type { GetApiClientsInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsInfinite.ts";
 export type { GetApiClientsStatsQueryKey } from "./hooks/ClientsHooks/useGetApiClientsStats.ts";
 export type { GetApiClientsStatsSuspenseQueryKey } from "./hooks/ClientsHooks/useGetApiClientsStatsSuspense.ts";
 export type { GetApiClientsStatsSuspenseInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsStatsSuspenseInfinite.ts";
@@ -34,16 +33,12 @@ export type { GetApiClientsSuspenseQueryKey } from "./hooks/ClientsHooks/useGetA
 export type { GetApiClientsSuspenseInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsSuspenseInfinite.ts";
 export type { PatchApiClientsIdMutationKey } from "./hooks/ClientsHooks/usePatchApiClientsId.ts";
 export type { PostApiClientsMutationKey } from "./hooks/ClientsHooks/usePostApiClients.ts";
-export type { GetApiChartsChartidEvidenceTimelineQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiChartsChartidEvidenceTimeline.ts";
-export type { GetApiChartsChartidEvidenceTimelineSuspenseQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiChartsChartidEvidenceTimelineSuspense.ts";
-export type { GetApiChartsChartidEvidenceTimelineSuspenseInfiniteQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiChartsChartidEvidenceTimelineSuspenseInfinite.ts";
-export type { GetApiClinicalTimelineEventidReviewEvidenceQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEventidReviewEvidence.ts";
-export type { GetApiClinicalTimelineEventidReviewEvidenceSuspenseQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEventidReviewEvidenceSuspense.ts";
-export type { GetApiClinicalTimelineEventidReviewEvidenceSuspenseInfiniteQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEventidReviewEvidenceSuspenseInfinite.ts";
-export type { GetApiClinicalTimelineFiltersQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineFilters.ts";
-export type { GetApiClinicalTimelineFiltersSuspenseQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineFiltersSuspense.ts";
-export type { GetApiClinicalTimelineFiltersSuspenseInfiniteQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineFiltersSuspenseInfinite.ts";
-export type { PutApiClinicalTimelineEventidMutationKey } from "./hooks/Clinical TimelineHooks/usePutApiClinicalTimelineEventid.ts";
+export type { GetApiClinicalTimelineEvidenceEventidReviewEvidenceQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEvidenceEventidReviewEvidence.ts";
+export type { GetApiClinicalTimelineEvidenceEventidReviewEvidenceSuspenseQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEvidenceEventidReviewEvidenceSuspense.ts";
+export type { GetApiClinicalTimelineEvidenceEventidReviewEvidenceSuspenseInfiniteQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEvidenceEventidReviewEvidenceSuspenseInfinite.ts";
+export type { PostApiClinicalTimelineEvidenceEventidAcceptMutationKey } from "./hooks/Clinical TimelineHooks/usePostApiClinicalTimelineEvidenceEventidAccept.ts";
+export type { PostApiClinicalTimelineEvidenceEventidRejectMutationKey } from "./hooks/Clinical TimelineHooks/usePostApiClinicalTimelineEvidenceEventidReject.ts";
+export type { PutApiClinicalTimelineEvidenceEventidMutationKey } from "./hooks/Clinical TimelineHooks/usePutApiClinicalTimelineEvidenceEventid.ts";
 export type { GetApiDepartmentsQueryKey } from "./hooks/DepartmentsHooks/useGetApiDepartments.ts";
 export type { GetApiDepartmentsSuspenseQueryKey } from "./hooks/DepartmentsHooks/useGetApiDepartmentsSuspense.ts";
 export type { GetApiDepartmentsSuspenseInfiniteQueryKey } from "./hooks/DepartmentsHooks/useGetApiDepartmentsSuspenseInfinite.ts";
@@ -54,14 +49,13 @@ export type { GetApiHedisEvaluationsIdSuspenseInfiniteQueryKey } from "./hooks/H
 export type { GetApiHedisQaQueuePatientidQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaQueuePatientid.ts";
 export type { GetApiHedisQaQueuePatientidSuspenseQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaQueuePatientidSuspense.ts";
 export type { GetApiHedisQaQueuePatientidSuspenseInfiniteQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaQueuePatientidSuspenseInfinite.ts";
-export type { GetApiHedisQaReviewQaqueueidQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaReviewQaqueueid.ts";
-export type { GetApiHedisQaReviewQaqueueidSuspenseQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaReviewQaqueueidSuspense.ts";
-export type { GetApiHedisQaReviewQaqueueidSuspenseInfiniteQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaReviewQaqueueidSuspenseInfinite.ts";
-export type { PostApiHedisEvaluateIdMutationKey } from "./hooks/HEDISHooks/usePostApiHedisEvaluateId.ts";
+export type { GetApiHedisQaReviewEvaluationidQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaReviewEvaluationid.ts";
+export type { GetApiHedisQaReviewEvaluationidSuspenseQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaReviewEvaluationidSuspense.ts";
+export type { GetApiHedisQaReviewEvaluationidSuspenseInfiniteQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaReviewEvaluationidSuspenseInfinite.ts";
+export type { PostApiHedisAssignAbstractorMutationKey } from "./hooks/HEDISHooks/usePostApiHedisAssignAbstractor.ts";
 export type { PostApiHedisMarkAsReviewedMutationKey } from "./hooks/HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
 export type { PostApiHedisSendToQaMutationKey } from "./hooks/HEDISHooks/usePostApiHedisSendToQa.ts";
 export type { PostApiHedisUpdateQaStatusMutationKey } from "./hooks/HEDISHooks/usePostApiHedisUpdateQaStatus.ts";
-export type { PostApiManualChartAbstractionMutationKey } from "./hooks/Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
 export type { GetApiMeasureLibraryQueryKey } from "./hooks/Measure LibraryHooks/useGetApiMeasureLibrary.ts";
 export type { GetApiMeasureLibraryIdQueryKey } from "./hooks/Measure LibraryHooks/useGetApiMeasureLibraryId.ts";
 export type { GetApiMeasureLibraryIdSuspenseQueryKey } from "./hooks/Measure LibraryHooks/useGetApiMeasureLibraryIdSuspense.ts";
@@ -127,6 +121,8 @@ export type { GetApiProjectsSuspenseInfiniteQueryKey } from "./hooks/ProjectsHoo
 export type { PatchApiProjectsIdMutationKey } from "./hooks/ProjectsHooks/usePatchApiProjectsId.ts";
 export type { PatchApiProjectsIdAccessMutationKey } from "./hooks/ProjectsHooks/usePatchApiProjectsIdAccess.ts";
 export type { PostApiProjectsMutationKey } from "./hooks/ProjectsHooks/usePostApiProjects.ts";
+export type { PostApiChartsChartidQaApproveMutationKey } from "./hooks/QA ReworkHooks/usePostApiChartsChartidQaApprove.ts";
+export type { PostApiQaEvidenceRequestsMutationKey } from "./hooks/QA ReworkHooks/usePostApiQaEvidenceRequests.ts";
 export type { GetApiChartsJobsJobidQueryKey } from "./hooks/QueueHooks/useGetApiChartsJobsJobid.ts";
 export type { GetApiChartsJobsJobidSuspenseQueryKey } from "./hooks/QueueHooks/useGetApiChartsJobsJobidSuspense.ts";
 export type { GetApiChartsJobsJobidSuspenseInfiniteQueryKey } from "./hooks/QueueHooks/useGetApiChartsJobsJobidSuspenseInfinite.ts";
@@ -188,9 +184,6 @@ export type { GetAdminUsersSuspenseQueryKey } from "./hooks/Super Admin UsersHoo
 export type { GetAdminUsersSuspenseInfiniteQueryKey } from "./hooks/Super Admin UsersHooks/useGetAdminUsersSuspenseInfinite.ts";
 export type { PatchAdminUsersIdMutationKey } from "./hooks/Super Admin UsersHooks/usePatchAdminUsersId.ts";
 export type { PostAdminUsersMutationKey } from "./hooks/Super Admin UsersHooks/usePostAdminUsers.ts";
-export type { PostApiTimelineEventidAcceptMutationKey } from "./hooks/TimelineHooks/usePostApiTimelineEventidAccept.ts";
-export type { PostApiTimelineEventidRejectMutationKey } from "./hooks/TimelineHooks/usePostApiTimelineEventidReject.ts";
-export type { PutApiTimelineEventidMutationKey } from "./hooks/TimelineHooks/usePutApiTimelineEventid.ts";
 export type { GetApiUserRolesQueryKey } from "./hooks/User RolesHooks/useGetApiUserRoles.ts";
 export type { GetApiUserRolesIdQueryKey } from "./hooks/User RolesHooks/useGetApiUserRolesId.ts";
 export type { GetApiUserRolesIdSuspenseQueryKey } from "./hooks/User RolesHooks/useGetApiUserRolesIdSuspense.ts";
@@ -311,16 +304,12 @@ export type {
 } from "./types/GetApiAuditLogsExport.ts";
 export type {
   GetApiChartsChartidAbstractionSummary200,
+  GetApiChartsChartidAbstractionSummary404,
+  GetApiChartsChartidAbstractionSummary500,
   GetApiChartsChartidAbstractionSummaryPathParams,
   GetApiChartsChartidAbstractionSummaryQuery,
   GetApiChartsChartidAbstractionSummaryQueryResponse,
 } from "./types/GetApiChartsChartidAbstractionSummary.ts";
-export type {
-  GetApiChartsChartidEvidenceTimeline200,
-  GetApiChartsChartidEvidenceTimelinePathParams,
-  GetApiChartsChartidEvidenceTimelineQuery,
-  GetApiChartsChartidEvidenceTimelineQueryResponse,
-} from "./types/GetApiChartsChartidEvidenceTimeline.ts";
 export type {
   GetApiChartsJobsJobid200,
   GetApiChartsJobsJobidPathParams,
@@ -357,16 +346,11 @@ export type {
   GetApiClientsStatsQueryResponse,
 } from "./types/GetApiClientsStats.ts";
 export type {
-  GetApiClinicalTimelineEventidReviewEvidence200,
-  GetApiClinicalTimelineEventidReviewEvidencePathParams,
-  GetApiClinicalTimelineEventidReviewEvidenceQuery,
-  GetApiClinicalTimelineEventidReviewEvidenceQueryResponse,
-} from "./types/GetApiClinicalTimelineEventidReviewEvidence.ts";
-export type {
-  GetApiClinicalTimelineFilters200,
-  GetApiClinicalTimelineFiltersQuery,
-  GetApiClinicalTimelineFiltersQueryResponse,
-} from "./types/GetApiClinicalTimelineFilters.ts";
+  GetApiClinicalTimelineEvidenceEventidReviewEvidence200,
+  GetApiClinicalTimelineEvidenceEventidReviewEvidencePathParams,
+  GetApiClinicalTimelineEvidenceEventidReviewEvidenceQuery,
+  GetApiClinicalTimelineEvidenceEventidReviewEvidenceQueryResponse,
+} from "./types/GetApiClinicalTimelineEvidenceEventidReviewEvidence.ts";
 export type {
   GetApiDepartments200,
   GetApiDepartments500,
@@ -388,11 +372,11 @@ export type {
   GetApiHedisQaQueuePatientidQueryResponse,
 } from "./types/GetApiHedisQaQueuePatientid.ts";
 export type {
-  GetApiHedisQaReviewQaqueueid200,
-  GetApiHedisQaReviewQaqueueidPathParams,
-  GetApiHedisQaReviewQaqueueidQuery,
-  GetApiHedisQaReviewQaqueueidQueryResponse,
-} from "./types/GetApiHedisQaReviewQaqueueid.ts";
+  GetApiHedisQaReviewEvaluationid200,
+  GetApiHedisQaReviewEvaluationidPathParams,
+  GetApiHedisQaReviewEvaluationidQuery,
+  GetApiHedisQaReviewEvaluationidQueryResponse,
+} from "./types/GetApiHedisQaReviewEvaluationid.ts";
 export type {
   GetApiMeasureLibrary200,
   GetApiMeasureLibraryQuery,
@@ -446,6 +430,9 @@ export type {
   GetApiPatientsPatientidClinicalTimeline500,
   GetApiPatientsPatientidClinicalTimelinePathParams,
   GetApiPatientsPatientidClinicalTimelineQuery,
+  GetApiPatientsPatientidClinicalTimelineQueryParams,
+  GetApiPatientsPatientidClinicalTimelineQueryParamsDocumentTypeEnumKey,
+  GetApiPatientsPatientidClinicalTimelineQueryParamsEncounterTypeEnumKey,
   GetApiPatientsPatientidClinicalTimelineQueryResponse,
 } from "./types/GetApiPatientsPatientidClinicalTimeline.ts";
 export type {
@@ -881,15 +868,27 @@ export type {
   PostApiChartAssignmentsBulkAssignMutationResponse,
 } from "./types/PostApiChartAssignmentsBulkAssign.ts";
 export type {
+  PostApiChartsChartidMarkNotFound200,
   PostApiChartsChartidMarkNotFoundMutation,
+  PostApiChartsChartidMarkNotFoundMutationRequest,
   PostApiChartsChartidMarkNotFoundMutationResponse,
 } from "./types/PostApiChartsChartidMarkNotFound.ts";
 export type {
+  PostApiChartsChartidQaApprove200,
+  PostApiChartsChartidQaApproveMutation,
+  PostApiChartsChartidQaApproveMutationResponse,
+  PostApiChartsChartidQaApprovePathParams,
+} from "./types/PostApiChartsChartidQaApprove.ts";
+export type {
+  PostApiChartsChartidSaveDraft200,
   PostApiChartsChartidSaveDraftMutation,
+  PostApiChartsChartidSaveDraftMutationRequest,
   PostApiChartsChartidSaveDraftMutationResponse,
 } from "./types/PostApiChartsChartidSaveDraft.ts";
 export type {
+  PostApiChartsChartidSubmitQa200,
   PostApiChartsChartidSubmitQaMutation,
+  PostApiChartsChartidSubmitQaMutationRequest,
   PostApiChartsChartidSubmitQaMutationResponse,
 } from "./types/PostApiChartsChartidSubmitQa.ts";
 export type {
@@ -905,6 +904,20 @@ export type {
   PostApiClientsMutationResponse,
 } from "./types/PostApiClients.ts";
 export type {
+  PostApiClinicalTimelineEvidenceEventidAccept200,
+  PostApiClinicalTimelineEvidenceEventidAcceptMutation,
+  PostApiClinicalTimelineEvidenceEventidAcceptMutationRequest,
+  PostApiClinicalTimelineEvidenceEventidAcceptMutationResponse,
+  PostApiClinicalTimelineEvidenceEventidAcceptPathParams,
+} from "./types/PostApiClinicalTimelineEvidenceEventidAccept.ts";
+export type {
+  PostApiClinicalTimelineEvidenceEventidReject200,
+  PostApiClinicalTimelineEvidenceEventidRejectMutation,
+  PostApiClinicalTimelineEvidenceEventidRejectMutationRequest,
+  PostApiClinicalTimelineEvidenceEventidRejectMutationResponse,
+  PostApiClinicalTimelineEvidenceEventidRejectPathParams,
+} from "./types/PostApiClinicalTimelineEvidenceEventidReject.ts";
+export type {
   PostApiDepartments201,
   PostApiDepartments400,
   PostApiDepartments500,
@@ -913,12 +926,12 @@ export type {
   PostApiDepartmentsMutationResponse,
 } from "./types/PostApiDepartments.ts";
 export type {
-  PostApiHedisEvaluateId200,
-  PostApiHedisEvaluateIdMutation,
-  PostApiHedisEvaluateIdMutationRequest,
-  PostApiHedisEvaluateIdMutationResponse,
-  PostApiHedisEvaluateIdPathParams,
-} from "./types/PostApiHedisEvaluateId.ts";
+  DecisionsQaStatusEnumKey,
+  PostApiHedisAssignAbstractor200,
+  PostApiHedisAssignAbstractorMutation,
+  PostApiHedisAssignAbstractorMutationRequest,
+  PostApiHedisAssignAbstractorMutationResponse,
+} from "./types/PostApiHedisAssignAbstractor.ts";
 export type {
   PostApiHedisMarkAsReviewed200,
   PostApiHedisMarkAsReviewedMutation,
@@ -940,20 +953,6 @@ export type {
   PostApiHedisUpdateQaStatusMutationRequestActionEnumKey,
   PostApiHedisUpdateQaStatusMutationResponse,
 } from "./types/PostApiHedisUpdateQaStatus.ts";
-export type {
-  PostApiManualChartAbstraction201,
-  PostApiManualChartAbstraction400,
-  PostApiManualChartAbstraction404,
-  PostApiManualChartAbstraction500,
-  PostApiManualChartAbstractionMutation,
-  PostApiManualChartAbstractionMutationRequest,
-  PostApiManualChartAbstractionMutationRequestCptCodeEnumKey,
-  PostApiManualChartAbstractionMutationRequestEvidenceTypeEnumKey,
-  PostApiManualChartAbstractionMutationRequestIcd10CodeEnumKey,
-  PostApiManualChartAbstractionMutationRequestScreeningTypeEnumKey,
-  PostApiManualChartAbstractionMutationRequestSourceTypeEnumKey,
-  PostApiManualChartAbstractionMutationResponse,
-} from "./types/PostApiManualChartAbstraction.ts";
 export type {
   PostApiPatientsIdAssign200,
   PostApiPatientsIdAssignMutation,
@@ -989,6 +988,12 @@ export type {
   PostApiProjectsMutationResponse,
 } from "./types/PostApiProjects.ts";
 export type {
+  PostApiQaEvidenceRequests200,
+  PostApiQaEvidenceRequestsMutation,
+  PostApiQaEvidenceRequestsMutationRequest,
+  PostApiQaEvidenceRequestsMutationResponse,
+} from "./types/PostApiQaEvidenceRequests.ts";
+export type {
   PostApiSecurityAlertsBlockUser200,
   PostApiSecurityAlertsBlockUserMutation,
   PostApiSecurityAlertsBlockUserMutationRequest,
@@ -1000,18 +1005,6 @@ export type {
   PostApiSecurityAllowedIpsMutationRequest,
   PostApiSecurityAllowedIpsMutationResponse,
 } from "./types/PostApiSecurityAllowedIps.ts";
-export type {
-  PostApiTimelineEventidAccept200,
-  PostApiTimelineEventidAcceptMutation,
-  PostApiTimelineEventidAcceptMutationResponse,
-  PostApiTimelineEventidAcceptPathParams,
-} from "./types/PostApiTimelineEventidAccept.ts";
-export type {
-  PostApiTimelineEventidReject200,
-  PostApiTimelineEventidRejectMutation,
-  PostApiTimelineEventidRejectMutationResponse,
-  PostApiTimelineEventidRejectPathParams,
-} from "./types/PostApiTimelineEventidReject.ts";
 export type {
   PostApiUserRoles201,
   PostApiUserRoles400,
@@ -1048,12 +1041,12 @@ export type {
   PostApiUsersDeactivateMutationResponse,
 } from "./types/PostApiUsersDeactivate.ts";
 export type {
-  PutApiClinicalTimelineEventid200,
-  PutApiClinicalTimelineEventidMutation,
-  PutApiClinicalTimelineEventidMutationRequest,
-  PutApiClinicalTimelineEventidMutationResponse,
-  PutApiClinicalTimelineEventidPathParams,
-} from "./types/PutApiClinicalTimelineEventid.ts";
+  PutApiClinicalTimelineEvidenceEventid200,
+  PutApiClinicalTimelineEvidenceEventidMutation,
+  PutApiClinicalTimelineEvidenceEventidMutationRequest,
+  PutApiClinicalTimelineEvidenceEventidMutationResponse,
+  PutApiClinicalTimelineEvidenceEventidPathParams,
+} from "./types/PutApiClinicalTimelineEvidenceEventid.ts";
 export type {
   DataAuthTokenLifetimeEnum2Key,
   DataForceReauthenticationEnum2Key,
@@ -1117,13 +1110,6 @@ export type {
   PutApiSecuritySessionManagementV2MutationRequestSessionTimeoutEnumKey,
   PutApiSecuritySessionManagementV2MutationResponse,
 } from "./types/PutApiSecuritySessionManagementV2.ts";
-export type {
-  PutApiTimelineEventid200,
-  PutApiTimelineEventidMutation,
-  PutApiTimelineEventidMutationRequest,
-  PutApiTimelineEventidMutationResponse,
-  PutApiTimelineEventidPathParams,
-} from "./types/PutApiTimelineEventid.ts";
 export type { ShiftScheduleMatrix } from "./types/ShiftScheduleMatrix.ts";
 export type { User } from "./types/User.ts";
 export { deleteAdminOrgsId } from "./clients/deleteAdminOrgsId.ts";
@@ -1138,18 +1124,16 @@ export { getApiAccessLogsAccessMonitor } from "./clients/getApiAccessLogsAccessM
 export { getApiAuditLogs } from "./clients/getApiAuditLogs.ts";
 export { getApiAuditLogsExport } from "./clients/getApiAuditLogsExport.ts";
 export { getApiChartsChartidAbstractionSummary } from "./clients/getApiChartsChartidAbstractionSummary.ts";
-export { getApiChartsChartidEvidenceTimeline } from "./clients/getApiChartsChartidEvidenceTimeline.ts";
 export { getApiChartsJobsJobid } from "./clients/getApiChartsJobsJobid.ts";
 export { getApiClients } from "./clients/getApiClients.ts";
 export { getApiClientsExport } from "./clients/getApiClientsExport.ts";
 export { getApiClientsId } from "./clients/getApiClientsId.ts";
 export { getApiClientsStats } from "./clients/getApiClientsStats.ts";
-export { getApiClinicalTimelineEventidReviewEvidence } from "./clients/getApiClinicalTimelineEventidReviewEvidence.ts";
-export { getApiClinicalTimelineFilters } from "./clients/getApiClinicalTimelineFilters.ts";
+export { getApiClinicalTimelineEvidenceEventidReviewEvidence } from "./clients/getApiClinicalTimelineEvidenceEventidReviewEvidence.ts";
 export { getApiDepartments } from "./clients/getApiDepartments.ts";
 export { getApiHedisEvaluationsId } from "./clients/getApiHedisEvaluationsId.ts";
 export { getApiHedisQaQueuePatientid } from "./clients/getApiHedisQaQueuePatientid.ts";
-export { getApiHedisQaReviewQaqueueid } from "./clients/getApiHedisQaReviewQaqueueid.ts";
+export { getApiHedisQaReviewEvaluationid } from "./clients/getApiHedisQaReviewEvaluationid.ts";
 export { getApiMeasureLibrary } from "./clients/getApiMeasureLibrary.ts";
 export { getApiMeasureLibraryId } from "./clients/getApiMeasureLibraryId.ts";
 export { getApiMeasuresExportSpecs } from "./clients/getApiMeasuresExportSpecs.ts";
@@ -1213,35 +1197,35 @@ export { postApiAuthTwoFaSendOtp } from "./clients/postApiAuthTwoFaSendOtp.ts";
 export { postApiAuthTwoFaValidateOtp } from "./clients/postApiAuthTwoFaValidateOtp.ts";
 export { postApiChartAssignmentsBulkAssign } from "./clients/postApiChartAssignmentsBulkAssign.ts";
 export { postApiChartsChartidMarkNotFound } from "./clients/postApiChartsChartidMarkNotFound.ts";
+export { postApiChartsChartidQaApprove } from "./clients/postApiChartsChartidQaApprove.ts";
 export { postApiChartsChartidSaveDraft } from "./clients/postApiChartsChartidSaveDraft.ts";
 export { postApiChartsChartidSubmitQa } from "./clients/postApiChartsChartidSubmitQa.ts";
 export { postApiClients } from "./clients/postApiClients.ts";
+export { postApiClinicalTimelineEvidenceEventidAccept } from "./clients/postApiClinicalTimelineEvidenceEventidAccept.ts";
+export { postApiClinicalTimelineEvidenceEventidReject } from "./clients/postApiClinicalTimelineEvidenceEventidReject.ts";
 export { postApiDepartments } from "./clients/postApiDepartments.ts";
-export { postApiHedisEvaluateId } from "./clients/postApiHedisEvaluateId.ts";
+export { postApiHedisAssignAbstractor } from "./clients/postApiHedisAssignAbstractor.ts";
 export { postApiHedisMarkAsReviewed } from "./clients/postApiHedisMarkAsReviewed.ts";
 export { postApiHedisSendToQa } from "./clients/postApiHedisSendToQa.ts";
 export { postApiHedisUpdateQaStatus } from "./clients/postApiHedisUpdateQaStatus.ts";
-export { postApiManualChartAbstraction } from "./clients/postApiManualChartAbstraction.ts";
 export { postApiPatientsIdAssign } from "./clients/postApiPatientsIdAssign.ts";
 export { postApiPatientsPatientidChartsUpload } from "./clients/postApiPatientsPatientidChartsUpload.ts";
 export { postApiProfileActiveSessionsRevokeOthers } from "./clients/postApiProfileActiveSessionsRevokeOthers.ts";
 export { postApiProjects } from "./clients/postApiProjects.ts";
+export { postApiQaEvidenceRequests } from "./clients/postApiQaEvidenceRequests.ts";
 export { postApiSecurityAlertsBlockUser } from "./clients/postApiSecurityAlertsBlockUser.ts";
 export { postApiSecurityAllowedIps } from "./clients/postApiSecurityAllowedIps.ts";
-export { postApiTimelineEventidAccept } from "./clients/postApiTimelineEventidAccept.ts";
-export { postApiTimelineEventidReject } from "./clients/postApiTimelineEventidReject.ts";
 export { postApiUserRoles } from "./clients/postApiUserRoles.ts";
 export { postApiUsers } from "./clients/postApiUsers.ts";
 export { postApiUsersAssignRole } from "./clients/postApiUsersAssignRole.ts";
 export { postApiUsersDeactivate } from "./clients/postApiUsersDeactivate.ts";
-export { putApiClinicalTimelineEventid } from "./clients/putApiClinicalTimelineEventid.ts";
+export { putApiClinicalTimelineEvidenceEventid } from "./clients/putApiClinicalTimelineEvidenceEventid.ts";
 export { putApiSecurityComplianceAccessExpiryPolicy } from "./clients/putApiSecurityComplianceAccessExpiryPolicy.ts";
 export { putApiSecurityComplianceDataRetentionPolicy } from "./clients/putApiSecurityComplianceDataRetentionPolicy.ts";
 export { putApiSecurityMfaV2 } from "./clients/putApiSecurityMfaV2.ts";
 export { putApiSecurityPasswordPolicy } from "./clients/putApiSecurityPasswordPolicy.ts";
 export { putApiSecurityPhiEncryptionControls } from "./clients/putApiSecurityPhiEncryptionControls.ts";
 export { putApiSecuritySessionManagementV2 } from "./clients/putApiSecuritySessionManagementV2.ts";
-export { putApiTimelineEventid } from "./clients/putApiTimelineEventid.ts";
 export { postApiChartsChartidMarkNotFoundMutationKey } from "./hooks/Abstraction WorkflowHooks/usePostApiChartsChartidMarkNotFound.ts";
 export { postApiChartsChartidMarkNotFoundMutationOptions } from "./hooks/Abstraction WorkflowHooks/usePostApiChartsChartidMarkNotFound.ts";
 export { usePostApiChartsChartidMarkNotFound } from "./hooks/Abstraction WorkflowHooks/usePostApiChartsChartidMarkNotFound.ts";
@@ -1326,9 +1310,6 @@ export { useGetApiClientsIdSuspense } from "./hooks/ClientsHooks/useGetApiClient
 export { getApiClientsIdSuspenseInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsIdSuspenseInfinite.ts";
 export { getApiClientsIdSuspenseInfiniteQueryOptions } from "./hooks/ClientsHooks/useGetApiClientsIdSuspenseInfinite.ts";
 export { useGetApiClientsIdSuspenseInfinite } from "./hooks/ClientsHooks/useGetApiClientsIdSuspenseInfinite.ts";
-export { getApiClientsInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsInfinite.ts";
-export { getApiClientsInfiniteQueryOptions } from "./hooks/ClientsHooks/useGetApiClientsInfinite.ts";
-export { useGetApiClientsInfinite } from "./hooks/ClientsHooks/useGetApiClientsInfinite.ts";
 export { getApiClientsStatsQueryKey } from "./hooks/ClientsHooks/useGetApiClientsStats.ts";
 export { getApiClientsStatsQueryOptions } from "./hooks/ClientsHooks/useGetApiClientsStats.ts";
 export { useGetApiClientsStats } from "./hooks/ClientsHooks/useGetApiClientsStats.ts";
@@ -1350,36 +1331,24 @@ export { usePatchApiClientsId } from "./hooks/ClientsHooks/usePatchApiClientsId.
 export { postApiClientsMutationKey } from "./hooks/ClientsHooks/usePostApiClients.ts";
 export { postApiClientsMutationOptions } from "./hooks/ClientsHooks/usePostApiClients.ts";
 export { usePostApiClients } from "./hooks/ClientsHooks/usePostApiClients.ts";
-export { getApiChartsChartidEvidenceTimelineQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiChartsChartidEvidenceTimeline.ts";
-export { getApiChartsChartidEvidenceTimelineQueryOptions } from "./hooks/Clinical TimelineHooks/useGetApiChartsChartidEvidenceTimeline.ts";
-export { useGetApiChartsChartidEvidenceTimeline } from "./hooks/Clinical TimelineHooks/useGetApiChartsChartidEvidenceTimeline.ts";
-export { getApiChartsChartidEvidenceTimelineSuspenseQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiChartsChartidEvidenceTimelineSuspense.ts";
-export { getApiChartsChartidEvidenceTimelineSuspenseQueryOptions } from "./hooks/Clinical TimelineHooks/useGetApiChartsChartidEvidenceTimelineSuspense.ts";
-export { useGetApiChartsChartidEvidenceTimelineSuspense } from "./hooks/Clinical TimelineHooks/useGetApiChartsChartidEvidenceTimelineSuspense.ts";
-export { getApiChartsChartidEvidenceTimelineSuspenseInfiniteQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiChartsChartidEvidenceTimelineSuspenseInfinite.ts";
-export { getApiChartsChartidEvidenceTimelineSuspenseInfiniteQueryOptions } from "./hooks/Clinical TimelineHooks/useGetApiChartsChartidEvidenceTimelineSuspenseInfinite.ts";
-export { useGetApiChartsChartidEvidenceTimelineSuspenseInfinite } from "./hooks/Clinical TimelineHooks/useGetApiChartsChartidEvidenceTimelineSuspenseInfinite.ts";
-export { getApiClinicalTimelineEventidReviewEvidenceQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEventidReviewEvidence.ts";
-export { getApiClinicalTimelineEventidReviewEvidenceQueryOptions } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEventidReviewEvidence.ts";
-export { useGetApiClinicalTimelineEventidReviewEvidence } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEventidReviewEvidence.ts";
-export { getApiClinicalTimelineEventidReviewEvidenceSuspenseQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEventidReviewEvidenceSuspense.ts";
-export { getApiClinicalTimelineEventidReviewEvidenceSuspenseQueryOptions } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEventidReviewEvidenceSuspense.ts";
-export { useGetApiClinicalTimelineEventidReviewEvidenceSuspense } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEventidReviewEvidenceSuspense.ts";
-export { getApiClinicalTimelineEventidReviewEvidenceSuspenseInfiniteQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEventidReviewEvidenceSuspenseInfinite.ts";
-export { getApiClinicalTimelineEventidReviewEvidenceSuspenseInfiniteQueryOptions } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEventidReviewEvidenceSuspenseInfinite.ts";
-export { useGetApiClinicalTimelineEventidReviewEvidenceSuspenseInfinite } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEventidReviewEvidenceSuspenseInfinite.ts";
-export { getApiClinicalTimelineFiltersQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineFilters.ts";
-export { getApiClinicalTimelineFiltersQueryOptions } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineFilters.ts";
-export { useGetApiClinicalTimelineFilters } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineFilters.ts";
-export { getApiClinicalTimelineFiltersSuspenseQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineFiltersSuspense.ts";
-export { getApiClinicalTimelineFiltersSuspenseQueryOptions } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineFiltersSuspense.ts";
-export { useGetApiClinicalTimelineFiltersSuspense } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineFiltersSuspense.ts";
-export { getApiClinicalTimelineFiltersSuspenseInfiniteQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineFiltersSuspenseInfinite.ts";
-export { getApiClinicalTimelineFiltersSuspenseInfiniteQueryOptions } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineFiltersSuspenseInfinite.ts";
-export { useGetApiClinicalTimelineFiltersSuspenseInfinite } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineFiltersSuspenseInfinite.ts";
-export { putApiClinicalTimelineEventidMutationKey } from "./hooks/Clinical TimelineHooks/usePutApiClinicalTimelineEventid.ts";
-export { putApiClinicalTimelineEventidMutationOptions } from "./hooks/Clinical TimelineHooks/usePutApiClinicalTimelineEventid.ts";
-export { usePutApiClinicalTimelineEventid } from "./hooks/Clinical TimelineHooks/usePutApiClinicalTimelineEventid.ts";
+export { getApiClinicalTimelineEvidenceEventidReviewEvidenceQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEvidenceEventidReviewEvidence.ts";
+export { getApiClinicalTimelineEvidenceEventidReviewEvidenceQueryOptions } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEvidenceEventidReviewEvidence.ts";
+export { useGetApiClinicalTimelineEvidenceEventidReviewEvidence } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEvidenceEventidReviewEvidence.ts";
+export { getApiClinicalTimelineEvidenceEventidReviewEvidenceSuspenseQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEvidenceEventidReviewEvidenceSuspense.ts";
+export { getApiClinicalTimelineEvidenceEventidReviewEvidenceSuspenseQueryOptions } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEvidenceEventidReviewEvidenceSuspense.ts";
+export { useGetApiClinicalTimelineEvidenceEventidReviewEvidenceSuspense } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEvidenceEventidReviewEvidenceSuspense.ts";
+export { getApiClinicalTimelineEvidenceEventidReviewEvidenceSuspenseInfiniteQueryKey } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEvidenceEventidReviewEvidenceSuspenseInfinite.ts";
+export { getApiClinicalTimelineEvidenceEventidReviewEvidenceSuspenseInfiniteQueryOptions } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEvidenceEventidReviewEvidenceSuspenseInfinite.ts";
+export { useGetApiClinicalTimelineEvidenceEventidReviewEvidenceSuspenseInfinite } from "./hooks/Clinical TimelineHooks/useGetApiClinicalTimelineEvidenceEventidReviewEvidenceSuspenseInfinite.ts";
+export { postApiClinicalTimelineEvidenceEventidAcceptMutationKey } from "./hooks/Clinical TimelineHooks/usePostApiClinicalTimelineEvidenceEventidAccept.ts";
+export { postApiClinicalTimelineEvidenceEventidAcceptMutationOptions } from "./hooks/Clinical TimelineHooks/usePostApiClinicalTimelineEvidenceEventidAccept.ts";
+export { usePostApiClinicalTimelineEvidenceEventidAccept } from "./hooks/Clinical TimelineHooks/usePostApiClinicalTimelineEvidenceEventidAccept.ts";
+export { postApiClinicalTimelineEvidenceEventidRejectMutationKey } from "./hooks/Clinical TimelineHooks/usePostApiClinicalTimelineEvidenceEventidReject.ts";
+export { postApiClinicalTimelineEvidenceEventidRejectMutationOptions } from "./hooks/Clinical TimelineHooks/usePostApiClinicalTimelineEvidenceEventidReject.ts";
+export { usePostApiClinicalTimelineEvidenceEventidReject } from "./hooks/Clinical TimelineHooks/usePostApiClinicalTimelineEvidenceEventidReject.ts";
+export { putApiClinicalTimelineEvidenceEventidMutationKey } from "./hooks/Clinical TimelineHooks/usePutApiClinicalTimelineEvidenceEventid.ts";
+export { putApiClinicalTimelineEvidenceEventidMutationOptions } from "./hooks/Clinical TimelineHooks/usePutApiClinicalTimelineEvidenceEventid.ts";
+export { usePutApiClinicalTimelineEvidenceEventid } from "./hooks/Clinical TimelineHooks/usePutApiClinicalTimelineEvidenceEventid.ts";
 export { getApiDepartmentsQueryKey } from "./hooks/DepartmentsHooks/useGetApiDepartments.ts";
 export { getApiDepartmentsQueryOptions } from "./hooks/DepartmentsHooks/useGetApiDepartments.ts";
 export { useGetApiDepartments } from "./hooks/DepartmentsHooks/useGetApiDepartments.ts";
@@ -1410,18 +1379,18 @@ export { useGetApiHedisQaQueuePatientidSuspense } from "./hooks/HEDISHooks/useGe
 export { getApiHedisQaQueuePatientidSuspenseInfiniteQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaQueuePatientidSuspenseInfinite.ts";
 export { getApiHedisQaQueuePatientidSuspenseInfiniteQueryOptions } from "./hooks/HEDISHooks/useGetApiHedisQaQueuePatientidSuspenseInfinite.ts";
 export { useGetApiHedisQaQueuePatientidSuspenseInfinite } from "./hooks/HEDISHooks/useGetApiHedisQaQueuePatientidSuspenseInfinite.ts";
-export { getApiHedisQaReviewQaqueueidQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaReviewQaqueueid.ts";
-export { getApiHedisQaReviewQaqueueidQueryOptions } from "./hooks/HEDISHooks/useGetApiHedisQaReviewQaqueueid.ts";
-export { useGetApiHedisQaReviewQaqueueid } from "./hooks/HEDISHooks/useGetApiHedisQaReviewQaqueueid.ts";
-export { getApiHedisQaReviewQaqueueidSuspenseQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaReviewQaqueueidSuspense.ts";
-export { getApiHedisQaReviewQaqueueidSuspenseQueryOptions } from "./hooks/HEDISHooks/useGetApiHedisQaReviewQaqueueidSuspense.ts";
-export { useGetApiHedisQaReviewQaqueueidSuspense } from "./hooks/HEDISHooks/useGetApiHedisQaReviewQaqueueidSuspense.ts";
-export { getApiHedisQaReviewQaqueueidSuspenseInfiniteQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaReviewQaqueueidSuspenseInfinite.ts";
-export { getApiHedisQaReviewQaqueueidSuspenseInfiniteQueryOptions } from "./hooks/HEDISHooks/useGetApiHedisQaReviewQaqueueidSuspenseInfinite.ts";
-export { useGetApiHedisQaReviewQaqueueidSuspenseInfinite } from "./hooks/HEDISHooks/useGetApiHedisQaReviewQaqueueidSuspenseInfinite.ts";
-export { postApiHedisEvaluateIdMutationKey } from "./hooks/HEDISHooks/usePostApiHedisEvaluateId.ts";
-export { postApiHedisEvaluateIdMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisEvaluateId.ts";
-export { usePostApiHedisEvaluateId } from "./hooks/HEDISHooks/usePostApiHedisEvaluateId.ts";
+export { getApiHedisQaReviewEvaluationidQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaReviewEvaluationid.ts";
+export { getApiHedisQaReviewEvaluationidQueryOptions } from "./hooks/HEDISHooks/useGetApiHedisQaReviewEvaluationid.ts";
+export { useGetApiHedisQaReviewEvaluationid } from "./hooks/HEDISHooks/useGetApiHedisQaReviewEvaluationid.ts";
+export { getApiHedisQaReviewEvaluationidSuspenseQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaReviewEvaluationidSuspense.ts";
+export { getApiHedisQaReviewEvaluationidSuspenseQueryOptions } from "./hooks/HEDISHooks/useGetApiHedisQaReviewEvaluationidSuspense.ts";
+export { useGetApiHedisQaReviewEvaluationidSuspense } from "./hooks/HEDISHooks/useGetApiHedisQaReviewEvaluationidSuspense.ts";
+export { getApiHedisQaReviewEvaluationidSuspenseInfiniteQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaReviewEvaluationidSuspenseInfinite.ts";
+export { getApiHedisQaReviewEvaluationidSuspenseInfiniteQueryOptions } from "./hooks/HEDISHooks/useGetApiHedisQaReviewEvaluationidSuspenseInfinite.ts";
+export { useGetApiHedisQaReviewEvaluationidSuspenseInfinite } from "./hooks/HEDISHooks/useGetApiHedisQaReviewEvaluationidSuspenseInfinite.ts";
+export { postApiHedisAssignAbstractorMutationKey } from "./hooks/HEDISHooks/usePostApiHedisAssignAbstractor.ts";
+export { postApiHedisAssignAbstractorMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisAssignAbstractor.ts";
+export { usePostApiHedisAssignAbstractor } from "./hooks/HEDISHooks/usePostApiHedisAssignAbstractor.ts";
 export { postApiHedisMarkAsReviewedMutationKey } from "./hooks/HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
 export { postApiHedisMarkAsReviewedMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
 export { usePostApiHedisMarkAsReviewed } from "./hooks/HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
@@ -1431,9 +1400,6 @@ export { usePostApiHedisSendToQa } from "./hooks/HEDISHooks/usePostApiHedisSendT
 export { postApiHedisUpdateQaStatusMutationKey } from "./hooks/HEDISHooks/usePostApiHedisUpdateQaStatus.ts";
 export { postApiHedisUpdateQaStatusMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisUpdateQaStatus.ts";
 export { usePostApiHedisUpdateQaStatus } from "./hooks/HEDISHooks/usePostApiHedisUpdateQaStatus.ts";
-export { postApiManualChartAbstractionMutationKey } from "./hooks/Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
-export { postApiManualChartAbstractionMutationOptions } from "./hooks/Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
-export { usePostApiManualChartAbstraction } from "./hooks/Manual Chart AbstractionHooks/usePostApiManualChartAbstraction.ts";
 export { getApiMeasureLibraryQueryKey } from "./hooks/Measure LibraryHooks/useGetApiMeasureLibrary.ts";
 export { getApiMeasureLibraryQueryOptions } from "./hooks/Measure LibraryHooks/useGetApiMeasureLibrary.ts";
 export { useGetApiMeasureLibrary } from "./hooks/Measure LibraryHooks/useGetApiMeasureLibrary.ts";
@@ -1629,6 +1595,12 @@ export { usePatchApiProjectsIdAccess } from "./hooks/ProjectsHooks/usePatchApiPr
 export { postApiProjectsMutationKey } from "./hooks/ProjectsHooks/usePostApiProjects.ts";
 export { postApiProjectsMutationOptions } from "./hooks/ProjectsHooks/usePostApiProjects.ts";
 export { usePostApiProjects } from "./hooks/ProjectsHooks/usePostApiProjects.ts";
+export { postApiChartsChartidQaApproveMutationKey } from "./hooks/QA ReworkHooks/usePostApiChartsChartidQaApprove.ts";
+export { postApiChartsChartidQaApproveMutationOptions } from "./hooks/QA ReworkHooks/usePostApiChartsChartidQaApprove.ts";
+export { usePostApiChartsChartidQaApprove } from "./hooks/QA ReworkHooks/usePostApiChartsChartidQaApprove.ts";
+export { postApiQaEvidenceRequestsMutationKey } from "./hooks/QA ReworkHooks/usePostApiQaEvidenceRequests.ts";
+export { postApiQaEvidenceRequestsMutationOptions } from "./hooks/QA ReworkHooks/usePostApiQaEvidenceRequests.ts";
+export { usePostApiQaEvidenceRequests } from "./hooks/QA ReworkHooks/usePostApiQaEvidenceRequests.ts";
 export { getApiChartsJobsJobidQueryKey } from "./hooks/QueueHooks/useGetApiChartsJobsJobid.ts";
 export { getApiChartsJobsJobidQueryOptions } from "./hooks/QueueHooks/useGetApiChartsJobsJobid.ts";
 export { useGetApiChartsJobsJobid } from "./hooks/QueueHooks/useGetApiChartsJobsJobid.ts";
@@ -1812,15 +1784,6 @@ export { usePatchAdminUsersId } from "./hooks/Super Admin UsersHooks/usePatchAdm
 export { postAdminUsersMutationKey } from "./hooks/Super Admin UsersHooks/usePostAdminUsers.ts";
 export { postAdminUsersMutationOptions } from "./hooks/Super Admin UsersHooks/usePostAdminUsers.ts";
 export { usePostAdminUsers } from "./hooks/Super Admin UsersHooks/usePostAdminUsers.ts";
-export { postApiTimelineEventidAcceptMutationKey } from "./hooks/TimelineHooks/usePostApiTimelineEventidAccept.ts";
-export { postApiTimelineEventidAcceptMutationOptions } from "./hooks/TimelineHooks/usePostApiTimelineEventidAccept.ts";
-export { usePostApiTimelineEventidAccept } from "./hooks/TimelineHooks/usePostApiTimelineEventidAccept.ts";
-export { postApiTimelineEventidRejectMutationKey } from "./hooks/TimelineHooks/usePostApiTimelineEventidReject.ts";
-export { postApiTimelineEventidRejectMutationOptions } from "./hooks/TimelineHooks/usePostApiTimelineEventidReject.ts";
-export { usePostApiTimelineEventidReject } from "./hooks/TimelineHooks/usePostApiTimelineEventidReject.ts";
-export { putApiTimelineEventidMutationKey } from "./hooks/TimelineHooks/usePutApiTimelineEventid.ts";
-export { putApiTimelineEventidMutationOptions } from "./hooks/TimelineHooks/usePutApiTimelineEventid.ts";
-export { usePutApiTimelineEventid } from "./hooks/TimelineHooks/usePutApiTimelineEventid.ts";
 export { getApiUserRolesQueryKey } from "./hooks/User RolesHooks/useGetApiUserRoles.ts";
 export { getApiUserRolesQueryOptions } from "./hooks/User RolesHooks/useGetApiUserRoles.ts";
 export { useGetApiUserRoles } from "./hooks/User RolesHooks/useGetApiUserRoles.ts";
@@ -1934,6 +1897,8 @@ export { getApiClientsExportQueryParamsFormatEnum } from "./types/GetApiClientsE
 export { getApiMeasuresExportSpecsQueryParamsFormatEnum } from "./types/GetApiMeasuresExportSpecs.ts";
 export { getApiMeasuresExportSpecsQueryParamsStatusEnum } from "./types/GetApiMeasuresExportSpecs.ts";
 export { getApiMeasuresMeasureidExportQueryParamsFormatEnum } from "./types/GetApiMeasuresMeasureidExport.ts";
+export { getApiPatientsPatientidClinicalTimelineQueryParamsDocumentTypeEnum } from "./types/GetApiPatientsPatientidClinicalTimeline.ts";
+export { getApiPatientsPatientidClinicalTimelineQueryParamsEncounterTypeEnum } from "./types/GetApiPatientsPatientidClinicalTimeline.ts";
 export { getApiProjectsQueryParamsPriorityEnum } from "./types/GetApiProjects.ts";
 export { getApiProjectsQueryParamsProjectTypeEnum } from "./types/GetApiProjects.ts";
 export { getApiProjectsQueryParamsSpecialtyEnum } from "./types/GetApiProjects.ts";
@@ -1971,12 +1936,8 @@ export { postApiClientsMutationRequestMeasureYearEnum } from "./types/PostApiCli
 export { postApiClientsMutationRequestPlanTierEnum } from "./types/PostApiClients.ts";
 export { postApiClientsMutationRequestRegionEnum } from "./types/PostApiClients.ts";
 export { postApiClientsMutationRequestStatusEnum } from "./types/PostApiClients.ts";
+export { decisionsQaStatusEnum } from "./types/PostApiHedisAssignAbstractor.ts";
 export { postApiHedisUpdateQaStatusMutationRequestActionEnum } from "./types/PostApiHedisUpdateQaStatus.ts";
-export { postApiManualChartAbstractionMutationRequestCptCodeEnum } from "./types/PostApiManualChartAbstraction.ts";
-export { postApiManualChartAbstractionMutationRequestEvidenceTypeEnum } from "./types/PostApiManualChartAbstraction.ts";
-export { postApiManualChartAbstractionMutationRequestIcd10CodeEnum } from "./types/PostApiManualChartAbstraction.ts";
-export { postApiManualChartAbstractionMutationRequestScreeningTypeEnum } from "./types/PostApiManualChartAbstraction.ts";
-export { postApiManualChartAbstractionMutationRequestSourceTypeEnum } from "./types/PostApiManualChartAbstraction.ts";
 export { postApiPatientsIdAssignMutationRequestRoleEnum } from "./types/PostApiPatientsIdAssign.ts";
 export { postApiProjectsMutationRequestPriorityEnum } from "./types/PostApiProjects.ts";
 export { postApiProjectsMutationRequestProjectTypeEnum } from "./types/PostApiProjects.ts";
@@ -2004,9 +1965,21 @@ export { putApiSecurityComplianceDataRetentionPolicyMutationRequestSessionLogsEn
 export { putApiSecurityMfaV2MutationRequestGracePeriodEnum } from "./types/PutApiSecurityMfaV2.ts";
 export { putApiSecuritySessionManagementV2MutationRequestMaxConcurrentSessionsEnum } from "./types/PutApiSecuritySessionManagementV2.ts";
 export { putApiSecuritySessionManagementV2MutationRequestSessionTimeoutEnum } from "./types/PutApiSecuritySessionManagementV2.ts";
-export { postApiChartsChartidMarkNotFoundMutationResponseSchema } from "./zod/Abstraction WorkflowSchemas/postApiChartsChartidMarkNotFoundSchema.ts";
-export { postApiChartsChartidSaveDraftMutationResponseSchema } from "./zod/Abstraction WorkflowSchemas/postApiChartsChartidSaveDraftSchema.ts";
-export { postApiChartsChartidSubmitQaMutationResponseSchema } from "./zod/Abstraction WorkflowSchemas/postApiChartsChartidSubmitQaSchema.ts";
+export {
+  postApiChartsChartidMarkNotFound200Schema,
+  postApiChartsChartidMarkNotFoundMutationRequestSchema,
+  postApiChartsChartidMarkNotFoundMutationResponseSchema,
+} from "./zod/Abstraction WorkflowSchemas/postApiChartsChartidMarkNotFoundSchema.ts";
+export {
+  postApiChartsChartidSaveDraft200Schema,
+  postApiChartsChartidSaveDraftMutationRequestSchema,
+  postApiChartsChartidSaveDraftMutationResponseSchema,
+} from "./zod/Abstraction WorkflowSchemas/postApiChartsChartidSaveDraftSchema.ts";
+export {
+  postApiChartsChartidSubmitQa200Schema,
+  postApiChartsChartidSubmitQaMutationRequestSchema,
+  postApiChartsChartidSubmitQaMutationResponseSchema,
+} from "./zod/Abstraction WorkflowSchemas/postApiChartsChartidSubmitQaSchema.ts";
 export {
   getApiAccessLogsAccessMonitor200Schema,
   getApiAccessLogsAccessMonitorQueryParamsSchema,
@@ -2122,25 +2095,28 @@ export {
   postApiClientsMutationResponseSchema,
 } from "./zod/ClientsSchemas/postApiClientsSchema.ts";
 export {
-  getApiChartsChartidEvidenceTimeline200Schema,
-  getApiChartsChartidEvidenceTimelinePathParamsSchema,
-  getApiChartsChartidEvidenceTimelineQueryResponseSchema,
-} from "./zod/Clinical TimelineSchemas/getApiChartsChartidEvidenceTimelineSchema.ts";
+  getApiClinicalTimelineEvidenceEventidReviewEvidence200Schema,
+  getApiClinicalTimelineEvidenceEventidReviewEvidencePathParamsSchema,
+  getApiClinicalTimelineEvidenceEventidReviewEvidenceQueryResponseSchema,
+} from "./zod/Clinical TimelineSchemas/getApiClinicalTimelineEvidenceEventidReviewEvidenceSchema.ts";
 export {
-  getApiClinicalTimelineEventidReviewEvidence200Schema,
-  getApiClinicalTimelineEventidReviewEvidencePathParamsSchema,
-  getApiClinicalTimelineEventidReviewEvidenceQueryResponseSchema,
-} from "./zod/Clinical TimelineSchemas/getApiClinicalTimelineEventidReviewEvidenceSchema.ts";
+  postApiClinicalTimelineEvidenceEventidAccept200Schema,
+  postApiClinicalTimelineEvidenceEventidAcceptMutationRequestSchema,
+  postApiClinicalTimelineEvidenceEventidAcceptMutationResponseSchema,
+  postApiClinicalTimelineEvidenceEventidAcceptPathParamsSchema,
+} from "./zod/Clinical TimelineSchemas/postApiClinicalTimelineEvidenceEventidAcceptSchema.ts";
 export {
-  getApiClinicalTimelineFilters200Schema,
-  getApiClinicalTimelineFiltersQueryResponseSchema,
-} from "./zod/Clinical TimelineSchemas/getApiClinicalTimelineFiltersSchema.ts";
+  postApiClinicalTimelineEvidenceEventidReject200Schema,
+  postApiClinicalTimelineEvidenceEventidRejectMutationRequestSchema,
+  postApiClinicalTimelineEvidenceEventidRejectMutationResponseSchema,
+  postApiClinicalTimelineEvidenceEventidRejectPathParamsSchema,
+} from "./zod/Clinical TimelineSchemas/postApiClinicalTimelineEvidenceEventidRejectSchema.ts";
 export {
-  putApiClinicalTimelineEventid200Schema,
-  putApiClinicalTimelineEventidMutationRequestSchema,
-  putApiClinicalTimelineEventidMutationResponseSchema,
-  putApiClinicalTimelineEventidPathParamsSchema,
-} from "./zod/Clinical TimelineSchemas/putApiClinicalTimelineEventidSchema.ts";
+  putApiClinicalTimelineEvidenceEventid200Schema,
+  putApiClinicalTimelineEvidenceEventidMutationRequestSchema,
+  putApiClinicalTimelineEvidenceEventidMutationResponseSchema,
+  putApiClinicalTimelineEvidenceEventidPathParamsSchema,
+} from "./zod/Clinical TimelineSchemas/putApiClinicalTimelineEvidenceEventidSchema.ts";
 export {
   getApiDepartments200Schema,
   getApiDepartments500Schema,
@@ -2166,16 +2142,15 @@ export {
   getApiHedisQaQueuePatientidQueryResponseSchema,
 } from "./zod/HEDISSchemas/getApiHedisQaQueuePatientidSchema.ts";
 export {
-  getApiHedisQaReviewQaqueueid200Schema,
-  getApiHedisQaReviewQaqueueidPathParamsSchema,
-  getApiHedisQaReviewQaqueueidQueryResponseSchema,
-} from "./zod/HEDISSchemas/getApiHedisQaReviewQaqueueidSchema.ts";
+  getApiHedisQaReviewEvaluationid200Schema,
+  getApiHedisQaReviewEvaluationidPathParamsSchema,
+  getApiHedisQaReviewEvaluationidQueryResponseSchema,
+} from "./zod/HEDISSchemas/getApiHedisQaReviewEvaluationidSchema.ts";
 export {
-  postApiHedisEvaluateId200Schema,
-  postApiHedisEvaluateIdMutationRequestSchema,
-  postApiHedisEvaluateIdMutationResponseSchema,
-  postApiHedisEvaluateIdPathParamsSchema,
-} from "./zod/HEDISSchemas/postApiHedisEvaluateIdSchema.ts";
+  postApiHedisAssignAbstractor200Schema,
+  postApiHedisAssignAbstractorMutationRequestSchema,
+  postApiHedisAssignAbstractorMutationResponseSchema,
+} from "./zod/HEDISSchemas/postApiHedisAssignAbstractorSchema.ts";
 export {
   postApiHedisMarkAsReviewed200Schema,
   postApiHedisMarkAsReviewedMutationRequestSchema,
@@ -2193,14 +2168,6 @@ export {
   postApiHedisUpdateQaStatusMutationRequestSchema,
   postApiHedisUpdateQaStatusMutationResponseSchema,
 } from "./zod/HEDISSchemas/postApiHedisUpdateQaStatusSchema.ts";
-export {
-  postApiManualChartAbstraction201Schema,
-  postApiManualChartAbstraction400Schema,
-  postApiManualChartAbstraction404Schema,
-  postApiManualChartAbstraction500Schema,
-  postApiManualChartAbstractionMutationRequestSchema,
-  postApiManualChartAbstractionMutationResponseSchema,
-} from "./zod/Manual Chart AbstractionSchemas/postApiManualChartAbstractionSchema.ts";
 export {
   getApiMeasureLibraryId200Schema,
   getApiMeasureLibraryId404Schema,
@@ -2288,6 +2255,8 @@ export {
 } from "./zod/OrganizationsSchemas/postAdminOrgsSchema.ts";
 export {
   getApiChartsChartidAbstractionSummary200Schema,
+  getApiChartsChartidAbstractionSummary404Schema,
+  getApiChartsChartidAbstractionSummary500Schema,
   getApiChartsChartidAbstractionSummaryPathParamsSchema,
   getApiChartsChartidAbstractionSummaryQueryResponseSchema,
 } from "./zod/PatientsSchemas/getApiChartsChartidAbstractionSummarySchema.ts";
@@ -2300,6 +2269,7 @@ export {
   getApiPatientsPatientidClinicalTimeline200Schema,
   getApiPatientsPatientidClinicalTimeline500Schema,
   getApiPatientsPatientidClinicalTimelinePathParamsSchema,
+  getApiPatientsPatientidClinicalTimelineQueryParamsSchema,
   getApiPatientsPatientidClinicalTimelineQueryResponseSchema,
 } from "./zod/PatientsSchemas/getApiPatientsPatientidClinicalTimelineSchema.ts";
 export {
@@ -2416,6 +2386,16 @@ export {
   postApiProjectsMutationRequestSchema,
   postApiProjectsMutationResponseSchema,
 } from "./zod/ProjectsSchemas/postApiProjectsSchema.ts";
+export {
+  postApiChartsChartidQaApprove200Schema,
+  postApiChartsChartidQaApproveMutationResponseSchema,
+  postApiChartsChartidQaApprovePathParamsSchema,
+} from "./zod/QA ReworkSchemas/postApiChartsChartidQaApproveSchema.ts";
+export {
+  postApiQaEvidenceRequests200Schema,
+  postApiQaEvidenceRequestsMutationRequestSchema,
+  postApiQaEvidenceRequestsMutationResponseSchema,
+} from "./zod/QA ReworkSchemas/postApiQaEvidenceRequestsSchema.ts";
 export {
   getApiChartsJobsJobid200Schema,
   getApiChartsJobsJobidPathParamsSchema,
@@ -2573,22 +2553,6 @@ export {
   postAdminUsersMutationRequestSchema,
   postAdminUsersMutationResponseSchema,
 } from "./zod/Super Admin UsersSchemas/postAdminUsersSchema.ts";
-export {
-  postApiTimelineEventidAccept200Schema,
-  postApiTimelineEventidAcceptMutationResponseSchema,
-  postApiTimelineEventidAcceptPathParamsSchema,
-} from "./zod/TimelineSchemas/postApiTimelineEventidAcceptSchema.ts";
-export {
-  postApiTimelineEventidReject200Schema,
-  postApiTimelineEventidRejectMutationResponseSchema,
-  postApiTimelineEventidRejectPathParamsSchema,
-} from "./zod/TimelineSchemas/postApiTimelineEventidRejectSchema.ts";
-export {
-  putApiTimelineEventid200Schema,
-  putApiTimelineEventidMutationRequestSchema,
-  putApiTimelineEventidMutationResponseSchema,
-  putApiTimelineEventidPathParamsSchema,
-} from "./zod/TimelineSchemas/putApiTimelineEventidSchema.ts";
 export {
   getApiUserRolesId200Schema,
   getApiUserRolesId404Schema,

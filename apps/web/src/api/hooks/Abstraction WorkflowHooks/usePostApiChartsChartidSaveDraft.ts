@@ -13,7 +13,10 @@ import type {
   UseMutationResult,
   QueryClient,
 } from "@tanstack/react-query";
-import type { PostApiChartsChartidSaveDraftMutationResponse } from "../../types/PostApiChartsChartidSaveDraft.ts";
+import type {
+  PostApiChartsChartidSaveDraftMutationRequest,
+  PostApiChartsChartidSaveDraftMutationResponse,
+} from "../../types/PostApiChartsChartidSaveDraft.ts";
 import { mutationOptions, useMutation } from "@tanstack/react-query";
 import { postApiChartsChartidSaveDraft } from "../../clients/postApiChartsChartidSaveDraft.ts";
 
@@ -26,17 +29,21 @@ export type PostApiChartsChartidSaveDraftMutationKey = ReturnType<
 
 export function postApiChartsChartidSaveDraftMutationOptions<
   TContext = unknown,
->(config: Partial<RequestConfig> & { client?: Client } = {}) {
+>(
+  config: Partial<
+    RequestConfig<PostApiChartsChartidSaveDraftMutationRequest>
+  > & { client?: Client } = {},
+) {
   const mutationKey = postApiChartsChartidSaveDraftMutationKey();
   return mutationOptions<
     PostApiChartsChartidSaveDraftMutationResponse,
     ResponseErrorConfig<Error>,
-    void,
+    { data?: PostApiChartsChartidSaveDraftMutationRequest },
     TContext
   >({
     mutationKey,
-    mutationFn: async () => {
-      return postApiChartsChartidSaveDraft(config);
+    mutationFn: async ({ data }) => {
+      return postApiChartsChartidSaveDraft(data, config);
     },
   });
 }
@@ -50,10 +57,12 @@ export function usePostApiChartsChartidSaveDraft<TContext>(
     mutation?: UseMutationOptions<
       PostApiChartsChartidSaveDraftMutationResponse,
       ResponseErrorConfig<Error>,
-      void,
+      { data?: PostApiChartsChartidSaveDraftMutationRequest },
       TContext
     > & { client?: QueryClient };
-    client?: Partial<RequestConfig> & { client?: Client };
+    client?: Partial<
+      RequestConfig<PostApiChartsChartidSaveDraftMutationRequest>
+    > & { client?: Client };
   } = {},
 ) {
   const { mutation = {}, client: config = {} } = options ?? {};
@@ -66,14 +75,14 @@ export function usePostApiChartsChartidSaveDraft<TContext>(
   ) as UseMutationOptions<
     PostApiChartsChartidSaveDraftMutationResponse,
     ResponseErrorConfig<Error>,
-    void,
+    { data?: PostApiChartsChartidSaveDraftMutationRequest },
     TContext
   >;
 
   return useMutation<
     PostApiChartsChartidSaveDraftMutationResponse,
     ResponseErrorConfig<Error>,
-    void,
+    { data?: PostApiChartsChartidSaveDraftMutationRequest },
     TContext
   >(
     {
@@ -85,7 +94,7 @@ export function usePostApiChartsChartidSaveDraft<TContext>(
   ) as UseMutationResult<
     PostApiChartsChartidSaveDraftMutationResponse,
     ResponseErrorConfig<Error>,
-    void,
+    { data?: PostApiChartsChartidSaveDraftMutationRequest },
     TContext
   >;
 }

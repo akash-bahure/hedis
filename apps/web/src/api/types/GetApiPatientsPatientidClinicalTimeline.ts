@@ -11,10 +11,79 @@ export type GetApiPatientsPatientidClinicalTimelinePathParams = {
   patientId: string;
 };
 
+export const getApiPatientsPatientidClinicalTimelineQueryParamsDocumentTypeEnum =
+  {
+    Medication: "Medication",
+    Document: "Document",
+    Imaging: "Imaging",
+    Vitals: "Vitals",
+    "Lab Results": "Lab Results",
+    Encounter: "Encounter",
+  } as const;
+
+export type GetApiPatientsPatientidClinicalTimelineQueryParamsDocumentTypeEnumKey =
+  (typeof getApiPatientsPatientidClinicalTimelineQueryParamsDocumentTypeEnum)[keyof typeof getApiPatientsPatientidClinicalTimelineQueryParamsDocumentTypeEnum];
+
+export const getApiPatientsPatientidClinicalTimelineQueryParamsEncounterTypeEnum =
+  {
+    Telehealth: "Telehealth",
+    "Office Visit": "Office Visit",
+    Emergency: "Emergency",
+    Inpatient: "Inpatient",
+    Procedure: "Procedure",
+  } as const;
+
+export type GetApiPatientsPatientidClinicalTimelineQueryParamsEncounterTypeEnumKey =
+  (typeof getApiPatientsPatientidClinicalTimelineQueryParamsEncounterTypeEnum)[keyof typeof getApiPatientsPatientidClinicalTimelineQueryParamsEncounterTypeEnum];
+
+export type GetApiPatientsPatientidClinicalTimelineQueryParams = {
+  /**
+   * @description Optional chart ID to scope provider filter extraction
+   * @type string | undefined, uuid
+   */
+  chartId?: string;
+  /**
+   * @description Filter by document type
+   * @type string | undefined
+   */
+  documentType?: GetApiPatientsPatientidClinicalTimelineQueryParamsDocumentTypeEnumKey;
+  /**
+   * @description Filter by encounter type
+   * @type string | undefined
+   */
+  encounterType?: GetApiPatientsPatientidClinicalTimelineQueryParamsEncounterTypeEnumKey;
+  /**
+   * @description Comma separated provider IDs
+   * @type string | undefined
+   */
+  providerIds?: string;
+  /**
+   * @type boolean | undefined
+   */
+  hedisRelevant?: boolean;
+  /**
+   * @type boolean | undefined
+   */
+  structuredRelevant?: boolean;
+};
+
 /**
  * @description Clinical timeline evidence retrieved successfully
  */
-export type GetApiPatientsPatientidClinicalTimeline200 = any;
+export type GetApiPatientsPatientidClinicalTimeline200 = {
+  /**
+   * @type string | undefined
+   */
+  message?: string;
+  /**
+   * @type array | undefined
+   */
+  events?: object[];
+  /**
+   * @type array | undefined
+   */
+  availableProviders?: string[];
+};
 
 /**
  * @description Internal server error
@@ -27,5 +96,6 @@ export type GetApiPatientsPatientidClinicalTimelineQueryResponse =
 export type GetApiPatientsPatientidClinicalTimelineQuery = {
   Response: GetApiPatientsPatientidClinicalTimeline200;
   PathParams: GetApiPatientsPatientidClinicalTimelinePathParams;
+  QueryParams: GetApiPatientsPatientidClinicalTimelineQueryParams;
   Errors: GetApiPatientsPatientidClinicalTimeline500;
 };

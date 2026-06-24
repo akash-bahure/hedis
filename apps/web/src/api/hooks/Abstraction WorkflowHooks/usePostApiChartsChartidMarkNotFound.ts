@@ -13,7 +13,10 @@ import type {
   UseMutationResult,
   QueryClient,
 } from "@tanstack/react-query";
-import type { PostApiChartsChartidMarkNotFoundMutationResponse } from "../../types/PostApiChartsChartidMarkNotFound.ts";
+import type {
+  PostApiChartsChartidMarkNotFoundMutationRequest,
+  PostApiChartsChartidMarkNotFoundMutationResponse,
+} from "../../types/PostApiChartsChartidMarkNotFound.ts";
 import { mutationOptions, useMutation } from "@tanstack/react-query";
 import { postApiChartsChartidMarkNotFound } from "../../clients/postApiChartsChartidMarkNotFound.ts";
 
@@ -26,17 +29,21 @@ export type PostApiChartsChartidMarkNotFoundMutationKey = ReturnType<
 
 export function postApiChartsChartidMarkNotFoundMutationOptions<
   TContext = unknown,
->(config: Partial<RequestConfig> & { client?: Client } = {}) {
+>(
+  config: Partial<
+    RequestConfig<PostApiChartsChartidMarkNotFoundMutationRequest>
+  > & { client?: Client } = {},
+) {
   const mutationKey = postApiChartsChartidMarkNotFoundMutationKey();
   return mutationOptions<
     PostApiChartsChartidMarkNotFoundMutationResponse,
     ResponseErrorConfig<Error>,
-    void,
+    { data?: PostApiChartsChartidMarkNotFoundMutationRequest },
     TContext
   >({
     mutationKey,
-    mutationFn: async () => {
-      return postApiChartsChartidMarkNotFound(config);
+    mutationFn: async ({ data }) => {
+      return postApiChartsChartidMarkNotFound(data, config);
     },
   });
 }
@@ -50,10 +57,12 @@ export function usePostApiChartsChartidMarkNotFound<TContext>(
     mutation?: UseMutationOptions<
       PostApiChartsChartidMarkNotFoundMutationResponse,
       ResponseErrorConfig<Error>,
-      void,
+      { data?: PostApiChartsChartidMarkNotFoundMutationRequest },
       TContext
     > & { client?: QueryClient };
-    client?: Partial<RequestConfig> & { client?: Client };
+    client?: Partial<
+      RequestConfig<PostApiChartsChartidMarkNotFoundMutationRequest>
+    > & { client?: Client };
   } = {},
 ) {
   const { mutation = {}, client: config = {} } = options ?? {};
@@ -67,14 +76,14 @@ export function usePostApiChartsChartidMarkNotFound<TContext>(
   ) as UseMutationOptions<
     PostApiChartsChartidMarkNotFoundMutationResponse,
     ResponseErrorConfig<Error>,
-    void,
+    { data?: PostApiChartsChartidMarkNotFoundMutationRequest },
     TContext
   >;
 
   return useMutation<
     PostApiChartsChartidMarkNotFoundMutationResponse,
     ResponseErrorConfig<Error>,
-    void,
+    { data?: PostApiChartsChartidMarkNotFoundMutationRequest },
     TContext
   >(
     {
@@ -86,7 +95,7 @@ export function usePostApiChartsChartidMarkNotFound<TContext>(
   ) as UseMutationResult<
     PostApiChartsChartidMarkNotFoundMutationResponse,
     ResponseErrorConfig<Error>,
-    void,
+    { data?: PostApiChartsChartidMarkNotFoundMutationRequest },
     TContext
   >;
 }

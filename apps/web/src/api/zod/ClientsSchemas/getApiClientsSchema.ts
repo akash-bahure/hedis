@@ -44,8 +44,8 @@ export const getApiClientsQueryParamsSchema = z.object({
       ])
       .describe("Filter by contract type"),
   ),
-  page_no: z.coerce.number().int().default(1).describe("Current page number"),
-  page_size: z.coerce
+  page: z.coerce.number().int().default(1).describe("Current page number"),
+  limit: z.coerce
     .number()
     .int()
     .default(10)
@@ -57,9 +57,10 @@ export const getApiClientsQueryParamsSchema = z.object({
  */
 export const getApiClients200Schema = z.object({
   message: z.optional(z.string()),
-  page_no: z.optional(z.number().int()),
-  page_size: z.optional(z.number().int()),
-  total_count: z.optional(z.number().int()),
+  currentPage: z.optional(z.number().int()),
+  pageSize: z.optional(z.number().int()),
+  totalCount: z.optional(z.number().int()),
+  totalPages: z.optional(z.number().int()),
   data: z.optional(
     z.array(
       z.object({

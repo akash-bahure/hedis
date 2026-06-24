@@ -3,9 +3,23 @@
  * Do not edit manually.
  */
 
-export type PostApiChartsChartidMarkNotFoundMutationResponse = any;
+/**
+ * @description Marked not found
+ */
+export type PostApiChartsChartidMarkNotFound200 = any;
+
+export type PostApiChartsChartidMarkNotFoundMutationRequest = {
+  /**
+   * @type string | undefined
+   */
+  notes?: string;
+};
+
+export type PostApiChartsChartidMarkNotFoundMutationResponse =
+  PostApiChartsChartidMarkNotFound200;
 
 export type PostApiChartsChartidMarkNotFoundMutation = {
-  Response: any;
+  Response: PostApiChartsChartidMarkNotFound200;
+  Request: PostApiChartsChartidMarkNotFoundMutationRequest;
   Errors: any;
 };
