@@ -48,12 +48,12 @@ exports.getClients = async (db, queryParams) => {
     region,
     status,
     contract_type,
-    page_no = 1,
-    page_size = 10,
+    page = 1,
+    limit = 10,
   } = queryParams;
 
   const offset =
-    (Number(page_no) - 1) * Number(page_size);
+    (Number(page) - 1) * Number(limit);
 
   let whereClauses = [];
 
@@ -166,7 +166,7 @@ exports.getClients = async (db, queryParams) => {
 
   const dataValues = [
     ...values,
-    Number(page_size),
+    Number(limit),
     offset
   ];
 
@@ -175,14 +175,14 @@ exports.getClients = async (db, queryParams) => {
     dataValues
   );
 
+  const totalPages = Math.ceil(total_count / Number(limit));
+
   return {
-    page_no: Number(page_no),
-
-    page_size: Number(page_size),
-
-    total_count,
-
     data: dataResult.rows,
+    totalCount: total_count,
+    currentPage: Number(page),
+    totalPages: totalPages,
+    pageSize: Number(limit)
   };
 };
 

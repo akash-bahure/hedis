@@ -65,81 +65,59 @@ router.post("/:patientId/charts/upload", upload.single("file"), chartController.
  *           type: string
  *           format: uuid
  *         description: The patient ID
+ *       - in: query
+ *         name: chartId
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Optional chart ID to scope provider filter extraction
+ *       - in: query
+ *         name: documentType
+ *         schema:
+ *           type: string
+ *           enum: [Medication, Document, Imaging, Vitals, "Lab Results", Encounter]
+ *         description: Filter by document type
+ *       - in: query
+ *         name: encounterType
+ *         schema:
+ *           type: string
+ *           enum: [Telehealth, "Office Visit", Emergency, Inpatient, Procedure]
+ *         description: Filter by encounter type
+ *       - in: query
+ *         name: providerIds
+ *         schema:
+ *           type: string
+ *         description: Comma separated provider IDs
+ *       - in: query
+ *         name: hedisRelevant
+ *         schema:
+ *           type: boolean
+ *       - in: query
+ *         name: structuredRelevant
+ *         schema:
+ *           type: boolean
  *     responses:
  *       200:
  *         description: Clinical timeline evidence retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 events:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 availableProviders:
+ *                   type: array
+ *                   items:
+ *                     type: string
  *       500:
  *         description: Internal server error
  */
 router.get("/:patientId/clinical-timeline", chartController.getClinicalTimeline);
-
-/**
- * @swagger
- * /api/clinical-timeline/{eventId}/review-evidence:
- *   get:
- *     summary: Retrieve detailed evidence for review screen
- *     tags: [Clinical Timeline]
- *     parameters:
- *       - in: path
- *         name: eventId
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *     responses:
- *       200:
- *         description: Evidence details retrieved successfully
- */
-router.get("/clinical-timeline/:eventId/review-evidence", chartController.getReviewEvidence);
-
-/**
- * @swagger
- * /api/clinical-timeline/{eventId}:
- *   put:
- *     summary: Edit an existing clinical timeline event
- *     tags: [Clinical Timeline]
- *     parameters:
- *       - in: path
- *         name: eventId
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               event_date:
- *                 type: string
- *                 format: date
- *               provider:
- *                 type: string
- *               measure:
- *                 type: string
- *               evidence:
- *                 type: string
- *               event_type:
- *                 type: string
- *     responses:
- *       200:
- *         description: Event edited successfully
- */
-router.put("/clinical-timeline/:eventId", chartController.editEvent);
-
-/**
- * @swagger
- * /api/clinical-timeline/filters:
- *   get:
- *     summary: Get unique filters for the clinical timeline
- *     tags: [Clinical Timeline]
- *     responses:
- *       200:
- *         description: Filters retrieved successfully
- */
-router.get("/clinical-timeline/filters", chartController.getClinicalTimelineFilters);
 
 /**
  * @swagger
@@ -157,27 +135,40 @@ router.get("/clinical-timeline/filters", chartController.getClinicalTimelineFilt
  *     responses:
  *       200:
  *         description: Chart summary retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     chart_id:
+ *                       type: string
+ *                     measureName:
+ *                       type: string
+ *                     eligibilityStatus:
+ *                       type: string
+ *                     availableEvidenceCount:
+ *                       type: integer
+ *                     missingEvidenceCount:
+ *                       type: integer
+ *                     missingEvidenceList:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     gapToCloseDetails:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *       404:
+ *         description: Chart or patient not found
+ *       500:
+ *         description: Internal server error
  */
 router.get("/charts/:chartId/abstraction-summary", chartController.getChartAbstractionSummary);
-
-/**
- * @swagger
- * /api/charts/{chartId}/evidence-timeline:
- *   get:
- *     summary: Retrieve chronological evidence timeline including workflow actions
- *     tags: [Clinical Timeline]
- *     parameters:
- *       - in: path
- *         name: chartId
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *     responses:
- *       200:
- *         description: Evidence timeline retrieved successfully
- */
-router.get("/charts/:chartId/evidence-timeline", chartController.getEvidenceTimeline);
 
 /**
  * @swagger
@@ -185,6 +176,33 @@ router.get("/charts/:chartId/evidence-timeline", chartController.getEvidenceTime
  *   post:
  *     summary: Save chart abstraction as draft
  *     tags: [Abstraction Workflow]
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               service_date:
+ *                 type: string
+ *                 format: date
+ *               screening_type:
+ *                 type: string
+ *               evidence_type:
+ *                 type: string
+ *               systolic:
+ *                 type: integer
+ *               diastolic:
+ *                 type: integer
+ *               cpt_code:
+ *                 type: string
+ *               icd_10_code:
+ *                 type: string
+ *               notes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Draft saved
  */
 router.post("/charts/:chartId/save-draft", chartController.saveDraft);
 
@@ -194,6 +212,18 @@ router.post("/charts/:chartId/save-draft", chartController.saveDraft);
  *   post:
  *     summary: Mark evidence not found
  *     tags: [Abstraction Workflow]
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               notes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Marked not found
  */
 router.post("/charts/:chartId/mark-not-found", chartController.markNotFound);
 
@@ -203,6 +233,33 @@ router.post("/charts/:chartId/mark-not-found", chartController.markNotFound);
  *   post:
  *     summary: Submit abstraction to QA review
  *     tags: [Abstraction Workflow]
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               service_date:
+ *                 type: string
+ *                 format: date
+ *               screening_type:
+ *                 type: string
+ *               evidence_type:
+ *                 type: string
+ *               systolic:
+ *                 type: integer
+ *               diastolic:
+ *                 type: integer
+ *               cpt_code:
+ *                 type: string
+ *               icd_10_code:
+ *                 type: string
+ *               notes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Submitted for QA
  */
 router.post("/charts/:chartId/submit-qa", chartController.submitQA);
 
