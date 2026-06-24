@@ -189,6 +189,8 @@ interface MeasureDetail {
   recommendations?: string[];
   overallReason?: string;
   lastAction?: string;
+  stage?: string | null;
+  reason?: string | null;
 }
 
 const MEASURE_DETAIL: Record<MeasureId, MeasureDetail> = {
@@ -1443,7 +1445,7 @@ function MeasurePanel({
 }) {
   const measure = measures.find((m) => m.id === selectedMeasure);
   if (!measure) return null;
-
+  console.log("detail", detail);
   const statusMeta =
     MEASURE_STATUS_META[measure.status] ?? MEASURE_STATUS_META["gap"];
 
@@ -1483,6 +1485,7 @@ function MeasurePanel({
       {/* Measure detail — scrollable */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Status header */}
+        {/* Status header */}
         <div
           className={`flex flex-col gap-1 px-3 py-2.5 rounded-xl border ${statusMeta.pill}`}
         >
@@ -1492,18 +1495,27 @@ function MeasurePanel({
               <p className="text-[12px] font-bold">
                 {measure.id} — {statusMeta.label}
               </p>
+
               <p className="text-[10px] opacity-80 leading-tight">
                 {measure.name}
               </p>
             </div>
           </div>
-          {/* {detail?.overallReason && (
-            <div className="mt-1 pt-1 border-t border-current/10">
+
+          {/* Stage */}
+          <div className="mt-1 pt-1 border-t border-current/10">
+            <div className="flex items-center justify-between text-[10px]">
+              {/* <span className="font-semibold opacity-80">Stage</span> */}
+              <span>{detail?.stage ?? ""}</span>
+            </div>
+
+            {/* Reason */}
+            <div className="mt-1">
               <p className="text-[10px] leading-tight opacity-90">
-                {detail.overallReason}
+                {detail?.reason ?? ""}
               </p>
             </div>
-          )} */}
+          </div>
         </div>
 
         {/* Eligibility */}
@@ -1969,7 +1981,7 @@ export function Patient360({
       await evaluateMutation.mutateAsync(payload);
 
       await refetchEval();
-      toast.success("Recalculation complete ✅", { id: "recalculating" });
+      toast.success("Recalculation complete ", { id: "recalculating" });
     } catch (err: any) {
       console.error("Recalculation failed:", err);
 
@@ -2060,6 +2072,8 @@ export function Patient360({
       })),
       recommendations: dr.recommendations || [],
       overallReason: dr.overallReason || dr.reasoning || selectedEval.reasoning,
+      stage: selectedEval.stage ?? null,
+      reason: selectedEval.reason ?? null,
       lastAction: selectedEval.last_action
         ? `Updated: ${selectedEval.last_action}`
         : `Analyzed by AI Engine · Confidence: ${Math.round((selectedEval.confidence || 0) * 100)}%`,

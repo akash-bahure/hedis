@@ -37,6 +37,33 @@ class HEDISService {
   }
 
   /**
+   * Orchestrate HEDIS evaluation by calling AI service with a file path and persisting results.
+   */
+  async evaluatePatientChartByPath(patientId, pdfPath, tenantSubdomain, db) {
+    const aiServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
+    const url = `${aiServiceUrl}/api/hedis/analyze`;
+
+    console.log(`Triggering AI evaluation for patient ${patientId} with path ${pdfPath} to AI Service: ${url}`);
+
+    const response = await axios.post(url, {
+      patient_id: patientId,
+      pdfPath: pdfPath,
+      tenant_subdomain: tenantSubdomain
+    });
+
+    const { evaluations } = response.data;
+    const savedEvaluations = [];
+
+    // Save each evaluation to the tenant-specific schema
+    for (const evalResult of evaluations) {
+      const saved = await this.saveEvaluation(db, patientId, evalResult);
+      savedEvaluations.push(saved);
+    }
+
+    return savedEvaluations;
+  }
+
+  /**
    * Save evaluation record to DB.
    */
   async saveEvaluation(db, patientId, evalResult) {

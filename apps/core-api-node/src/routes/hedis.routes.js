@@ -3,42 +3,6 @@ const multer = require("multer");
 const hedisController = require("../controllers/hedis.controller");
 const router = express.Router();
 
-const upload = multer({
-  dest: "uploads/",
-});
-
-/**
- * @swagger
- * /api/hedis/evaluate/{id}:
- *   post:
- *     summary: Evaluate a patient's chart for HEDIS measures
- *     tags: [HEDIS]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               file:
- *                 type: string
- *                 format: binary
- *     responses:
- *       200:
- *         description: Evaluation completed
- */
-router.post(
-  "/evaluate/:id",
-  upload.single("file"),
-  hedisController.evaluateChart
-);
 
 /**
  * @swagger
@@ -130,7 +94,9 @@ router.post("/send-to-qa", hedisController.sendToQA);
  *       200:
  *         description: List of QA entries for the patient fetched successfully
  */
+/*
 router.get("/qa-queue/:id", hedisController.getQAQueue);
+*/
 
 /**
  * @swagger
@@ -159,13 +125,13 @@ router.post("/mark-as-reviewed", hedisController.markAsReviewed);
 
 /**
  * @swagger
- * /api/hedis/qa-review/{qaQueueId}:
+ * /api/hedis/qa-review/{evaluationId}:
  *   get:
  *     summary: Get detailed HEDIS QA review data including AI analysis and evidence
  *     tags: [HEDIS]
  *     parameters:
  *       - in: path
- *         name: qaQueueId
+ *         name: evaluationId
  *         required: true
  *         schema:
  *           type: string
@@ -174,7 +140,7 @@ router.post("/mark-as-reviewed", hedisController.markAsReviewed);
  *       200:
  *         description: QA review details fetched successfully
  */
-router.get("/qa-review/:qaQueueId", hedisController.getQAReviewDetails);
+router.get("/qa-review/:evaluationId", hedisController.getQAReviewDetails);
 
 /**
  * @swagger
@@ -219,5 +185,52 @@ router.get("/qa-review/:qaQueueId", hedisController.getQAReviewDetails);
  *         description: Internal server error
  */
 router.post("/update-qa-status", hedisController.updateQAStatus);
+
+/**
+ * @swagger
+ * /api/hedis/assign-abstractor:
+ *   post:
+ *     summary: Assign a patient to an abstractor with measure-level decisions
+ *     tags: [HEDIS]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - patientId
+ *               - assignedAbstractorId
+ *               - decisions
+ *             properties:
+ *               patientId:
+ *                 type: string
+ *               chartId:
+ *                 type: string
+ *               assignedAbstractorId:
+ *                 type: string
+ *               decisions:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     measureId:
+ *                       type: string
+ *                     measureCode:
+ *                       type: string
+ *                     measureName:
+ *                       type: string
+ *                     qaStatus:
+ *                       type: string
+ *                       enum: [QA_PASS, REQUEST_REVISION, QA_FAIL]
+ *                     reasons:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *     responses:
+ *       200:
+ *         description: Abstractor assigned successfully
+ */
+router.post("/assign-abstractor", hedisController.assignAbstractor);
 
 module.exports = router;

@@ -4,184 +4,73 @@
  */
 function buildQAReviewAnalysisPrompt(
   chartText,
-  measureRules,
-  abstractorEvidence
+  measureRules
 ) {
   return `
-You are an expert HEDIS Quality Assurance Auditor. Your role is to critically validate the abstractor's submitted evidence against the patient's actual medical chart and the official HEDIS measure specifications.
+You are an expert HEDIS Quality Assurance Auditor. Your role is to perform a fully dynamic, rule-based audit by comparing the patient's medical chart directly against the official HEDIS Measure Library rules.
 
 ---
 PATIENT MEDICAL CHART (Extracted Text):
 ${chartText}
 
 ---
-MEASURE RULES:
+MEASURE LIBRARY RULES (Expected/Ground Truth):
 ${JSON.stringify(measureRules, null, 2)}
 
 ---
-ABSTRACTOR SUBMITTED EVIDENCE:
-${JSON.stringify(abstractorEvidence, null, 2)}
-
----
 TASK:
-Thoroughly analyze the chart for all relevant evidence. Then return **ONLY** a valid JSON object in the exact structure below. Do not include any explanations, markdown, or additional text outside the JSON.
+1. **Identify Required Rules**: Parse the MEASURE LIBRARY RULES to identify all eligibility, evidence, documentation, and coding requirements.
+2. **Treat Rules as "Expected"**: Use the specific criteria from the rules as the baseline for the "abstractorValue" (or "abstractorEntry") fields.
+3. **Extract Chart Evidence**: Find all relevant data points in the PATIENT MEDICAL CHART to serve as the "sourceDocumentValue" (or "sourceDocument").
+4. **Compare Rules vs Chart**: Evaluate whether the chart text complies with the Measure Library rules.
+5. **Identify Gaps**: If a required rule is not met or evidence is missing from the chart, mark it as "FAIL" or "MISSING_IN_SOURCE" without assumptions.
+
+Return **ONLY** a valid JSON object in the exact structure below. Do not include any explanations, markdown, or additional text outside the JSON.
 
 {
   "extractedEvidence": [
     {
-      "field": "Service Date",
-      "abstractorValue": "",
-      "sourceDocumentValue": "",
+      "field": "Rule field from Measure Library (e.g. Age Requirement, Service Date Rule, CPT Requirement)",
+      "abstractorValue": "Expected value/rule definition from Measure Library",
+      "sourceDocumentValue": "Actual value found in the medical chart",
       "status": "MATCH" | "DISCREPANCY" | "MISSING_IN_SOURCE",
-      "reason": ""
-    },
-    {
-      "field": "Screening Type",
-      "abstractorValue": "",
-      "sourceDocumentValue": "",
-      "status": "MATCH" | "DISCREPANCY" | "MISSING_IN_SOURCE",
-      "reason": ""
-    },
-    {
-      "field": "CPT Code",
-      "abstractorValue": "",
-      "sourceDocumentValue": "",
-      "status": "MATCH" | "DISCREPANCY" | "MISSING_IN_SOURCE",
-      "reason": ""
-    },
-    {
-      "field": "ICD-10 Diagnosis",
-      "abstractorValue": "",
-      "sourceDocumentValue": "",
-      "status": "MATCH" | "DISCREPANCY" | "MISSING_IN_SOURCE",
-      "reason": ""
-    },
-    {
-      "field": "BI-RADS Result",
-      "abstractorValue": "",
-      "sourceDocumentValue": "",
-      "status": "MATCH" | "DISCREPANCY" | "MISSING_IN_SOURCE",
-      "reason": ""
-    },
-    {
-      "field": "Ordering Physician",
-      "abstractorValue": "",
-      "sourceDocumentValue": "",
-      "status": "MATCH" | "DISCREPANCY" | "MISSING_IN_SOURCE",
-      "reason": ""
-    },
-    {
-      "field": "Facility",
-      "abstractorValue": "",
-      "sourceDocumentValue": "",
-      "status": "MATCH" | "DISCREPANCY" | "MISSING_IN_SOURCE",
-      "reason": ""
-    },
-    {
-      "field": "Report Status",
-      "abstractorValue": "",
-      "sourceDocumentValue": "",
-      "status": "MATCH" | "DISCREPANCY" | "MISSING_IN_SOURCE",
-      "reason": ""
+      "reason": "Specific rationale for the match or gap"
     }
   ],
   "validationChecklist": {
     "eligibility": [
       {
-        "rule": "Age Criteria",
+        "rule": "Specific eligibility criterion from rules (Age, Gender, Enrollment, Denominator, Exclusions)",
         "status": "PASS" | "FAIL" | "WARN",
-        "abstractorEntry": "",
-        "sourceDocument": "",
-        "message": ""
-      },
-      {
-        "rule": "Continuous Enrollment Verified",
-        "status": "PASS" | "FAIL" | "WARN",
-        "abstractorEntry": "",
-        "sourceDocument": "",
-        "message": ""
+        "abstractorEntry": "Rule definition from library",
+        "sourceDocument": "Corresponding evidence found in chart",
+        "message": "Detail about compliance"
       }
     ],
     "evidence": [
       {
-        "rule": "Mammography Screening Found in Chart",
+        "rule": "Numerator/Service requirement from library (Service Date, Lookback, Procedure Found)",
         "status": "PASS" | "FAIL",
-        "abstractorEntry": "",
-        "sourceDocument": "",
-        "message": ""
-      },
-      {
-        "rule": "Service Date Valid in Lookback Period",
-        "status": "PASS" | "FAIL",
-        "abstractorEntry": "",
-        "sourceDocument": "",
-        "message": ""
-      },
-      {
-        "rule": "Lookback Period Met",
-        "status": "PASS" | "FAIL",
-        "abstractorEntry": "",
-        "sourceDocument": "",
-        "message": ""
-      },
-      {
-        "rule": "Bilateral Notation Present",
-        "status": "PASS" | "FAIL",
-        "abstractorEntry": "",
-        "sourceDocument": "",
+        "abstractorEntry": "Rule definition from library",
+        "sourceDocument": "Corresponding evidence found in chart",
         "message": ""
       }
     ],
     "documentation": [
       {
-        "rule": "Source Document Uploaded",
+        "rule": "Documentation requirement from library (Signature, Facility, Highlights, Source Type)",
         "status": "PASS" | "FAIL",
-        "abstractorEntry": "",
-        "sourceDocument": "",
-        "message": ""
-      },
-      {
-        "rule": "Abstractor Entry Matches Source",
-        "status": "PASS" | "FAIL",
-        "abstractorEntry": "",
-        "sourceDocument": "",
-        "message": ""
-      },
-      {
-        "rule": "Highlight / Annotation Present",
-        "status": "PASS" | "FAIL",
-        "abstractorEntry": "",
-        "sourceDocument": "",
-        "message": ""
-      },
-      {
-        "rule": "Provider Signature & Credentials",
-        "status": "PASS" | "FAIL",
-        "abstractorEntry": "",
-        "sourceDocument": "",
+        "abstractorEntry": "Requirement from library",
+        "sourceDocument": "Evidence found in chart",
         "message": ""
       }
     ],
     "coding": [
       {
-        "rule": "CPT 77067 - Bilateral Screening Mammography",
+        "rule": "Coding requirement from library (CPT, HCPCS, ICD-10 codes)",
         "status": "PASS" | "FAIL",
-        "abstractorEntry": "",
-        "sourceDocument": "",
-        "message": ""
-      },
-      {
-        "rule": "ICD-10 Z12.31 - Screening Diagnosis",
-        "status": "PASS" | "FAIL",
-        "abstractorEntry": "",
-        "sourceDocument": "",
-        "message": ""
-      },
-      {
-        "rule": "Rendering Provider NPI Documented",
-        "status": "PASS" | "FAIL",
-        "abstractorEntry": "",
-        "sourceDocument": "",
+        "abstractorEntry": "Coding rule from library",
+        "sourceDocument": "Codes found in chart",
         "message": ""
       }
     ]
@@ -191,16 +80,24 @@ Thoroughly analyze the chart for all relevant evidence. Then return **ONLY** a v
     "passed": 0,
     "warnings": 0,
     "failed": 0,
-    "confidence": 85
-  }
+    "confidence": 0
+  },
+  "allEvidence": [
+    {
+      "content": "Full quote or specific excerpt from the chart",
+      "pageNumber": 1,
+      "relevance": "How this specific evidence supports or fails a measure rule"
+    }
+  ]
 }
 
 **CRITICAL INSTRUCTIONS:**
-- Base every comparison strictly on the PATIENT MEDICAL CHART provided.
-- Be precise, objective, and critical. Do not assume or infer missing information.
-- Fill **all** "abstractorEntry", "sourceDocument", "message", and "reason" fields with specific details.
-- Calculate summary counts accurately based on the checklist results.
-- Return **ONLY** the JSON object. No other text.
+- **Fully Dynamic**: Do NOT use hardcoded criteria. Extract EVERY checklist item and evidence field directly from the provided MEASURE LIBRARY RULES.
+- **Rules as Baseline**: "abstractorValue" and "abstractorEntry" must always contain the rule/requirement from the library.
+- **Strict Evidence**: Do not assume missing info. If evidence is not in the chart, it is a FAIL / MISSING_IN_SOURCE.
+- **Detailed Excerpts**: Populate "allEvidence" with every piece of text relevant to the measure rules, including page numbers.
+- **Calculations**: Ensure the summary counts match the checklist results.
+- **JSON Format**: Return ONLY the JSON object.
 `;
 }
 

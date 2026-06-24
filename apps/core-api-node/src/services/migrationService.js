@@ -1170,7 +1170,7 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
   await client.query(`
     CREATE TABLE IF NOT EXISTS ${schema}.hedis_qa_review_analyses (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      qa_queue_id UUID NOT NULL REFERENCES  ${schema}.hedis_qa_queue(id) ON DELETE CASCADE,
+      evaluation_id UUID NOT NULL REFERENCES ${schema}.hedis_evaluations(id) ON DELETE CASCADE,
       patient_id UUID,
       measure_code VARCHAR(50),
       measure_name TEXT,
@@ -1180,6 +1180,33 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
       summary JSONB,
       abstractor_evidence JSONB,
       measure_rules JSONB,
+      all_evidences JSONB,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
+
+  try {
+    await client.query(`
+      ALTER TABLE ${schema}.hedis_qa_review_analyses
+        ADD COLUMN IF NOT EXISTS evaluation_id UUID REFERENCES ${schema}.hedis_evaluations(id) ON DELETE CASCADE,
+        ADD COLUMN IF NOT EXISTS all_evidences JSONB;
+    `);
+  } catch (err) {}
+
+  // QA Measure Decisions: stores granular QA results per measure
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.hedis_qa_measure_decisions (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      patient_id UUID REFERENCES ${schema}.patients(id) ON DELETE CASCADE,
+      chart_id UUID REFERENCES ${schema}.patient_charts(id) ON DELETE SET NULL,
+      measure_id UUID REFERENCES ${schema}.hedis_evaluations(id) ON DELETE SET NULL,
+      measure_code VARCHAR(50),
+      measure_name TEXT,
+      qa_status VARCHAR(50), -- QA_PASS, REQUEST_REVISION, QA_FAIL
+      reasons JSONB,
+      assigned_abstractor_id UUID REFERENCES ${schema}.users(id),
+      abstractor_id UUID REFERENCES ${schema}.users(id),
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW()
     );
