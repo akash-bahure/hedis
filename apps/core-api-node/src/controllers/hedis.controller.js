@@ -271,9 +271,9 @@ exports.getQAReviewDetails = async (req, res) => {
     // 2. Get patient chart path
     const chartResult = await req.db.query(
       `
-      SELECT chart_document 
-      FROM ${schema}.patient_charts 
-      WHERE patient_id = $1 
+      SELECT chart_document
+      FROM ${schema}.patient_charts
+      WHERE patient_id = $1
       LIMIT 1
     `,
       [patient_id]
@@ -283,17 +283,25 @@ exports.getQAReviewDetails = async (req, res) => {
     const filePath = chartDoc.filePath || `charts/${chartDoc.fileName}`;
 
     const chartPdfUrl = `${req.protocol}://${req.get("host")}/uploads/${filePath}`;
-    const pdfPath = `/app/uploads/${filePath}`; // This is what AI service expects
+    const pdfPath = `/app/uploads/${filePath}`;
 
     // 3. Check if analysis already exists in DB (cache)
     const cachedResult = await req.db.query(
-      `SELECT * FROM ${schema}.hedis_qa_review_analyses WHERE evaluation_id = $1 ORDER BY created_at DESC LIMIT 1`,
+      `SELECT *
+       FROM ${schema}.hedis_qa_review_analyses
+       WHERE evaluation_id = $1
+       ORDER BY created_at DESC
+       LIMIT 1`,
       [evaluationId]
     );
 
     if (cachedResult.rows.length > 0) {
       const cached = cachedResult.rows[0];
-      console.log(`Returning cached QA analysis for evaluation: ${evaluationId}`);
+
+      console.log(
+        `Returning cached QA analysis for evaluation: ${evaluationId}`
+      );
+
       return res.json({
         pdfUrl: chartPdfUrl,
         measure: {
@@ -301,7 +309,6 @@ exports.getQAReviewDetails = async (req, res) => {
           measureCode: cached.measure_code,
           measureName: cached.measure_name,
         },
-        abstractorEvidence: cached.abstractor_evidence,
         measureRules: cached.measure_rules,
         extractedEvidence: cached.extracted_evidence,
         validationChecklist: cached.validation_checklist,
@@ -310,29 +317,24 @@ exports.getQAReviewDetails = async (req, res) => {
       });
     }
 
+    console.log(
+      `No cached analysis found. Triggering fresh QA review for evaluation: ${evaluationId}`
+    );
+
     // 4. Fetch measure rules from Measure Library
     const measureResult = await req.db.query(
       `SELECT * FROM ${schema}.measures WHERE measure_code = $1`,
       [measure_code]
     );
+
     const measureRules = measureResult.rows[0] || {};
 
-    // 5. Mock abstraction data
-    const mockAbstractionData = {
-      serviceDate: "2025-08-15",
-      screeningType: "Bilateral Mammogram",
-      cptCode: "77067",
-      icd10: "Z12.31",
-      provider: "Dr. Torres",
-      facility: "Advanced Imaging Center",
-      result: "BI-RADS 1 - Negative",
-    };
-
-    // 6. Call AI Service (ai-service-node)
+    // 5. Call AI Service
     const aiServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8001";
     console.log(
       `Calling AI Service at ${aiServiceUrl}/api/hedis/qa-review-analysis`
     );
+
     const axios = require("axios");
 
     const aiResponse = await axios.post(
@@ -340,9 +342,8 @@ exports.getQAReviewDetails = async (req, res) => {
       {
         patientId: patient_id,
         measureCode: measure_code,
-        pdfPath: pdfPath,
-        measureRules: measureRules,
-        abstractorEvidence: mockAbstractionData,
+        pdfPath,
+        measureRules,
       },
       {
         timeout: 300000, // 5 minutes
@@ -351,13 +352,23 @@ exports.getQAReviewDetails = async (req, res) => {
 
     const analysisData = aiResponse.data;
 
-    // 7. Persist result to DB
+    // 6. Persist result to DB (cache)
     await req.db.query(
       `INSERT INTO ${schema}.hedis_qa_review_analyses
-        (evaluation_id, patient_id, measure_code, measure_name, pdf_path,
-         extracted_evidence, validation_checklist, summary,
-         abstractor_evidence, measure_rules, all_evidences)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+        (
+          evaluation_id,
+          patient_id,
+          measure_code,
+          measure_name,
+          pdf_path,
+          extracted_evidence,
+          validation_checklist,
+          summary,
+          abstractor_evidence,
+          measure_rules,
+          all_evidences
+        )
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NULL, $9, $10)`,
       [
         evaluationId,
         patient_id,
@@ -367,13 +378,12 @@ exports.getQAReviewDetails = async (req, res) => {
         JSON.stringify(analysisData.extractedEvidence || []),
         JSON.stringify(analysisData.validationChecklist || {}),
         JSON.stringify(analysisData.summary || {}),
-        JSON.stringify(mockAbstractionData),
         JSON.stringify(measureRules),
         JSON.stringify(analysisData.allEvidence || []),
       ]
     );
 
-    // 8. Return normalized response
+    // 7. Return response
     res.json({
       pdfUrl: chartPdfUrl,
       measure: {
@@ -381,14 +391,15 @@ exports.getQAReviewDetails = async (req, res) => {
         measureCode: measure_code,
         measureName: measure_name,
       },
-      abstractorEvidence: mockAbstractionData,
-      measureRules: measureRules,
+      measureRules,
       ...analysisData,
       all_evidences: analysisData.allEvidence || [],
     });
   } catch (err) {
     console.error("Get QA Review Details Error:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: err.message,
+    });
   }
 };
 
@@ -492,14 +503,7 @@ exports.assignAbstractor = async (req, res) => {
         ]
       );
 
-      if (measureId) {
-        await client.query(
-          `UPDATE ${schema}.hedis_evaluations
-           SET status = $1, stage = $2, reason = $3
-           WHERE id = $4`,
-          [qaStatus, "QA Review", (reasons || []).join(", "), measureId]
-        );
-      }
+
 
       if (qaStatus === "REQUEST_REVISION") hasRevision = true;
       if (qaStatus === "QA_FAIL") hasFail = true;

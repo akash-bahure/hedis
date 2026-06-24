@@ -49,7 +49,7 @@ exports.analyzeChart = async (req, res) => {
 
 exports.qaReviewAnalysis = async (req, res) => {
   try {
-    const { patientId, measureCode, pdfPath, measureRules, abstractorEvidence } = req.body;
+    const { patientId, measureCode, pdfPath, measureRules } = req.body;
 
     console.log(`Starting QA Review Analysis for Patient: ${patientId}, Measure: ${measureCode}`);
 
@@ -59,7 +59,7 @@ exports.qaReviewAnalysis = async (req, res) => {
     console.log(`Extraction complete. Text length: ${text.length}`);
 
     // 2. Build Prompt
-    const prompt = buildQAReviewAnalysisPrompt(text, measureRules, abstractorEvidence);
+    const prompt = buildQAReviewAnalysisPrompt(text, measureRules);
 
     // 3. Call LLM
     console.log("Calling LLM for QA Review Analysis...");
