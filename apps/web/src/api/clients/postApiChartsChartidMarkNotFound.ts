@@ -9,7 +9,10 @@ import type {
   RequestConfig,
   ResponseErrorConfig,
 } from "../../../utils/client.ts";
-import type { PostApiChartsChartidMarkNotFoundMutationResponse } from "../types/PostApiChartsChartidMarkNotFound.ts";
+import type {
+  PostApiChartsChartidMarkNotFoundMutationRequest,
+  PostApiChartsChartidMarkNotFoundMutationResponse,
+} from "../types/PostApiChartsChartidMarkNotFound.ts";
 
 function getPostApiChartsChartidMarkNotFoundUrl() {
   const res = {
@@ -24,17 +27,23 @@ function getPostApiChartsChartidMarkNotFoundUrl() {
  * {@link /api/charts/:chartId/mark-not-found}
  */
 export async function postApiChartsChartidMarkNotFound(
-  config: Partial<RequestConfig> & { client?: Client } = {},
+  data?: PostApiChartsChartidMarkNotFoundMutationRequest,
+  config: Partial<
+    RequestConfig<PostApiChartsChartidMarkNotFoundMutationRequest>
+  > & { client?: Client } = {},
 ) {
   const { client: request = fetch, ...requestConfig } = config;
+
+  const requestData = data;
 
   const res = await request<
     PostApiChartsChartidMarkNotFoundMutationResponse,
     ResponseErrorConfig<Error>,
-    unknown
+    PostApiChartsChartidMarkNotFoundMutationRequest
   >({
     method: "POST",
     url: getPostApiChartsChartidMarkNotFoundUrl().url.toString(),
+    data: requestData,
     ...requestConfig,
   });
   return res.data;

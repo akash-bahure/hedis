@@ -62,13 +62,13 @@ export type GetApiClientsQueryParams = {
    * @default 1
    * @type integer | undefined
    */
-  page_no?: number;
+  page?: number;
   /**
    * @description Number of records per page
    * @default 10
    * @type integer | undefined
    */
-  page_size?: number;
+  limit?: number;
 };
 
 /**
@@ -82,15 +82,19 @@ export type GetApiClients200 = {
   /**
    * @type integer | undefined
    */
-  page_no?: number;
+  currentPage?: number;
   /**
    * @type integer | undefined
    */
-  page_size?: number;
+  pageSize?: number;
   /**
    * @type integer | undefined
    */
-  total_count?: number;
+  totalCount?: number;
+  /**
+   * @type integer | undefined
+   */
+  totalPages?: number;
   /**
    * @type array | undefined
    */

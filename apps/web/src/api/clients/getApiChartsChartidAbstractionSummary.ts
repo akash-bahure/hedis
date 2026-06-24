@@ -12,6 +12,8 @@ import type {
 import type {
   GetApiChartsChartidAbstractionSummaryQueryResponse,
   GetApiChartsChartidAbstractionSummaryPathParams,
+  GetApiChartsChartidAbstractionSummary404,
+  GetApiChartsChartidAbstractionSummary500,
 } from "../types/GetApiChartsChartidAbstractionSummary.ts";
 
 function getGetApiChartsChartidAbstractionSummaryUrl(
@@ -36,7 +38,10 @@ export async function getApiChartsChartidAbstractionSummary(
 
   const res = await request<
     GetApiChartsChartidAbstractionSummaryQueryResponse,
-    ResponseErrorConfig<Error>,
+    ResponseErrorConfig<
+      | GetApiChartsChartidAbstractionSummary404
+      | GetApiChartsChartidAbstractionSummary500
+    >,
     unknown
   >({
     method: "GET",

@@ -3,9 +3,51 @@
  * Do not edit manually.
  */
 
-export type PostApiChartsChartidSaveDraftMutationResponse = any;
+/**
+ * @description Draft saved
+ */
+export type PostApiChartsChartidSaveDraft200 = any;
+
+export type PostApiChartsChartidSaveDraftMutationRequest = {
+  /**
+   * @type string | undefined, date
+   */
+  service_date?: string;
+  /**
+   * @type string | undefined
+   */
+  screening_type?: string;
+  /**
+   * @type string | undefined
+   */
+  evidence_type?: string;
+  /**
+   * @type integer | undefined
+   */
+  systolic?: number;
+  /**
+   * @type integer | undefined
+   */
+  diastolic?: number;
+  /**
+   * @type string | undefined
+   */
+  cpt_code?: string;
+  /**
+   * @type string | undefined
+   */
+  icd_10_code?: string;
+  /**
+   * @type string | undefined
+   */
+  notes?: string;
+};
+
+export type PostApiChartsChartidSaveDraftMutationResponse =
+  PostApiChartsChartidSaveDraft200;
 
 export type PostApiChartsChartidSaveDraftMutation = {
-  Response: any;
+  Response: PostApiChartsChartidSaveDraft200;
+  Request: PostApiChartsChartidSaveDraftMutationRequest;
   Errors: any;
 };

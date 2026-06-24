@@ -17,6 +17,8 @@ import type {
 import type {
   GetApiChartsChartidAbstractionSummaryQueryResponse,
   GetApiChartsChartidAbstractionSummaryPathParams,
+  GetApiChartsChartidAbstractionSummary404,
+  GetApiChartsChartidAbstractionSummary500,
 } from "../../types/GetApiChartsChartidAbstractionSummary.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { getApiChartsChartidAbstractionSummary } from "../../clients/getApiChartsChartidAbstractionSummary.ts";
@@ -47,7 +49,10 @@ export function getApiChartsChartidAbstractionSummarySuspenseQueryOptions(
     getApiChartsChartidAbstractionSummarySuspenseQueryKey(chartId);
   return queryOptions<
     GetApiChartsChartidAbstractionSummaryQueryResponse,
-    ResponseErrorConfig<Error>,
+    ResponseErrorConfig<
+      | GetApiChartsChartidAbstractionSummary404
+      | GetApiChartsChartidAbstractionSummary500
+    >,
     GetApiChartsChartidAbstractionSummaryQueryResponse,
     typeof queryKey
   >({
@@ -78,7 +83,10 @@ export function useGetApiChartsChartidAbstractionSummarySuspense<
     query?: Partial<
       UseSuspenseQueryOptions<
         GetApiChartsChartidAbstractionSummaryQueryResponse,
-        ResponseErrorConfig<Error>,
+        ResponseErrorConfig<
+          | GetApiChartsChartidAbstractionSummary404
+          | GetApiChartsChartidAbstractionSummary500
+        >,
         TData,
         TQueryKey
       >
@@ -102,9 +110,13 @@ export function useGetApiChartsChartidAbstractionSummarySuspense<
       queryKey,
     } as unknown as UseSuspenseQueryOptions,
     queryClient,
-  ) as UseSuspenseQueryResult<TData, ResponseErrorConfig<Error>> & {
-    queryKey: TQueryKey;
-  };
+  ) as UseSuspenseQueryResult<
+    TData,
+    ResponseErrorConfig<
+      | GetApiChartsChartidAbstractionSummary404
+      | GetApiChartsChartidAbstractionSummary500
+    >
+  > & { queryKey: TQueryKey };
 
   query.queryKey = queryKey as TQueryKey;
 

@@ -18,6 +18,7 @@ import type {
 import type {
   GetApiPatientsPatientidClinicalTimelineQueryResponse,
   GetApiPatientsPatientidClinicalTimelinePathParams,
+  GetApiPatientsPatientidClinicalTimelineQueryParams,
   GetApiPatientsPatientidClinicalTimeline500,
 } from "../../types/GetApiPatientsPatientidClinicalTimeline.ts";
 import {
@@ -30,12 +31,14 @@ export const getApiPatientsPatientidClinicalTimelineSuspenseInfiniteQueryKey = (
   patientId:
     | GetApiPatientsPatientidClinicalTimelinePathParams["patientId"]
     | undefined,
+  params?: GetApiPatientsPatientidClinicalTimelineQueryParams,
 ) =>
   [
     {
       url: "/api/patients/:patientId/clinical-timeline",
       params: { patientId: patientId },
     },
+    ...(params ? [params] : []),
   ] as const;
 
 export type GetApiPatientsPatientidClinicalTimelineSuspenseInfiniteQueryKey =
@@ -47,21 +50,30 @@ export function getApiPatientsPatientidClinicalTimelineSuspenseInfiniteQueryOpti
   patientId:
     | GetApiPatientsPatientidClinicalTimelinePathParams["patientId"]
     | undefined,
+  params?: GetApiPatientsPatientidClinicalTimelineQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
   const queryKey =
-    getApiPatientsPatientidClinicalTimelineSuspenseInfiniteQueryKey(patientId);
+    getApiPatientsPatientidClinicalTimelineSuspenseInfiniteQueryKey(
+      patientId,
+      params,
+    );
   return infiniteQueryOptions<
     GetApiPatientsPatientidClinicalTimelineQueryResponse,
     ResponseErrorConfig<GetApiPatientsPatientidClinicalTimeline500>,
     InfiniteData<GetApiPatientsPatientidClinicalTimelineQueryResponse>,
     typeof queryKey,
-    number
+    NonNullable<GetApiPatientsPatientidClinicalTimelineQueryParams["page_no"]>
   >({
     enabled: !!patientId,
     queryKey,
-    queryFn: async ({ signal }) => {
-      return getApiPatientsPatientidClinicalTimeline(patientId!, {
+    queryFn: async ({ signal, pageParam }) => {
+      params = {
+        ...(params ?? {}),
+        ["page_no"]:
+          pageParam as unknown as GetApiPatientsPatientidClinicalTimelineQueryParams["page_no"],
+      } as GetApiPatientsPatientidClinicalTimelineQueryParams;
+      return getApiPatientsPatientidClinicalTimeline(patientId!, params, {
         ...config,
         signal: config.signal ?? signal,
       });
@@ -86,11 +98,14 @@ export function useGetApiPatientsPatientidClinicalTimelineSuspenseInfinite<
   TData = InfiniteData<TQueryFnData>,
   TQueryKey extends QueryKey =
     GetApiPatientsPatientidClinicalTimelineSuspenseInfiniteQueryKey,
-  TPageParam = number,
+  TPageParam = NonNullable<
+    GetApiPatientsPatientidClinicalTimelineQueryParams["page_no"]
+  >,
 >(
   patientId:
     | GetApiPatientsPatientidClinicalTimelinePathParams["patientId"]
     | undefined,
+  params?: GetApiPatientsPatientidClinicalTimelineQueryParams,
   options: {
     query?: Partial<
       UseSuspenseInfiniteQueryOptions<
@@ -108,12 +123,16 @@ export function useGetApiPatientsPatientidClinicalTimelineSuspenseInfinite<
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
     resolvedOptions?.queryKey ??
-    getApiPatientsPatientidClinicalTimelineSuspenseInfiniteQueryKey(patientId);
+    getApiPatientsPatientidClinicalTimelineSuspenseInfiniteQueryKey(
+      patientId,
+      params,
+    );
 
   const query = useSuspenseInfiniteQuery(
     {
       ...getApiPatientsPatientidClinicalTimelineSuspenseInfiniteQueryOptions(
         patientId,
+        params,
         config,
       ),
       ...resolvedOptions,

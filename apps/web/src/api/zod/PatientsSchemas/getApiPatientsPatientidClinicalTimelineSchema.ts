@@ -9,6 +9,7 @@ import type {
   GetApiPatientsPatientidClinicalTimeline200,
   GetApiPatientsPatientidClinicalTimeline500,
   GetApiPatientsPatientidClinicalTimelinePathParams,
+  GetApiPatientsPatientidClinicalTimelineQueryParams,
   GetApiPatientsPatientidClinicalTimelineQueryResponse,
 } from "../../types/GetApiPatientsPatientidClinicalTimeline.ts";
 
@@ -18,11 +19,53 @@ export const getApiPatientsPatientidClinicalTimelinePathParamsSchema = z.object(
   },
 ) as unknown as ToZod<GetApiPatientsPatientidClinicalTimelinePathParams>;
 
+export const getApiPatientsPatientidClinicalTimelineQueryParamsSchema = z
+  .object({
+    chartId: z.optional(
+      z
+        .string()
+        .uuid()
+        .describe("Optional chart ID to scope provider filter extraction"),
+    ),
+    documentType: z.optional(
+      z
+        .enum([
+          "Medication",
+          "Document",
+          "Imaging",
+          "Vitals",
+          "Lab Results",
+          "Encounter",
+        ])
+        .describe("Filter by document type"),
+    ),
+    encounterType: z.optional(
+      z
+        .enum([
+          "Telehealth",
+          "Office Visit",
+          "Emergency",
+          "Inpatient",
+          "Procedure",
+        ])
+        .describe("Filter by encounter type"),
+    ),
+    providerIds: z.optional(
+      z.string().describe("Comma separated provider IDs"),
+    ),
+    hedisRelevant: z.optional(z.boolean()),
+    structuredRelevant: z.optional(z.boolean()),
+  })
+  .optional() as unknown as ToZod<GetApiPatientsPatientidClinicalTimelineQueryParams>;
+
 /**
  * @description Clinical timeline evidence retrieved successfully
  */
-export const getApiPatientsPatientidClinicalTimeline200Schema =
-  z.unknown() as unknown as ToZod<GetApiPatientsPatientidClinicalTimeline200>;
+export const getApiPatientsPatientidClinicalTimeline200Schema = z.object({
+  message: z.optional(z.string()),
+  events: z.optional(z.array(z.object({}))),
+  availableProviders: z.optional(z.array(z.string())),
+}) as unknown as ToZod<GetApiPatientsPatientidClinicalTimeline200>;
 
 /**
  * @description Internal server error

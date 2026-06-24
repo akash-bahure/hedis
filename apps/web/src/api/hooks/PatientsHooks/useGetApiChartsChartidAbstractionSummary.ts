@@ -17,6 +17,8 @@ import type {
 import type {
   GetApiChartsChartidAbstractionSummaryQueryResponse,
   GetApiChartsChartidAbstractionSummaryPathParams,
+  GetApiChartsChartidAbstractionSummary404,
+  GetApiChartsChartidAbstractionSummary500,
 } from "../../types/GetApiChartsChartidAbstractionSummary.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { getApiChartsChartidAbstractionSummary } from "../../clients/getApiChartsChartidAbstractionSummary.ts";
@@ -46,7 +48,10 @@ export function getApiChartsChartidAbstractionSummaryQueryOptions(
   const queryKey = getApiChartsChartidAbstractionSummaryQueryKey(chartId);
   return queryOptions<
     GetApiChartsChartidAbstractionSummaryQueryResponse,
-    ResponseErrorConfig<Error>,
+    ResponseErrorConfig<
+      | GetApiChartsChartidAbstractionSummary404
+      | GetApiChartsChartidAbstractionSummary500
+    >,
     GetApiChartsChartidAbstractionSummaryQueryResponse,
     typeof queryKey
   >({
@@ -77,7 +82,10 @@ export function useGetApiChartsChartidAbstractionSummary<
     query?: Partial<
       QueryObserverOptions<
         GetApiChartsChartidAbstractionSummaryQueryResponse,
-        ResponseErrorConfig<Error>,
+        ResponseErrorConfig<
+          | GetApiChartsChartidAbstractionSummary404
+          | GetApiChartsChartidAbstractionSummary500
+        >,
         TData,
         TQueryData,
         TQueryKey
@@ -99,9 +107,13 @@ export function useGetApiChartsChartidAbstractionSummary<
       queryKey,
     } as unknown as QueryObserverOptions,
     queryClient,
-  ) as UseQueryResult<TData, ResponseErrorConfig<Error>> & {
-    queryKey: TQueryKey;
-  };
+  ) as UseQueryResult<
+    TData,
+    ResponseErrorConfig<
+      | GetApiChartsChartidAbstractionSummary404
+      | GetApiChartsChartidAbstractionSummary500
+    >
+  > & { queryKey: TQueryKey };
 
   query.queryKey = queryKey as TQueryKey;
 
