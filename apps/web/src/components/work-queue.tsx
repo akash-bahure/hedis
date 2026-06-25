@@ -60,7 +60,8 @@ import {
   useGetApiUsers,
   usePatchApiPatientsIdStage,
   usePostApiPatientsIdAssign,
-  usePostApiHedisEvaluateId,
+  useGetApiHedisEvaluationsId,
+  // usePostApiHedisEvaluateId,
 } from "@/api";
 import { toast } from "sonner";
 
@@ -234,798 +235,6 @@ const PIPELINE: {
 function getPipeline(s: Status) {
   return PIPELINE.find((p) => p.status === s) ?? PIPELINE[0];
 }
-
-/* ─────────────────────────────────────────────────────────────
-   MOCK DATA  (38 charts across all 9 stages)
-───────────────────────────────────────────────────────────── */
-const MOCK: ChartRow[] = [
-  {
-    id: "CHT-5001",
-    patientName: "Adams, William K.",
-    mrn: "M-05001",
-    dob: "08/14/1958",
-    measure: "Controlling Blood Pressure",
-    measureCode: "CBP",
-    plan: "Medicare",
-    priority: "Urgent",
-    status: "Not Started",
-    step: 1,
-    assignedTo: "—",
-    dueDate: "2026-02-26",
-    slaHoursLeft: 24,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "2h ago",
-    overdue: false,
-    riskScore: 2.8,
-  },
-  {
-    id: "CHT-5002",
-    patientName: "Chen, Linda M.",
-    mrn: "M-05002",
-    dob: "03/22/1967",
-    measure: "Breast Cancer Screening",
-    measureCode: "BCS",
-    plan: "Medicaid",
-    priority: "Urgent",
-    status: "Not Started",
-    step: 1,
-    assignedTo: "—",
-    dueDate: "2026-02-26",
-    slaHoursLeft: 18,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "1h ago",
-    overdue: false,
-    riskScore: 2.1,
-  },
-  {
-    id: "CHT-5003",
-    patientName: "Patel, Raj S.",
-    mrn: "M-05003",
-    dob: "11/09/1971",
-    measure: "Colorectal Cancer Screening",
-    measureCode: "COL",
-    plan: "Commercial",
-    priority: "High",
-    status: "Not Started",
-    step: 1,
-    assignedTo: "—",
-    dueDate: "2026-02-27",
-    slaHoursLeft: 36,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "3h ago",
-    overdue: false,
-    riskScore: 1.6,
-  },
-  {
-    id: "CHT-5004",
-    patientName: "Washington, Barbara J.",
-    mrn: "M-05004",
-    dob: "07/18/1954",
-    measure: "Child Immunization Status",
-    measureCode: "CIS",
-    plan: "Medicare",
-    priority: "High",
-    status: "Not Started",
-    step: 1,
-    assignedTo: "—",
-    dueDate: "2026-02-28",
-    slaHoursLeft: 48,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "5h ago",
-    overdue: false,
-    riskScore: 3.1,
-  },
-  {
-    id: "CHT-5005",
-    patientName: "Okonkwo, Emeka D.",
-    mrn: "M-05005",
-    dob: "02/04/1982",
-    measure: "HbA1c Testing (CDC)",
-    measureCode: "HbA1c",
-    plan: "Medicaid",
-    priority: "Medium",
-    status: "Not Started",
-    step: 1,
-    assignedTo: "—",
-    dueDate: "2026-03-01",
-    slaHoursLeft: 72,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "4h ago",
-    overdue: false,
-    riskScore: 1.4,
-  },
-  {
-    id: "CHT-5006",
-    patientName: "Rodriguez, Elena M.",
-    mrn: "M-05006",
-    dob: "06/30/1965",
-    measure: "Controlling Blood Pressure",
-    measureCode: "CBP",
-    plan: "Commercial",
-    priority: "Medium",
-    status: "Not Started",
-    step: 1,
-    assignedTo: "—",
-    dueDate: "2026-03-01",
-    slaHoursLeft: 68,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "6h ago",
-    overdue: false,
-    riskScore: 1.8,
-  },
-  {
-    id: "CHT-4892",
-    patientName: "Martinez, Carlos R.",
-    mrn: "M-00287",
-    dob: "01/12/1968",
-    measure: "Controlling Blood Pressure",
-    measureCode: "CBP",
-    plan: "Medicare",
-    priority: "Urgent",
-    status: "Assigned",
-    step: 2,
-    assignedTo: "R. Gupta",
-    dueDate: "2026-02-25",
-    slaHoursLeft: 8,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "1h ago",
-    overdue: false,
-    riskScore: 2.4,
-  },
-  {
-    id: "CHT-4893",
-    patientName: "Kumar, David S.",
-    mrn: "M-00621",
-    dob: "05/28/1975",
-    measure: "Follow-Up After Hosp.",
-    measureCode: "FUH",
-    plan: "Medicaid",
-    priority: "High",
-    status: "Assigned",
-    step: 2,
-    assignedTo: "M. Joshi",
-    dueDate: "2026-02-25",
-    slaHoursLeft: 10,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "2h ago",
-    overdue: false,
-    riskScore: 1.9,
-  },
-  {
-    id: "CHT-4894",
-    patientName: "Williams, Sandra L.",
-    mrn: "M-00391",
-    dob: "09/14/1980",
-    measure: "Controlling Blood Pressure",
-    measureCode: "CBP",
-    plan: "Commercial",
-    priority: "High",
-    status: "Assigned",
-    step: 2,
-    assignedTo: "P. Rao",
-    dueDate: "2026-02-26",
-    slaHoursLeft: 28,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "3h ago",
-    overdue: false,
-    riskScore: 1.2,
-  },
-  {
-    id: "CHT-5007",
-    patientName: "Fernandez, Jose A.",
-    mrn: "M-05007",
-    dob: "12/19/1959",
-    measure: "Colorectal Cancer Screening",
-    measureCode: "COL",
-    plan: "Medicare",
-    priority: "Medium",
-    status: "Assigned",
-    step: 2,
-    assignedTo: "D. Pillai",
-    dueDate: "2026-02-27",
-    slaHoursLeft: 44,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "4h ago",
-    overdue: false,
-    riskScore: 2.0,
-  },
-  {
-    id: "CHT-5008",
-    patientName: "Kim, Susan J.",
-    mrn: "M-05008",
-    dob: "04/07/1974",
-    measure: "Breast Cancer Screening",
-    measureCode: "BCS",
-    plan: "Medicaid",
-    priority: "Medium",
-    status: "Assigned",
-    step: 2,
-    assignedTo: "S. Johnson",
-    dueDate: "2026-02-28",
-    slaHoursLeft: 52,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "5h ago",
-    overdue: false,
-    riskScore: 1.5,
-  },
-  {
-    id: "CHT-4891",
-    patientName: "Anderson, Jennifer K.",
-    mrn: "M-00142",
-    dob: "10/03/1971",
-    measure: "HbA1c Testing (CDC)",
-    measureCode: "HbA1c",
-    plan: "Medicare",
-    priority: "High",
-    status: "In Progress",
-    step: 3,
-    assignedTo: "S. Johnson",
-    dueDate: "2026-02-25",
-    slaHoursLeft: 8,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "2h ago",
-    overdue: false,
-    riskScore: 2.2,
-  },
-  {
-    id: "CHT-4895",
-    patientName: "Thompson, Robert M.",
-    mrn: "M-00445",
-    dob: "07/22/1966",
-    measure: "Well-Child Visits",
-    measureCode: "W34",
-    plan: "Medicaid",
-    priority: "Medium",
-    status: "In Progress",
-    step: 3,
-    assignedTo: "D. Pillai",
-    dueDate: "2026-02-26",
-    slaHoursLeft: 36,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "5h ago",
-    overdue: false,
-    riskScore: 1.1,
-  },
-  {
-    id: "CHT-4898",
-    patientName: "Nguyen, Thi Lan",
-    mrn: "M-00934",
-    dob: "02/15/1984",
-    measure: "Breast Cancer Screening",
-    measureCode: "BCS",
-    plan: "Commercial",
-    priority: "Medium",
-    status: "In Progress",
-    step: 3,
-    assignedTo: "M. Joshi",
-    dueDate: "2026-02-27",
-    slaHoursLeft: 48,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "2h ago",
-    overdue: false,
-    riskScore: 1.3,
-  },
-  {
-    id: "CHT-4900",
-    patientName: "Singh, Amarpreet J.",
-    mrn: "M-01143",
-    dob: "11/29/1977",
-    measure: "Follow-Up After Hosp.",
-    measureCode: "FUH",
-    plan: "Medicare",
-    priority: "High",
-    status: "In Progress",
-    step: 3,
-    assignedTo: "R. Gupta",
-    dueDate: "2026-02-27",
-    slaHoursLeft: 42,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "3h ago",
-    overdue: false,
-    riskScore: 2.5,
-  },
-  {
-    id: "CHT-4906",
-    patientName: "Davis, Michael P.",
-    mrn: "M-01634",
-    dob: "08/11/1988",
-    measure: "Well-Child Visits",
-    measureCode: "W34",
-    plan: "Medicaid",
-    priority: "Medium",
-    status: "In Progress",
-    step: 3,
-    assignedTo: "S. Johnson",
-    dueDate: "2026-02-28",
-    slaHoursLeft: 30,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "4h ago",
-    overdue: false,
-    riskScore: 0.9,
-  },
-  {
-    id: "CHT-4904",
-    patientName: "Lee, Stephanie J.",
-    mrn: "M-01389",
-    dob: "05/06/1979",
-    measure: "HbA1c Testing (CDC)",
-    measureCode: "HbA1c",
-    plan: "Medicaid",
-    priority: "Low",
-    status: "In Progress",
-    step: 3,
-    assignedTo: "P. Rao",
-    dueDate: "2026-02-28",
-    slaHoursLeft: 52,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "1d ago",
-    overdue: false,
-    riskScore: 1.6,
-  },
-  {
-    id: "CHT-4908",
-    patientName: "Taylor, Amanda N.",
-    mrn: "M-01878",
-    dob: "03/19/1960",
-    measure: "Follow-Up After Hosp.",
-    measureCode: "FUH",
-    plan: "Commercial",
-    priority: "Low",
-    status: "In Progress",
-    step: 3,
-    assignedTo: "D. Pillai",
-    dueDate: "2026-02-28",
-    slaHoursLeft: 60,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "1d ago",
-    overdue: false,
-    riskScore: 1.0,
-  },
-  {
-    id: "CHT-4912",
-    patientName: "Verma, Sunita P.",
-    mrn: "M-03094",
-    dob: "01/25/1970",
-    measure: "Well-Child Visits",
-    measureCode: "W34",
-    plan: "Medicare",
-    priority: "Medium",
-    status: "In Progress",
-    step: 3,
-    assignedTo: "R. Gupta",
-    dueDate: "2026-02-28",
-    slaHoursLeft: 44,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "1h ago",
-    overdue: false,
-    riskScore: 1.4,
-  },
-  {
-    id: "CHT-4896",
-    patientName: "Clark, Daniel F.",
-    mrn: "M-00991",
-    dob: "06/08/1963",
-    measure: "Colorectal Cancer Screening",
-    measureCode: "COL",
-    plan: "Medicare",
-    priority: "High",
-    status: "Pending QA",
-    step: 4,
-    assignedTo: "S. Johnson",
-    dueDate: "2026-02-25",
-    slaHoursLeft: 9,
-    qaFlag: false,
-    auditSample: true,
-    lastActivity: "1h ago",
-    overdue: false,
-    riskScore: 2.3,
-  },
-  {
-    id: "CHT-4899",
-    patientName: "Gonzalez, Maria E.",
-    mrn: "M-01021",
-    dob: "09/17/1972",
-    measure: "Controlling Blood Pressure",
-    measureCode: "CBP",
-    plan: "Medicaid",
-    priority: "Medium",
-    status: "Pending QA",
-    step: 4,
-    assignedTo: "P. Rao",
-    dueDate: "2026-02-27",
-    slaHoursLeft: 40,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "1h ago",
-    overdue: false,
-    riskScore: 1.7,
-  },
-  {
-    id: "CHT-4907",
-    patientName: "Wilson, Elizabeth J.",
-    mrn: "M-01756",
-    dob: "04/12/1969",
-    measure: "Breast Cancer Screening",
-    measureCode: "BCS",
-    plan: "Commercial",
-    priority: "Medium",
-    status: "Pending QA",
-    step: 4,
-    assignedTo: "R. Gupta",
-    dueDate: "2026-02-28",
-    slaHoursLeft: 32,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "2h ago",
-    overdue: false,
-    riskScore: 1.3,
-  },
-  {
-    id: "CHT-4914",
-    patientName: "Ahmed, Farida S.",
-    mrn: "M-03339",
-    dob: "12/30/1978",
-    measure: "Breast Cancer Screening",
-    measureCode: "BCS",
-    plan: "Medicare",
-    priority: "Medium",
-    status: "Pending QA",
-    step: 4,
-    assignedTo: "P. Rao",
-    dueDate: "2026-02-27",
-    slaHoursLeft: 20,
-    qaFlag: false,
-    auditSample: true,
-    lastActivity: "3h ago",
-    overdue: false,
-    riskScore: 1.9,
-  },
-  {
-    id: "CHT-5009",
-    patientName: "Brown, Naomi L.",
-    mrn: "M-05009",
-    dob: "07/15/1955",
-    measure: "HbA1c Testing (CDC)",
-    measureCode: "HbA1c",
-    plan: "Medicaid",
-    priority: "High",
-    status: "Pending QA",
-    step: 4,
-    assignedTo: "M. Joshi",
-    dueDate: "2026-02-26",
-    slaHoursLeft: 12,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "45m ago",
-    overdue: false,
-    riskScore: 2.6,
-  },
-  {
-    id: "CHT-4903",
-    patientName: "Moore, Patricia S.",
-    mrn: "M-00603",
-    dob: "08/29/1970",
-    measure: "HbA1c Testing (CDC)",
-    measureCode: "HbA1c",
-    plan: "Medicare",
-    priority: "Urgent",
-    status: "QA Returned",
-    step: 5,
-    assignedTo: "R. Gupta",
-    dueDate: "2026-02-22",
-    slaHoursLeft: -3,
-    qaFlag: true,
-    qaNote: "Missing service date — CPT 83036 not documented",
-    auditSample: false,
-    lastActivity: "1h ago",
-    overdue: true,
-    riskScore: 2.1,
-  },
-  {
-    id: "CHT-4905",
-    patientName: "Sharma, Kavitha R.",
-    mrn: "M-01512",
-    dob: "03/14/1973",
-    measure: "Controlling Blood Pressure",
-    measureCode: "CBP",
-    plan: "Medicaid",
-    priority: "High",
-    status: "QA Returned",
-    step: 5,
-    assignedTo: "M. Joshi",
-    dueDate: "2026-02-27",
-    slaHoursLeft: 18,
-    qaFlag: true,
-    qaNote: "BP reading illegible — re-abstract from source",
-    auditSample: false,
-    lastActivity: "6h ago",
-    overdue: false,
-    riskScore: 1.8,
-  },
-  {
-    id: "CHT-5010",
-    patientName: "Park, James H.",
-    mrn: "M-05010",
-    dob: "11/07/1961",
-    measure: "Colorectal Cancer Screening",
-    measureCode: "COL",
-    plan: "Commercial",
-    priority: "High",
-    status: "QA Returned",
-    step: 5,
-    assignedTo: "P. Rao",
-    dueDate: "2026-02-25",
-    slaHoursLeft: 6,
-    qaFlag: true,
-    qaNote: "Incorrect lookback period applied",
-    auditSample: false,
-    lastActivity: "3h ago",
-    overdue: false,
-    riskScore: 2.0,
-  },
-  {
-    id: "CHT-4901",
-    patientName: "White, Karen L.",
-    mrn: "M-00481",
-    dob: "06/22/1966",
-    measure: "Breast Cancer Screening",
-    measureCode: "BCS",
-    plan: "Medicare",
-    priority: "Urgent",
-    status: "Rework",
-    step: 6,
-    assignedTo: "D. Pillai",
-    dueDate: "2026-02-22",
-    slaHoursLeft: -6,
-    qaFlag: true,
-    qaNote: "No valid mammogram CPT in lookback window",
-    auditSample: true,
-    lastActivity: "6h ago",
-    overdue: true,
-    riskScore: 2.9,
-  },
-  {
-    id: "CHT-4902",
-    patientName: "Brown, Christopher D.",
-    mrn: "M-01267",
-    dob: "09/08/1958",
-    measure: "Colorectal Cancer Screening",
-    measureCode: "COL",
-    plan: "Commercial",
-    priority: "High",
-    status: "Rework",
-    step: 6,
-    assignedTo: "D. Pillai",
-    dueDate: "2026-02-27",
-    slaHoursLeft: 24,
-    qaFlag: true,
-    qaNote: "FIT test date outside measurement year",
-    auditSample: true,
-    lastActivity: "2h ago",
-    overdue: false,
-    riskScore: 1.7,
-  },
-  {
-    id: "CHT-5011",
-    patientName: "Gupta, Priya V.",
-    mrn: "M-05011",
-    dob: "04/18/1976",
-    measure: "Follow-Up After Hosp.",
-    measureCode: "FUH",
-    plan: "Medicaid",
-    priority: "Medium",
-    status: "Rework",
-    step: 6,
-    assignedTo: "S. Johnson",
-    dueDate: "2026-02-28",
-    slaHoursLeft: 30,
-    qaFlag: true,
-    qaNote: "Discharge date does not match encounter record",
-    auditSample: false,
-    lastActivity: "4h ago",
-    overdue: false,
-    riskScore: 1.2,
-  },
-  {
-    id: "CHT-4910",
-    patientName: "Harris, Rebecca M.",
-    mrn: "M-02237",
-    dob: "02/11/1980",
-    measure: "Colorectal Cancer Screening",
-    measureCode: "COL",
-    plan: "Medicare",
-    priority: "Low",
-    status: "Completed",
-    step: 7,
-    assignedTo: "M. Joshi",
-    dueDate: "2026-02-24",
-    slaHoursLeft: 0,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "3h ago",
-    overdue: false,
-    riskScore: 1.0,
-  },
-  {
-    id: "CHT-4911",
-    patientName: "Jackson, Thomas R.",
-    mrn: "M-02359",
-    dob: "07/30/1955",
-    measure: "Controlling Blood Pressure",
-    measureCode: "CBP",
-    plan: "Commercial",
-    priority: "Low",
-    status: "Completed",
-    step: 7,
-    assignedTo: "S. Johnson",
-    dueDate: "2026-02-24",
-    slaHoursLeft: 0,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "12h ago",
-    overdue: false,
-    riskScore: 0.8,
-  },
-  {
-    id: "CHT-4913",
-    patientName: "Iyer, Lakshmi D.",
-    mrn: "M-03217",
-    dob: "05/04/1969",
-    measure: "HbA1c Testing (CDC)",
-    measureCode: "HbA1c",
-    plan: "Medicare",
-    priority: "Low",
-    status: "Completed",
-    step: 7,
-    assignedTo: "D. Pillai",
-    dueDate: "2026-02-24",
-    slaHoursLeft: 0,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "2d ago",
-    overdue: false,
-    riskScore: 1.1,
-  },
-  {
-    id: "CHT-4915",
-    patientName: "Nair, Gopalan V.",
-    mrn: "M-03462",
-    dob: "10/22/1963",
-    measure: "Follow-Up After Hosp.",
-    measureCode: "FUH",
-    plan: "Medicaid",
-    priority: "Low",
-    status: "Completed",
-    step: 7,
-    assignedTo: "M. Joshi",
-    dueDate: "2026-02-23",
-    slaHoursLeft: 0,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "6h ago",
-    overdue: false,
-    riskScore: 0.9,
-  },
-  {
-    id: "CHT-4897",
-    patientName: "Patel, Rohan K.",
-    mrn: "M-00812",
-    dob: "01/09/1977",
-    measure: "HbA1c Testing (CDC)",
-    measureCode: "HbA1c",
-    plan: "Medicare",
-    priority: "High",
-    status: "Audit Sample",
-    step: 8,
-    assignedTo: "S. Johnson",
-    dueDate: "2026-02-26",
-    slaHoursLeft: 22,
-    qaFlag: false,
-    auditSample: true,
-    lastActivity: "45m ago",
-    overdue: false,
-    riskScore: 2.2,
-  },
-  {
-    id: "CHT-4909",
-    patientName: "Lewis, Sandra K.",
-    mrn: "M-02114",
-    dob: "08/16/1971",
-    measure: "HbA1c Testing (CDC)",
-    measureCode: "HbA1c",
-    plan: "Medicaid",
-    priority: "High",
-    status: "Audit Sample",
-    step: 8,
-    assignedTo: "P. Rao",
-    dueDate: "2026-02-27",
-    slaHoursLeft: 14,
-    qaFlag: false,
-    auditSample: true,
-    lastActivity: "5h ago",
-    overdue: false,
-    riskScore: 1.8,
-  },
-  {
-    id: "CHT-5012",
-    patientName: "Morris, Dana K.",
-    mrn: "M-05012",
-    dob: "03/27/1968",
-    measure: "Breast Cancer Screening",
-    measureCode: "BCS",
-    plan: "Commercial",
-    priority: "Medium",
-    status: "Audit Sample",
-    step: 8,
-    assignedTo: "R. Gupta",
-    dueDate: "2026-02-28",
-    slaHoursLeft: 36,
-    qaFlag: false,
-    auditSample: true,
-    lastActivity: "2h ago",
-    overdue: false,
-    riskScore: 1.5,
-  },
-  {
-    id: "CHT-5013",
-    patientName: "Martinez, Rosa A.",
-    mrn: "M-05013",
-    dob: "02/09/1962",
-    measure: "Breast Cancer Screening",
-    measureCode: "BCS",
-    plan: "Medicaid",
-    priority: "Low",
-    status: "Submission Ready",
-    step: 9,
-    assignedTo: "S. Johnson",
-    dueDate: "2026-02-24",
-    slaHoursLeft: 0,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "1d ago",
-    overdue: false,
-    riskScore: 1.3,
-  },
-  {
-    id: "CHT-5014",
-    patientName: "Chen, Robert L.",
-    mrn: "M-05014",
-    dob: "06/01/1957",
-    measure: "Controlling Blood Pressure",
-    measureCode: "CBP",
-    plan: "Medicare",
-    priority: "Low",
-    status: "Submission Ready",
-    step: 9,
-    assignedTo: "D. Pillai",
-    dueDate: "2026-02-24",
-    slaHoursLeft: 0,
-    qaFlag: false,
-    auditSample: false,
-    lastActivity: "2d ago",
-    overdue: false,
-    riskScore: 1.0,
-  },
-];
 
 /* ─────────────────────────────────────────────────────────────
    MOCK CLIENTS DATA 
@@ -1262,16 +471,30 @@ function RowAction({
   row: ChartRow;
   onOpen: () => void;
   onOpenWorkspace?: (patientId: string, chartId: string) => void;
-  onOpenQAReview?: (patientId: string, chartId: string) => void;
+  onOpenQAReview?: (
+    patientId: string,
+    chartId: string,
+    patientData?: any
+  ) => void;
   onEvaluate?: (patientId: string, chartId: string) => Promise<void>;
   role?: "program-manager" | "abstractor" | "qa-analyst";
   currentUserName?: string;
 }) {
   const [phase, setPhase] = useState<"idle" | "loading" | "ready">("idle");
   const [launching, setLaunching] = useState(false);
-
+  const [isQaLoading, setIsQaLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const evaluateMutation = usePostApiHedisEvaluateId();
+  // const evaluateMutation = usePostApiHedisEvaluateId();
+
+  const qaEvaluationQuery = useGetApiHedisEvaluationsId(
+    role === "qa-analyst" ? row.patientId || row.id : undefined,
+    {
+      query: {
+        enabled: false, // Don't fetch automatically
+        refetchOnWindowFocus: false,
+      },
+    }
+  );
 
   // ===================== PROGRAM MANAGER / ADMIN =====================
   if (role === "program-manager") {
@@ -1287,22 +510,93 @@ function RowAction({
   }
 
   // ===================== QA ANALYST =====================
+  // ===================== QA ANALYST =====================
   if (role === "qa-analyst") {
-    // Show Begin QA Review for Assigned, In Progress, Pending QA stages
+    const handleBeginQAReview = async () => {
+      if (!onOpenQAReview || isQaLoading) return;
+
+      const patientId = row.patientId || row.id;
+      const chartId = row.chartId || row.id;
+
+      setIsQaLoading(true);
+      toast.info("Starting QA Evaluation...", {
+        description: `Loading evaluation for ${row.patientName}`,
+      });
+
+      try {
+        // Trigger the GET API (this starts extraction on backend)
+        const result = await qaEvaluationQuery.refetch();
+
+        if (result.data) {
+          toast.success("Evaluation Loaded Successfully", {
+            description: "Chart is now ready for QA Review.",
+          });
+
+          // Prepare patient data for the review screen
+          const patientData = {
+            patientName: row.patientName,
+            dob: row.dob,
+            mrn: row.mrn,
+            plan: row.plan,
+            riskScore: row.riskScore,
+          };
+
+          // Navigate to QA Review screen
+          onOpenQAReview(patientId, chartId, patientData);
+        } else {
+          throw new Error("No data returned");
+        }
+      } catch (err) {
+        console.error("QA Evaluation failed:", err);
+        toast.error("Failed to load QA Evaluation", {
+          description: "Please try again or contact support.",
+        });
+      } finally {
+        setIsQaLoading(false);
+      }
+    };
+
     if ([2, 3, 4].includes(row.step)) {
       return (
         <button
-          onClick={() =>
-            onOpenQAReview?.(row.patientId || row.id, row.chartId || row.id)
-          }
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-bold text-violet-600 hover:bg-violet-50 border-violet-200 transition-colors"
+          onClick={handleBeginQAReview}
+          disabled={isQaLoading || qaEvaluationQuery.isFetching}
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-bold text-violet-600 hover:bg-violet-50 border-violet-200 transition-colors disabled:opacity-60 disabled:cursor-wait"
         >
-          <Play className="w-3 h-3" />
-          Begin QA Review
+          {isQaLoading || qaEvaluationQuery.isFetching ? (
+            <>
+              <svg
+                className="w-3 h-3 animate-spin"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v8z"
+                />
+              </svg>
+              Evaluating...
+            </>
+          ) : (
+            <>
+              <Play className="w-3 h-3" />
+              Begin QA Review
+            </>
+          )}
         </button>
       );
     }
-    // Fallback for other stages
+
+    // Fallback for QA
     return (
       <button
         onClick={onOpen}
@@ -1334,57 +628,45 @@ function RowAction({
     }
 
     const isQA = role === "qa-analyst";
-
-    // ===================== QA ANALYST - DIRECT OPEN =====================
-    if (isQA) {
-      return (
-        <button
-          onClick={() => onOpenQAReview?.(row.patientId, row.chartId)}
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-bold text-violet-600 hover:bg-violet-50 border-violet-200 transition-colors"
-        >
-          <Play className="w-3 h-3" />
-          Begin QA Review
-        </button>
-      );
-    }
+    // isQA block removed from here as it was redundant inside abstractor check
 
     const handleBeginClick = () => {
       if (phase !== "idle") return;
       fileInputRef.current?.click();
     };
 
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
+    // const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    //   const file = e.target.files?.[0];
+    //   if (!file) return;
 
-      try {
-        setPhase("loading");
-        toast.info("Starting Evaluation...", {
-          description: `Evaluating chart for ${row.patientName}`,
-        });
+    //   try {
+    //     setPhase("loading");
+    //     toast.info("Starting Evaluation...", {
+    //       description: `Evaluating chart for ${row.patientName}`,
+    //     });
 
-        await evaluateMutation.mutateAsync({
-          id: row.id,
-          data: { file },
-        });
+    //     await evaluateMutation.mutateAsync({
+    //       id: row.id,
+    //       data: { file },
+    //     });
 
-        toast.success("Evaluation Complete", {
-          description: "Chart is now ready for abstraction.",
-        });
-        setPhase("ready");
-      } catch (err) {
-        console.error("Evaluation failed:", err);
-        toast.error("Evaluation Failed", {
-          description:
-            "There was an error processing the chart. Please try again.",
-        });
-        setPhase("idle");
-      } finally {
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
-      }
-    };
+    //     toast.success("Evaluation Complete", {
+    //       description: "Chart is now ready for abstraction.",
+    //     });
+    //     setPhase("ready");
+    //   } catch (err) {
+    //     console.error("Evaluation failed:", err);
+    //     toast.error("Evaluation Failed", {
+    //       description:
+    //         "There was an error processing the chart. Please try again.",
+    //     });
+    //     setPhase("idle");
+    //   } finally {
+    //     if (fileInputRef.current) {
+    //       fileInputRef.current.value = "";
+    //     }
+    //   }
+    // };
     const handleLaunch = () => {
       if (launching) return;
       setLaunching(true);
@@ -1404,7 +686,7 @@ function RowAction({
         <input
           type="file"
           ref={fileInputRef}
-          onChange={handleFileChange}
+          // onChange={handleFileChange}
           accept=".pdf"
           className="hidden"
         />
@@ -2375,7 +1657,11 @@ export function WorkQueue({
       riskScore?: number;
     }
   ) => void;
-  onOpenQAReview?: (patientId: string, chartId: string) => void;
+  onOpenQAReview?: (
+    patientId: string,
+    chartId: string,
+    patientData?: any
+  ) => void;
 }) {
   // Component state
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -2447,64 +1733,64 @@ export function WorkQueue({
     },
   });
 
-  const evaluateMutation = usePostApiHedisEvaluateId();
+  // const evaluateMutation = usePostApiHedisEvaluateId();
 
-  const handleEvaluateAndNavigate = async (
-    patientId: string,
-    chartId: string,
-    file?: File
-  ) => {
-    if (!file) {
-      setPendingSelection({ patientId, chartId });
-      fileInputRef.current?.click();
-      return;
-    }
+  // const handleEvaluateAndNavigate = async (
+  //   patientId: string,
+  //   chartId: string,
+  //   file?: File
+  // ) => {
+  //   if (!file) {
+  //     setPendingSelection({ patientId, chartId });
+  //     fileInputRef.current?.click();
+  //     return;
+  //   }
 
-    try {
-      toast.loading("Starting evaluation...", { id: "evaluating" });
-      await evaluateMutation.mutateAsync({
-        id: patientId,
-        data: { file },
-      });
+  //   try {
+  //     toast.loading("Starting evaluation...", { id: "evaluating" });
+  //     await evaluateMutation.mutateAsync({
+  //       id: patientId,
+  //       data: { file },
+  //     });
 
-      toast.success("Evaluation complete", { id: "evaluating" });
+  //     toast.success("Evaluation complete", { id: "evaluating" });
 
-      // Find patient data to pass forward
-      const row = workQueueData.find(
-        (r) => r.patientId === patientId || r.id === patientId
-      );
+  //     // Find patient data to pass forward
+  //     const row = workQueueData.find(
+  //       (r) => r.patientId === patientId || r.id === patientId
+  //     );
 
-      const patientData = row
-        ? {
-            patientName: row.patientName,
-            dob: row.dob,
-            mrn: row.mrn,
-            plan: row.plan,
-            riskScore: row.riskScore,
-          }
-        : undefined;
+  //     const patientData = row
+  //       ? {
+  //           patientName: row.patientName,
+  //           dob: row.dob,
+  //           mrn: row.mrn,
+  //           plan: row.plan,
+  //           riskScore: row.riskScore,
+  //         }
+  //       : undefined;
 
-      onOpenPatient360(patientId, chartId, patientData);
-    } catch (err) {
-      console.error("Evaluation failed:", err);
-      toast.error("Evaluation failed. Please try again.", {
-        id: "evaluating",
-      });
-    }
-  };
+  //     onOpenPatient360(patientId, chartId, patientData);
+  //   } catch (err) {
+  //     console.error("Evaluation failed:", err);
+  //     toast.error("Evaluation failed. Please try again.", {
+  //       id: "evaluating",
+  //     });
+  //   }
+  // };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && pendingSelection) {
-      handleEvaluateAndNavigate(
-        pendingSelection.patientId,
-        pendingSelection.chartId,
-        file
-      );
-    }
-    setPendingSelection(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
+  // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (file && pendingSelection) {
+  //     handleEvaluateAndNavigate(
+  //       pendingSelection.patientId,
+  //       pendingSelection.chartId,
+  //       file
+  //     );
+  //   }
+  //   setPendingSelection(null);
+  //   if (fileInputRef.current) fileInputRef.current.value = "";
+  // };
 
   const effectiveRole = useMemo(() => {
     if (!rawRole) return role || "abstractor";
@@ -2893,7 +2179,7 @@ export function WorkQueue({
 
     // For Abstractor on Step 2 → Go through evaluation flow
     if (row.step === 2 && effectiveRole === "abstractor") {
-      handleEvaluateAndNavigate(row.patientId || row.id, row.chartId || row.id);
+      // handleEvaluateAndNavigate(row.patientId || row.id, row.chartId || row.id);
     } else {
       // Direct open for QA Analyst, Completed stages, etc.
       onOpenPatient360(
@@ -3836,7 +3122,7 @@ export function WorkQueue({
                           onOpen={() => handleRowOpen(row)}
                           onOpenWorkspace={onStartAbstraction}
                           onOpenQAReview={onOpenQAReview}
-                          onEvaluate={handleEvaluateAndNavigate}
+                          // onEvaluate={handleEvaluateAndNavigate}
                           role={effectiveRole}
                           currentUserName={currentUser}
                         />
@@ -4048,7 +3334,7 @@ export function WorkQueue({
       <input
         type="file"
         ref={fileInputRef}
-        onChange={handleFileChange}
+        // onChange={handleFileChange}
         accept="application/pdf"
         className="hidden"
       />
