@@ -45,7 +45,7 @@ import {
 } from "lucide-react";
 import {
   useGetApiHedisEvaluationsId,
-  usePostApiHedisEvaluateId,
+  // usePostApiHedisEvaluateId,
   usePostApiHedisSendToQa,
 } from "@/api";
 import { toast } from "sonner";
@@ -1900,7 +1900,7 @@ export function Patient360({
     isLoading: evalLoading,
     refetch: refetchEval,
   } = useGetApiHedisEvaluationsId(patientId);
-  const evaluateMutation = usePostApiHedisEvaluateId();
+  // const evaluateMutation = usePostApiHedisEvaluateId();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const evaluations = useMemo(() => {
@@ -1961,49 +1961,49 @@ export function Patient360({
 
   // Safe Recalculation Handler
   // FIXED: Safe Recalculation Handler
-  const handleRecalculate = async (file?: File) => {
-    if (!file) {
-      fileInputRef.current?.click();
-      return;
-    }
+  // const handleRecalculate = async (file?: File) => {
+  //   if (!file) {
+  //     fileInputRef.current?.click();
+  //     return;
+  //   }
 
-    try {
-      toast.loading("Recalculating HEDIS measures...", { id: "recalculating" });
+  //   try {
+  //     toast.loading("Recalculating HEDIS measures...", { id: "recalculating" });
 
-      // Explicitly create clean payload to prevent circular structure
-      const payload = {
-        id: patientId,
-        data: {
-          file: file, // File object only
-        },
-      };
+  //     // Explicitly create clean payload to prevent circular structure
+  //     const payload = {
+  //       id: patientId,
+  //       data: {
+  //         file: file, // File object only
+  //       },
+  //     };
 
-      await evaluateMutation.mutateAsync(payload);
+  //     await evaluateMutation.mutateAsync(payload);
 
-      await refetchEval();
-      toast.success("Recalculation complete ", { id: "recalculating" });
-    } catch (err: any) {
-      console.error("Recalculation failed:", err);
+  //     await refetchEval();
+  //     toast.success("Recalculation complete ", { id: "recalculating" });
+  //   } catch (err: any) {
+  //     console.error("Recalculation failed:", err);
 
-      const message =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Failed to process chart. Please try again.";
+  //     const message =
+  //       err?.response?.data?.message ||
+  //       err?.message ||
+  //       "Failed to process chart. Please try again.";
 
-      toast.error(message, { id: "recalculating" });
-    }
-  };
+  //     toast.error(message, { id: "recalculating" });
+  //   }
+  // };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleRecalculate(file);
-    }
-    // Reset input immediately
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
+  // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (file) {
+  //     handleRecalculate(file);
+  //   }
+  //   // Reset input immediately
+  //   if (fileInputRef.current) {
+  //     fileInputRef.current.value = "";
+  //   }
+  // };
 
   const sendToQaMutation = usePostApiHedisSendToQa();
   const selectedEval = evaluations.find(
@@ -2265,8 +2265,8 @@ export function Patient360({
               onOpenWorkspace={onOpenWorkspace}
               measures={dynamicMeasures}
               detail={dynamicDetail}
-              onRecalculate={handleRecalculate}
-              isRecalculating={evaluateMutation.isLoading}
+              // onRecalculate={handleRecalculate}
+              // isRecalculating={evaluateMutation.isLoading}
               onSendToQA={handleSendToQa}
               isSendingToQA={sendToQaMutation.isLoading}
             />
@@ -2297,7 +2297,7 @@ export function Patient360({
       <input
         type="file"
         ref={fileInputRef}
-        onChange={handleFileChange}
+        // onChange={handleFileChange}
         accept="application/pdf"
         className="hidden"
       />

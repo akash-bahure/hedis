@@ -69,6 +69,7 @@ export default function App() {
     null
   );
   const [selectedChartId, setSelectedChartId] = useState<string | null>(null);
+  const [selectedPatientData, setSelectedPatientData] = useState<any>(null);
 
   /* Apply dark mode class */
   useEffect(() => {
@@ -107,19 +108,22 @@ export default function App() {
         return (
           <WorkQueue
             role={role}
-            onStartAbstraction={(patientId, chartId) => {
+            onStartAbstraction={(patientId, chartId, patientData) => {
               setSelectedPatientId(patientId || null);
               setSelectedChartId(chartId || null);
+              setSelectedPatientData(patientData || null);
               navigate("patient-360");
             }}
-            onOpenPatient360={(patientId, chartId) => {
+            onOpenPatient360={(patientId, chartId, patientData) => {
               setSelectedPatientId(patientId || null);
               setSelectedChartId(chartId || null);
+              setSelectedPatientData(patientData || null);
               navigate("patient-360");
             }}
-            onOpenQAReview={(patientId, chartId) => {
+            onOpenQAReview={(patientId, chartId, patientData) => {
               setSelectedPatientId(patientId || null);
               setSelectedChartId(chartId || null);
+              setSelectedPatientData(patientData || null);
               navigate("qa-review");
             }}
           />
@@ -132,6 +136,7 @@ export default function App() {
             chartId={selectedChartId || ""}
             onBack={() => navigate(previousView)}
             onOpenWorkspace={() => navigate("abstraction")}
+            {...selectedPatientData}
           />
         );
 
@@ -151,6 +156,7 @@ export default function App() {
         return (
           <QAReview
             patientId={selectedPatientId || undefined}
+            patientData={selectedPatientData}
             onOpenPatient360={() => navigate("patient-360")}
           />
         );

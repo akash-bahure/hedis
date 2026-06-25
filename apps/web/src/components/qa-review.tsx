@@ -29,18 +29,19 @@ import {
   Minus,
   Hash,
   Check,
-  Layers,
   User,
   Stethoscope,
-  Info,
-  ExternalLink,
   Calendar,
   ChevronUp,
+  Layers,
+  UserCheck2,
+  Info,
+  Save,
 } from "lucide-react";
 import {
-  useGetApiHedisQaQueuePatientid,
-  useGetApiHedisQaReviewQaqueueid,
-  usePostApiHedisUpdateQaStatus,
+  useGetApiHedisQaReviewEvaluationid,
+  useGetApiHedisEvaluationsId,
+  usePostApiHedisAssignAbstractor,
 } from "@/api";
 import { toast } from "sonner";
 import { Document, Page, pdfjs } from "react-pdf";
@@ -280,11 +281,10 @@ function QueueCard({
       tabIndex={0}
       onClick={onClick}
       onKeyDown={(e) => e.key === "Enter" && onClick()}
-      className={`w-full text-left px-3 py-3 border-b border-border transition-all hover:bg-muted/30 cursor-pointer ${
-        selected
-          ? "bg-primary/5 border-l-[3px] border-l-primary"
-          : "border-l-[3px] border-l-transparent"
-      }`}
+      className={`w-full text-left px-3 py-3 border-b border-border transition-all hover:bg-muted/30 cursor-pointer ${selected
+        ? "bg-primary/5 border-l-[3px] border-l-primary"
+        : "border-l-[3px] border-l-transparent"
+        }`}
     >
       <div className="flex items-start justify-between gap-2 mb-1.5">
         <div className="flex items-center gap-2 min-w-0">
@@ -636,13 +636,15 @@ function CheckItem({
 ───────────────────────────────────────────────────────────── */
 export function QAReview({
   patientId,
+  patientData,
   onOpenPatient360,
 }: {
   patientId?: string;
+  patientData?: any;
   onOpenPatient360: () => void;
 }) {
   console.log("🔍 QAReview component mounted with patientId:", patientId);
-  const [selectedId, setSelectedId] = useState("qr-031");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [queueSearch, setQueueSearch] = useState("");
   const [queueFilter, setQueueFilter] = useState<
     "all" | "pending" | "in-review" | "returned"
@@ -656,40 +658,55 @@ export function QAReview({
     new Set(["ev2", "dc2"])
   );
   const [decision, setDecision] = useState<Decision>(null);
-  const [failReason, setFailReason] = useState("");
+  const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
   const [reviewNotes, setReviewNotes] = useState("");
   const [phiVisible, setPhiVisible] = useState(true);
   const [queueCollapsed, setQueueCollapsed] = useState(false);
-
-  // Fetch QA queue for this patient
-  const { data, isLoading, error, refetch } = useGetApiHedisQaQueuePatientid(
-    patientId || "",
-    {
-      page: 1,
-      limit: 50,
-      search: queueSearch || undefined,
-      status:
-        queueFilter === "all"
-          ? undefined
-          : queueFilter === "pending"
-            ? "Pending QA"
-            : queueFilter === "in-review"
-              ? "In Review"
-              : queueFilter,
-    },
-    {
-      query: {
-        enabled: true,
-      },
-    }
+  const [selectedMeasureCode, setSelectedMeasureCode] = useState<string | null>(
+    null
   );
 
-  // === NEW: Fetch QA Review Details for selected case ===
+  // New state for multi-measure decisions
+  const [measureDecisions, setMeasureDecisions] = useState<
+    Record<
+      string,
+      {
+        qaStatus: Decision;
+        reasons: string[];
+        notes: string;
+      }
+    >
+  >({});
+  const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
+
+  // === FETCH EVALUATIONS ===
+  const { data: evaluationsData, isLoading: evalLoading } =
+    useGetApiHedisEvaluationsId(patientId || "", {
+      query: { enabled: !!patientId },
+    });
+
+  // Correct mapping from actual response structure
+  const allEvaluations = useMemo(() => {
+    return (
+      evaluationsData?.evaluations || evaluationsData?.data?.evaluations || []
+    );
+  }, [evaluationsData]);
+
+  // Filter out "Not Eligible" measures for dropdown
+  const eligibleMeasures = useMemo(() => {
+    return allEvaluations.filter((m: any) => {
+      const status = (m.status || "").toLowerCase();
+      return m.eligible === true && status !== "not eligible";
+    });
+  }, [allEvaluations]);
+
+
+  // === FETCH QA REVIEW DETAILS (AI Analysis) ===
   const {
     data: reviewData,
     isLoading: reviewLoading,
     error: reviewError,
-  } = useGetApiHedisQaReviewQaqueueid(selectedId, {
+  } = useGetApiHedisQaReviewEvaluationid(selectedId || "", {
     query: {
       enabled: !!selectedId,
     },
@@ -698,6 +715,111 @@ export function QAReview({
   // Derived states from API (fallback to mock for now if needed)
   const detail = reviewData?.data ?? reviewData ?? null;
   const pdfUrl = detail?.pdfUrl || null;
+
+  // === DROPDOWN OPTIONS ===
+  const measureOptions = useMemo(() => {
+    if (eligibleMeasures.length === 0) {
+      return [
+        {
+          code: selectedMeasureCode || "N/A",
+          label: `${selectedMeasureCode || "No Measure"} - No Eligible Measures`,
+        },
+      ];
+    }
+
+    return eligibleMeasures.map((m: any) => ({
+      code: m.measure_code,
+      label: `${m.measure_code} - ${m.status || "Gap"}`,
+      full: m,
+    }));
+  }, [eligibleMeasures, selectedMeasureCode]);
+
+  // Auto-select first eligible measure
+  useEffect(() => {
+    if (measureOptions.length > 0 && !selectedMeasureCode) {
+      const firstMeasure = measureOptions[0];
+      setSelectedMeasureCode(firstMeasure.code);
+      if (firstMeasure.full?.id) {
+        const mid = firstMeasure.full.id;
+        setSelectedId(mid);
+
+        // Sync initial state if exists
+        if (measureDecisions[mid]) {
+          setDecision(measureDecisions[mid].qaStatus);
+          setSelectedReasons(measureDecisions[mid].reasons);
+          setReviewNotes(measureDecisions[mid].notes);
+        } else {
+          setDecision(null);
+          setSelectedReasons([]);
+          setReviewNotes("");
+        }
+      }
+    }
+  }, [measureOptions, selectedMeasureCode, measureDecisions]);
+
+  // Handle measure selection change
+  const handleMeasureChange = (code: string) => {
+    setSelectedMeasureCode(code);
+    const measure = eligibleMeasures.find((m: any) => m.measure_code === code);
+    if (measure?.id) {
+      const mid = measure.id;
+      setSelectedId(mid);
+      setPdfPage(1);
+
+      // Restore previously made decision for this measure
+      const prev = measureDecisions[mid];
+      if (prev) {
+        setDecision(prev.qaStatus);
+        setSelectedReasons(prev.reasons);
+        setReviewNotes(prev.notes);
+      } else {
+        setDecision(null);
+        setSelectedReasons([]);
+        setReviewNotes("");
+      }
+    }
+  };
+
+  // Sync current measure decision to global state
+  const syncMeasureDecision = (
+    newStatus: Decision,
+    newReasons: string[],
+    newNotes: string
+  ) => {
+    if (!selectedId) return;
+    setMeasureDecisions((prev) => ({
+      ...prev,
+      [selectedId]: {
+        qaStatus: newStatus,
+        reasons: newReasons,
+        notes: newNotes,
+      },
+    }));
+  };
+
+  const handleDecisionClick = (action: Decision) => {
+    const finalDecision = decision === action ? null : action;
+    setDecision(finalDecision);
+    if (finalDecision !== "qaFail" && finalDecision !== "requestRevision") {
+      setSelectedReasons([]);
+    }
+    syncMeasureDecision(finalDecision, selectedReasons, reviewNotes);
+  };
+
+  const handleReasonToggle = (reason: string) => {
+    setSelectedReasons((prev) => {
+      const next = prev.includes(reason)
+        ? prev.filter((r) => r !== reason)
+        : [...prev, reason];
+      syncMeasureDecision(decision, next, reviewNotes);
+      return next;
+    });
+  };
+
+  const handleNotesChange = (notes: string) => {
+    setReviewNotes(notes);
+    syncMeasureDecision(decision, selectedReasons, notes);
+  };
 
   // VALIDATION CHECKLIST — Pure API Mapping (No Mock Fallback)
   const apiChecklist = useMemo(() => {
@@ -715,11 +837,11 @@ export function QAReview({
       const items = detail.validationChecklist[group] || [];
       items.forEach((item: any, idx: number) => {
         mapped.push({
-          id: `${group[0]}${idx + 1}`,
+          id: `${group}-${idx}`,
           group,
           label: item.rule || "Validation Rule",
           description: item.message || "",
-          ncqaRef: "HEDIS Spec",
+          ncqaRef: item.ncqaRef || "HEDIS Spec",
           abstractorValue: item.abstractorEntry || "N/A",
           documentValue: item.sourceDocument || "Not Found",
           state: (item.status?.toLowerCase() as CheckState) || "pending",
@@ -746,8 +868,10 @@ export function QAReview({
       document: ev.sourceDocumentValue || "Not Found",
       discrepancy:
         ev.status === "MISSING_IN_SOURCE" ||
-        ev.status?.includes("DISCREPANCY") ||
-        ev.status === "FAIL",
+          ev.status?.includes("DISCREPANCY") ||
+          ev.status === "FAIL"
+          ? ev.reason
+          : undefined,
       icon: getIconForField(ev.field),
     }));
   }, [detail]);
@@ -763,8 +887,8 @@ export function QAReview({
       aiValue: item.aiValue || item.abstractorValue || "",
       match:
         item.status === "MISSING_IN_SOURCE" ||
-        item.status?.includes("DISCREPANCY") ||
-        item.status === "FAIL"
+          item.status?.includes("DISCREPANCY") ||
+          item.status === "FAIL"
           ? "discrepancy"
           : "match",
     }));
@@ -780,205 +904,38 @@ export function QAReview({
     console.error("PDF Load Error:", error);
   };
 
-  // Map API data
-  const QUEUE: QueueCase[] = useMemo(() => {
-    if (!data?.data || !Array.isArray(data.data)) return [];
-
-    return data.data.map((item: any) => ({
-      id: item.id,
-      caseRef: item.chart_id || item.id?.slice(-8).toUpperCase() || "N/A",
-      member: item.patient_name || "Unknown Patient",
-      memberId: item.patient_id,
-      measureCode: item.measure_code || "N/A",
-      measureName: item.measure_name || "Unknown Measure",
-      abstractor: item.sent_by_name || item.sent_by || "System",
-      submittedAt: new Date(item.sent_at || item.created_at).toLocaleDateString(
-        "en-US",
-        {
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-        }
-      ),
-      dueBy: "TBD",
-      hoursRemaining: 24,
-      priority: "medium" as Priority,
-      status: item.status?.toLowerCase().includes("pending")
-        ? "pending"
-        : item.status?.toLowerCase().includes("review")
-          ? "in-review"
-          : item.status?.toLowerCase().includes("return")
-            ? "returned"
-            : "pending",
-      qaSampled: false,
-      fieldCount: 0,
-      discrepancies: 0,
-    }));
-  }, [data]);
-
-  //  Auto-select first item when QUEUE changes
-  useEffect(() => {
-    if (
-      QUEUE.length > 0 &&
-      (!selectedId || !QUEUE.some((q) => q.id === selectedId))
-    ) {
-      setSelectedId(QUEUE[0].id);
-    }
-  }, [QUEUE, selectedId]);
-
-  // SAFE SELECTED CASE + MAP API FIELDS
-  const selectedCase = QUEUE.find((q) => q.id === selectedId) ||
-    QUEUE[0] || {
-      id: "",
-      status: "pending" as QueueStatus,
-      qaSampled: false,
-      discrepancies: 0,
-      caseRef: "N/A",
-      member: "Unknown Patient",
-      memberId: "",
-      measureCode: "N/A",
-      measureName: "No Measure Selected",
-      abstractor: "System",
-      submittedAt: "",
-      dueBy: "TBD",
-      hoursRemaining: 0,
-      priority: "medium" as Priority,
-    };
-
-  const filteredQueue = useMemo(() => {
-    return QUEUE.filter((item) => {
-      if (queueFilter !== "all" && item.status !== queueFilter) return false;
-      if (queueSearch) {
-        const q = queueSearch.toLowerCase();
-        return (
-          item.member.toLowerCase().includes(q) ||
-          item.measureCode.toLowerCase().includes(q) ||
-          item.measureName.toLowerCase().includes(q)
-        );
-      }
-      return true;
-    });
-  }, [QUEUE, queueFilter, queueSearch]);
-
-  const updateQaStatus = usePostApiHedisUpdateQaStatus({
-    mutation: {
-      onSuccess: () => {
-        refetch(); // Refresh QA Queue
-
-        // Reset form
-        setDecision(null);
-        setFailReason("");
-        setReviewNotes("");
-
-        toast.success("QA Status updated successfully");
-      },
-
-      onError: (error: any) => {
-        console.error("Failed to update QA status:", error);
-
-        const errorMessage =
-          error?.response?.data?.message ||
-          error?.message ||
-          "An unexpected error occurred while updating QA status.";
-
-        toast.error("Failed to update QA status", {
-          description: errorMessage,
-        });
-      },
-    },
-  });
-
-  // Improved Decision Handler
-  const handleQaDecision = async (
-    action: "qaPass" | "qaFail" | "requestRevision"
-  ) => {
-    if (!selectedId) {
-      toast.error("No case selected");
-      return;
-    }
-
-    // Validation for Fail and Revision
-    if (
-      (action === "qaFail" || action === "requestRevision") &&
-      !failReason?.trim()
-    ) {
-      toast.error("Reason is required", {
-        description: "Please select a reason for Fail or Revision request.",
-      });
-      return;
-    }
-
-    try {
-      await updateQaStatus.mutateAsync({
-        data: {
-          qaQueueIds: [selectedId],
-          action,
-          reason: failReason || null,
-          additionalNotes: reviewNotes?.trim() || null,
-        },
-      });
-    } catch (err) {
-      // Error is already handled in onError
-    }
-  };
-  // ==================== LEFT PANEL ONLY RENDERING ====================
-  // ==================== LEFT PANEL RENDER ====================
-  const renderLeftQueue = () => {
-    if (isLoading) {
-      return (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Loading measures...</p>
-          </div>
-        </div>
-      );
-    }
-
-    if (error) {
-      return (
-        <div className="flex-1 flex items-center justify-center p-4 text-red-600">
-          Error loading QA queue
-        </div>
-      );
-    }
-
-    if (QUEUE.length === 0) {
-      return (
-        <div className="flex-1 flex flex-col items-center justify-center py-12 text-muted-foreground">
-          <ClipboardCheck className="w-12 h-12 mb-4 opacity-50" />
-          <p className="font-medium">No QA Measures</p>
-          <p className="text-sm text-center mt-1 px-6">
-            No measures have been sent to QA for this patient yet.
-          </p>
-        </div>
-      );
-    }
-
-    if (filteredQueue.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-          <Search className="w-7 h-7 opacity-30 mb-2" />
-          <p>No matching measures found</p>
-        </div>
-      );
-    }
-
-    return filteredQueue.map((item) => (
-      <QueueCard
-        key={item.id}
-        item={item}
-        selected={item.id === selectedId}
-        onClick={() => setSelectedId(item.id)}
-        onOpenPatient360={onOpenPatient360}
-      />
-    ));
-  };
   const passCount = checklist.filter((c) => c.state === "pass").length;
   const failCount = checklist.filter((c) => c.state === "fail").length;
   const warnCount = checklist.filter((c) => c.state === "warn").length;
   const totalCount = checklist.length;
+
+  // Derive selectedCase from the current selection and patientData
+  const selectedCase = useMemo(() => {
+    const currentMeasure = eligibleMeasures.find((m: any) => m.id === selectedId);
+    return {
+      id: selectedId || "",
+      status: (currentMeasure?.status?.toLowerCase() || "pending") as QueueStatus,
+      qaSampled: false,
+      discrepancies: failCount,
+      caseRef: currentMeasure?.measure_code || "N/A",
+      member: patientData?.patientName || "Unknown Patient",
+      memberId: patientData?.mrn || patientId || "",
+      measureCode: currentMeasure?.measure_code || "N/A",
+      measureName: currentMeasure?.measure_name || "Unknown Measure",
+      abstractor: "System",
+      submittedAt: "",
+      dueBy: "TBD",
+      hoursRemaining: 24,
+      priority: "medium" as Priority,
+    };
+  }, [selectedId, eligibleMeasures, patientData, patientId, failCount]);
+
+  // Auto-select first measure if none selected
+  useEffect(() => {
+    if (eligibleMeasures.length > 0 && !selectedId) {
+      setSelectedId(eligibleMeasures[0].id);
+    }
+  }, [eligibleMeasures, selectedId]);
 
   const toggleCheck = (id: string) => {
     const order: CheckState[] = ["pending", "pass", "warn", "fail", "na"];
@@ -1000,141 +957,10 @@ export function QAReview({
 
   const byGroup = (g: ChecklistItem["group"]) =>
     checklist.filter((c) => c.group === g);
-  const canSave =
-    decision !== null &&
-    ((decision !== "qaFail" && decision !== "qaRevision") || !!failReason);
+  const canSave = Object.keys(measureDecisions).length > 0;
 
   return (
     <div className="flex h-full overflow-hidden bg-background">
-      {/* ══════════════════════════════════════════════════════
-          LEFT PANEL: QA QUEUE (Full Height)
-      ══════════════════════════════════════════════════════ */}
-      <div
-        className={`flex-shrink-0 flex flex-col border-r border-border overflow-hidden bg-card transition-all duration-300 ${queueCollapsed ? "w-12" : "w-72"}`}
-      >
-        {queueCollapsed ? (
-          // Collapsed state - vertical button
-          <div className="flex flex-col items-center py-3 h-full">
-            <button
-              onClick={() => setQueueCollapsed(false)}
-              className="inline-flex items-center gap-2 whitespace-nowrap p-2 rounded hover:bg-muted transition-colors"
-              title="Expand queue"
-            >
-              <ChevronRight className="w-4 h-4 text-primary" />
-            </button>
-            <div className="mt-3 flex flex-col items-center gap-2">
-              <ClipboardCheck className="w-4 h-4 text-primary" />
-              <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full border border-amber-200">
-                {
-                  QUEUE.filter(
-                    (q) => q.status === "pending" || q.status === "in-review"
-                  ).length
-                }
-              </span>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Panel header */}
-            <div className="flex-shrink-0 px-3 pt-3 pb-2.5 border-b border-border">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-1.5">
-                  <ClipboardCheck className="w-4 h-4 text-primary" />
-                  <span className="text-[12px] font-bold text-foreground">
-                    QA Queue
-                  </span>
-                  <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full border border-amber-200">
-                    {
-                      QUEUE.filter(
-                        (q) =>
-                          q.status === "pending" || q.status === "in-review"
-                      ).length
-                    }
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 whitespace-nowrap">
-                  <span className="text-[10px] text-muted-foreground">
-                    {QUEUE.length} total
-                  </span>
-                  <button
-                    onClick={() => setQueueCollapsed(true)}
-                    className="inline-flex items-center gap-2 whitespace-nowrap p-1 rounded hover:bg-muted transition-colors"
-                    title="Minimize queue"
-                  >
-                    <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground" />
-                  </button>
-                </div>
-              </div>
-              <div className="relative mb-2">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Search case, member, measure…"
-                  value={queueSearch}
-                  onChange={(e) => setQueueSearch(e.target.value)}
-                  className="w-full pl-8 pr-3 py-1.5 text-[11px] border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
-              <div className="flex gap-1 flex-wrap">
-                {(["all", "pending", "in-review", "returned"] as const).map(
-                  (f) => (
-                    <button
-                      key={f}
-                      onClick={() => setQueueFilter(f)}
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border transition-colors ${queueFilter === f ? "bg-primary text-white border-primary" : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"}`}
-                    >
-                      {f === "all"
-                        ? "All"
-                        : f === "in-review"
-                          ? "In Review"
-                          : f.charAt(0).toUpperCase() + f.slice(1)}
-                    </button>
-                  )
-                )}
-              </div>
-            </div>
-
-            {/* Queue list */}
-            {/* Queue List Area */}
-            <div className="flex-1 overflow-y-auto relative">
-              {renderLeftQueue()}
-            </div>
-
-            {/* Queue stats footer */}
-            <div className="flex-shrink-0 border-t border-border px-3 py-2.5">
-              <div className="grid grid-cols-3 gap-2 text-center">
-                {[
-                  {
-                    label: "Pending",
-                    count: QUEUE.filter((q) => q.status === "pending").length,
-                    cls: "text-amber-600",
-                  },
-                  {
-                    label: "Approved",
-                    count: QUEUE.filter((q) => q.status === "approved").length,
-                    cls: "text-emerald-600",
-                  },
-                  {
-                    label: "At Risk",
-                    count: QUEUE.filter(
-                      (q) => q.hoursRemaining > 0 && q.hoursRemaining <= 8
-                    ).length,
-                    cls: "text-red-600",
-                  },
-                ].map((s) => (
-                  <div key={s.label}>
-                    <p className={`text-sm font-bold ${s.cls}`}>{s.count}</p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {s.label}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-
       {/* ══════════════════════════════════════════════════════
           RIGHT SIDE: MAIN CONTENT
       ══════════════════════════════════════════════════════ */}
@@ -1147,33 +973,39 @@ export function QAReview({
             <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className="w-10 h-10 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center flex-shrink-0">
                 <span className="text-[11px] font-bold text-primary">
-                  {selectedCase.member
+                  {(phiVisible
+                    ? patientData?.patientName || selectedCase.member
+                    : "██"
+                  )
                     ?.split(",")[0]
                     ?.trim()
                     .substring(0, 2)
                     .toUpperCase() || "JD"}
                 </span>
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap mb-0.5">
                   <h1 className="text-sm font-bold text-foreground">
-                    {phiVisible ? selectedCase.member : "████████████"}
+                    {phiVisible
+                      ? patientData?.patientName || selectedCase.member
+                      : "████████████"}
                   </h1>
                   <span className="text-[11px] text-muted-foreground font-mono">
-                    {phiVisible ? selectedCase.memberId : "██████████"}
+                    {phiVisible
+                      ? patientData?.mrn || selectedCase.memberId
+                      : "██████████"}
                   </span>
                   <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-bold ${
-                      decision === "qaPass"
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                        : decision === "qaFail"
-                          ? "bg-red-50 text-red-700 border-red-200"
-                          : decision === "requestRevision"
-                            ? "bg-amber-50 text-amber-700 border-amber-200"
-                            : STATUS_STYLES[selectedCase.status as QueueStatus]
-                                ?.badge ||
-                              "bg-amber-50 text-amber-700 border-amber-200"
-                    }`}
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-bold ${decision === "qaPass"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : decision === "qaFail"
+                        ? "bg-red-50 text-red-700 border-red-200"
+                        : decision === "requestRevision"
+                          ? "bg-amber-50 text-amber-700 border-amber-200"
+                          : STATUS_STYLES[selectedCase.status as QueueStatus]
+                            ?.badge ||
+                          "bg-amber-50 text-amber-700 border-amber-200"
+                      }`}
                   >
                     {decision === "qaPass"
                       ? "QA Passed"
@@ -1182,7 +1014,7 @@ export function QAReview({
                         : decision === "requestRevision"
                           ? "Revision Requested"
                           : STATUS_STYLES[selectedCase.status as QueueStatus]
-                              ?.label || "Pending QA"}
+                            ?.label || "Pending QA"}
                   </span>
                   {selectedCase.qaSampled && (
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
@@ -1193,11 +1025,15 @@ export function QAReview({
                 </div>
 
                 <div className="flex items-center gap-3 flex-wrap">
-                  <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold border border-primary/20">
-                      {selectedCase.measureCode}
+                  <span className="text-[11px] text-muted-foreground">
+                    DOB: {phiVisible ? patientData?.dob || "—" : "██/██/████"}
+                  </span>
+                  <span className="text-muted-foreground/40">·</span>
+                  <span className="text-[11px] text-muted-foreground">
+                    Plan:{" "}
+                    <span className="font-semibold text-foreground">
+                      {patientData?.plan || "—"}
                     </span>
-                    {selectedCase.measureName}
                   </span>
                   <span className="text-muted-foreground/40">·</span>
                   <span className="text-[11px] text-muted-foreground">
@@ -1206,14 +1042,28 @@ export function QAReview({
                     </span>{" "}
                     · Submitted {selectedCase.submittedAt || "—"}
                   </span>
-                  <span className="text-muted-foreground/40">·</span>
-                  <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    Due {selectedCase.dueBy}
-                  </span>
                 </div>
               </div>
             </div>
+
+            {/* MEASURE SELECTION DROPDOWN - Placed before action buttons */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-1.5 border border-border rounded-lg px-3 py-1.5 bg-card">
+                <Layers className="w-3.5 h-3.5 text-primary" />
+                <select
+                  value={selectedMeasureCode || ""}
+                  onChange={(e) => handleMeasureChange(e.target.value)}
+                  className="bg-transparent border-none text-[11px] font-bold text-primary focus:ring-0 cursor-pointer hover:underline p-0 min-w-[140px]"
+                >
+                  {measureOptions.map((opt: any) => (
+                    <option key={opt.code} value={opt.code}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             {/* Action buttons */}
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
@@ -1227,36 +1077,37 @@ export function QAReview({
                 )}
                 {phiVisible ? "Mask PHI" : "Show PHI"}
               </button>
+
               <div className="w-px h-5 bg-border" />
+
               <button
-                onClick={() => {
-                  setDecision("requestRevision");
-                  setFailReason("");
-                  setReviewNotes("");
-                }}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${decision === "revision" ? "bg-amber-500 text-white border-amber-500 shadow-sm" : "border-amber-300 text-amber-700 hover:bg-amber-50"}`}
+                onClick={() => handleDecisionClick("requestRevision")}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${decision === "requestRevision"
+                  ? "bg-amber-500 text-white border-amber-500 shadow-sm"
+                  : "border-amber-300 text-amber-700 hover:bg-amber-50"
+                  }`}
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 Request Revision
               </button>
+
               <button
-                onClick={() => {
-                  setDecision("qaFail");
-                  setFailReason("");
-                  setReviewNotes("");
-                }}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${decision === "fail" ? "bg-red-600 text-white border-red-600 shadow-sm" : "border-red-300 text-red-700 hover:bg-red-50"}`}
+                onClick={() => handleDecisionClick("qaFail")}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${decision === "qaFail"
+                  ? "bg-red-600 text-white border-red-600 shadow-sm"
+                  : "border-red-300 text-red-700 hover:bg-red-50"
+                  }`}
               >
                 <XCircle className="w-3.5 h-3.5" />
                 QA Fail
               </button>
+
               <button
-                onClick={() => {
-                  setDecision("qaPass");
-                  setFailReason("");
-                  setReviewNotes("");
-                }}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${decision === "pass" ? "bg-emerald-600 text-white border-emerald-600 shadow-sm" : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"}`}
+                onClick={() => handleDecisionClick("qaPass")}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${decision === "qaPass"
+                  ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                  : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                  }`}
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 QA Pass
@@ -1264,50 +1115,59 @@ export function QAReview({
             </div>
           </div>
 
-          {/* Fail/Revision reason bar */}
+          {/* Fail/Revision reason */}
           {(decision === "qaFail" || decision === "requestRevision") && (
             <div
-              className={`flex items-center gap-3 px-4 py-2.5 border-t ${decision === "fail" ? "bg-red-50 border-red-100" : "bg-amber-50 border-amber-100"}`}
+              className={`flex-col gap-3 px-4 py-3 border-t ${decision === "qaFail" ? "bg-red-50 border-red-100" : "bg-amber-50 border-amber-100"}`}
             >
-              <AlertTriangle
-                className={`w-4 h-4 flex-shrink-0 ${decision === "fail" ? "text-red-500" : "text-amber-500"}`}
-              />
-              <span
-                className={`text-[11px] font-bold whitespace-nowrap ${decision === "fail" ? "text-red-700" : "text-amber-700"}`}
-              >
-                {decision === "fail"
-                  ? "Failure reason required:"
-                  : "Revision reason required:"}
-              </span>
-              <select
-                value={failReason}
-                onChange={(e) => setFailReason(e.target.value)}
-                className={`px-3 py-1.5 text-[11px] border rounded-lg bg-white text-foreground focus:outline-none focus:ring-2 ${decision === "fail" ? "border-red-300 focus:ring-red-200" : "border-amber-300 focus:ring-amber-200"}`}
-              >
-                <option value="">— Select reason —</option>
+              <div className="flex items-center gap-3 mb-3">
+                <AlertTriangle
+                  className={`w-4 h-4 flex-shrink-0 ${decision === "qaFail" ? "text-red-500" : "text-amber-500"}`}
+                />
+                <span
+                  className={`text-[11px] font-bold whitespace-nowrap ${decision === "qaFail" ? "text-red-700" : "text-amber-700"}`}
+                >
+                  {decision === "qaFail"
+                    ? "Select failure reasons (multiple allowed):"
+                    : "Select revision reasons (multiple allowed):"}
+                </span>
+              </div>
+
+              <div className="flex flex-wrap gap-x-4 gap-y-2 mb-3">
                 {FAIL_REASONS.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
+                  <div key={r} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={`reason-${r}`}
+                      checked={selectedReasons.includes(r)}
+                      onChange={() => handleReasonToggle(r)}
+                      className={`w-3.5 h-3.5 rounded border ${decision === "qaFail" ? "text-red-600 border-red-300 focus:ring-red-500" : "text-amber-600 border-amber-300 focus:ring-amber-500"}`}
+                    />
+                    <label
+                      htmlFor={`reason-${r}`}
+                      className={`text-[11px] cursor-pointer font-medium ${decision === "qaFail" ? "text-red-900" : "text-amber-900"}`}
+                    >
+                      {r}
+                    </label>
+                  </div>
                 ))}
-              </select>
-              <input
-                type="text"
-                value={reviewNotes}
-                onChange={(e) => setReviewNotes(e.target.value)}
-                placeholder="Additional notes for the abstractor…"
-                className={`flex-1 px-3 py-1.5 text-[11px] border rounded-lg bg-white text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 ${decision === "fail" ? "border-red-300 focus:ring-red-200" : "border-amber-300 focus:ring-amber-200"}`}
-              />
-              <button
-                onClick={() => {
-                  setDecision(null);
-                  setFailReason("");
-                  setReviewNotes("");
-                }}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={reviewNotes}
+                  onChange={(e) => handleNotesChange(e.target.value)}
+                  placeholder="Additional notes for the abstractor…"
+                  className={`flex-1 px-3 py-1.5 text-[11px] border rounded-lg bg-white text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 ${decision === "qaFail" ? "border-red-300 focus:ring-red-200" : "border-amber-300 focus:ring-amber-200"}`}
+                />
+                <button
+                  onClick={() => handleDecisionClick(decision)}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -1544,9 +1404,7 @@ export function QAReview({
                               {ev.discrepancy && (
                                 <p className="text-[10px] text-red-600 mt-1.5 flex items-start gap-1">
                                   <AlertCircle className="w-3 h-3 flex-shrink-0 mt-0.5" />
-                                  Year mismatch: abstractor entered 2025,
-                                  document shows 2024. Requires correction
-                                  before closure.
+                                  {ev.discrepancy}
                                 </p>
                               )}
                             </div>
@@ -1558,33 +1416,35 @@ export function QAReview({
                         </div>
                       )}
 
-                      {/* AI Insight */}
-                      <div className="border border-primary/20 rounded-lg p-2.5 bg-primary/5">
-                        <div className="flex items-center gap-1.5 mb-1.5">
-                          <Sparkles className="w-3.5 h-3.5 text-primary" />
-                          <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
-                            AI Analysis
-                          </span>
-                          <span className="text-[9px] text-muted-foreground ml-auto">
-                            Confidence: 94%
-                          </span>
+
+
+                      {/* NEW: All Evidences Found */}
+                      {detail?.all_evidences && detail.all_evidences.length > 0 && (
+                        <div className="mt-4 border-t border-border pt-4">
+                          <h4 className="text-[11px] font-bold text-foreground mb-2 flex items-center gap-1.5 uppercase tracking-wider">
+                            <BookOpen className="w-3.5 h-3.5 text-primary" />
+                            All Contextual Evidences
+                          </h4>
+                          <div className="space-y-2">
+                            {detail.all_evidences.map((ev: any, idx: number) => (
+                              <div key={idx} className="bg-muted/30 rounded p-2 border border-border/50 text-[11px]">
+                                <p className="text-foreground leading-relaxed italic mb-1">"{ev.content}"</p>
+                                <div className="flex items-center justify-between text-[9px] text-muted-foreground font-semibold">
+                                  <span className="flex items-center gap-1">
+                                    <Info className="w-2.5 h-2.5" />
+                                    {ev.relevance}
+                                  </span>
+                                  <span className="bg-muted px-1 rounded">Page {ev.pageNumber}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                        <p className="text-[11px] text-foreground">
-                          Detected a{" "}
-                          <span className="font-bold text-red-600">
-                            year discrepancy
-                          </span>{" "}
-                          in the service date field. All other extracted fields
-                          match the source document. Compliance status is
-                          unaffected — member remains numerator-compliant under
-                          either date.
-                        </p>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>
               ) : (
-                /* FIELD COMPARISON TABLE */
                 /* FIELD COMPARISON TABLE */
                 <div className="flex-1 overflow-auto p-5">
                   {reviewLoading ? (
@@ -1762,7 +1622,6 @@ export function QAReview({
             </div>
 
             {/* Checklist groups (scrollable) */}
-            {/* Checklist groups (scrollable) */}
             <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
               {reviewLoading ? (
                 <div className="flex items-center justify-center h-64">
@@ -1893,45 +1752,33 @@ export function QAReview({
 
               <div className="grid grid-cols-3 gap-1.5">
                 <button
-                  onClick={() => handleQaDecision("qaPass")}
-                  disabled={updateQaStatus.isPending}
-                  className={`inline-flex items-center justify-center gap-1 py-2 rounded-lg border text-[11px] font-bold transition-all ${
-                    decision === "qaPass"
-                      ? "bg-emerald-600 text-white border-emerald-600"
-                      : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"
-                  }`}
+                  onClick={() => handleDecisionClick("qaPass")}
+                  className={`inline-flex items-center justify-center gap-1 py-2 rounded-lg border text-[11px] font-bold transition-all ${decision === "qaPass"
+                    ? "bg-emerald-600 text-white border-emerald-600"
+                    : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                    }`}
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   Pass
                 </button>
 
                 <button
-                  onClick={() => handleQaDecision("requestRevision")}
-                  disabled={
-                    updateQaStatus.isPending ||
-                    (decision === "requestRevision" && !failReason)
-                  }
-                  className={`inline-flex items-center justify-center gap-1 py-2 rounded-lg border text-[11px] font-bold transition-all ${
-                    decision === "requestRevision"
-                      ? "bg-amber-500 text-white border-amber-500"
-                      : "border-amber-300 text-amber-700 hover:bg-amber-50"
-                  }`}
+                  onClick={() => handleDecisionClick("requestRevision")}
+                  className={`inline-flex items-center justify-center gap-1 py-2 rounded-lg border text-[11px] font-bold transition-all ${decision === "requestRevision"
+                    ? "bg-amber-500 text-white border-amber-500"
+                    : "border-amber-300 text-amber-700 hover:bg-amber-50"
+                    }`}
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   Revise
                 </button>
 
                 <button
-                  onClick={() => handleQaDecision("qaFail")}
-                  disabled={
-                    updateQaStatus.isPending ||
-                    (decision === "qaFail" && !failReason)
-                  }
-                  className={`inline-flex items-center justify-center gap-1 py-2 rounded-lg border text-[11px] font-bold transition-all ${
-                    decision === "qaFail"
-                      ? "bg-red-600 text-white border-red-600"
-                      : "border-red-300 text-red-700 hover:bg-red-50"
-                  }`}
+                  onClick={() => handleDecisionClick("qaFail")}
+                  className={`inline-flex items-center justify-center gap-1 py-2 rounded-lg border text-[11px] font-bold transition-all ${decision === "qaFail"
+                    ? "bg-red-600 text-white border-red-600"
+                    : "border-red-300 text-red-700 hover:bg-red-50"
+                    }`}
                 >
                   <XCircle className="w-3.5 h-3.5" />
                   Fail
@@ -1973,18 +1820,214 @@ export function QAReview({
               </span>
             )}
             <button
-              onClick={() => handleQaDecision(decision!)} // or keep separate if you want
-              disabled={!canSave || updateQaStatus.isPending}
+              onClick={() => setIsAssignmentModalOpen(true)}
+              disabled={!canSave}
               className="inline-flex items-center gap-1.5 px-4 py-2 text-[12px] font-bold rounded-lg transition-all bg-primary text-white hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
             >
-              {updateQaStatus.isPending ? (
-                <>Processing...</>
-              ) : (
-                <>
-                  <Send className="w-3.5 h-3.5" />
-                  Save Decision
-                </>
+              <Send className="w-3.5 h-3.5" />
+              Save Decision
+            </button>
+          </div>
+        </div>
+
+        {/* Assignment Modal */}
+        <AssignmentModal
+          open={isAssignmentModalOpen}
+          onOpenChange={setIsAssignmentModalOpen}
+          patientId={patientId || ""}
+          measureDecisions={measureDecisions}
+          eligibleMeasures={eligibleMeasures}
+          abstractorId={selectedCase.memberId || "system"} // Use memberId as a placeholder or fetch real ID
+        />
+      </div>
+    </div>
+  );
+}
+
+function AssignmentModal({
+  open,
+  onOpenChange,
+  patientId,
+  measureDecisions,
+  eligibleMeasures,
+  abstractorId,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  patientId: string;
+  measureDecisions: any;
+  eligibleMeasures: any[];
+  abstractorId: string;
+}) {
+  const assignMutation = usePostApiHedisAssignAbstractor();
+
+  const handleAssign = async () => {
+    const decisionsArray = Object.entries(measureDecisions).map(
+      ([mid, data]: any) => {
+        const measure = eligibleMeasures.find((m) => m.id === mid);
+        return {
+          measureId: mid,
+          measureCode: measure?.measure_code || "",
+          measureName: measure?.measure_name || "",
+          qaStatus:
+            data.qaStatus === "qaPass"
+              ? "QA_PASS"
+              : data.qaStatus === "qaFail"
+                ? "QA_FAIL"
+                : "REQUEST_REVISION",
+          reasons: data.reasons,
+        };
+      }
+    );
+
+    try {
+      await assignMutation.mutateAsync({
+        data: {
+          patientId,
+          assignedAbstractorId: abstractorId,
+          decisions: decisionsArray as any,
+        },
+      });
+      toast.success("Measures assigned back to abstractor successfully");
+      onOpenChange(false);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to assign measures. Please try again.");
+    }
+  };
+
+  if (!open) return null;
+
+  const decisionList = Object.entries(measureDecisions);
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+        onClick={() => onOpenChange(false)}
+      />
+
+      {/* Modal Content */}
+      <div className="relative w-full max-w-md bg-background border border-border rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="px-6 py-4 border-b border-border bg-muted/30">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <UserCheck2 className="w-5 h-5 text-primary" />
+              <h3 className="text-[14px] font-bold text-foreground">
+                Assign to Abstractor
+              </h3>
+            </div>
+            <button
+              onClick={() => onOpenChange(false)}
+              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <p className="text-[12px] text-muted-foreground mt-1">
+            Review decisions for all measures before assigning back.
+          </p>
+        </div>
+
+        <div className="p-6">
+          <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar border rounded-lg p-4 bg-muted/10">
+            <div className="space-y-4">
+              {decisionList.map(([mid, data]: any) => {
+                const measure = eligibleMeasures.find((m) => m.id === mid);
+                return (
+                  <div
+                    key={mid}
+                    className="border-b border-border/50 pb-3 last:border-0 last:pb-0"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[11px] font-bold text-foreground capitalize">
+                        {measure?.measure_code} - {measure?.measure_name}
+                      </span>
+                      <span
+                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border shadow-sm ${data.qaStatus === "qaPass"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : data.qaStatus === "qaFail"
+                            ? "bg-red-50 text-red-700 border-red-200"
+                            : "bg-amber-50 text-amber-700 border-amber-200"
+                          }`}
+                      >
+                        {data.qaStatus === "qaPass"
+                          ? "Pass"
+                          : data.qaStatus === "qaFail"
+                            ? "Fail"
+                            : "Revise"}
+                      </span>
+                    </div>
+                    {data.reasons.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {data.reasons.map((r: string) => (
+                          <span
+                            key={r}
+                            className="text-[9px] bg-background border border-border px-1.5 rounded text-muted-foreground"
+                          >
+                            {r}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {data.notes && (
+                      <p className="text-[10px] text-muted-foreground mt-1.5 italic line-clamp-2 bg-muted/30 p-1 rounded">
+                        "{data.notes}"
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/20">
+            <div className="flex items-center gap-2 text-[11px] font-bold text-primary uppercase tracking-tight">
+              <Info className="w-3.5 h-3.5" />
+              Decision Summary
+            </div>
+            <div className="flex gap-4 mt-2 text-[11px] font-semibold">
+              <span className="text-emerald-700">
+                Pass:{" "}
+                {
+                  decisionList.filter(([_, d]: any) => d.qaStatus === "qaPass")
+                    .length
+                }
+              </span>
+              <span className="text-red-700">
+                Fail:{" "}
+                {
+                  decisionList.filter(([_, d]: any) => d.qaStatus === "qaFail")
+                    .length
+                }
+              </span>
+              <span className="text-amber-700">
+                Revise:{" "}
+                {
+                  decisionList.filter(
+                    ([_, d]: any) => d.qaStatus === "requestRevision"
+                  ).length
+                }
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-6 flex justify-end gap-3">
+            <button
+              onClick={() => onOpenChange(false)}
+              className="px-4 py-2 rounded-lg text-xs font-bold border border-border hover:bg-muted transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleAssign}
+              disabled={assignMutation.isPending}
+              className="px-6 py-2 rounded-lg text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-all flex items-center gap-2 shadow-md hover:shadow-primary/20"
+            >
+              {assignMutation.isPending && (
+                <div className="w-3 h-3 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
               )}
+              Assign back to Abstractor
             </button>
           </div>
         </div>

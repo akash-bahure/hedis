@@ -45,14 +45,14 @@ import {
   BarChart3,
   TrendingDown,
 } from "lucide-react";
-import {
-  PostApiManualChartAbstractionMutationRequestCptCodeEnumKey,
-  PostApiManualChartAbstractionMutationRequestEvidenceTypeEnumKey,
-  PostApiManualChartAbstractionMutationRequestIcd10CodeEnumKey,
-  PostApiManualChartAbstractionMutationRequestScreeningTypeEnumKey,
-  PostApiManualChartAbstractionMutationRequestSourceTypeEnumKey,
-  usePostApiManualChartAbstraction,
-} from "@/api";
+// import {
+//   PostApiManualChartAbstractionMutationRequestCptCodeEnumKey,
+//   PostApiManualChartAbstractionMutationRequestEvidenceTypeEnumKey,
+//   PostApiManualChartAbstractionMutationRequestIcd10CodeEnumKey,
+//   PostApiManualChartAbstractionMutationRequestScreeningTypeEnumKey,
+//   PostApiManualChartAbstractionMutationRequestSourceTypeEnumKey,
+//   usePostApiManualChartAbstraction,
+// } from "@/api";
 import { toast } from "sonner";
 
 /* ══════════════════════════════════════════════════════════════
@@ -679,7 +679,7 @@ function DocumentViewer({
             max={total}
             onChange={(e) =>
               setPage(
-                Math.min(total, Math.max(1, parseInt(e.target.value) || 1)),
+                Math.min(total, Math.max(1, parseInt(e.target.value) || 1))
               )
             }
             className="w-8 text-center bg-white/10 border border-white/20 rounded text-white text-[10px] px-1 py-0.5 focus:outline-none focus:border-white/40"
@@ -969,10 +969,10 @@ function EvidenceTimeline({
   });
 
   const satisfiesCount = TIMELINE_EVENTS.filter(
-    (e) => e.hedisMatch === "satisfies",
+    (e) => e.hedisMatch === "satisfies"
   ).length;
   const failsCount = TIMELINE_EVENTS.filter(
-    (e) => e.hedisMatch === "fails",
+    (e) => e.hedisMatch === "fails"
   ).length;
 
   return (
@@ -1254,7 +1254,7 @@ function EvidenceTimeline({
                                           onClick={() =>
                                             onSelectEvent(
                                               ev.docPage!,
-                                              ev.code || ev.title,
+                                              ev.code || ev.title
                                             )
                                           }
                                           className="inline-flex items-center gap-1 text-[9px] font-black px-2 py-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
@@ -1341,75 +1341,75 @@ function AbstractionForm({
   const completePct = Math.round((filledCount / fields.length) * 100);
   const requiredFilled = fields.every(Boolean);
 
-  const abstractionMutation = usePostApiManualChartAbstraction({
-    mutation: {
-      onSuccess: () => {
-        toast.success("Abstraction submitted successfully");
-        onSubmitQA();
-      },
+  // const abstractionMutation = usePostApiManualChartAbstraction({
+  //   mutation: {
+  //     onSuccess: () => {
+  //       toast.success("Abstraction submitted successfully");
+  //       onSubmitQA();
+  //     },
 
-      onError: (error) => {
-        console.error(error);
+  //     onError: (error) => {
+  //       console.error(error);
 
-        toast.error("Failed to submit abstraction");
-      },
-    },
-  });
+  //       toast.error("Failed to submit abstraction");
+  //     },
+  //   },
+  // });
 
-  const handleSubmitForQA = async () => {
-    try {
-      const payload = {
-        patient_id: CHART.patientId,
-        patient_chart_id: CHART.chartId,
+  // const handleSubmitForQA = async () => {
+  //   try {
+  //     const payload = {
+  //       patient_id: CHART.patientId,
+  //       patient_chart_id: CHART.chartId,
 
-        service_date: form.serviceDate,
+  //       service_date: form.serviceDate,
 
-        screening_type:
-          form.screeningType as PostApiManualChartAbstractionMutationRequestScreeningTypeEnumKey,
+  //       screening_type:
+  //         form.screeningType as PostApiManualChartAbstractionMutationRequestScreeningTypeEnumKey,
 
-        evidence_type:
-          form.evidenceType as PostApiManualChartAbstractionMutationRequestEvidenceTypeEnumKey,
+  //       evidence_type:
+  //         form.evidenceType as PostApiManualChartAbstractionMutationRequestEvidenceTypeEnumKey,
 
-        systolic: Number(form.systolic),
+  //       systolic: Number(form.systolic),
 
-        diastolic: Number(form.diastolic),
+  //       diastolic: Number(form.diastolic),
 
-        cpt_code: form.cptCode
-          ? (form.cptCode as PostApiManualChartAbstractionMutationRequestCptCodeEnumKey)
-          : undefined,
+  //       cpt_code: form.cptCode
+  //         ? (form.cptCode as PostApiManualChartAbstractionMutationRequestCptCodeEnumKey)
+  //         : undefined,
 
-        icd_10_code: form.icdCode
-          ? (form.icdCode as PostApiManualChartAbstractionMutationRequestIcd10CodeEnumKey)
-          : undefined,
+  //       icd_10_code: form.icdCode
+  //         ? (form.icdCode as PostApiManualChartAbstractionMutationRequestIcd10CodeEnumKey)
+  //         : undefined,
 
-        source_type: form.evidenceSource
-          ? (form.evidenceSource as PostApiManualChartAbstractionMutationRequestSourceTypeEnumKey)
-          : undefined,
+  //       source_type: form.evidenceSource
+  //         ? (form.evidenceSource as PostApiManualChartAbstractionMutationRequestSourceTypeEnumKey)
+  //         : undefined,
 
-        evidence_source: form.evidenceSource || undefined,
+  //       evidence_source: form.evidenceSource || undefined,
 
-        uploaded_document:
-          files.length > 0
-            ? {
-                file_name: files[0],
-                file_url: "",
-              }
-            : undefined,
+  //       uploaded_document:
+  //         files.length > 0
+  //           ? {
+  //               file_name: files[0],
+  //               file_url: "",
+  //             }
+  //           : undefined,
 
-        notes: form.notes || undefined,
+  //       notes: form.notes || undefined,
 
-        assigned_qa: undefined,
-      };
+  //       assigned_qa: undefined,
+  //     };
 
-      console.log("ABSTRACTION PAYLOAD =>", payload);
+  //     console.log("ABSTRACTION PAYLOAD =>", payload);
 
-      await abstractionMutation.mutateAsync({
-        data: payload,
-      });
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  //     await abstractionMutation.mutateAsync({
+  //       data: payload,
+  //     });
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -1772,7 +1772,7 @@ function AbstractionForm({
 
         {/* Primary submit */}
         <button
-          onClick={handleSubmitForQA}
+          // onClick={handleSubmitForQA}
           disabled={!requiredFilled}
           className="w-full inline-flex items-center justify-center gap-2 py-2.5 text-[12px] font-black rounded-xl text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm whitespace-nowrap"
           style={{
@@ -2077,14 +2077,14 @@ export function AbstractionWorkspace({ onBack }: { onBack?: () => void }) {
   const [flashActive, setFlashActive] = useState(false);
   const [submitMode, setSubmitMode] = useState<SubmitMode>(null);
   const [savedStatus, setSavedStatus] = useState<"idle" | "saving" | "saved">(
-    "idle",
+    "idle"
   );
   const [mobileTab, setMobileTab] = useState<"doc" | "timeline" | "form">(
-    "timeline",
+    "timeline"
   );
   const [viewerFull, setViewerFull] = useState(false);
   const [prefill, setPrefill] = useState<Partial<FormData> | undefined>(
-    undefined,
+    undefined
   );
 
   const slaAtRisk = CHART.slaHrsLeft <= 12;
