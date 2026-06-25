@@ -679,7 +679,7 @@ function DocumentViewer({
             max={total}
             onChange={(e) =>
               setPage(
-                Math.min(total, Math.max(1, parseInt(e.target.value) || 1))
+                Math.min(total, Math.max(1, parseInt(e.target.value) || 1)),
               )
             }
             className="w-8 text-center bg-white/10 border border-white/20 rounded text-white text-[10px] px-1 py-0.5 focus:outline-none focus:border-white/40"
@@ -969,10 +969,10 @@ function EvidenceTimeline({
   });
 
   const satisfiesCount = TIMELINE_EVENTS.filter(
-    (e) => e.hedisMatch === "satisfies"
+    (e) => e.hedisMatch === "satisfies",
   ).length;
   const failsCount = TIMELINE_EVENTS.filter(
-    (e) => e.hedisMatch === "fails"
+    (e) => e.hedisMatch === "fails",
   ).length;
 
   return (
@@ -1254,7 +1254,7 @@ function EvidenceTimeline({
                                           onClick={() =>
                                             onSelectEvent(
                                               ev.docPage!,
-                                              ev.code || ev.title
+                                              ev.code || ev.title,
                                             )
                                           }
                                           className="inline-flex items-center gap-1 text-[9px] font-black px-2 py-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
@@ -2071,20 +2071,30 @@ function SubmitModal({
 /* ══════════════════════════════════════════════════════════════
    MAIN WORKSPACE
 ══════════════════════════════════════════════════════════════ */
-export function AbstractionWorkspace({ onBack }: { onBack?: () => void }) {
+export function AbstractionWorkspace({
+  onBack,
+  patientId,
+  chartId,
+  patientData,
+}: {
+  onBack?: () => void;
+  patientId?: string;
+  chartId?: string;
+  patientData?: any;
+}) {
   const [viewerPage, setViewerPage] = useState(1);
   const [flashCode, setFlashCode] = useState<string | null>(null);
   const [flashActive, setFlashActive] = useState(false);
   const [submitMode, setSubmitMode] = useState<SubmitMode>(null);
   const [savedStatus, setSavedStatus] = useState<"idle" | "saving" | "saved">(
-    "idle"
+    "idle",
   );
   const [mobileTab, setMobileTab] = useState<"doc" | "timeline" | "form">(
-    "timeline"
+    "timeline",
   );
   const [viewerFull, setViewerFull] = useState(false);
   const [prefill, setPrefill] = useState<Partial<FormData> | undefined>(
-    undefined
+    undefined,
   );
 
   const slaAtRisk = CHART.slaHrsLeft <= 12;

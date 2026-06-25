@@ -66,7 +66,7 @@ export default function App() {
   const [role, setRole] = useState<UserRole>("program-manager");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(
-    null
+    null,
   );
   const [selectedChartId, setSelectedChartId] = useState<string | null>(null);
   const [selectedPatientData, setSelectedPatientData] = useState<any>(null);
@@ -112,7 +112,7 @@ export default function App() {
               setSelectedPatientId(patientId || null);
               setSelectedChartId(chartId || null);
               setSelectedPatientData(patientData || null);
-              navigate("patient-360");
+              navigate("abstraction");
             }}
             onOpenPatient360={(patientId, chartId, patientData) => {
               setSelectedPatientId(patientId || null);
@@ -149,7 +149,15 @@ export default function App() {
           />
         );
       case "abstraction":
-        return <AbstractionWorkspace onBack={() => navigate("work-queue")} />;
+      case "abstraction":
+        return (
+          <AbstractionWorkspace
+            patientId={selectedPatientId || ""}
+            chartId={selectedChartId || ""}
+            patientData={selectedPatientData}
+            onBack={() => navigate("work-queue")}
+          />
+        );
       case "audit-sampling":
         return <AuditReview onOpenPatient360={() => navigate("patient-360")} />;
       case "qa-review":

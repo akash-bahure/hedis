@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import type { ElementType } from "react";
+import type { ElementType, JSX } from "react";
 import {
   getApiPatientsExport,
   useGetApiWorkQueue,
@@ -474,7 +474,7 @@ function RowAction({
   onOpenQAReview?: (
     patientId: string,
     chartId: string,
-    patientData?: any
+    patientData?: any,
   ) => void;
   onEvaluate?: (patientId: string, chartId: string) => Promise<void>;
   role?: "program-manager" | "abstractor" | "qa-analyst";
@@ -485,6 +485,7 @@ function RowAction({
   const [isQaLoading, setIsQaLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   // const evaluateMutation = usePostApiHedisEvaluateId();
+  const [showAbstractionModal, setShowAbstractionModal] = useState(false);
 
   const qaEvaluationQuery = useGetApiHedisEvaluationsId(
     role === "qa-analyst" ? row.patientId || row.id : undefined,
@@ -493,7 +494,7 @@ function RowAction({
         enabled: false, // Don't fetch automatically
         refetchOnWindowFocus: false,
       },
-    }
+    },
   );
 
   // ===================== PROGRAM MANAGER / ADMIN =====================
@@ -609,271 +610,335 @@ function RowAction({
   }
 
   /* ── Step 2: multi-phase "Begin Review" ── */
-  if (row.step === 2 && role === "abstractor") {
-    const isAssignedToMe =
-      row.assignedTo === currentUserName ||
-      row.assignedTo
-        .toLowerCase()
-        .includes(currentUserName?.toLowerCase() || "") ||
-      row.assignedTo === "Assigned";
+  // if (row.step === 2 && role === "abstractor") {
+  //   const isAssignedToMe =
+  //     row.assignedTo === currentUserName ||
+  //     row.assignedTo
+  //       .toLowerCase()
+  //       .includes(currentUserName?.toLowerCase() || "") ||
+  //     row.assignedTo === "Assigned";
 
-    if (!isAssignedToMe) {
-      return (
-        <div className="flex items-center justify-center py-2">
-          <span className="text-slate-300 text-[10px] italic">
-            Assigned to {row.assignedTo}
-          </span>
-        </div>
-      );
-    }
+  //   if (!isAssignedToMe) {
+  //     return (
+  //       <div className="flex items-center justify-center py-2">
+  //         <span className="text-slate-300 text-[10px] italic">
+  //           Assigned to {row.assignedTo}
+  //         </span>
+  //       </div>
+  //     );
+  //   }
 
-    const isQA = role === "qa-analyst";
-    // isQA block removed from here as it was redundant inside abstractor check
+  //   const isQA = role === "qa-analyst";
+  //   // isQA block removed from here as it was redundant inside abstractor check
 
-    const handleBeginClick = () => {
-      if (phase !== "idle") return;
-      fileInputRef.current?.click();
-    };
+  //   const handleBeginClick = () => {
+  //     if (phase !== "idle") return;
+  //     fileInputRef.current?.click();
+  //   };
 
-    // const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    //   const file = e.target.files?.[0];
-    //   if (!file) return;
+  //   // const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   //   const file = e.target.files?.[0];
+  //   //   if (!file) return;
 
-    //   try {
-    //     setPhase("loading");
-    //     toast.info("Starting Evaluation...", {
-    //       description: `Evaluating chart for ${row.patientName}`,
-    //     });
+  //   //   try {
+  //   //     setPhase("loading");
+  //   //     toast.info("Starting Evaluation...", {
+  //   //       description: `Evaluating chart for ${row.patientName}`,
+  //   //     });
 
-    //     await evaluateMutation.mutateAsync({
-    //       id: row.id,
-    //       data: { file },
-    //     });
+  //   //     await evaluateMutation.mutateAsync({
+  //   //       id: row.id,
+  //   //       data: { file },
+  //   //     });
 
-    //     toast.success("Evaluation Complete", {
-    //       description: "Chart is now ready for abstraction.",
-    //     });
-    //     setPhase("ready");
-    //   } catch (err) {
-    //     console.error("Evaluation failed:", err);
-    //     toast.error("Evaluation Failed", {
-    //       description:
-    //         "There was an error processing the chart. Please try again.",
-    //     });
-    //     setPhase("idle");
-    //   } finally {
-    //     if (fileInputRef.current) {
-    //       fileInputRef.current.value = "";
-    //     }
-    //   }
-    // };
-    const handleLaunch = () => {
-      if (launching) return;
-      setLaunching(true);
-      setTimeout(() => {
-        setPhase("idle");
-        setLaunching(false);
-        onOpenWorkspace?.(row.patientId || row.id, row.chartId || row.id);
-      }, 900);
-    };
-    const handleCancel = () => {
-      setPhase("idle");
-      setLaunching(false);
-    };
+  //   //     toast.success("Evaluation Complete", {
+  //   //       description: "Chart is now ready for abstraction.",
+  //   //     });
+  //   //     setPhase("ready");
+  //   //   } catch (err) {
+  //   //     console.error("Evaluation failed:", err);
+  //   //     toast.error("Evaluation Failed", {
+  //   //       description:
+  //   //         "There was an error processing the chart. Please try again.",
+  //   //     });
+  //   //     setPhase("idle");
+  //   //   } finally {
+  //   //     if (fileInputRef.current) {
+  //   //       fileInputRef.current.value = "";
+  //   //     }
+  //   //   }
+  //   // };
+  //   const handleLaunch = () => {
+  //     if (launching) return;
+  //     setLaunching(true);
+  //     setTimeout(() => {
+  //       setPhase("idle");
+  //       setLaunching(false);
+  //       onOpenWorkspace?.(row.patientId || row.id, row.chartId || row.id);
+  //     }, 900);
+  //   };
+  //   const handleCancel = () => {
+  //     setPhase("idle");
+  //     setLaunching(false);
+  //   };
 
+  //   return (
+  //     <>
+  //       <input
+  //         type="file"
+  //         ref={fileInputRef}
+  //         // onChange={handleFileChange}
+  //         accept=".pdf"
+  //         className="hidden"
+  //       />
+  //       <button
+  //         onClick={handleBeginClick}
+  //         disabled={phase === "loading"}
+  //         className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-bold transition-all duration-200 whitespace-nowrap ${
+  //           phase === "ready"
+  //             ? "bg-[#0891b2] text-white border-[#0891b2] shadow-sm"
+  //             : phase === "loading"
+  //               ? "bg-[#0891b2]/10 text-[#0891b2] border-[#0891b2]/20 cursor-wait"
+  //               : "text-cyan-600 hover:bg-cyan-50 border-cyan-200"
+  //         }`}
+  //       >
+  //         {phase === "loading" ? (
+  //           <>
+  //             <svg
+  //               className="w-3 h-3 animate-spin flex-shrink-0"
+  //               viewBox="0 0 24 24"
+  //               fill="none"
+  //             >
+  //               <circle
+  //                 className="opacity-25"
+  //                 cx="12"
+  //                 cy="12"
+  //                 r="10"
+  //                 stroke="currentColor"
+  //                 strokeWidth="4"
+  //               />
+  //               <path
+  //                 className="opacity-75"
+  //                 fill="currentColor"
+  //                 d="M4 12a8 8 0 018-8v8z"
+  //               />
+  //             </svg>
+  //             Evaluating…
+  //           </>
+  //         ) : phase === "ready" ? (
+  //           <>
+  //             <CheckCircle2 className="w-3 h-3" /> Ready
+  //           </>
+  //         ) : (
+  //           <>
+  //             <Play className="w-3 h-3" /> Begin Chart Review
+  //           </>
+  //         )}
+  //       </button>
+
+  //       {phase === "ready" && (
+  //         <div
+  //           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+  //           onClick={handleCancel}
+  //         >
+  //           <div
+  //             className="bg-white border border-slate-200 rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden"
+  //             onClick={(e) => e.stopPropagation()}
+  //           >
+  //             <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-[#f0f9ff] to-white">
+  //               <div className="w-9 h-9 rounded-xl bg-[#0891b2]/10 flex items-center justify-center flex-shrink-0">
+  //                 <ClipboardList className="w-4 h-4 text-[#0891b2]" />
+  //               </div>
+  //               <div className="flex-1 min-w-0">
+  //                 <h3 className="text-sm font-bold text-slate-800">
+  //                   Chart Ready for Abstraction
+  //                 </h3>
+  //                 <p className="text-[10px] text-slate-500 truncate">
+  //                   {row.id} · {row.patientName}
+  //                 </p>
+  //               </div>
+  //               <button
+  //                 onClick={handleCancel}
+  //                 className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+  //               >
+  //                 <X className="w-4 h-4" />
+  //               </button>
+  //             </div>
+
+  //             <div className="px-5 py-4 space-y-3">
+  //               <div className="grid grid-cols-2 gap-2">
+  //                 <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5">
+  //                   <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+  //                     Measure
+  //                   </p>
+  //                   <p className="text-[12px] font-bold text-slate-800">
+  //                     {row.measureCode}
+  //                   </p>
+  //                   <p className="text-[10px] text-slate-500 truncate">
+  //                     {row.measure}
+  //                   </p>
+  //                 </div>
+  //                 <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5">
+  //                   <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+  //                     Plan · Priority
+  //                   </p>
+  //                   <p className="text-[12px] font-bold text-slate-800">
+  //                     {row.plan}
+  //                   </p>
+  //                   <p className="text-[10px] text-slate-500">
+  //                     {row.priority} Priority
+  //                   </p>
+  //                 </div>
+  //               </div>
+
+  //               <div
+  //                 className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${
+  //                   row.slaHoursLeft <= 12
+  //                     ? "bg-amber-50 border-amber-200"
+  //                     : "bg-emerald-50 border-emerald-100"
+  //                 }`}
+  //               >
+  //                 <Clock
+  //                   className={`w-3.5 h-3.5 flex-shrink-0 ${row.slaHoursLeft <= 12 ? "text-amber-500" : "text-emerald-500"}`}
+  //                 />
+  //                 <div>
+  //                   <p
+  //                     className={`text-[11px] font-bold ${row.slaHoursLeft <= 12 ? "text-amber-700" : "text-emerald-700"}`}
+  //                   >
+  //                     {row.slaHoursLeft}h SLA Remaining
+  //                   </p>
+  //                   <p
+  //                     className={`text-[9px] ${row.slaHoursLeft <= 12 ? "text-amber-600" : "text-emerald-600"}`}
+  //                   >
+  //                     Due {row.dueDate}
+  //                   </p>
+  //                 </div>
+  //                 <span
+  //                   className={`ml-auto text-[9px] font-black px-2 py-0.5 rounded-full ${
+  //                     row.slaHoursLeft <= 12
+  //                       ? "bg-amber-100 text-amber-700"
+  //                       : "bg-emerald-100 text-emerald-700"
+  //                   }`}
+  //                 >
+  //                   {row.slaHoursLeft <= 12 ? "AT RISK" : "ON TRACK"}
+  //                 </span>
+  //               </div>
+
+  //               <div className="flex items-start gap-2 px-3 py-2 rounded-xl bg-blue-50 border border-blue-100">
+  //                 <Sparkles className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
+  //                 <p className="text-[10px] text-blue-700 leading-snug">
+  //                   AI pre-analysis ready ·{" "}
+  //                   <span className="font-bold">3 evidence items</span> flagged
+  //                   for review in this chart
+  //                 </p>
+  //               </div>
+
+  //               <div className="flex gap-2 pt-1">
+  //                 <button
+  //                   onClick={handleCancel}
+  //                   className="flex-1 py-2 text-[11px] font-semibold border border-slate-200 rounded-xl text-slate-500 hover:bg-slate-50 transition-colors whitespace-nowrap"
+  //                 >
+  //                   Cancel
+  //                 </button>
+  //                 <button
+  //                   onClick={handleLaunch}
+  //                   disabled={launching}
+  //                   className="flex-[2] py-2 text-[11px] font-bold rounded-xl text-white bg-[#0891b2] hover:bg-[#0e7490] transition-all inline-flex items-center justify-center gap-1.5 disabled:opacity-70 shadow-sm whitespace-nowrap"
+  //                 >
+  //                   {launching ? (
+  //                     <>
+  //                       <svg
+  //                         className="w-3 h-3 animate-spin flex-shrink-0"
+  //                         viewBox="0 0 24 24"
+  //                         fill="none"
+  //                       >
+  //                         <circle
+  //                           className="opacity-25"
+  //                           cx="12"
+  //                           cy="12"
+  //                           r="10"
+  //                           stroke="currentColor"
+  //                           strokeWidth="4"
+  //                         />
+  //                         <path
+  //                           className="opacity-75"
+  //                           fill="currentColor"
+  //                           d="M4 12a8 8 0 018-8v8z"
+  //                         />
+  //                       </svg>
+  //                       Launching…
+  //                     </>
+  //                   ) : (
+  //                     <>
+  //                       <Play className="w-3 h-3" /> Launch Workspace
+  //                     </>
+  //                   )}
+  //                 </button>
+  //               </div>
+  //             </div>
+  //           </div>
+  //         </div>
+  //       )}
+  //     </>
+  //   );
+  // }
+  if (role === "abstractor") {
     return (
       <>
-        <input
-          type="file"
-          ref={fileInputRef}
-          // onChange={handleFileChange}
-          accept=".pdf"
-          className="hidden"
-        />
         <button
-          onClick={handleBeginClick}
-          disabled={phase === "loading"}
-          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-bold transition-all duration-200 whitespace-nowrap ${
-            phase === "ready"
-              ? "bg-[#0891b2] text-white border-[#0891b2] shadow-sm"
-              : phase === "loading"
-                ? "bg-[#0891b2]/10 text-[#0891b2] border-[#0891b2]/20 cursor-wait"
-                : "text-cyan-600 hover:bg-cyan-50 border-cyan-200"
-          }`}
+          onClick={() => setShowAbstractionModal(true)}
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-bold text-cyan-600 hover:bg-cyan-50 border-cyan-200 transition-colors"
         >
-          {phase === "loading" ? (
-            <>
-              <svg
-                className="w-3 h-3 animate-spin flex-shrink-0"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v8z"
-                />
-              </svg>
-              Evaluating…
-            </>
-          ) : phase === "ready" ? (
-            <>
-              <CheckCircle2 className="w-3 h-3" /> Ready
-            </>
-          ) : (
-            <>
-              <Play className="w-3 h-3" /> Begin Chart Review
-            </>
-          )}
+          <Play className="w-3 h-3" />
+          Begin Chart Abstraction
         </button>
 
-        {phase === "ready" && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-            onClick={handleCancel}
-          >
-            <div
-              className="bg-white border border-slate-200 rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-[#f0f9ff] to-white">
-                <div className="w-9 h-9 rounded-xl bg-[#0891b2]/10 flex items-center justify-center flex-shrink-0">
-                  <ClipboardList className="w-4 h-4 text-[#0891b2]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-bold text-slate-800">
-                    Chart Ready for Abstraction
-                  </h3>
-                  <p className="text-[10px] text-slate-500 truncate">
-                    {row.id} · {row.patientName}
+        {showAbstractionModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white rounded-xl shadow-xl w-[420px] p-6">
+              <h3 className="text-lg font-semibold text-slate-800">
+                Begin Chart Abstraction
+              </h3>
+
+              <p className="mt-3 text-sm text-slate-600">
+                Do you want to launch the workspace for this chart?
+              </p>
+
+              <div className="mt-4 bg-slate-50 rounded-lg p-4">
+                <div>
+                  <span className="text-xs text-slate-500">Patient Name</span>
+                  <p className="font-medium text-slate-800">
+                    {row.patientName}
                   </p>
                 </div>
-                <button
-                  onClick={handleCancel}
-                  className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+
+                <div className="mt-3">
+                  <span className="text-xs text-slate-500">Chart ID</span>
+                  <p className="font-medium text-slate-800">{row.chartId}</p>
+                </div>
               </div>
 
-              <div className="px-5 py-4 space-y-3">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5">
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
-                      Measure
-                    </p>
-                    <p className="text-[12px] font-bold text-slate-800">
-                      {row.measureCode}
-                    </p>
-                    <p className="text-[10px] text-slate-500 truncate">
-                      {row.measure}
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5">
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
-                      Plan · Priority
-                    </p>
-                    <p className="text-[12px] font-bold text-slate-800">
-                      {row.plan}
-                    </p>
-                    <p className="text-[10px] text-slate-500">
-                      {row.priority} Priority
-                    </p>
-                  </div>
-                </div>
-
-                <div
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${
-                    row.slaHoursLeft <= 12
-                      ? "bg-amber-50 border-amber-200"
-                      : "bg-emerald-50 border-emerald-100"
-                  }`}
+              <div className="flex justify-end gap-2 mt-6">
+                <button
+                  onClick={() => setShowAbstractionModal(false)}
+                  className="px-4 py-2 border rounded-lg text-sm"
                 >
-                  <Clock
-                    className={`w-3.5 h-3.5 flex-shrink-0 ${row.slaHoursLeft <= 12 ? "text-amber-500" : "text-emerald-500"}`}
-                  />
-                  <div>
-                    <p
-                      className={`text-[11px] font-bold ${row.slaHoursLeft <= 12 ? "text-amber-700" : "text-emerald-700"}`}
-                    >
-                      {row.slaHoursLeft}h SLA Remaining
-                    </p>
-                    <p
-                      className={`text-[9px] ${row.slaHoursLeft <= 12 ? "text-amber-600" : "text-emerald-600"}`}
-                    >
-                      Due {row.dueDate}
-                    </p>
-                  </div>
-                  <span
-                    className={`ml-auto text-[9px] font-black px-2 py-0.5 rounded-full ${
-                      row.slaHoursLeft <= 12
-                        ? "bg-amber-100 text-amber-700"
-                        : "bg-emerald-100 text-emerald-700"
-                    }`}
-                  >
-                    {row.slaHoursLeft <= 12 ? "AT RISK" : "ON TRACK"}
-                  </span>
-                </div>
+                  Cancel
+                </button>
 
-                <div className="flex items-start gap-2 px-3 py-2 rounded-xl bg-blue-50 border border-blue-100">
-                  <Sparkles className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-blue-700 leading-snug">
-                    AI pre-analysis ready ·{" "}
-                    <span className="font-bold">3 evidence items</span> flagged
-                    for review in this chart
-                  </p>
-                </div>
+                <button
+                  onClick={() => {
+                    setShowAbstractionModal(false);
 
-                <div className="flex gap-2 pt-1">
-                  <button
-                    onClick={handleCancel}
-                    className="flex-1 py-2 text-[11px] font-semibold border border-slate-200 rounded-xl text-slate-500 hover:bg-slate-50 transition-colors whitespace-nowrap"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleLaunch}
-                    disabled={launching}
-                    className="flex-[2] py-2 text-[11px] font-bold rounded-xl text-white bg-[#0891b2] hover:bg-[#0e7490] transition-all inline-flex items-center justify-center gap-1.5 disabled:opacity-70 shadow-sm whitespace-nowrap"
-                  >
-                    {launching ? (
-                      <>
-                        <svg
-                          className="w-3 h-3 animate-spin flex-shrink-0"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8v8z"
-                          />
-                        </svg>
-                        Launching…
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-3 h-3" /> Launch Workspace
-                      </>
-                    )}
-                  </button>
-                </div>
+                    onOpenWorkspace?.(
+                      row.patientId || row.id,
+                      row.chartId || row.id,
+                    );
+                  }}
+                  className="px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm hover:bg-cyan-700"
+                >
+                  Go To Workspace
+                </button>
               </div>
             </div>
           </div>
@@ -1149,7 +1214,7 @@ function AssignModal({
           };
         },
       },
-    }
+    },
   );
 
   const users = usersResponse?.results || [];
@@ -1157,16 +1222,16 @@ function AssignModal({
   const abstractors = useMemo(
     () =>
       users.filter((u: any) =>
-        ["Chart Abstractor", "Abstractor"].includes(u?.user_role?.name?.trim())
+        ["Chart Abstractor", "Abstractor"].includes(u?.user_role?.name?.trim()),
       ),
-    [users]
+    [users],
   );
   const qas = useMemo(
     () =>
       users.filter((u: any) =>
-        ["Quality Analyst", "QA"].includes(u?.user_role?.name?.trim())
+        ["Quality Analyst", "QA"].includes(u?.user_role?.name?.trim()),
       ),
-    [users]
+    [users],
   );
 
   return (
@@ -1230,7 +1295,7 @@ function AssignModal({
                       key={user?.id}
                       onClick={() =>
                         setSelectedAbstractor(
-                          selectedAbstractor?.id === user?.id ? null : user
+                          selectedAbstractor?.id === user?.id ? null : user,
                         )
                       }
                       className={`px-3 py-2 rounded-xl border text-[11px] font-semibold text-left transition-all ${
@@ -1655,12 +1720,12 @@ export function WorkQueue({
       gender?: string;
       plan?: string;
       riskScore?: number;
-    }
+    },
   ) => void;
   onOpenQAReview?: (
     patientId: string,
     chartId: string,
-    patientData?: any
+    patientData?: any,
   ) => void;
 }) {
   // Component state
@@ -1892,7 +1957,7 @@ export function WorkQueue({
         keepPreviousData: true,
         refetchOnWindowFocus: false,
       },
-    }
+    },
   );
 
   const apiPatients = workQueueResponse?.data ?? [];
@@ -1916,7 +1981,7 @@ export function WorkQueue({
           );
         },
       },
-    }
+    },
   );
 
   const ASSIGNEES = useMemo(() => {
@@ -1966,7 +2031,7 @@ export function WorkQueue({
         dueDate:
           item?.patient_due_date || item?.sla_deadline
             ? new Date(
-                item.patient_due_date || item.sla_deadline
+                item.patient_due_date || item.sla_deadline,
               ).toLocaleDateString()
             : "—",
         slaHoursLeft: item?.sla_hours_left || 0,
@@ -2122,7 +2187,7 @@ export function WorkQueue({
         if (sortCol === "due") cmp = a.dueDate.localeCompare(b.dueDate);
         return sortDir === "asc" ? cmp : -cmp;
       }),
-    [filtered, sortCol, sortDir]
+    [filtered, sortCol, sortDir],
   );
 
   const totalRecords = workQueueResponse?.total || sorted.length;
@@ -2185,7 +2250,7 @@ export function WorkQueue({
       onOpenPatient360(
         row.patientId || row.id,
         row.chartId || row.id,
-        patientData
+        patientData,
       );
     }
   };
@@ -2242,7 +2307,7 @@ export function WorkQueue({
         },
         {
           responseType: "blob",
-        }
+        },
       );
 
       // Create downloadable link
@@ -2350,7 +2415,7 @@ export function WorkQueue({
                     key={client.id}
                     onClick={() =>
                       setSelectedClient(
-                        client.id === selectedClient ? null : client.id
+                        client.id === selectedClient ? null : client.id,
                       )
                     }
                     className={`w-full text-left px-3 py-2.5 border-b border-border hover:bg-muted/50 transition-colors ${selectedClient === client.id ? "bg-primary/5" : ""}`}
@@ -2616,7 +2681,8 @@ export function WorkQueue({
                   }`}
                 >
                   {workQueueData.filter(
-                    (r) => r.status === "Rework" && r.assignedTo === currentUser
+                    (r) =>
+                      r.status === "Rework" && r.assignedTo === currentUser,
                   ).length > 0 && (
                     <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
                       <span
@@ -2629,7 +2695,8 @@ export function WorkQueue({
                   )}
                   Rework
                   {workQueueData.filter(
-                    (r) => r.status === "Rework" && r.assignedTo === currentUser
+                    (r) =>
+                      r.status === "Rework" && r.assignedTo === currentUser,
                   ).length > 0 && (
                     <span
                       className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
@@ -2642,7 +2709,7 @@ export function WorkQueue({
                         workQueueData.filter(
                           (r) =>
                             r.status === "Rework" &&
-                            r.assignedTo === currentUser
+                            r.assignedTo === currentUser,
                         ).length
                       }
                     </span>
@@ -2960,20 +3027,20 @@ export function WorkQueue({
                       <td className="px-3 py-3">
                         <div className="flex flex-col gap-0.5">
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onOpenPatient360(
-                                row.patientId || row.id,
-                                row.chartId || row.id,
-                                {
-                                  patientName: row.patientName,
-                                  dob: row.dob,
-                                  mrn: row.mrn,
-                                  plan: row.plan,
-                                  riskScore: row.riskScore,
-                                }
-                              );
-                            }}
+                            // onClick={(e) => {
+                            //   e.stopPropagation();
+                            //   // onOpenPatient360(
+                            //   //   row.patientId || row.id,
+                            //   //   row.chartId || row.id,
+                            //   //   {
+                            //   //     patientName: row.patientName,
+                            //   //     dob: row.dob,
+                            //   //     mrn: row.mrn,
+                            //   //     plan: row.plan,
+                            //   //     riskScore: row.riskScore,
+                            //   //   }
+                            //   // );
+                            // }}
                             className="text-[11px] font-bold text-primary hover:underline cursor-pointer text-left"
                           >
                             {row.chartId || row.id}
@@ -3084,7 +3151,7 @@ export function WorkQueue({
                             <button
                               onClick={() =>
                                 setShowQaNote(
-                                  showQaNote === row.id ? null : row.id
+                                  showQaNote === row.id ? null : row.id,
                                 )
                               }
                               title={row.qaNote}
@@ -3127,7 +3194,7 @@ export function WorkQueue({
                           currentUserName={currentUser}
                         />
                       </td>
-                    </tr>
+                    </tr>,
                   );
 
                   if (showQaNote === row.id && row.qaNote) {
@@ -3154,7 +3221,7 @@ export function WorkQueue({
                             </button>
                           </div>
                         </td>
-                      </tr>
+                      </tr>,
                     );
                   }
 
@@ -3303,7 +3370,7 @@ export function WorkQueue({
                   });
 
                   toast.success(
-                    `${assignModal.length} charts assigned successfully`
+                    `${assignModal.length} charts assigned successfully`,
                   );
                 }
 
