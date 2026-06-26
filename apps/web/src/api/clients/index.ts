@@ -6,6 +6,7 @@ export { deleteApiSecurityAllowedIpsId } from "./deleteApiSecurityAllowedIpsId.t
 export { deleteApiUsersId } from "./deleteApiUsersId.ts";
 export { getAdminOrgs } from "./getAdminOrgs.ts";
 export { getAdminUsers } from "./getAdminUsers.ts";
+export { getApiAbstractorPatientidChartidMeasures } from "./getApiAbstractorPatientidChartidMeasures.ts";
 export { getApiAccessLogsAccessMonitor } from "./getApiAccessLogsAccessMonitor.ts";
 export { getApiAuditLogs } from "./getApiAuditLogs.ts";
 export { getApiAuditLogsExport } from "./getApiAuditLogsExport.ts";
