@@ -233,4 +233,123 @@ router.post("/update-qa-status", hedisController.updateQAStatus);
  */
 router.post("/assign-abstractor", hedisController.assignAbstractor);
 
+/**
+ * @swagger
+ * /api/hedis/clinical-timeline/{patientId}:
+ *   get:
+ *     summary: Get clinical timeline for a patient with optional filters
+ *     tags: [Clinical Timeline]
+ *     parameters:
+ *       - in: path
+ *         name: patientId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID of the patient
+ *       
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search term for event_title, summary, or provider (case-insensitive)
+ *       
+ *       - in: query
+ *         name: documentType
+ *         schema:
+ *           type: string
+ *         description: Filter by document type
+ *       
+ *       - in: query
+ *         name: encounterType
+ *         schema:
+ *           type: string
+ *         description: Filter by encounter type
+ *       
+ *       - in: query
+ *         name: provider
+ *         schema:
+ *           type: string
+ *         description: Filter by provider name
+ *       
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Start date for event_date filter (YYYY-MM-DD)
+ *       
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: End date for event_date filter (YYYY-MM-DD)
+ *     responses:
+ *       200:
+ *         description: Clinical timeline data returned (grouped by year and month)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 patient_id:
+ *                   type: string
+ *                   format: uuid
+ *                 timeline:
+ *                   type: object
+ *                   description: Grouped timeline events by year → month
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/clinical-timeline/:id", hedisController.getClinicalTimeline);
+
+/**
+ * @swagger
+ * /api/hedis/clinical-timeline/event/{eventId}:
+ *   get:
+ *     summary: Get detailed information for a specific timeline event
+ *     tags: [Clinical Timeline]
+ *     parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Event details fetched
+ */
+router.get("/clinical-timeline/event/:eventId", hedisController.getTimelineEventDetails);
+
+/**
+ * @swagger
+ * /api/hedis/clinical-timeline/review:
+ *   post:
+ *     summary: Accept or Reject a timeline event
+ *     tags: [Clinical Timeline]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [eventId, status]
+ *             properties:
+ *               eventId:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *                 enum: [ACCEPTED, REJECTED]
+ *               remarks:
+ *                 type: string
+ *               reviewedBy:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Review saved
+ */
+router.post("/clinical-timeline/review", hedisController.reviewTimelineEvent);
+
 module.exports = router;

@@ -2,10 +2,7 @@
  * HEDIS QA Review Analysis Prompt - Matched to Figma UI
  * Evaluates abstractor evidence against medical chart and HEDIS measure rules.
  */
-function buildQAReviewAnalysisPrompt(
-  chartText,
-  measureRules
-) {
+function buildQAReviewAnalysisPrompt(chartText, measureRules) {
   return `
 You are an expert HEDIS Quality Assurance Auditor. Your role is to perform a fully dynamic, rule-based audit by comparing the patient's medical chart directly against the official HEDIS Measure Library rules.
 
@@ -20,9 +17,9 @@ ${JSON.stringify(measureRules, null, 2)}
 ---
 TASK:
 1. **Identify Required Rules**: Parse the MEASURE LIBRARY RULES to identify all eligibility, evidence, documentation, and coding requirements.
-2. **Treat Rules as "Expected"**: Use the specific criteria from the rules as the baseline for the "abstractorValue" (or "abstractorEntry") fields.
-3. **Extract Chart Evidence**: Find all relevant data points in the PATIENT MEDICAL CHART to serve as the "sourceDocumentValue" (or "sourceDocument").
-4. **Compare Rules vs Chart**: Evaluate whether the chart text complies with the Measure Library rules.
+2. **Extract from Chart**: Use relevant data points from the PATIENT MEDICAL CHART as the baseline for the "abstractorValue" (or "abstractorEntry") fields.
+3. **Use Rules as Expected**: Use the specific criteria from the MEASURE LIBRARY RULES for the "sourceDocumentValue" (or "sourceDocument").
+4. **Compare Chart vs Rules**: Evaluate whether the abstractor extraction complies with the Measure Library rules.
 5. **Identify Gaps**: If a required rule is not met or evidence is missing from the chart, mark it as "FAIL" or "MISSING_IN_SOURCE" without assumptions.
 
 Return **ONLY** a valid JSON object in the exact structure below. Do not include any explanations, markdown, or additional text outside the JSON.
@@ -31,10 +28,13 @@ Return **ONLY** a valid JSON object in the exact structure below. Do not include
   "extractedEvidence": [
     {
       "field": "Rule field from Measure Library (e.g. Age Requirement, Service Date Rule, CPT Requirement)",
-      "abstractorValue": "Expected value/rule definition from Measure Library",
-      "sourceDocumentValue": "Actual value found in the medical chart",
+      "abstractorValue": "Actual value found in the medical chart (what abstractor extracted)",
+      "sourceDocumentValue": "Expected value/rule definition from Measure Library",
       "status": "MATCH" | "DISCREPANCY" | "MISSING_IN_SOURCE",
-      "reason": "Specific rationale for the match or gap"
+      "reason": "Specific rationale for the match or gap",
+      "highlightText": "Shortest unique anchor in the chart (≤4 words) — e.g. '01/01/1975', 'PET/CT scan', 'DOB'. Never a full sentence.",
+      "highlightWords": ["each", "individual", "token", "from", "highlightText"],
+      "pageNumber": 1
     }
   ],
   "validationChecklist": {
@@ -42,8 +42,8 @@ Return **ONLY** a valid JSON object in the exact structure below. Do not include
       {
         "rule": "Specific eligibility criterion from rules (Age, Gender, Enrollment, Denominator, Exclusions)",
         "status": "PASS" | "FAIL" | "WARN",
-        "abstractorEntry": "Rule definition from library",
-        "sourceDocument": "Corresponding evidence found in chart",
+        "abstractorEntry": "Corresponding evidence found in chart",
+        "sourceDocument": "Rule definition from library",
         "message": "Detail about compliance"
       }
     ],
@@ -51,8 +51,8 @@ Return **ONLY** a valid JSON object in the exact structure below. Do not include
       {
         "rule": "Numerator/Service requirement from library (Service Date, Lookback, Procedure Found)",
         "status": "PASS" | "FAIL",
-        "abstractorEntry": "Rule definition from library",
-        "sourceDocument": "Corresponding evidence found in chart",
+        "abstractorEntry": "Corresponding evidence found in chart",
+        "sourceDocument": "Rule definition from library",
         "message": ""
       }
     ],
@@ -60,8 +60,8 @@ Return **ONLY** a valid JSON object in the exact structure below. Do not include
       {
         "rule": "Documentation requirement from library (Signature, Facility, Highlights, Source Type)",
         "status": "PASS" | "FAIL",
-        "abstractorEntry": "Requirement from library",
-        "sourceDocument": "Evidence found in chart",
+        "abstractorEntry": "Evidence found in chart",
+        "sourceDocument": "Requirement from library",
         "message": ""
       }
     ],
@@ -69,8 +69,8 @@ Return **ONLY** a valid JSON object in the exact structure below. Do not include
       {
         "rule": "Coding requirement from library (CPT, HCPCS, ICD-10 codes)",
         "status": "PASS" | "FAIL",
-        "abstractorEntry": "Coding rule from library",
-        "sourceDocument": "Codes found in chart",
+        "abstractorEntry": "Codes found in chart",
+        "sourceDocument": "Coding rule from library",
         "message": ""
       }
     ]
@@ -93,8 +93,9 @@ Return **ONLY** a valid JSON object in the exact structure below. Do not include
 
 **CRITICAL INSTRUCTIONS:**
 - **Fully Dynamic**: Do NOT use hardcoded criteria. Extract EVERY checklist item and evidence field directly from the provided MEASURE LIBRARY RULES.
-- **Rules as Baseline**: "abstractorValue" and "abstractorEntry" must always contain the rule/requirement from the library.
+- **Abstractor vs Rules**: "abstractorValue" and "abstractorEntry" must always contain data from the PATIENT CHART. "sourceDocumentValue" and "sourceDocument" must contain the rule/requirement from the Measure Library.
 - **Strict Evidence**: Do not assume missing info. If evidence is not in the chart, it is a FAIL / MISSING_IN_SOURCE.
+- **Highlight Anchors**: "highlightText" must be the shortest unique anchor found verbatim in the chart (at most 4 words, e.g. a date, a code, short phrase). "highlightWords" must be an array of each individual whitespace-separated token from "highlightText" (e.g. "01/01/1975" → ["01/01/1975"]; "PET/CT scan" → ["PET/CT", "scan"]). If no highlight is possible, set highlightText to null and highlightWords to [].
 - **Detailed Excerpts**: Populate "allEvidence" with every piece of text relevant to the measure rules, including page numbers.
 - **Calculations**: Ensure the summary counts match the checklist results.
 - **JSON Format**: Return ONLY the JSON object.

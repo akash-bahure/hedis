@@ -561,3 +561,104 @@ exports.assignAbstractor = async (req, res) => {
     });
   }
 };
+
+exports.getClinicalTimeline = async (req, res) => {
+  try {
+    const { id: patientId } = req.params;
+    const filters = req.query;
+    const { subdomain, schema_name: schema } = req.tenant;
+
+    // First, try to get existing timeline
+    let timeline = await hedisService.getClinicalTimeline(req.db, patientId, filters);
+
+    // If no timeline events exist → trigger extraction
+    if (Object.keys(timeline).length === 0 ||
+      (Array.isArray(timeline) && timeline.length === 0)) {
+
+      console.log(`No clinical timeline found for patient ${patientId}. Triggering extraction...`);
+
+      const chartResult = await req.db.query(
+        `SELECT chart_document FROM ${schema}.patient_charts 
+         WHERE patient_id = $1 LIMIT 1`,
+        [patientId]
+      );
+
+      if (chartResult.rows.length > 0) {
+        const chartDoc = chartResult.rows[0].chart_document || {};
+        const filePath = chartDoc.filePath || `charts/${chartDoc.fileName}`;
+        const pdfPath = `/app/uploads/${filePath}`;
+
+        console.log(`Triggering Clinical Timeline extraction for Patient: ${patientId}, Path: ${pdfPath}`);
+
+        await hedisService.extractClinicalTimeline(
+          patientId,
+          pdfPath,
+          subdomain,
+          req.db
+        );
+
+        // Fetch again after extraction
+        timeline = await hedisService.getClinicalTimeline(req.db, patientId, filters);
+      } else {
+        console.log(`No chart found for patient ${patientId}. Cannot trigger timeline extraction.`);
+      }
+    }
+
+    res.json({
+      patient_id: patientId,
+      timeline
+    });
+  } catch (err) {
+    console.error("Get Clinical Timeline Error:", err);
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+};
+
+exports.getTimelineEventDetails = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    const event = await hedisService.getTimelineEventDetails(req.db, eventId);
+
+    if (!event) {
+      return res.status(404).json({ error: "Timeline event not found" });
+    }
+
+    res.json(event);
+  } catch (err) {
+    console.error("Get Timeline Event Details Error:", err);
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+};
+
+exports.reviewTimelineEvent = async (req, res) => {
+  try {
+    const { eventId, status, remarks, reviewedBy } = req.body;
+
+    if (!eventId || !status) {
+      return res.status(400).json({ error: "Missing required fields: eventId, status" });
+    }
+
+    const event = await hedisService.reviewTimelineEvent(
+      req.db,
+      eventId,
+      status,
+      remarks,
+      reviewedBy || req.user?.id
+    );
+
+    res.json({
+      message: `Event ${status.toLowerCase()} successfully`,
+      event
+    });
+  } catch (err) {
+    console.error("Review Timeline Event Error:", err);
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+};
