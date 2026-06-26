@@ -6,7 +6,6 @@ export { deleteApiSecurityAllowedIpsId } from "./deleteApiSecurityAllowedIpsId.t
 export { deleteApiUsersId } from "./deleteApiUsersId.ts";
 export { getAdminOrgs } from "./getAdminOrgs.ts";
 export { getAdminUsers } from "./getAdminUsers.ts";
-export { getApiAbstractorPatientidChartidMeasures } from "./getApiAbstractorPatientidChartidMeasures.ts";
 export { getApiAccessLogsAccessMonitor } from "./getApiAccessLogsAccessMonitor.ts";
 export { getApiAuditLogs } from "./getApiAuditLogs.ts";
 export { getApiAuditLogsExport } from "./getApiAuditLogsExport.ts";
@@ -18,6 +17,8 @@ export { getApiClientsId } from "./getApiClientsId.ts";
 export { getApiClientsStats } from "./getApiClientsStats.ts";
 export { getApiClinicalTimelineEvidenceEventidReviewEvidence } from "./getApiClinicalTimelineEvidenceEventidReviewEvidence.ts";
 export { getApiDepartments } from "./getApiDepartments.ts";
+export { getApiHedisClinicalTimelineEventEventid } from "./getApiHedisClinicalTimelineEventEventid.ts";
+export { getApiHedisClinicalTimelinePatientid } from "./getApiHedisClinicalTimelinePatientid.ts";
 export { getApiHedisEvaluationsId } from "./getApiHedisEvaluationsId.ts";
 export { getApiHedisQaQueuePatientid } from "./getApiHedisQaQueuePatientid.ts";
 export { getApiHedisQaReviewEvaluationid } from "./getApiHedisQaReviewEvaluationid.ts";
@@ -92,6 +93,7 @@ export { postApiClinicalTimelineEvidenceEventidAccept } from "./postApiClinicalT
 export { postApiClinicalTimelineEvidenceEventidReject } from "./postApiClinicalTimelineEvidenceEventidReject.ts";
 export { postApiDepartments } from "./postApiDepartments.ts";
 export { postApiHedisAssignAbstractor } from "./postApiHedisAssignAbstractor.ts";
+export { postApiHedisClinicalTimelineReview } from "./postApiHedisClinicalTimelineReview.ts";
 export { postApiHedisMarkAsReviewed } from "./postApiHedisMarkAsReviewed.ts";
 export { postApiHedisSendToQa } from "./postApiHedisSendToQa.ts";
 export { postApiHedisUpdateQaStatus } from "./postApiHedisUpdateQaStatus.ts";
