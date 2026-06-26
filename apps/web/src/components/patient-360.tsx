@@ -44,11 +44,15 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import {
+  useGetApiHedisClinicalTimelineEventEventid,
+  useGetApiHedisClinicalTimelinePatientid,
   useGetApiHedisEvaluationsId,
+  usePostApiHedisClinicalTimelineReview,
   // usePostApiHedisEvaluateId,
   usePostApiHedisSendToQa,
 } from "@/api";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 /* ─────────────────────────────────────────────────────────────
    TYPES
@@ -829,12 +833,12 @@ function EventCard({
                 {event.title}
               </p>
               <p className="text-[10px] text-muted-foreground truncate">
-                {event.subtitle}
+                {event.eventType}
               </p>
             </div>
             <div className="flex flex-col items-end gap-1 flex-shrink-0">
               <span className="text-[10px] text-muted-foreground">
-                {event.shortDate}
+                {new Date(event.date).toLocaleDateString()}
               </span>
               <SourceTag source={event.source} />
             </div>
@@ -889,6 +893,151 @@ function EvidenceDrawer({
 }) {
   const m = EVENT_META[event.type];
   const Icon = m.icon;
+  const queryClient = useQueryClient();
+  const eventDetailsQuery = useGetApiHedisClinicalTimelineEventEventid(
+    event.id,
+  );
+
+  const reviewMutation = usePostApiHedisClinicalTimelineReview({
+    mutation: {
+      onSuccess: (_, variables) => {
+        toast.success(
+          variables.data.status === "ACCEPTED"
+            ? "Evidence accepted successfully."
+            : "Evidence rejected successfully.",
+        );
+
+        // Refresh event details
+        eventDetailsQuery.refetch();
+
+        // Refresh complete timeline
+        queryClient.invalidateQueries({
+          queryKey: [
+            {
+              url: "/api/hedis/clinical-timeline",
+            },
+          ],
+        });
+
+        onClose();
+      },
+      onError: (error) => {
+        console.error(error);
+
+        toast.error(
+          error?.response?.data?.message ??
+            error?.message ??
+            "Failed to update evidence review.",
+        );
+      },
+    },
+  });
+  const detail = eventDetailsQuery.data;
+  if (eventDetailsQuery.isLoading) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-card">
+        Loading Event...
+      </div>
+    );
+  }
+
+  const handleAccept = () => {
+    reviewMutation.mutate({
+      data: {
+        eventId: event.id,
+        status: "ACCEPTED",
+      },
+    });
+  };
+
+  const handleReject = () => {
+    reviewMutation.mutate({
+      data: {
+        eventId: event.id,
+        status: "REJECTED",
+      },
+    });
+  };
+  const extractedFields = [
+    {
+      label: "Visit Type",
+      value: detail?.event_title || "-",
+    },
+    {
+      label: "Provider",
+      value: detail?.provider || "-",
+    },
+    {
+      label: "Measure",
+      value: detail?.measure || "-",
+    },
+    {
+      label: "Encounter Type",
+      value: detail?.encounter_type || "-",
+    },
+    {
+      label: "Document Type",
+      value: detail?.document_type || "-",
+    },
+    {
+      label: "Review Status",
+      value:
+        detail?.review_status === "ACCEPTED"
+          ? "Accepted"
+          : detail?.review_status === "REJECTED"
+            ? "Rejected"
+            : "Pending",
+    },
+    {
+      label: "HEDIS Mapping",
+      value: detail?.measure || "-",
+    },
+
+    ...(detail?.extracted_structured_data?.vitals ?? []).flatMap((v: any) => [
+      {
+        label: "Blood Pressure",
+        value: v.blood_pressure || "-",
+      },
+      {
+        label: "Heart Rate",
+        value: v.heart_rate || "-",
+      },
+      {
+        label: "BMI",
+        value: v.bmi || "-",
+      },
+      {
+        label: "Weight",
+        value: v.weight || "-",
+      },
+    ]),
+
+    ...(detail?.extracted_structured_data?.diagnosis ?? []).map((d: any) => ({
+      label: "Diagnosis",
+      value: d.diagnosis || d.name || "-",
+    })),
+
+    ...(detail?.extracted_structured_data?.medications ?? []).map((m: any) => ({
+      label: "Medication",
+      value: m.medication || m.name || "-",
+    })),
+
+    ...(detail?.extracted_structured_data?.labs ?? []).map((l: any) => ({
+      label: l.test_name || "Lab Result",
+      value: l.value || "-",
+    })),
+
+    ...(detail?.extracted_structured_data?.imaging ?? []).map((i: any) => ({
+      label: "Imaging",
+      value: i.study || i.name || "-",
+    })),
+
+    ...(detail?.extracted_structured_data?.cpt_codes ?? []).map((c: any) => ({
+      label: "CPT Code",
+      value: c.code || "-",
+    })),
+  ];
+
   return (
     <div className="absolute inset-x-0 bottom-0 z-30 h-[55%] flex flex-col bg-card border-t-2 border-primary shadow-2xl">
       {/* Drawer handle / header */}
@@ -900,10 +1049,11 @@ function EvidenceDrawer({
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[13px] font-bold text-foreground">
-            Evidence Review: {event.title}
+            Evidence Review: {detail?.event_title ?? event.title}
           </p>
           <p className="text-[11px] text-muted-foreground">
-            {event.date} · {event.provider}
+            {detail?.event_date?.split("T")[0]}•
+            {detail?.provider || "Not specified"}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -941,27 +1091,33 @@ function EvidenceDrawer({
 
           {/* Simulated document */}
           <div className="flex-1 bg-white border border-border rounded-xl p-4 font-mono text-[10px] leading-relaxed text-slate-700 overflow-y-auto shadow-inner">
-            {event.docPreview?.split("\n").map((line, i) => {
-              const isHeader = i === 0;
-              const isDivider = line.startsWith("──");
-              const isKeyVal = line.includes(":") && !isDivider;
-              const highlight =
-                event.closesGap &&
-                (line.includes("HbA1c") ||
-                  line.includes("Mammogram") ||
-                  line.includes("CPT"));
-              return (
-                <div
-                  key={i}
-                  className={`${isHeader ? "font-bold text-slate-900 text-[11px] mb-2" : ""}
+            {(
+              detail?.source_text ??
+              detail?.source_excerpt ??
+              "No document available"
+            )
+              .split("\n")
+              .map((line, i) => {
+                const isHeader = i === 0;
+                const isDivider = line.startsWith("──");
+                const isKeyVal = line.includes(":") && !isDivider;
+                const highlight =
+                  event.closesGap &&
+                  (line.includes("HbA1c") ||
+                    line.includes("Mammogram") ||
+                    line.includes("CPT"));
+                return (
+                  <div
+                    key={i}
+                    className={`${isHeader ? "font-bold text-slate-900 text-[11px] mb-2" : ""}
                     ${isDivider ? "text-slate-300 my-1" : ""}
                     ${highlight ? "bg-yellow-100 border-l-2 border-yellow-400 pl-1 rounded" : ""}
                   `}
-                >
-                  {line || <br />}
-                </div>
-              );
-            })}
+                  >
+                    {line || <br />}
+                  </div>
+                );
+              })}
           </div>
         </div>
 
@@ -974,7 +1130,7 @@ function EvidenceDrawer({
 
             {/* Extracted fields */}
             <div className="space-y-2">
-              {event.extractedFields?.map((f, i) => (
+              {extractedFields.map((f, i) => (
                 <div
                   key={i}
                   className="flex items-start gap-2 py-1.5 border-b border-border/50 last:border-0"
@@ -994,7 +1150,7 @@ function EvidenceDrawer({
           </div>
 
           {/* Confidence score */}
-          {event.confidence && (
+          {Number(detail?.ai_confidence || detail?.ai_confidence_score) > 0 && (
             <div className="border border-border rounded-xl p-3">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-[11px] font-bold text-foreground">
@@ -1002,12 +1158,20 @@ function EvidenceDrawer({
                 </p>
                 <span
                   className={`text-[11px] font-bold px-2 py-0.5 rounded-full
-                  ${event.confidence >= 90 ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
+                  ${Number(detail?.ai_confidence || detail?.ai_confidence_score) >= 90 ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
                 >
-                  {event.confidence >= 90 ? "High" : "Medium"}
+                  {Number(
+                    detail?.ai_confidence || detail?.ai_confidence_score,
+                  ) >= 90
+                    ? "High"
+                    : "Medium"}
                 </span>
               </div>
-              <ConfidenceBar score={event.confidence} />
+              <ConfidenceBar
+                score={Number(
+                  detail?.ai_confidence || detail?.ai_confidence_score || 0,
+                )}
+              />
               <p className="text-[10px] text-muted-foreground mt-1.5">
                 Extracted by NLP engine · Review recommended before acceptance
               </p>
@@ -1017,19 +1181,27 @@ function EvidenceDrawer({
           {/* Action buttons */}
           <div className="flex items-center gap-2 pt-1">
             <button
-              onClick={onAccept}
+              disabled={
+                reviewMutation.isPending || detail?.review_status === "ACCEPTED"
+              }
+              onClick={handleAccept}
               className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 text-white text-[12px] font-bold hover:bg-emerald-700 transition-colors"
             >
-              <Check className="w-3.5 h-3.5" /> Accept
+              <Check className="w-3.5 h-3.5" />{" "}
+              {reviewMutation.isPending ? "Accepting..." : "Accept"}
             </button>
             <button className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-border text-foreground text-[12px] font-bold hover:bg-muted transition-colors">
               <Edit3 className="w-3.5 h-3.5" /> Edit
             </button>
             <button
-              onClick={onReject}
+              disabled={
+                reviewMutation.isPending || detail?.review_status === "REJECTED"
+              }
+              onClick={handleReject}
               className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-red-200 text-red-600 text-[12px] font-bold hover:bg-red-50 transition-colors"
             >
-              <X className="w-3.5 h-3.5" /> Reject
+              <X className="w-3.5 h-3.5" />{" "}
+              {reviewMutation.isPending ? "Rejecting..." : "Reject"}
             </button>
           </div>
 
@@ -1039,11 +1211,17 @@ function EvidenceDrawer({
               <User className="w-3 h-3" />
               <span>
                 Abstractor:{" "}
-                <strong className="text-foreground">S. Johnson</strong>
+                <strong className="text-foreground">
+                  {detail?.reviewed_by || "Pending Review"}
+                </strong>
               </span>
               <span>·</span>
               <Clock className="w-3 h-3" />
-              <span>Feb 24, 2026 · 12:43 PM</span>
+              <span>
+                {detail?.reviewed_at
+                  ? new Date(detail.reviewed_at).toLocaleString()
+                  : "Not Reviewed"}
+              </span>
             </div>
           </div>
         </div>
@@ -1835,7 +2013,11 @@ function TimelineCenter({
     hedisOnly: boolean;
     structuredOnly: boolean;
     docTypes: Set<EventType>;
+    encounterType: string;
     provider: string;
+
+    startDate: string;
+    endDate: string;
   };
 }) {
   const [collapsedYears, setCollapsedYears] = useState<Set<string>>(new Set());
@@ -1846,25 +2028,85 @@ function TimelineCenter({
     setCollapsedYears(s);
   };
 
+  // const filterEvent = (e: TimelineEvent) => {
+  //   if (
+  //     filters.search &&
+  //     !e.title.toLowerCase().includes(filters.search.toLowerCase()) &&
+  //     !e.provider.toLowerCase().includes(filters.search.toLowerCase()) &&
+  //     !e.value?.toLowerCase().includes(filters.search.toLowerCase())
+  //   )
+  //     return false;
+  //   if (filters.hedisOnly && !e.hedisRelevant) return false;
+  //   if (filters.structuredOnly && e.source === "uploaded") return false;
+  //   if (!filters.docTypes.has(e.type)) return false;
+  //   if (
+  //     filters.provider !== "All Providers" &&
+  //     !e.provider.includes(filters.provider.replace("Dr. ", ""))
+  //   )
+  //     return false;
+  //   return true;
+  // };
+
   const filterEvent = (e: TimelineEvent) => {
-    if (
-      filters.search &&
-      !e.title.toLowerCase().includes(filters.search.toLowerCase()) &&
-      !e.provider.toLowerCase().includes(filters.search.toLowerCase()) &&
-      !e.value?.toLowerCase().includes(filters.search.toLowerCase())
-    )
+    // Search
+    if (filters.search) {
+      const search = filters.search.toLowerCase();
+
+      if (
+        !e.title?.toLowerCase().includes(search) &&
+        !e.summary?.toLowerCase().includes(search) &&
+        !e.provider?.toLowerCase().includes(search) &&
+        !e.eventType?.toLowerCase().includes(search) &&
+        !e.documentType?.toLowerCase().includes(search) &&
+        !e.measure?.toLowerCase().includes(search)
+      ) {
+        return false;
+      }
+    }
+
+    // HEDIS Filter
+    if (filters.hedisOnly && !e.hedisRelevant) {
       return false;
-    if (filters.hedisOnly && !e.hedisRelevant) return false;
-    if (filters.structuredOnly && e.source === "uploaded") return false;
-    if (!filters.docTypes.has(e.type)) return false;
+    }
+
+    // Structured Filter
+    if (filters.structuredOnly && e.source === "uploaded") {
+      return false;
+    }
+
+    // Document Type Filter
+    if (filters.docTypes.size && !filters.docTypes.has(e.type)) {
+      return false;
+    }
+
+    // Provider Filter
     if (
       filters.provider !== "All Providers" &&
-      !e.provider.includes(filters.provider.replace("Dr. ", ""))
-    )
+      e.provider !== filters.provider
+    ) {
       return false;
+    }
+
+    // Encounter Filter
+    if (
+      filters.encounterType !== "All Encounters" &&
+      e.encounterType !== filters.encounterType
+    ) {
+      return false;
+    }
+
+    // Start Date
+    if (filters.startDate && new Date(e.date) < new Date(filters.startDate)) {
+      return false;
+    }
+
+    // End Date
+    if (filters.endDate && new Date(e.date) > new Date(filters.endDate)) {
+      return false;
+    }
+
     return true;
   };
-
   return (
     <div className="h-full overflow-y-auto px-5 py-4">
       {events.map((yearGroup) => {
@@ -1902,7 +2144,8 @@ function TimelineCenter({
                     <div className="flex items-center gap-2 mb-3 ml-4">
                       <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
                       <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                        {monthGroup.month} {yearGroup.year}
+                        {monthGroup.month} {yearGroup.year} •{" "}
+                        {visibleEvents.length} Events
                       </span>
                       <span className="text-[10px] text-muted-foreground">
                         ({visibleEvents.length} event
@@ -1996,10 +2239,223 @@ export function Patient360({
   const {
     data: evaluationResponse,
     isLoading: evalLoading,
+    isError: evalError,
+    error: evaluationError,
     refetch: refetchEval,
   } = useGetApiHedisEvaluationsId(patientId);
+
+  const [timelineLoading, setTimelineLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    search: "",
+    hedisOnly: false,
+    structuredOnly: false,
+    docTypes: new Set(DOC_TYPES.map((d) => d.type)) as Set<EventType>,
+    encounterType: "All Encounters",
+    provider: "All Providers",
+
+    // Add these two fields
+    startDate: "",
+    endDate: "",
+  });
+
+  const timelineQuery = useGetApiHedisClinicalTimelinePatientid(
+    patientId,
+    {
+      search: filters.search || undefined,
+      provider:
+        filters.provider !== "All Providers" ? filters.provider : undefined,
+
+      encounterType:
+        filters.encounterType !== "All Encounters"
+          ? filters.encounterType
+          : undefined,
+
+      startDate: filters.startDate,
+
+      endDate: filters.endDate,
+
+      documentType:
+        filters.docTypes.size === 1
+          ? Array.from(filters.docTypes)[0]
+          : undefined,
+    },
+    {
+      query: {
+        enabled: true,
+      },
+    },
+  );
+
+  useEffect(() => {
+    if (timelineQuery.isLoading) {
+      toast.loading("Loading clinical timeline...", {
+        id: "timeline-loading",
+      });
+    } else {
+      toast.dismiss("timeline-loading");
+    }
+  }, [timelineQuery.isLoading]);
+
+  useEffect(() => {
+    if (timelineQuery.isError) {
+      toast.dismiss("timeline-loading");
+
+      const message =
+        (timelineQuery.error as any)?.response?.data?.message ||
+        (timelineQuery.error as any)?.message ||
+        "Failed to load the clinical timeline.";
+
+      toast.error(message, {
+        id: "timeline-error",
+      });
+    }
+  }, [timelineQuery.isError, timelineQuery.error]);
+  const timelineData = useMemo(() => {
+    const apiTimeline = timelineQuery.data?.timeline;
+
+    if (!apiTimeline) return [];
+
+    return Object.entries(apiTimeline).map(([year, months]: any) => ({
+      year,
+
+      months: Object.entries(months).map(([month, events]: any) => ({
+        month,
+
+        events: events.map((event: any) => ({
+          // Timeline
+          id: event.id,
+
+          title: event.event_title || "Clinical Event",
+
+          description: event.summary || "",
+
+          summary: event.summary || "",
+
+          provider: event.provider || "Not specified",
+
+          value: event.summary || "",
+
+          date: event.event_date,
+
+          time: event.event_time || "",
+
+          year: event.year,
+
+          month: event.month,
+
+          // Event Type
+
+          eventType: event.event_type,
+
+          type:
+            event.event_type === "Lab Result"
+              ? "lab"
+              : event.event_type === "Medication"
+                ? "medication"
+                : event.event_type === "Encounter"
+                  ? "visit"
+                  : event.event_type === "Imaging"
+                    ? "imaging"
+                    : event.event_type === "Procedure"
+                      ? "procedure"
+                      : "document",
+
+          // Filters
+
+          documentType: event.document_type,
+
+          encounterType: event.encounter_type,
+
+          hedisRelevant: !!event.measure,
+
+          source:
+            event.source_type === "AI"
+              ? "nlp"
+              : event.source_type === "Structured"
+                ? "structured"
+                : "uploaded",
+
+          // Measure
+          measure: event.measure,
+
+          // Review
+
+          reviewStatus: event.review_status,
+
+          // reviewedBy: event.reviewed_by,
+
+          reviewedAt: event.reviewed_at,
+
+          reviewComment: event.review_comment,
+
+          rejectionReason: event.rejection_reason,
+
+          // AI
+
+          confidence:
+            Number(event.ai_confidence_score) ||
+            Number(event.ai_confidence) ||
+            0,
+
+          // Document
+
+          documentTypeName: event.document_type,
+
+          sourceText: event.source_text,
+
+          sourceExcerpt: event.source_excerpt,
+
+          evidence: event.evidence,
+
+          // Structured Data
+
+          extractedFields: event.extracted_fields,
+
+          structuredData: event.extracted_structured_data,
+
+          // Metadata
+
+          patientId: event.patient_id,
+
+          chartId: event.chart_id,
+
+          createdAt: event.created_at,
+
+          updatedAt: event.updated_at,
+
+          // Raw API
+          raw: event,
+        })),
+      })),
+    }));
+  }, [timelineQuery.data]);
+
   // const evaluateMutation = usePostApiHedisEvaluateId();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (evalLoading) {
+      toast.loading("Loading HEDIS evaluation...", {
+        id: "evaluation-loading",
+      });
+    } else {
+      toast.dismiss("evaluation-loading");
+    }
+  }, [evalLoading]);
+
+  useEffect(() => {
+    if (evalError) {
+      toast.dismiss("evaluation-loading");
+
+      const message =
+        (evaluationError as any)?.response?.data?.message ||
+        (evaluationError as any)?.message ||
+        "Failed to load HEDIS evaluation.";
+
+      toast.error(message, {
+        id: "evaluation-error",
+      });
+    }
+  }, [evalError, evaluationError]);
 
   const evaluations = useMemo(() => {
     if (!evaluationResponse?.evaluations) return [];
@@ -2184,14 +2640,6 @@ export function Patient360({
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [acceptedEvents, setAcceptedEvents] = useState<Set<string>>(new Set());
-  const [filters, setFilters] = useState({
-    search: "",
-    hedisOnly: false,
-    structuredOnly: false,
-    docTypes: new Set(DOC_TYPES.map((d) => d.type)) as Set<EventType>,
-    encounterType: "All Encounters",
-    provider: "All Providers",
-  });
 
   const handleEventClick = (event: TimelineEvent) => {
     setSelectedEvent(event);
@@ -2342,12 +2790,66 @@ export function Patient360({
             </div>
           </div>
 
-          <TimelineCenter
-            events={TIMELINE}
-            selectedEventId={selectedEvent?.id ?? null}
-            onEventClick={handleEventClick}
-            filters={filters}
-          />
+          {timelineQuery.isLoading ? (
+            <div className="flex h-full items-center justify-center">
+              <div className="flex flex-col items-center gap-3">
+                <svg
+                  className="h-8 w-8 animate-spin text-primary"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    className="opacity-25"
+                  />
+                  <path
+                    fill="currentColor"
+                    className="opacity-75"
+                    d="M4 12a8 8 0 018-8v8z"
+                  />
+                </svg>
+
+                <p className="text-sm text-muted-foreground">
+                  Loading Clinical Timeline...
+                </p>
+              </div>
+            </div>
+          ) : timelineQuery.isError ? (
+            <div className="flex h-full items-center justify-center">
+              <div className="text-center space-y-3">
+                <AlertCircle className="h-10 w-10 text-red-500 mx-auto" />
+
+                <div>
+                  <h3 className="font-semibold text-foreground">
+                    Unable to load Clinical Timeline
+                  </h3>
+
+                  <p className="text-sm text-muted-foreground mt-1">
+                    An error occurred while loading the patient's timeline.
+                  </p>
+                </div>
+
+                <button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => timelineQuery.refetch()}
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          ) : (
+            <TimelineCenter
+              events={timelineData}
+              selectedEventId={selectedEvent?.id ?? null}
+              onEventClick={handleEventClick}
+              filters={filters}
+            />
+          )}
         </div>
 
         {/* RIGHT — Measure Panel */}
@@ -2359,19 +2861,49 @@ export function Patient360({
             </span>
           </div>
           <div className="h-[calc(100%-45px)]">
-            <MeasurePanel
-              patientId={patientId}
-              workflowType={workflowType}
-              selectedMeasure={selectedMeasure}
-              onMeasureChange={setSelectedMeasure}
-              onOpenWorkspace={onOpenWorkspace}
-              measures={dynamicMeasures}
-              detail={dynamicDetail}
-              // onRecalculate={handleRecalculate}
-              // isRecalculating={evaluateMutation.isLoading}
-              onSendToQA={handleSendToQa}
-              isSendingToQA={sendToQaMutation.isLoading}
-            />
+            {evalLoading ? (
+              <div className="flex h-full items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin" />
+              </div>
+            ) : evalError ? (
+              <div className="flex h-full items-center justify-center px-6">
+                <div className="text-center space-y-3">
+                  <AlertCircle className="h-10 w-10 text-red-500 mx-auto" />
+
+                  <div>
+                    <h3 className="font-semibold">
+                      Unable to load HEDIS Measures
+                    </h3>
+
+                    <p className="text-sm text-muted-foreground">
+                      Failed to fetch the evaluation results.
+                    </p>
+                  </div>
+
+                  <button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => refetchEval()}
+                  >
+                    Retry
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <MeasurePanel
+                patientId={patientId}
+                workflowType={workflowType}
+                selectedMeasure={selectedMeasure}
+                onMeasureChange={setSelectedMeasure}
+                onOpenWorkspace={onOpenWorkspace}
+                measures={dynamicMeasures}
+                detail={dynamicDetail}
+                // onRecalculate={handleRecalculate}
+                // isRecalculating={evaluateMutation.isLoading}
+                onSendToQA={handleSendToQa}
+                isSendingToQA={sendToQaMutation.isLoading}
+              />
+            )}
           </div>
         </div>
 
