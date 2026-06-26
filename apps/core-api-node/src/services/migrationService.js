@@ -1060,7 +1060,7 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
         ADD COLUMN IF NOT EXISTS stage TEXT,
         ADD COLUMN IF NOT EXISTS reason TEXT;
     `);
-  } catch (err) {}
+  } catch (err) { }
   await client.query(`
   CREATE TABLE IF NOT EXISTS ${schema}.hedis_qa_queue (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1130,7 +1130,7 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
       ALTER TABLE ${schema}.clinical_timeline_events 
       DROP CONSTRAINT IF EXISTS clinical_timeline_events_review_status_check;
     `);
-    
+
     // Add the updated constraints
     await client.query(`
       ALTER TABLE ${schema}.clinical_timeline_events 
@@ -1139,10 +1139,29 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
       
       ALTER TABLE ${schema}.clinical_timeline_events 
       ADD CONSTRAINT clinical_timeline_events_review_status_check 
-      CHECK (review_status IN ('PASS', 'FAIL', 'DISCREPANCY', 'PENDING', 'NO_STATUS', 'REVIEW_REQUIRED', 'ACCEPTED', 'REJECTED', 'EDITED'));
+      CHECK (review_status IN ('PASS', 'FAIL', 'DISCREPANCY', 'PENDING', 'NO_STATUS', 'REVIEW_REQUIRED', 'ACCEPTED', 'REJECTED', 'EDITED', 'ACCEPTED', 'REJECTED'));
     `);
   } catch (err) {
     console.warn(`[Migration] Could not update constraints for ${schema}:`, err.message);
+  }
+
+  // Clinical Timeline Feature Updates
+  try {
+    await client.query(`
+      ALTER TABLE ${schema}.clinical_timeline_events
+        ADD COLUMN IF NOT EXISTS event_title TEXT,
+        ADD COLUMN IF NOT EXISTS source_text TEXT,
+        ADD COLUMN IF NOT EXISTS year INTEGER,
+        ADD COLUMN IF NOT EXISTS month VARCHAR(20),
+        ADD COLUMN IF NOT EXISTS encounter_type TEXT,
+        ADD COLUMN IF NOT EXISTS document_type TEXT,
+        ADD COLUMN IF NOT EXISTS summary TEXT,
+        ADD COLUMN IF NOT EXISTS extracted_structured_data JSONB,
+        ADD COLUMN IF NOT EXISTS ai_confidence DECIMAL,
+        ADD COLUMN IF NOT EXISTS assigned_abstractor_id UUID REFERENCES ${schema}.users(id);
+    `);
+  } catch (err) {
+    console.warn(`[Migration] Could not add Clinical Timeline feature fields to clinical_timeline_events in ${schema}:`, err.message);
   }
 
   try {
@@ -1153,7 +1172,7 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
         ADD COLUMN IF NOT EXISTS updated_by UUID REFERENCES ${schema}.users(id),
         ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
     `);
-  } catch (err) {}
+  } catch (err) { }
 
   try {
     await client.query(`
@@ -1177,7 +1196,7 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
         ADD COLUMN IF NOT EXISTS updated_by UUID REFERENCES ${schema}.users(id),
         ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
     `);
-  } catch (err) {}
+  } catch (err) { }
 
   // QA Review Analyses: stores AI-generated analysis results for each QA review
   await client.query(`
@@ -1205,7 +1224,7 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
         ADD COLUMN IF NOT EXISTS evaluation_id UUID REFERENCES ${schema}.hedis_evaluations(id) ON DELETE CASCADE,
         ADD COLUMN IF NOT EXISTS all_evidences JSONB;
     `);
-  } catch (err) {}
+  } catch (err) { }
 
   // QA Measure Decisions: stores granular QA results per measure
   await client.query(`
@@ -1224,6 +1243,46 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
       updated_at TIMESTAMP DEFAULT NOW()
     );
   `);
+
+  // New Clinical Timeline Supporting Tables
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.clinical_timeline_event_documents (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      event_id UUID REFERENCES ${schema}.clinical_timeline_events(id) ON DELETE CASCADE,
+      document_id UUID, -- Reference to actual document storage or patient_chart
+      page_number INTEGER,
+      document_segment_text TEXT,
+      preview_metadata JSONB,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.clinical_timeline_reviews (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      event_id UUID REFERENCES ${schema}.clinical_timeline_events(id) ON DELETE CASCADE,
+      status VARCHAR(50) NOT NULL,
+      remarks TEXT,
+      reviewed_by UUID REFERENCES ${schema}.users(id),
+      reviewed_at TIMESTAMP DEFAULT NOW(),
+      assignment_status VARCHAR(50), -- Status of assignment to abstractor
+      abstractor_id UUID REFERENCES ${schema}.users(id),
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.clinical_timeline_assignments (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      event_id UUID REFERENCES ${schema}.clinical_timeline_events(id) ON DELETE CASCADE,
+      abstractor_id UUID REFERENCES ${schema}.users(id),
+      status VARCHAR(50) DEFAULT 'Assigned',
+      assigned_by UUID REFERENCES ${schema}.users(id),
+      assigned_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
+
   await client.query(`
     CREATE TABLE IF NOT EXISTS ${schema}.qa_evidence_requests (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

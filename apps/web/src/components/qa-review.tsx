@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import type { ElementType } from "react";
 import {
   Search,
@@ -36,7 +36,7 @@ import {
   Layers,
   UserCheck2,
   Info,
-  Save,
+  Save,ExternalLink
 } from "lucide-react";
 import {
   useGetApiHedisQaReviewEvaluationid,
@@ -281,10 +281,11 @@ function QueueCard({
       tabIndex={0}
       onClick={onClick}
       onKeyDown={(e) => e.key === "Enter" && onClick()}
-      className={`w-full text-left px-3 py-3 border-b border-border transition-all hover:bg-muted/30 cursor-pointer ${selected
-        ? "bg-primary/5 border-l-[3px] border-l-primary"
-        : "border-l-[3px] border-l-transparent"
-        }`}
+      className={`w-full text-left px-3 py-3 border-b border-border transition-all hover:bg-muted/30 cursor-pointer ${
+        selected
+          ? "bg-primary/5 border-l-[3px] border-l-primary"
+          : "border-l-[3px] border-l-transparent"
+      }`}
     >
       <div className="flex items-start justify-between gap-2 mb-1.5">
         <div className="flex items-center gap-2 min-w-0">
@@ -665,7 +666,7 @@ export function QAReview({
   const [selectedMeasureCode, setSelectedMeasureCode] = useState<string | null>(
     null
   );
-
+  const [textRenderKey, setTextRenderKey] = useState(0);
   // New state for multi-measure decisions
   const [measureDecisions, setMeasureDecisions] = useState<
     Record<
@@ -678,6 +679,68 @@ export function QAReview({
     >
   >({});
   const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
+
+  // Array of individual word tokens from the highlight phrase.
+  // PDF.js splits text into one span per word, so we must match token-by-token.
+  // === HIGHLIGHT STATE ===
+  // === HIGHLIGHT STATE (keep as is) ===
+  const [currentHighlightText, setCurrentHighlightText] = useState<
+    string | null
+  >(null);
+  const [currentHighlightWords, setCurrentHighlightWords] = useState<string[]>(
+    []
+  );
+
+  const HIGHLIGHT_STYLE: React.CSSProperties = {
+    backgroundColor: "#fef08c",
+    color: "#1f2937",
+    padding: "1px 4px",
+    borderRadius: "3px",
+    boxShadow: "0 0 0 2px rgba(250, 204, 21, 0.5)",
+    fontWeight: "600",
+  };
+
+  // === BEST TEXT RENDERER FOR MEDICAL PDFs ===
+  // === IMPROVED TEXT RENDERER (Best for this PDF) ===
+  const textRenderer = useMemo(() => {
+    if (!currentHighlightWords.length) {
+      return undefined; // let react-pdf use default rendering when nothing to highlight
+    }
+
+    // Build a single case-insensitive regex from all highlight words,
+    // longest first so "Enrollment:" doesn't get shadowed by "Enrollment".
+    const escaped = [...currentHighlightWords]
+      .filter((w) => w.trim().length > 1)
+      .sort((a, b) => b.length - a.length)
+      .map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+
+    if (escaped.length === 0) return undefined;
+
+    const pattern = new RegExp(`(${escaped.join("|")})`, "gi");
+
+    return (textItem: any) => {
+      const str = textItem?.str ?? "";
+      if (!str.trim()) return str;
+
+      if (!pattern.test(str)) return str;
+      pattern.lastIndex = 0; // reset after .test()
+
+      const parts = str.split(pattern);
+      return (
+        <>
+          {parts.map((part: string, i: number) =>
+            pattern.test(part) && part.length > 0 ? (
+              <mark key={i} style={HIGHLIGHT_STYLE}>
+                {part}
+              </mark>
+            ) : (
+              <span key={i}>{part}</span>
+            )
+          )}
+        </>
+      );
+    };
+  }, [currentHighlightWords]);
 
   // === FETCH EVALUATIONS ===
   const { data: evaluationsData, isLoading: evalLoading } =
@@ -696,10 +759,10 @@ export function QAReview({
   const eligibleMeasures = useMemo(() => {
     return allEvaluations.filter((m: any) => {
       const status = (m.status || "").toLowerCase();
-      return m.eligible === true && status !== "not eligible";
+      // return m.eligible === true && status !== "not eligible";
+      return status !== "error";
     });
   }, [allEvaluations]);
-
 
   // === FETCH QA REVIEW DETAILS (AI Analysis) ===
   const {
@@ -760,6 +823,9 @@ export function QAReview({
   // Handle measure selection change
   const handleMeasureChange = (code: string) => {
     setSelectedMeasureCode(code);
+    // Clear stale highlights from the previous measure
+    setCurrentHighlightText(null);
+    setCurrentHighlightWords([]);
     const measure = eligibleMeasures.find((m: any) => m.measure_code === code);
     if (measure?.id) {
       const mid = measure.id;
@@ -868,11 +934,14 @@ export function QAReview({
       document: ev.sourceDocumentValue || "Not Found",
       discrepancy:
         ev.status === "MISSING_IN_SOURCE" ||
-          ev.status?.includes("DISCREPANCY") ||
-          ev.status === "FAIL"
+        ev.status?.includes("DISCREPANCY") ||
+        ev.status === "FAIL"
           ? ev.reason
           : undefined,
       icon: getIconForField(ev.field),
+      highlightText: ev.highlightText,
+      highlightWords: ev.highlightWords, // ← ADD THIS, was missing
+      pageNumber: ev.pageNumber,
     }));
   }, [detail]);
 
@@ -887,17 +956,32 @@ export function QAReview({
       aiValue: item.aiValue || item.abstractorValue || "",
       match:
         item.status === "MISSING_IN_SOURCE" ||
-          item.status?.includes("DISCREPANCY") ||
-          item.status === "FAIL"
+        item.status?.includes("DISCREPANCY") ||
+        item.status === "FAIL"
           ? "discrepancy"
           : "match",
     }));
   }, [detail]);
 
+  // Auto-scroll to the first highlighted <mark> after the page renders
+  useEffect(() => {
+    if (!currentHighlightWords.length) return;
+    // Delay slightly so react-pdf finishes painting the text layer
+    const timer = setTimeout(() => {
+      const mark = document.querySelector<HTMLElement>(
+        ".react-pdf__Page__textContent mark"
+      );
+      if (mark) {
+        mark.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 450);
+    return () => clearTimeout(timer);
+  }, [pdfPage, currentHighlightWords]);
+
   // PDF Load Success
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
-    setPdfPage(1); // reset to first page
+    // setPdfPage(1); // Removed to prevent resetting on every load if we have a target page
   };
 
   const onDocumentLoadError = (error: Error) => {
@@ -911,10 +995,13 @@ export function QAReview({
 
   // Derive selectedCase from the current selection and patientData
   const selectedCase = useMemo(() => {
-    const currentMeasure = eligibleMeasures.find((m: any) => m.id === selectedId);
+    const currentMeasure = eligibleMeasures.find(
+      (m: any) => m.id === selectedId
+    );
     return {
       id: selectedId || "",
-      status: (currentMeasure?.status?.toLowerCase() || "pending") as QueueStatus,
+      status: (currentMeasure?.status?.toLowerCase() ||
+        "pending") as QueueStatus,
       qaSampled: false,
       discrepancies: failCount,
       caseRef: currentMeasure?.measure_code || "N/A",
@@ -996,16 +1083,17 @@ export function QAReview({
                       : "██████████"}
                   </span>
                   <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-bold ${decision === "qaPass"
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                      : decision === "qaFail"
-                        ? "bg-red-50 text-red-700 border-red-200"
-                        : decision === "requestRevision"
-                          ? "bg-amber-50 text-amber-700 border-amber-200"
-                          : STATUS_STYLES[selectedCase.status as QueueStatus]
-                            ?.badge ||
-                          "bg-amber-50 text-amber-700 border-amber-200"
-                      }`}
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-bold ${
+                      decision === "qaPass"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : decision === "qaFail"
+                          ? "bg-red-50 text-red-700 border-red-200"
+                          : decision === "requestRevision"
+                            ? "bg-amber-50 text-amber-700 border-amber-200"
+                            : STATUS_STYLES[selectedCase.status as QueueStatus]
+                                ?.badge ||
+                              "bg-amber-50 text-amber-700 border-amber-200"
+                    }`}
                   >
                     {decision === "qaPass"
                       ? "QA Passed"
@@ -1014,7 +1102,7 @@ export function QAReview({
                         : decision === "requestRevision"
                           ? "Revision Requested"
                           : STATUS_STYLES[selectedCase.status as QueueStatus]
-                            ?.label || "Pending QA"}
+                              ?.label || "Pending QA"}
                   </span>
                   {selectedCase.qaSampled && (
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
@@ -1082,10 +1170,11 @@ export function QAReview({
 
               <button
                 onClick={() => handleDecisionClick("requestRevision")}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${decision === "requestRevision"
-                  ? "bg-amber-500 text-white border-amber-500 shadow-sm"
-                  : "border-amber-300 text-amber-700 hover:bg-amber-50"
-                  }`}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${
+                  decision === "requestRevision"
+                    ? "bg-amber-500 text-white border-amber-500 shadow-sm"
+                    : "border-amber-300 text-amber-700 hover:bg-amber-50"
+                }`}
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 Request Revision
@@ -1093,10 +1182,11 @@ export function QAReview({
 
               <button
                 onClick={() => handleDecisionClick("qaFail")}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${decision === "qaFail"
-                  ? "bg-red-600 text-white border-red-600 shadow-sm"
-                  : "border-red-300 text-red-700 hover:bg-red-50"
-                  }`}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${
+                  decision === "qaFail"
+                    ? "bg-red-600 text-white border-red-600 shadow-sm"
+                    : "border-red-300 text-red-700 hover:bg-red-50"
+                }`}
               >
                 <XCircle className="w-3.5 h-3.5" />
                 QA Fail
@@ -1104,10 +1194,11 @@ export function QAReview({
 
               <button
                 onClick={() => handleDecisionClick("qaPass")}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${decision === "qaPass"
-                  ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-                  : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"
-                  }`}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${
+                  decision === "qaPass"
+                    ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                    : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                }`}
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 QA Pass
@@ -1278,11 +1369,15 @@ export function QAReview({
                           className="shadow-lg rounded"
                         >
                           <Page
+                            key={`page-${pdfPage}-${textRenderKey}`}
                             pageNumber={pdfPage}
                             scale={pdfZoom / 100}
                             className="bg-white shadow-md"
                             renderTextLayer={true}
                             renderAnnotationLayer={true}
+                            {...(textRenderer
+                              ? { customTextRenderer: textRenderer }
+                              : {})}
                           />
                         </Document>
                       )}
@@ -1353,10 +1448,34 @@ export function QAReview({
                       ) : EVIDENCE_CARDS.length > 0 ? (
                         EVIDENCE_CARDS.map((ev: any) => {
                           const Icon = ev.icon;
+                          const isSelectedHighlight =
+                            currentHighlightText === ev.highlightText;
                           return (
                             <div
                               key={ev.label}
-                              className={`rounded-lg border p-2.5 ${ev.discrepancy ? "border-red-200 bg-red-50/30" : "border-border bg-card"}`}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => {
+                                if (ev.pageNumber) {
+                                  setPdfPage(ev.pageNumber);
+                                }
+
+                                if (ev.highlightText) {
+                                  setCurrentHighlightText(ev.highlightText);
+                                  // Prefer the API-provided tokens; fall back to manual split only if absent
+                                  const words = ev.highlightWords?.length
+                                    ? ev.highlightWords
+                                    : (ev.highlightText || "")
+                                        .trim()
+                                        .split(/[\s:,\-–—/()[\].]+/)
+                                        .map((w: string) => w.trim())
+                                        .filter((w: string) => w.length > 1);
+
+                                  setCurrentHighlightWords(words);
+                                  setTextRenderKey((k) => k + 1); // ← real remount trigger, replaces the zoom hack
+                                }
+                              }}
+                              className={`rounded-lg border p-2.5 transition-all cursor-pointer hover:shadow-md ${isSelectedHighlight ? "ring-2 ring-primary ring-offset-1 border-primary" : ""} ${ev.discrepancy ? "border-red-200 bg-red-50/30" : "border-border bg-card"}`}
                             >
                               <div className="flex items-center justify-between mb-1.5">
                                 <div className="flex items-center gap-1.5">
@@ -1407,6 +1526,15 @@ export function QAReview({
                                   {ev.discrepancy}
                                 </p>
                               )}
+                              {ev.highlightText &&
+                                ev.highlightText !== "N/A" && (
+                                  <div className="mt-2 pt-2 border-t border-border/50 flex items-center gap-1.5">
+                                    <Sparkles className="w-2.5 h-2.5 text-primary" />
+                                    <span className="text-[9px] font-medium text-muted-foreground truncate">
+                                      Evidence on Page {ev.pageNumber}
+                                    </span>
+                                  </div>
+                                )}
                             </div>
                           );
                         })
@@ -1416,31 +1544,67 @@ export function QAReview({
                         </div>
                       )}
 
-
-
                       {/* NEW: All Evidences Found */}
-                      {detail?.all_evidences && detail.all_evidences.length > 0 && (
-                        <div className="mt-4 border-t border-border pt-4">
-                          <h4 className="text-[11px] font-bold text-foreground mb-2 flex items-center gap-1.5 uppercase tracking-wider">
-                            <BookOpen className="w-3.5 h-3.5 text-primary" />
-                            All Contextual Evidences
-                          </h4>
-                          <div className="space-y-2">
-                            {detail.all_evidences.map((ev: any, idx: number) => (
-                              <div key={idx} className="bg-muted/30 rounded p-2 border border-border/50 text-[11px]">
-                                <p className="text-foreground leading-relaxed italic mb-1">"{ev.content}"</p>
-                                <div className="flex items-center justify-between text-[9px] text-muted-foreground font-semibold">
-                                  <span className="flex items-center gap-1">
-                                    <Info className="w-2.5 h-2.5" />
-                                    {ev.relevance}
-                                  </span>
-                                  <span className="bg-muted px-1 rounded">Page {ev.pageNumber}</span>
-                                </div>
-                              </div>
-                            ))}
+                      {detail?.all_evidences &&
+                        detail.all_evidences.length > 0 && (
+                          <div className="mt-4 border-t border-border pt-4">
+                            <h4 className="text-[11px] font-bold text-foreground mb-2 flex items-center gap-1.5 uppercase tracking-wider">
+                              <BookOpen className="w-3.5 h-3.5 text-primary" />
+                              All Contextual Evidences
+                            </h4>
+                            <div className="space-y-2">
+                              {detail.all_evidences.map(
+                                (ev: any, idx: number) => {
+                                  const isSelectedHighlight =
+                                    currentHighlightText === ev.content;
+                                  return (
+                                    <div
+                                      key={idx}
+                                      role="button"
+                                      tabIndex={0}
+                                      onClick={() => {
+                                        if (ev.pageNumber)
+                                          setPdfPage(ev.pageNumber);
+                                        if (ev.content) {
+                                          setCurrentHighlightText(ev.content);
+                                          const words = ev.content
+                                            .split(/[\s:,\-–—/()[\]]+/)
+                                            .map((w: string) => w.trim())
+                                            .filter(Boolean);
+                                          setCurrentHighlightWords(words);
+
+                                          setTimeout(
+                                            () => setPdfZoom((z) => z),
+                                            80
+                                          );
+                                        }
+                                      }}
+                                      className={`rounded p-2 border transition-all cursor-pointer hover:shadow-sm text-[11px] ${
+                                        isSelectedHighlight
+                                          ? "bg-primary/5 border-primary ring-1 ring-primary/20"
+                                          : "bg-muted/30 border-border/50"
+                                      }`}
+                                    >
+                                      <p className="text-foreground leading-relaxed italic mb-1">
+                                        "{ev.content}"
+                                      </p>
+                                      <div className="flex items-center justify-between text-[9px] text-muted-foreground font-semibold">
+                                        <span className="flex items-center gap-1">
+                                          <Info className="w-2.5 h-2.5" />
+                                          {ev.relevance}
+                                        </span>
+                                        <span className="bg-muted px-1 rounded flex items-center gap-1">
+                                          <FileText className="w-2.5 h-2.5" />
+                                          Page {ev.pageNumber}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                }
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
                     </div>
                   </div>
                 </div>
@@ -1753,10 +1917,11 @@ export function QAReview({
               <div className="grid grid-cols-3 gap-1.5">
                 <button
                   onClick={() => handleDecisionClick("qaPass")}
-                  className={`inline-flex items-center justify-center gap-1 py-2 rounded-lg border text-[11px] font-bold transition-all ${decision === "qaPass"
-                    ? "bg-emerald-600 text-white border-emerald-600"
-                    : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"
-                    }`}
+                  className={`inline-flex items-center justify-center gap-1 py-2 rounded-lg border text-[11px] font-bold transition-all ${
+                    decision === "qaPass"
+                      ? "bg-emerald-600 text-white border-emerald-600"
+                      : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                  }`}
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   Pass
@@ -1764,10 +1929,11 @@ export function QAReview({
 
                 <button
                   onClick={() => handleDecisionClick("requestRevision")}
-                  className={`inline-flex items-center justify-center gap-1 py-2 rounded-lg border text-[11px] font-bold transition-all ${decision === "requestRevision"
-                    ? "bg-amber-500 text-white border-amber-500"
-                    : "border-amber-300 text-amber-700 hover:bg-amber-50"
-                    }`}
+                  className={`inline-flex items-center justify-center gap-1 py-2 rounded-lg border text-[11px] font-bold transition-all ${
+                    decision === "requestRevision"
+                      ? "bg-amber-500 text-white border-amber-500"
+                      : "border-amber-300 text-amber-700 hover:bg-amber-50"
+                  }`}
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   Revise
@@ -1775,10 +1941,11 @@ export function QAReview({
 
                 <button
                   onClick={() => handleDecisionClick("qaFail")}
-                  className={`inline-flex items-center justify-center gap-1 py-2 rounded-lg border text-[11px] font-bold transition-all ${decision === "qaFail"
-                    ? "bg-red-600 text-white border-red-600"
-                    : "border-red-300 text-red-700 hover:bg-red-50"
-                    }`}
+                  className={`inline-flex items-center justify-center gap-1 py-2 rounded-lg border text-[11px] font-bold transition-all ${
+                    decision === "qaFail"
+                      ? "bg-red-600 text-white border-red-600"
+                      : "border-red-300 text-red-700 hover:bg-red-50"
+                  }`}
                 >
                   <XCircle className="w-3.5 h-3.5" />
                   Fail
@@ -1891,7 +2058,9 @@ function AssignmentModal({
       toast.success("Measures assigned back to abstractor successfully");
       onOpenChange(false);
     } catch (err: any) {
-      toast.error(err?.message || "Failed to assign measures. Please try again.");
+      toast.error(
+        err?.message || "Failed to assign measures. Please try again."
+      );
     }
   };
 
@@ -1944,12 +2113,13 @@ function AssignmentModal({
                         {measure?.measure_code} - {measure?.measure_name}
                       </span>
                       <span
-                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border shadow-sm ${data.qaStatus === "qaPass"
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                          : data.qaStatus === "qaFail"
-                            ? "bg-red-50 text-red-700 border-red-200"
-                            : "bg-amber-50 text-amber-700 border-amber-200"
-                          }`}
+                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border shadow-sm ${
+                          data.qaStatus === "qaPass"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : data.qaStatus === "qaFail"
+                              ? "bg-red-50 text-red-700 border-red-200"
+                              : "bg-amber-50 text-amber-700 border-amber-200"
+                        }`}
                       >
                         {data.qaStatus === "qaPass"
                           ? "Pass"
