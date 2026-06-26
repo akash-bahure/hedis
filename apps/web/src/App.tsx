@@ -70,6 +70,7 @@ export default function App() {
   );
   const [selectedChartId, setSelectedChartId] = useState<string | null>(null);
   const [selectedPatientData, setSelectedPatientData] = useState<any>(null);
+  const [qaMode, setQaMode] = useState(false);
 
   /* Apply dark mode class */
   useEffect(() => {
@@ -91,6 +92,9 @@ export default function App() {
     setPreviousView(activeView);
     setActiveView(view);
     setMobileSidebarOpen(false);
+  };
+  const handleBackToQueue = () => {
+    navigate("/work-queue");
   };
 
   const renderContent = () => {
@@ -115,27 +119,45 @@ export default function App() {
               navigate("abstraction");
             }}
             onOpenPatient360={(patientId, chartId, patientData) => {
+              setQaMode(false);
               setSelectedPatientId(patientId || null);
               setSelectedChartId(chartId || null);
               setSelectedPatientData(patientData || null);
               navigate("patient-360");
             }}
             onOpenQAReview={(patientId, chartId, patientData) => {
+              setQaMode(true);
               setSelectedPatientId(patientId || null);
               setSelectedChartId(chartId || null);
               setSelectedPatientData(patientData || null);
-              navigate("qa-review");
+              navigate("patient-360");
             }}
           />
         );
 
+      // case "patient-360":
+      //   return (
+      //     <Patient360
+      //       patientId={selectedPatientId || ""}
+      //       chartId={selectedChartId || ""}
+      //       onBack={() => navigate(previousView)}
+      //       onOpenWorkspace={() => navigate("abstraction")}
+      //       {...selectedPatientData}
+      //     />
+      //   );
       case "patient-360":
         return (
           <Patient360
             patientId={selectedPatientId || ""}
             chartId={selectedChartId || ""}
             onBack={() => navigate(previousView)}
-            onOpenWorkspace={() => navigate("abstraction")}
+            onOpenWorkspace={() => {
+              if (qaMode) {
+                navigate("qa-review");
+              } else {
+                navigate("abstraction");
+              }
+            }}
             {...selectedPatientData}
           />
         );
@@ -148,7 +170,6 @@ export default function App() {
             onGoBack={() => navigate("work-queue")}
           />
         );
-      case "abstraction":
       case "abstraction":
         return (
           <AbstractionWorkspace

@@ -513,48 +513,66 @@ function RowAction({
   // ===================== QA ANALYST =====================
   // ===================== QA ANALYST =====================
   if (role === "qa-analyst") {
-    const handleBeginQAReview = async () => {
-      if (!onOpenQAReview || isQaLoading) return;
+    // const handleBeginQAReview = async () => {
+    //   if (!onOpenQAReview || isQaLoading) return;
+
+    //   const patientId = row.patientId || row.id;
+    //   const chartId = row.chartId || row.id;
+
+    //   setIsQaLoading(true);
+    //   toast.info("Starting QA Evaluation...", {
+    //     description: `Loading evaluation for ${row.patientName}`,
+    //   });
+
+    //   try {
+    //     // Trigger the GET API (this starts extraction on backend)
+    //     const result = await qaEvaluationQuery.refetch();
+
+    //     if (result.data) {
+    //       toast.success("Evaluation Loaded Successfully", {
+    //         description: "Chart is now ready for QA Review.",
+    //       });
+
+    //       // Prepare patient data for the review screen
+    //       const patientData = {
+    //         patientName: row.patientName,
+    //         dob: row.dob,
+    //         mrn: row.mrn,
+    //         plan: row.plan,
+    //         riskScore: row.riskScore,
+    //         workflowType: "qa",
+    //       };
+
+    //       // Navigate to QA Review screen
+    //       onOpenQAReview(patientId, chartId, patientData);
+    //     } else {
+    //       throw new Error("No data returned");
+    //     }
+    //   } catch (err) {
+    //     console.error("QA Evaluation failed:", err);
+    //     toast.error("Failed to load QA Evaluation", {
+    //       description: "Please try again or contact support.",
+    //     });
+    //   } finally {
+    //     setIsQaLoading(false);
+    //   }
+    // };
+    const handleBeginQAReview = () => {
+      if (!onOpenQAReview) return;
 
       const patientId = row.patientId || row.id;
       const chartId = row.chartId || row.id;
 
-      setIsQaLoading(true);
-      toast.info("Starting QA Evaluation...", {
-        description: `Loading evaluation for ${row.patientName}`,
-      });
+      const patientData = {
+        patientName: row.patientName,
+        dob: row.dob,
+        mrn: row.mrn,
+        plan: row.plan,
+        riskScore: row.riskScore,
+        workflowType: "qa",
+      };
 
-      try {
-        // Trigger the GET API (this starts extraction on backend)
-        const result = await qaEvaluationQuery.refetch();
-
-        if (result.data) {
-          toast.success("Evaluation Loaded Successfully", {
-            description: "Chart is now ready for QA Review.",
-          });
-
-          // Prepare patient data for the review screen
-          const patientData = {
-            patientName: row.patientName,
-            dob: row.dob,
-            mrn: row.mrn,
-            plan: row.plan,
-            riskScore: row.riskScore,
-          };
-
-          // Navigate to QA Review screen
-          onOpenQAReview(patientId, chartId, patientData);
-        } else {
-          throw new Error("No data returned");
-        }
-      } catch (err) {
-        console.error("QA Evaluation failed:", err);
-        toast.error("Failed to load QA Evaluation", {
-          description: "Please try again or contact support.",
-        });
-      } finally {
-        setIsQaLoading(false);
-      }
+      onOpenQAReview(patientId, chartId, patientData);
     };
 
     if ([2, 3, 4].includes(row.step)) {

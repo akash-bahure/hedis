@@ -1312,110 +1312,197 @@ function GoToWorkspaceButton({
 /* ─────────────────────────────────────────────────────────────
    OPEN ABSTRACTION BUTTON (self-contained)
 ───────────────────────────────────────────────────────────── */
+// function OpenAbstractionButton({
+//   onOpenWorkspace,
+// }: {
+//   onOpenWorkspace: () => void;
+// }) {
+//   const [phase, setPhase] = useState<"idle" | "loading" | "open">("idle");
+
+//   const handleClick = () => {
+//     if (phase !== "idle") return;
+//     setPhase("loading");
+//     setTimeout(() => setPhase("open"), 900);
+//   };
+
+//   const handleClose = () => setPhase("idle");
+
+//   return (
+//     <div className="relative">
+//       <button
+//         onClick={handleClick}
+//         disabled={phase === "loading"}
+//         className={`w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-[12px] font-bold transition-all duration-200 shadow-sm ${
+//           phase === "open"
+//             ? "bg-emerald-500 text-white shadow-emerald-200 hover:bg-emerald-600"
+//             : phase === "loading"
+//               ? "bg-[#0891b2]/60 text-white cursor-wait shadow-none"
+//               : "bg-[#0891b2] text-white shadow-[#0891b2]/30 hover:bg-[#0e7490] hover:shadow-md active:scale-[0.98]"
+//         }`}
+//       >
+//         {phase === "loading" ? (
+//           <>
+//             <svg
+//               className="w-3.5 h-3.5 animate-spin"
+//               viewBox="0 0 24 24"
+//               fill="none"
+//             >
+//               <circle
+//                 className="opacity-25"
+//                 cx="12"
+//                 cy="12"
+//                 r="10"
+//                 stroke="currentColor"
+//                 strokeWidth="4"
+//               />
+//               <path
+//                 className="opacity-75"
+//                 fill="currentColor"
+//                 d="M4 12a8 8 0 018-8v8z"
+//               />
+//             </svg>
+//             Opening…
+//           </>
+//         ) : phase === "open" ? (
+//           <>
+//             <CheckCircle2 className="w-3.5 h-3.5" /> Abstraction Open
+//           </>
+//         ) : (
+//           <>
+//             <ClipboardCheck className="w-3.5 h-3.5" /> Open Abstraction
+//           </>
+//         )}
+//       </button>
+
+//       {phase === "open" && (
+//         <div className="mt-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 space-y-2">
+//           <div className="flex items-center justify-between">
+//             <div className="flex items-center gap-1.5">
+//               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+//               <span className="text-[11px] font-bold text-emerald-800">
+//                 Abstraction Workspace Ready
+//               </span>
+//             </div>
+//             <button
+//               onClick={handleClose}
+//               className="text-emerald-500 hover:text-emerald-700 transition-colors"
+//             >
+//               <X className="w-3 h-3" />
+//             </button>
+//           </div>
+//           <p className="text-[10px] text-emerald-700 leading-snug">
+//             Chart <span className="font-mono font-bold">CHT-2024-00892</span>{" "}
+//             has been loaded into the abstraction workspace. Review all flagged
+//             evidence before submitting.
+//           </p>
+//           <div className="grid grid-cols-2 gap-1.5">
+//             <div className="rounded-lg bg-white border border-emerald-200 px-2 py-1.5 text-center">
+//               <p className="text-[9px] text-emerald-600 font-semibold uppercase tracking-wider">
+//                 Evidence Items
+//               </p>
+//               <p className="text-[14px] font-bold text-emerald-800">7</p>
+//             </div>
+//             <div className="rounded-lg bg-white border border-emerald-200 px-2 py-1.5 text-center">
+//               <p className="text-[9px] text-emerald-600 font-semibold uppercase tracking-wider">
+//                 Gaps to Close
+//               </p>
+//               <p className="text-[14px] font-bold text-emerald-800">2</p>
+//             </div>
+//           </div>
+//           <GoToWorkspaceButton
+//             onDone={handleClose}
+//             onOpenWorkspace={onOpenWorkspace}
+//           />
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
+
 function OpenAbstractionButton({
+  patientId,
+  workflowType,
   onOpenWorkspace,
 }: {
+  patientId: string;
+  workflowType?: string;
   onOpenWorkspace: () => void;
 }) {
-  const [phase, setPhase] = useState<"idle" | "loading" | "open">("idle");
+  const [loading, setLoading] = useState(false);
+  const qaEvaluationQuery = useGetApiHedisEvaluationsId(patientId, {
+    query: {
+      enabled: false,
+      refetchOnWindowFocus: false,
+    },
+  });
 
-  const handleClick = () => {
-    if (phase !== "idle") return;
-    setPhase("loading");
-    setTimeout(() => setPhase("open"), 900);
+  const handleLaunch = async () => {
+    console.log("Launch clicked");
+    console.log("patientId:", patientId);
+    console.log("workflowType:", workflowType);
+    if (loading) return;
+
+    setLoading(true);
+
+    try {
+      if (workflowType === "qa") {
+        toast.loading("Preparing QA Evaluation...", {
+          id: "qa-eval",
+        });
+
+        const result = await qaEvaluationQuery.refetch();
+
+        if (!result.data) {
+          throw new Error("No evaluation returned");
+        }
+
+        toast.success("QA Evaluation Ready", {
+          id: "qa-eval",
+        });
+      }
+
+      onOpenWorkspace();
+    } catch (err) {
+      toast.error("Unable to prepare QA Evaluation", {
+        id: "qa-eval",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleClose = () => setPhase("idle");
-
   return (
-    <div className="relative">
-      <button
-        onClick={handleClick}
-        disabled={phase === "loading"}
-        className={`w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-[12px] font-bold transition-all duration-200 shadow-sm ${
-          phase === "open"
-            ? "bg-emerald-500 text-white shadow-emerald-200 hover:bg-emerald-600"
-            : phase === "loading"
-              ? "bg-[#0891b2]/60 text-white cursor-wait shadow-none"
-              : "bg-[#0891b2] text-white shadow-[#0891b2]/30 hover:bg-[#0e7490] hover:shadow-md active:scale-[0.98]"
-        }`}
-      >
-        {phase === "loading" ? (
-          <>
-            <svg
-              className="w-3.5 h-3.5 animate-spin"
-              viewBox="0 0 24 24"
-              fill="none"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8v8z"
-              />
-            </svg>
-            Opening…
-          </>
-        ) : phase === "open" ? (
-          <>
-            <CheckCircle2 className="w-3.5 h-3.5" /> Abstraction Open
-          </>
-        ) : (
-          <>
-            <ClipboardCheck className="w-3.5 h-3.5" /> Open Abstraction
-          </>
-        )}
-      </button>
-
-      {phase === "open" && (
-        <div className="mt-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="text-[11px] font-bold text-emerald-800">
-                Abstraction Workspace Ready
-              </span>
-            </div>
-            <button
-              onClick={handleClose}
-              className="text-emerald-500 hover:text-emerald-700 transition-colors"
-            >
-              <X className="w-3 h-3" />
-            </button>
-          </div>
-          <p className="text-[10px] text-emerald-700 leading-snug">
-            Chart <span className="font-mono font-bold">CHT-2024-00892</span>{" "}
-            has been loaded into the abstraction workspace. Review all flagged
-            evidence before submitting.
-          </p>
-          <div className="grid grid-cols-2 gap-1.5">
-            <div className="rounded-lg bg-white border border-emerald-200 px-2 py-1.5 text-center">
-              <p className="text-[9px] text-emerald-600 font-semibold uppercase tracking-wider">
-                Evidence Items
-              </p>
-              <p className="text-[14px] font-bold text-emerald-800">7</p>
-            </div>
-            <div className="rounded-lg bg-white border border-emerald-200 px-2 py-1.5 text-center">
-              <p className="text-[9px] text-emerald-600 font-semibold uppercase tracking-wider">
-                Gaps to Close
-              </p>
-              <p className="text-[14px] font-bold text-emerald-800">2</p>
-            </div>
-          </div>
-          <GoToWorkspaceButton
-            onDone={handleClose}
-            onOpenWorkspace={onOpenWorkspace}
-          />
-        </div>
+    <button
+      onClick={handleLaunch}
+      disabled={loading}
+      className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-[13px] font-bold transition-colors disabled:opacity-60"
+    >
+      {loading ? (
+        <>
+          <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+              className="opacity-25"
+            />
+            <path
+              fill="currentColor"
+              className="opacity-75"
+              d="M4 12a8 8 0 018-8v8z"
+            />
+          </svg>
+          Launching...
+        </>
+      ) : (
+        <>
+          <ClipboardCheck className="w-4 h-4" />
+          Launch QA Workspace
+        </>
       )}
-    </div>
+    </button>
   );
 }
 
@@ -1423,6 +1510,8 @@ function OpenAbstractionButton({
    RIGHT MEASURE PANEL
 ───────────────────────────────────────────────────────────── */
 function MeasurePanel({
+  patientId,
+  workflowType,
   selectedMeasure,
   onMeasureChange,
   onOpenWorkspace,
@@ -1433,6 +1522,8 @@ function MeasurePanel({
   onSendToQA, // ← Added
   isSendingToQA, // ← Added
 }: {
+  patientId: string;
+  workflowType?: string;
   selectedMeasure: string;
   onMeasureChange: (m: string) => void;
   onOpenWorkspace?: () => void;
@@ -1691,8 +1782,13 @@ function MeasurePanel({
         {/* CTA Buttons */}
         {measure.status !== "not-eligible" && (
           <div className="border-t border-border pt-3 space-y-2">
-            <OpenAbstractionButton
+            {/* <OpenAbstractionButton
               onOpenWorkspace={onOpenWorkspace ?? (() => {})}
+            /> */}
+            <OpenAbstractionButton
+              patientId={patientId}
+              workflowType={workflowType}
+              onOpenWorkspace={onOpenWorkspace}
             />
             <button className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border text-foreground text-[12px] font-semibold hover:bg-muted transition-colors">
               <Eye className="w-3.5 h-3.5" /> Mark Reviewed
@@ -1855,6 +1951,7 @@ export function Patient360({
   gender,
   plan,
   riskScore,
+  workflowType,
 }: {
   onBack?: () => void;
   onOpenWorkspace?: () => void;
@@ -1866,6 +1963,7 @@ export function Patient360({
   gender?: string;
   plan?: string;
   riskScore?: number;
+  workflowType?: "qa" | "abstraction";
 }) {
   // Dynamic Patient Data (with fallbacks)
   const patient = {
@@ -1909,7 +2007,9 @@ export function Patient360({
     // Filter non-eligible first
     let filtered = evaluationResponse.evaluations.filter(
       (ev: any) =>
-        ev.status !== "Not Eligible" && ev.eligible !== false && ev.measure_code // must have a code
+        ev.status !== "Not Eligible" &&
+        ev.eligible !== false &&
+        ev.measure_code, // must have a code
     );
 
     // Deduplicate by measure_code (keep the one with highest confidence or latest)
@@ -2007,7 +2107,7 @@ export function Patient360({
 
   const sendToQaMutation = usePostApiHedisSendToQa();
   const selectedEval = evaluations.find(
-    (ev: any) => ev.measure_code === selectedMeasure
+    (ev: any) => ev.measure_code === selectedMeasure,
   );
   const handleSendToQa = async () => {
     if (!selectedEval) return;
@@ -2080,7 +2180,7 @@ export function Patient360({
     };
   }, [selectedEval]);
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(
-    null
+    null,
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [acceptedEvents, setAcceptedEvents] = useState<Set<string>>(new Set());
@@ -2260,6 +2360,8 @@ export function Patient360({
           </div>
           <div className="h-[calc(100%-45px)]">
             <MeasurePanel
+              patientId={patientId}
+              workflowType={workflowType}
               selectedMeasure={selectedMeasure}
               onMeasureChange={setSelectedMeasure}
               onOpenWorkspace={onOpenWorkspace}
