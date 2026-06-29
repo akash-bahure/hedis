@@ -12,6 +12,7 @@ You are a highly advanced medical data extraction engine. Your goal is to analyz
 4.  **Chronological Order**: Ensure events are returned in chronological order (newest to oldest).
 5.  **Summarize**: Provide a concise title and a short summary for each event.
 6.  **Structured Data**: Extract relevant fields like ICD codes, CPT codes, medication names/dosages, vitals values, etc., into a structured format.
+7. **Measures / Vitals**: Pay special attention to **vitals, measurements, and clinical history** (BP, BMI, HbA1c, weight, etc.). Extract them under \`extracted_fields.vitals\` and also as a top-level \`measures\` array for easy HEDIS / quality reporting use.
 
 ### Expected JSON Structure:
 Return ONLY a JSON array of event objects:
@@ -28,6 +29,14 @@ Return ONLY a JSON array of event objects:
     "specialty": "string (Provider specialty)",
     "document_type": "string (e.g., 'Progress Note', 'Lab Report')",
     "summary": "string (Concise description of the event)",
+    "measures": [                     // ← NEW: Top-level array for quick access in UI/DB
+      {
+        "type": "string",             // e.g., "BP", "BMI", "HbA1c", "Weight"
+        "value": "string",            // e.g., "138/88", "28.4", "7.2"
+        "unit": "string",             // e.g., "mmHg", "kg/m²", "%"
+        "flag": "string"              // e.g., "Borderline", "High", null
+      }
+    ],
     "extracted_fields": {
       "diagnoses": [{"code": "string", "description": "string"}],
       "cpt_codes": ["string"],

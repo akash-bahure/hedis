@@ -568,27 +568,44 @@ exports.getClinicalTimeline = async (req, res) => {
     const filters = req.query;
     const { subdomain, schema_name: schema } = req.tenant;
 
-    // First, try to get existing timeline
-    let timeline = await hedisService.getClinicalTimeline(req.db, patientId, filters);
+    // Check if timeline already exists for this patient (ignore filters)
+    const existingTimelineResult = await req.db.query(
+      `
+      SELECT COUNT(*) AS total
+      FROM ${schema}.clinical_timeline_events
+      WHERE patient_id = $1
+      `,
+      [patientId]
+    );
 
-    // If no timeline events exist → trigger extraction
-    if (Object.keys(timeline).length === 0 ||
-      (Array.isArray(timeline) && timeline.length === 0)) {
+    const hasTimeline =
+      Number(existingTimelineResult.rows[0].total) > 0;
 
-      console.log(`No clinical timeline found for patient ${patientId}. Triggering extraction...`);
+    // Trigger extraction only if timeline doesn't exist
+    if (!hasTimeline) {
+      console.log(
+        `No clinical timeline found for patient ${patientId}. Triggering extraction...`
+      );
 
       const chartResult = await req.db.query(
-        `SELECT chart_document FROM ${schema}.patient_charts 
-         WHERE patient_id = $1 LIMIT 1`,
+        `
+        SELECT chart_document
+        FROM ${schema}.patient_charts
+        WHERE patient_id = $1
+        LIMIT 1
+        `,
         [patientId]
       );
 
       if (chartResult.rows.length > 0) {
         const chartDoc = chartResult.rows[0].chart_document || {};
-        const filePath = chartDoc.filePath || `charts/${chartDoc.fileName}`;
+        const filePath =
+          chartDoc.filePath || `charts/${chartDoc.fileName}`;
         const pdfPath = `/app/uploads/${filePath}`;
 
-        console.log(`Triggering Clinical Timeline extraction for Patient: ${patientId}, Path: ${pdfPath}`);
+        console.log(
+          `Triggering Clinical Timeline extraction for Patient: ${patientId}, Path: ${pdfPath}`
+        );
 
         await hedisService.extractClinicalTimeline(
           patientId,
@@ -596,17 +613,23 @@ exports.getClinicalTimeline = async (req, res) => {
           subdomain,
           req.db
         );
-
-        // Fetch again after extraction
-        timeline = await hedisService.getClinicalTimeline(req.db, patientId, filters);
       } else {
-        console.log(`No chart found for patient ${patientId}. Cannot trigger timeline extraction.`);
+        console.log(
+          `No chart found for patient ${patientId}. Cannot trigger timeline extraction.`
+        );
       }
     }
 
+    // Always fetch timeline from DB with filters
+    const timeline = await hedisService.getClinicalTimeline(
+      req.db,
+      patientId,
+      filters
+    );
+
     res.json({
       patient_id: patientId,
-      timeline
+      timeline,
     });
   } catch (err) {
     console.error("Get Clinical Timeline Error:", err);
@@ -662,3 +685,129 @@ exports.reviewTimelineEvent = async (req, res) => {
     });
   }
 };
+
+exports.getEvidenceTimeline = async (req, res) => {
+  try {
+    const { id: patientId } = req.params;
+    const filters = req.query;
+    const { subdomain, schema_name: schema } = req.tenant;
+
+    // 1. Get patient chart path and construct PDF URL for frontend rendering
+    const chartResult = await req.db.query(
+      `
+      SELECT chart_document
+      FROM ${schema}.patient_charts
+      WHERE patient_id = $1
+      LIMIT 1
+    `,
+      [patientId]
+    );
+
+    let pdfUrl = null;
+    if (chartResult.rows.length > 0) {
+      const chartDoc = chartResult.rows[0].chart_document || {};
+      const filePath = chartDoc.filePath || `charts/${chartDoc.fileName}`;
+      pdfUrl = `${req.protocol}://${req.get("host")}/uploads/${filePath}`;
+    }
+
+    // 2. Retrieve the reviewed evidence timeline events
+    const timeline = await hedisService.getEvidenceTimeline(req.db, patientId, filters);
+
+    res.json({
+      patient_id: patientId,
+      pdfUrl,
+      timeline
+    });
+  } catch (err) {
+    console.error("Get Evidence Timeline Error:", err);
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+};
+
+/**
+ * GET /api/hedis/abstractor-measures/:patientId
+ * Returns all QA measure decisions assigned to the abstractor for a patient.
+ */
+exports.getAbstractorMeasures = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const schema = req.tenant.schema_name;
+
+    // 1. Get the patient's assigned abstractor
+    const patientResult = await req.db.query(
+      `SELECT abstractor_id FROM ${schema}.patients WHERE id = $1`,
+      [patientId]
+    );
+
+    if (patientResult.rows.length === 0) {
+      return res.status(404).json({ error: "Patient not found" });
+    }
+
+    const abstractorId = patientResult.rows[0].abstractor_id;
+
+    // 2. Fetch all QA measure decisions for this patient assigned to the abstractor
+    const measuresResult = await req.db.query(
+      `SELECT
+         d.id,
+         d.patient_id,
+         d.chart_id,
+         d.measure_id,
+         d.measure_code,
+         d.measure_name,
+         d.qa_status,
+         d.reasons,
+         d.assigned_abstractor_id,
+         d.created_at,
+         d.updated_at
+       FROM ${schema}.hedis_qa_measure_decisions d
+       WHERE d.patient_id = $1
+         AND d.assigned_abstractor_id = $2
+       ORDER BY d.created_at DESC`,
+      [patientId, abstractorId]
+    );
+
+    // 3. Get chart PDF URL
+    const chartResult = await req.db.query(
+      `SELECT chart_document
+       FROM ${schema}.patient_charts
+       WHERE patient_id = $1
+       LIMIT 1`,
+      [patientId]
+    );
+
+    let pdfUrl = null;
+    if (chartResult.rows.length > 0) {
+      const chartDoc = chartResult.rows[0].chart_document || {};
+      const filePath = chartDoc.filePath || `charts/${chartDoc.fileName}`;
+      pdfUrl = `${req.protocol}://${req.get("host")}/uploads/${filePath}`;
+    }
+
+    res.json({
+      patient_id: patientId,
+      abstractor_id: abstractorId,
+      pdfUrl,
+      total: measuresResult.rows.length,
+      measures: measuresResult.rows.map((m) => ({
+        id: m.id,
+        measure_id: m.measure_id,
+        measure_code: m.measure_code,
+        measure_name: m.measure_name,
+        qa_status: m.qa_status,
+        reasons: m.reasons,
+        chart_id: m.chart_id,
+        assigned_abstractor_id: m.assigned_abstractor_id,
+        created_at: m.created_at,
+        updated_at: m.updated_at,
+      })),
+    });
+  } catch (err) {
+    console.error("Get Abstractor Measures Error:", err);
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+};
+
+

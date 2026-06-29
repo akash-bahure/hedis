@@ -9,7 +9,9 @@ class HEDISService {
     const aiServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
     const url = `${aiServiceUrl}/api/hedis/analyze`;
 
-    console.log(`Forwarding chart for patient ${patientId} to AI Service: ${url}`);
+    console.log(
+      `Forwarding chart for patient ${patientId} to AI Service: ${url}`
+    );
 
     const FormData = require("form-data");
     const fs = require("fs");
@@ -43,12 +45,14 @@ class HEDISService {
     const aiServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
     const url = `${aiServiceUrl}/api/hedis/analyze`;
 
-    console.log(`Triggering AI evaluation for patient ${patientId} with path ${pdfPath} to AI Service: ${url}`);
+    console.log(
+      `Triggering AI evaluation for patient ${patientId} with path ${pdfPath} to AI Service: ${url}`
+    );
 
     const response = await axios.post(url, {
       patient_id: patientId,
       pdfPath: pdfPath,
-      tenant_subdomain: tenantSubdomain
+      tenant_subdomain: tenantSubdomain,
     });
 
     const { evaluations } = response.data;
@@ -58,13 +62,6 @@ class HEDISService {
     for (const evalResult of evaluations) {
       const saved = await this.saveEvaluation(db, patientId, evalResult);
       savedEvaluations.push(saved);
-    }
-
-    // Trigger Clinical Timeline Extraction as well
-    try {
-      await this.extractClinicalTimeline(patientId, pdfPath, tenantSubdomain, db);
-    } catch (timelineErr) {
-      console.error("Clinical Timeline Extraction failed but continuing HEDIS flow:", timelineErr);
     }
 
     return savedEvaluations;
@@ -77,18 +74,22 @@ class HEDISService {
     const aiServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
     const url = `${aiServiceUrl}/api/hedis/clinical-timeline/extract`;
 
-    console.log(`Triggering Clinical Timeline extraction for patient ${patientId} with path ${pdfPath}`);
+    console.log(
+      `Triggering Clinical Timeline extraction for patient ${patientId} with path ${pdfPath}`
+    );
 
     const response = await axios.post(url, {
       patient_id: patientId,
       pdfPath: pdfPath,
-      tenant_subdomain: tenantSubdomain   // ← Added for consistency
+      tenant_subdomain: tenantSubdomain, // ← Added for consistency
     });
 
     const { timeline } = response.data || { timeline: [] };
 
     if (!timeline || timeline.length === 0) {
-      console.warn(`AI Service returned empty timeline for patient ${patientId}`);
+      console.warn(
+        `AI Service returned empty timeline for patient ${patientId}`
+      );
       return [];
     }
 
@@ -99,7 +100,9 @@ class HEDISService {
       savedEvents.push(saved);
     }
 
-    console.log(`Successfully saved ${savedEvents.length} timeline events for patient ${patientId}`);
+    console.log(
+      `Successfully saved ${savedEvents.length} timeline events for patient ${patientId}`
+    );
     return savedEvents;
   }
 
@@ -111,9 +114,9 @@ class HEDISService {
       INSERT INTO clinical_timeline_events (
         patient_id, event_title, event_date, year, month, 
         event_type, encounter_type, provider, document_type, 
-        summary, extracted_structured_data, ai_confidence, source_text,
+        summary, extracted_structured_data, ai_confidence, source_text,measures,
         review_status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14,$15)
       RETURNING *
     `;
 
@@ -121,8 +124,14 @@ class HEDISService {
       patientId,
       event.event_title,
       event.event_date || null,
-      event.year || (event.event_date ? new Date(event.event_date).getFullYear() : null),
-      event.month || (event.event_date ? new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date(event.event_date)) : null),
+      event.year ||
+      (event.event_date ? new Date(event.event_date).getFullYear() : null),
+      event.month ||
+      (event.event_date
+        ? new Intl.DateTimeFormat("en-US", { month: "long" }).format(
+          new Date(event.event_date)
+        )
+        : null),
       event.event_type,
       event.encounter_type,
       event.provider,
@@ -131,7 +140,8 @@ class HEDISService {
       JSON.stringify(event.extracted_fields || {}),
       event.confidence || 0,
       event.evidence,
-      'PENDING'
+      JSON.stringify(event.measures || []),
+      "PENDING",
     ];
 
     const result = await db.query(query, values);
@@ -215,9 +225,7 @@ class HEDISService {
 
     const patientId = queueResult.rows[0].patient_id;
 
-    const measureCodes = queueResult.rows.map(
-      (row) => row.measure_code
-    );
+    const measureCodes = queueResult.rows.map((row) => row.measure_code);
 
     // Update hedis_evaluations
     const result = await db.query(
@@ -231,13 +239,7 @@ class HEDISService {
       AND measure_code = ANY($5)
     RETURNING *
     `,
-      [
-        stage,
-        reason || null,
-        additionalNotes || null,
-        patientId,
-        measureCodes,
-      ]
+      [stage, reason || null, additionalNotes || null, patientId, measureCodes]
     );
 
     // // Optional: update QA queue status
@@ -309,16 +311,29 @@ class HEDISService {
 
     // Group by Year and Month
     const grouped = {};
-    events.forEach(event => {
-      const year = event.year || (event.event_date ? new Date(event.event_date).getFullYear() : "Unknown");
-      const month = event.month || (event.event_date ? new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date(event.event_date)) : "Unknown");
+    events.forEach((event) => {
+      const year =
+        event.year ||
+        (event.event_date
+          ? new Date(event.event_date).getFullYear()
+          : "Unknown");
+      const month =
+        event.month ||
+        (event.event_date
+          ? new Intl.DateTimeFormat("en-US", { month: "long" }).format(
+            new Date(event.event_date)
+          )
+          : "Unknown");
 
       if (!grouped[year]) grouped[year] = {};
       if (!grouped[year][month]) grouped[year][month] = [];
 
       grouped[year][month].push({
         ...event,
-        extracted_fields: typeof event.extracted_structured_data === 'string' ? JSON.parse(event.extracted_structured_data) : event.extracted_structured_data
+        extracted_fields:
+          typeof event.extracted_structured_data === "string"
+            ? JSON.parse(event.extracted_structured_data)
+            : event.extracted_structured_data,
       });
     });
 
@@ -341,12 +356,17 @@ class HEDISService {
     const event = result.rows[0];
     return {
       ...event,
-      extracted_fields: typeof event.extracted_structured_data === 'string' ? JSON.parse(event.extracted_structured_data) : event.extracted_structured_data,
-      documents: result.rows.map(row => ({
-        segment_text: row.document_segment_text,
-        preview_metadata: row.preview_metadata,
-        page_number: row.page_number
-      })).filter(d => d.segment_text || d.preview_metadata)
+      extracted_fields:
+        typeof event.extracted_structured_data === "string"
+          ? JSON.parse(event.extracted_structured_data)
+          : event.extracted_structured_data,
+      documents: result.rows
+        .map((row) => ({
+          segment_text: row.document_segment_text,
+          preview_metadata: row.preview_metadata,
+          page_number: row.page_number,
+        }))
+        .filter((d) => d.segment_text || d.preview_metadata),
     };
   }
 
@@ -368,7 +388,10 @@ class HEDISService {
     if (!event) throw new Error("Event not found");
 
     // 2. Fetch patient's assigned abstractor
-    const patientResult = await db.query(`SELECT abstractor_id FROM patients WHERE id = $1`, [event.patient_id]);
+    const patientResult = await db.query(
+      `SELECT abstractor_id FROM patients WHERE id = $1`,
+      [event.patient_id]
+    );
     const abstractorId = patientResult.rows[0]?.abstractor_id;
 
     // 3. Create review record
@@ -383,24 +406,119 @@ class HEDISService {
       status,
       remarks,
       reviewedBy,
-      status === 'ACCEPTED' ? abstractorId : null,
-      status === 'ACCEPTED' ? 'ASSIGNED' : 'REJECTED'
+      status === "ACCEPTED" ? abstractorId : null,
+      status === "ACCEPTED" ? "ASSIGNED" : "REJECTED",
     ]);
 
     // 4. Update assignment table if accepted
-    if (status === 'ACCEPTED' && abstractorId) {
-      await db.query(`
+    if (status === "ACCEPTED" && abstractorId) {
+      await db.query(
+        `
         INSERT INTO clinical_timeline_assignments (event_id, abstractor_id, assigned_by)
         VALUES ($1, $2, $3)
         ON CONFLICT (event_id, abstractor_id) DO UPDATE SET status = 'Assigned', updated_at = NOW()
-      `, [eventId, abstractorId, reviewedBy]);
+      `,
+        [eventId, abstractorId, reviewedBy]
+      );
 
       // Update event with abstractor
-      await db.query(`UPDATE clinical_timeline_events SET assigned_abstractor_id = $1 WHERE id = $2`, [abstractorId, eventId]);
+      await db.query(
+        `UPDATE clinical_timeline_events SET assigned_abstractor_id = $1 WHERE id = $2`,
+        [abstractorId, eventId]
+      );
     }
 
     return event;
   }
+
+  /**
+   * Get reviewed & assigned evidence timeline events for abstractor.
+   */
+  async getEvidenceTimeline(db, patientId, filters = {}) {
+    let query = `
+      SELECT e.* 
+      FROM clinical_timeline_events e
+      INNER JOIN patients p ON e.patient_id = p.id
+      WHERE e.patient_id = $1
+        AND (
+          (e.review_status = 'ACCEPTED' AND e.assigned_abstractor_id = p.abstractor_id)
+          OR e.review_status IN ('PENDING', 'REJECTED')
+        )
+    `;
+    const params = [patientId];
+    let paramCount = 1;
+
+    // Apply filters based on image pills
+    if (filters.filter) {
+      const f = filters.filter.toLowerCase();
+      if (f === "hedis" || f === "hedis_only" || f === "hedisonly") {
+        query += ` AND e.measures IS NOT NULL AND jsonb_array_length(e.measures) > 0`;
+      } else if (f === "encounter" || f === "encounters") {
+        query += ` AND e.event_type = 'Encounter'`;
+      } else if (f === "lab" || f === "labs") {
+        query += ` AND e.event_type = 'Lab Result'`;
+      } else if (f === "med" || f === "meds" || f === "medication") {
+        query += ` AND e.event_type = 'Medication'`;
+      } else if (f === "doc" || f === "docs" || f === "document") {
+        query += ` AND (e.event_type = 'Document' OR e.event_type NOT IN ('Encounter', 'Lab Result', 'Medication', 'Imaging', 'Procedure'))`;
+      }
+    }
+
+    if (filters.search) {
+      paramCount++;
+      query += ` AND (e.event_title ILIKE $${paramCount} OR e.summary ILIKE $${paramCount} OR e.provider ILIKE $${paramCount})`;
+      params.push(`%${filters.search}%`);
+    }
+
+    if (filters.provider && filters.provider !== "All Providers") {
+      paramCount++;
+      query += ` AND e.provider = $${paramCount}`;
+      params.push(filters.provider);
+    }
+
+    if (filters.startDate && filters.endDate) {
+      paramCount++;
+      query += ` AND e.event_date BETWEEN $${paramCount} AND $${paramCount + 1}`;
+      params.push(filters.startDate, filters.endDate);
+      paramCount++;
+    }
+
+    query += ` ORDER BY e.event_date DESC`;
+
+    const result = await db.query(query, params);
+    const events = result.rows;
+
+    // Group by Year and Month
+    const grouped = {};
+    events.forEach((event) => {
+      const year =
+        event.year ||
+        (event.event_date
+          ? new Date(event.event_date).getFullYear()
+          : "Unknown");
+      const month =
+        event.month ||
+        (event.event_date
+          ? new Intl.DateTimeFormat("en-US", { month: "long" }).format(
+              new Date(event.event_date)
+            )
+          : "Unknown");
+
+      if (!grouped[year]) grouped[year] = {};
+      if (!grouped[year][month]) grouped[year][month] = [];
+
+      grouped[year][month].push({
+        ...event,
+        extracted_fields:
+          typeof event.extracted_structured_data === "string"
+            ? JSON.parse(event.extracted_structured_data)
+            : event.extracted_structured_data,
+      });
+    });
+
+    return grouped;
+  }
 }
 
 module.exports = new HEDISService();
+
