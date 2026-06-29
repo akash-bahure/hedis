@@ -511,7 +511,6 @@ function RowAction({
   }
 
   // ===================== QA ANALYST =====================
-  // ===================== QA ANALYST =====================
   if (role === "qa-analyst") {
     // const handleBeginQAReview = async () => {
     //   if (!onOpenQAReview || isQaLoading) return;
@@ -557,22 +556,31 @@ function RowAction({
     //     setIsQaLoading(false);
     //   }
     // };
-    const handleBeginQAReview = () => {
+    const handleBeginQAReview = async () => {
       if (!onOpenQAReview) return;
 
-      const patientId = row.patientId || row.id;
-      const chartId = row.chartId || row.id;
+      setIsQaLoading(true);
 
-      const patientData = {
-        patientName: row.patientName,
-        dob: row.dob,
-        mrn: row.mrn,
-        plan: row.plan,
-        riskScore: row.riskScore,
-        workflowType: "qa",
-      };
+      try {
+        await qaEvaluationQuery.refetch();
 
-      onOpenQAReview(patientId, chartId, patientData);
+        const patientData = {
+          patientName: row.patientName,
+          dob: row.dob,
+          mrn: row.mrn,
+          plan: row.plan,
+          riskScore: row.riskScore,
+          workflowType: "qa",
+        };
+
+        onOpenQAReview(
+          row.patientId || row.id,
+          row.chartId || row.id,
+          patientData,
+        );
+      } finally {
+        setIsQaLoading(false);
+      }
     };
 
     if ([2, 3, 4].includes(row.step)) {

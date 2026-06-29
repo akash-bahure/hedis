@@ -187,6 +187,7 @@ export default function App() {
             patientId={selectedPatientId || undefined}
             patientData={selectedPatientData}
             onOpenPatient360={() => navigate("patient-360")}
+            onBack={() => navigate("work-queue")}
           />
         );
       case "measure-library":

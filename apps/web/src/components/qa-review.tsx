@@ -36,7 +36,9 @@ import {
   Layers,
   UserCheck2,
   Info,
-  Save,ExternalLink
+  Save,
+  ExternalLink,
+  ArrowLeft,
 } from "lucide-react";
 import {
   useGetApiHedisQaReviewEvaluationid,
@@ -639,10 +641,12 @@ export function QAReview({
   patientId,
   patientData,
   onOpenPatient360,
+  onBack,
 }: {
   patientId?: string;
   patientData?: any;
   onOpenPatient360: () => void;
+  onBack: () => void;
 }) {
   console.log("🔍 QAReview component mounted with patientId:", patientId);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -656,7 +660,7 @@ export function QAReview({
   const [pdfZoom, setPdfZoom] = useState(100);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [expanded, setExpanded] = useState<Set<string>>(
-    new Set(["ev2", "dc2"])
+    new Set(["ev2", "dc2"]),
   );
   const [decision, setDecision] = useState<Decision>(null);
   const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
@@ -664,7 +668,7 @@ export function QAReview({
   const [phiVisible, setPhiVisible] = useState(true);
   const [queueCollapsed, setQueueCollapsed] = useState(false);
   const [selectedMeasureCode, setSelectedMeasureCode] = useState<string | null>(
-    null
+    null,
   );
   const [textRenderKey, setTextRenderKey] = useState(0);
   // New state for multi-measure decisions
@@ -688,7 +692,7 @@ export function QAReview({
     string | null
   >(null);
   const [currentHighlightWords, setCurrentHighlightWords] = useState<string[]>(
-    []
+    [],
   );
 
   const HIGHLIGHT_STYLE: React.CSSProperties = {
@@ -735,7 +739,7 @@ export function QAReview({
               </mark>
             ) : (
               <span key={i}>{part}</span>
-            )
+            ),
           )}
         </>
       );
@@ -850,7 +854,7 @@ export function QAReview({
   const syncMeasureDecision = (
     newStatus: Decision,
     newReasons: string[],
-    newNotes: string
+    newNotes: string,
   ) => {
     if (!selectedId) return;
     setMeasureDecisions((prev) => ({
@@ -969,7 +973,7 @@ export function QAReview({
     // Delay slightly so react-pdf finishes painting the text layer
     const timer = setTimeout(() => {
       const mark = document.querySelector<HTMLElement>(
-        ".react-pdf__Page__textContent mark"
+        ".react-pdf__Page__textContent mark",
       );
       if (mark) {
         mark.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -996,7 +1000,7 @@ export function QAReview({
   // Derive selectedCase from the current selection and patientData
   const selectedCase = useMemo(() => {
     const currentMeasure = eligibleMeasures.find(
-      (m: any) => m.id === selectedId
+      (m: any) => m.id === selectedId,
     );
     return {
       id: selectedId || "",
@@ -1031,7 +1035,7 @@ export function QAReview({
         if (item.id !== id) return item;
         const idx = order.indexOf(item.state);
         return { ...item, state: order[(idx + 1) % order.length] };
-      })
+      }),
     );
   };
   const toggleExpand = (id: string) => {
@@ -1056,6 +1060,13 @@ export function QAReview({
         <div className="flex-shrink-0 border-b border-border">
           {/* Main header row */}
           <div className="flex items-center gap-4 px-4 py-3">
+            <button
+              onClick={onBack}
+              className="flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors text-[11px] font-semibold whitespace-nowrap"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Back to Queue
+            </button>
             {/* Avatar + patient / case info */}
             <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className="w-10 h-10 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center flex-shrink-0">
@@ -1575,7 +1586,7 @@ export function QAReview({
 
                                           setTimeout(
                                             () => setPdfZoom((z) => z),
-                                            80
+                                            80,
                                           );
                                         }
                                       }}
@@ -1600,7 +1611,7 @@ export function QAReview({
                                       </div>
                                     </div>
                                   );
-                                }
+                                },
                               )}
                             </div>
                           </div>
@@ -1637,7 +1648,7 @@ export function QAReview({
                             <AlertTriangle className="w-3 h-3" />
                             {
                               COMPARISON_FIELDS.filter(
-                                (r) => r.match === "discrepancy"
+                                (r) => r.match === "discrepancy",
                               ).length
                             }{" "}
                             discrepancy
@@ -1646,7 +1657,7 @@ export function QAReview({
                             <Check className="w-3 h-3" />
                             {
                               COMPARISON_FIELDS.filter(
-                                (r) => r.match === "match"
+                                (r) => r.match === "match",
                               ).length
                             }{" "}
                             matches
@@ -2044,7 +2055,7 @@ function AssignmentModal({
                 : "REQUEST_REVISION",
           reasons: data.reasons,
         };
-      }
+      },
     );
 
     try {
@@ -2059,7 +2070,7 @@ function AssignmentModal({
       onOpenChange(false);
     } catch (err: any) {
       toast.error(
-        err?.message || "Failed to assign measures. Please try again."
+        err?.message || "Failed to assign measures. Please try again.",
       );
     }
   };
@@ -2175,7 +2186,7 @@ function AssignmentModal({
                 Revise:{" "}
                 {
                   decisionList.filter(
-                    ([_, d]: any) => d.qaStatus === "requestRevision"
+                    ([_, d]: any) => d.qaStatus === "requestRevision",
                   ).length
                 }
               </span>
