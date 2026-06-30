@@ -14,6 +14,11 @@ require("./src/jobs/externalDataImport.cron");
 require("./src/workers/chart.worker");
 require("./src/jobs/chart-ingestion.job");
 
+// HEDIS Background Analysis Queue Worker
+require("./src/workers/hedis.worker");
+require("./src/workers/hedis-qa.worker");
+require("./src/workers/timeline.worker");
+
 async function startServer() {
   await initDB();
   await seedSuperAdmin();
