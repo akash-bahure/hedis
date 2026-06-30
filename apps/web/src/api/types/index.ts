@@ -140,6 +140,13 @@ export type {
   GetApiDepartmentsQueryResponse,
 } from "./GetApiDepartments.ts";
 export type {
+  GetApiHedisAbstractorMeasuresPatientid200,
+  GetApiHedisAbstractorMeasuresPatientid404,
+  GetApiHedisAbstractorMeasuresPatientidPathParams,
+  GetApiHedisAbstractorMeasuresPatientidQuery,
+  GetApiHedisAbstractorMeasuresPatientidQueryResponse,
+} from "./GetApiHedisAbstractorMeasuresPatientid.ts";
+export type {
   GetApiHedisClinicalTimelineEventEventid200,
   GetApiHedisClinicalTimelineEventEventidPathParams,
   GetApiHedisClinicalTimelineEventEventidQuery,
@@ -159,6 +166,13 @@ export type {
   GetApiHedisEvaluationsIdQuery,
   GetApiHedisEvaluationsIdQueryResponse,
 } from "./GetApiHedisEvaluationsId.ts";
+export type {
+  GetApiHedisEvidenceTimelineId200,
+  GetApiHedisEvidenceTimelineIdPathParams,
+  GetApiHedisEvidenceTimelineIdQuery,
+  GetApiHedisEvidenceTimelineIdQueryParams,
+  GetApiHedisEvidenceTimelineIdQueryResponse,
+} from "./GetApiHedisEvidenceTimelineId.ts";
 export type {
   GetApiHedisQaQueuePatientid200,
   GetApiHedisQaQueuePatientidPathParams,
