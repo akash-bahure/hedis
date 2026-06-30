@@ -352,4 +352,73 @@ router.get("/clinical-timeline/event/:eventId", hedisController.getTimelineEvent
  */
 router.post("/clinical-timeline/review", hedisController.reviewTimelineEvent);
 
+/**
+ * @swagger
+ * /api/hedis/evidence-timeline/{id}:
+ *   get:
+ *     summary: Get evidence timeline events for abstractor
+ *     tags: [HEDIS]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID of the patient
+ *       - in: query
+ *         name: filter
+ *         schema:
+ *           type: string
+ *         description: Category filter (All, HEDIS Only, Encounters, Labs, Meds, Docs)
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search term
+ *       - in: query
+ *         name: provider
+ *         schema:
+ *           type: string
+ *         description: Provider name
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *     responses:
+ *       200:
+ *         description: Evidence timeline fetched successfully
+ */
+router.get("/evidence-timeline/:id", hedisController.getEvidenceTimeline);
+
+/**
+ * @swagger
+ * /api/hedis/abstractor-measures/{patientId}:
+ *   get:
+ *     summary: Get all QA measure decisions assigned to the abstractor for a patient
+ *     tags: [HEDIS]
+ *     parameters:
+ *       - in: path
+ *         name: patientId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID of the patient
+ *     responses:
+ *       200:
+ *         description: List of measure decisions for the abstractor
+ *       404:
+ *         description: Patient not found
+ */
+router.get("/abstractor-measures/:patientId", hedisController.getAbstractorMeasures);
+
 module.exports = router;
+
+

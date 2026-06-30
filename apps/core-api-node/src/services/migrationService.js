@@ -1060,7 +1060,7 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
         ADD COLUMN IF NOT EXISTS stage TEXT,
         ADD COLUMN IF NOT EXISTS reason TEXT;
     `);
-  } catch (err) { }
+  } catch (err) {}
   await client.query(`
   CREATE TABLE IF NOT EXISTS ${schema}.hedis_qa_queue (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1109,7 +1109,7 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
       chart_id UUID REFERENCES ${schema}.patient_charts(id) ON DELETE CASCADE,
       event_date DATE,
       event_type TEXT,
-      measure TEXT,
+     measures JSONB,
       provider TEXT,
       evidence TEXT,
       source_type TEXT CHECK (source_type IN ('AI', 'MANUAL', 'EMR', 'EHR')),
@@ -1142,7 +1142,10 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
       CHECK (review_status IN ('PASS', 'FAIL', 'DISCREPANCY', 'PENDING', 'NO_STATUS', 'REVIEW_REQUIRED', 'ACCEPTED', 'REJECTED', 'EDITED', 'ACCEPTED', 'REJECTED'));
     `);
   } catch (err) {
-    console.warn(`[Migration] Could not update constraints for ${schema}:`, err.message);
+    console.warn(
+      `[Migration] Could not update constraints for ${schema}:`,
+      err.message
+    );
   }
 
   // Clinical Timeline Feature Updates
@@ -1161,7 +1164,10 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
         ADD COLUMN IF NOT EXISTS assigned_abstractor_id UUID REFERENCES ${schema}.users(id);
     `);
   } catch (err) {
-    console.warn(`[Migration] Could not add Clinical Timeline feature fields to clinical_timeline_events in ${schema}:`, err.message);
+    console.warn(
+      `[Migration] Could not add Clinical Timeline feature fields to clinical_timeline_events in ${schema}:`,
+      err.message
+    );
   }
 
   try {
@@ -1172,7 +1178,7 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
         ADD COLUMN IF NOT EXISTS updated_by UUID REFERENCES ${schema}.users(id),
         ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
     `);
-  } catch (err) { }
+  } catch (err) {}
 
   try {
     await client.query(`
@@ -1184,7 +1190,10 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
         ADD COLUMN IF NOT EXISTS ai_confidence_score DECIMAL;
     `);
   } catch (err) {
-    console.warn(`[Migration] Could not add new fields to clinical_timeline_events in ${schema}:`, err.message);
+    console.warn(
+      `[Migration] Could not add new fields to clinical_timeline_events in ${schema}:`,
+      err.message
+    );
   }
 
   try {
@@ -1196,7 +1205,7 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
         ADD COLUMN IF NOT EXISTS updated_by UUID REFERENCES ${schema}.users(id),
         ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
     `);
-  } catch (err) { }
+  } catch (err) {}
 
   // QA Review Analyses: stores AI-generated analysis results for each QA review
   await client.query(`
@@ -1224,7 +1233,7 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
         ADD COLUMN IF NOT EXISTS evaluation_id UUID REFERENCES ${schema}.hedis_evaluations(id) ON DELETE CASCADE,
         ADD COLUMN IF NOT EXISTS all_evidences JSONB;
     `);
-  } catch (err) { }
+  } catch (err) {}
 
   // QA Measure Decisions: stores granular QA results per measure
   await client.query(`

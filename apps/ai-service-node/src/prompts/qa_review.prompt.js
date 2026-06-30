@@ -25,18 +25,19 @@ TASK:
 Return **ONLY** a valid JSON object in the exact structure below. Do not include any explanations, markdown, or additional text outside the JSON.
 
 {
-  "extractedEvidence": [
-    {
-      "field": "Rule field from Measure Library (e.g. Age Requirement, Service Date Rule, CPT Requirement)",
-      "abstractorValue": "Actual value found in the medical chart (what abstractor extracted)",
-      "sourceDocumentValue": "Expected value/rule definition from Measure Library",
-      "status": "MATCH" | "DISCREPANCY" | "MISSING_IN_SOURCE",
-      "reason": "Specific rationale for the match or gap",
-      "highlightText": "Shortest unique anchor in the chart (≤4 words) — e.g. '01/01/1975', 'PET/CT scan', 'DOB'. Never a full sentence.",
-      "highlightWords": ["each", "individual", "token", "from", "highlightText"],
-      "pageNumber": 1
-    }
-  ],
+ "extractedEvidence": [
+{
+"field": "Evidence field from the Measure Library (Procedure, Diagnosis, CPT Code, HCPCS Code, ICD-10 Code, Medication, Lab Result, Service Date, Provider Documentation, Imaging, Clinical Finding, etc.). DO NOT include demographic eligibility fields such as Age, Gender, Enrollment, Denominator or Exclusions.",
+"abstractorValue": "Actual value extracted from the PATIENT MEDICAL CHART. If no evidence exists, return null.",
+"sourceDocumentValue": "Expected evidence requirement from the Measure Library.",
+"status": "MATCH | DISCREPANCY | MISSING_IN_SOURCE",
+"reason": "Explain why the evidence matches or fails the Measure Library requirement.",
+"highlightText": "Shortest unique phrase that exists verbatim in the chart (maximum 4 words). Never generate or paraphrase.",
+"highlightWords": ["Tokenized words from highlightText"],
+"pageNumber": 1
+}
+]
+
   "validationChecklist": {
     "eligibility": [
       {
