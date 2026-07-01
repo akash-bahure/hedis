@@ -404,9 +404,9 @@ class HEDISService {
     await db.query(reviewQuery, [
       eventId,
       status,
-      remarks,
-      reviewedBy,
-      status === "ACCEPTED" ? abstractorId : null,
+      remarks || null,
+      reviewedBy || null,
+      status === "ACCEPTED" ? (abstractorId || null) : null,
       status === "ACCEPTED" ? "ASSIGNED" : "REJECTED",
     ]);
 
@@ -418,7 +418,7 @@ class HEDISService {
         VALUES ($1, $2, $3)
         ON CONFLICT (event_id, abstractor_id) DO UPDATE SET status = 'Assigned', updated_at = NOW()
       `,
-        [eventId, abstractorId, reviewedBy]
+        [eventId, abstractorId, reviewedBy || null]
       );
 
       // Update event with abstractor
