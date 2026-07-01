@@ -2,7 +2,8 @@ const express = require("express");
 const multer = require("multer");
 const hedisController = require("../controllers/hedis.controller");
 const router = express.Router();
-
+const fs = require("fs");
+const path = require("path");
 
 /**
  * @swagger
@@ -247,38 +248,38 @@ router.post("/assign-abstractor", hedisController.assignAbstractor);
  *           type: string
  *           format: uuid
  *         description: UUID of the patient
- *       
+ *
  *       - in: query
  *         name: search
  *         schema:
  *           type: string
  *         description: Search term for event_title, summary, or provider (case-insensitive)
- *       
+ *
  *       - in: query
  *         name: documentType
  *         schema:
  *           type: string
  *         description: Filter by document type
- *       
+ *
  *       - in: query
  *         name: encounterType
  *         schema:
  *           type: string
  *         description: Filter by encounter type
- *       
+ *
  *       - in: query
  *         name: provider
  *         schema:
  *           type: string
  *         description: Filter by provider name
- *       
+ *
  *       - in: query
  *         name: startDate
  *         schema:
  *           type: string
  *           format: date
  *         description: Start date for event_date filter (YYYY-MM-DD)
- *       
+ *
  *       - in: query
  *         name: endDate
  *         schema:
@@ -321,7 +322,10 @@ router.get("/clinical-timeline/:id", hedisController.getClinicalTimeline);
  *       200:
  *         description: Event details fetched
  */
-router.get("/clinical-timeline/event/:eventId", hedisController.getTimelineEventDetails);
+router.get(
+  "/clinical-timeline/event/:eventId",
+  hedisController.getTimelineEventDetails
+);
 
 /**
  * @swagger
@@ -417,8 +421,88 @@ router.get("/evidence-timeline/:id", hedisController.getEvidenceTimeline);
  *       404:
  *         description: Patient not found
  */
-router.get("/abstractor-measures/:patientId", hedisController.getAbstractorMeasures);
+router.get(
+  "/abstractor-measures/:patientId",
+  hedisController.getAbstractorMeasures
+);
+
+const evidenceUploadDir = path.join(__dirname, "../uploads/evidence");
+if (!fs.existsSync(evidenceUploadDir)) {
+  fs.mkdirSync(evidenceUploadDir, { recursive: true });
+}
+
+const evidenceStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, evidenceUploadDir);
+  },
+  filename: (req, file, cb) => {
+    const timestamp = Date.now();
+    const ext = path.extname(file.originalname) || ".pdf";
+    cb(null, `evidence_${timestamp}${ext}`);
+  },
+});
+
+const uploadEvidence = multer({ storage: evidenceStorage });
+
+/**
+ * @swagger
+ * /api/hedis/abstractor/submit-qa:
+ *   post:
+ *     summary: Submit HEDIS measure evidence to QA queue with evidence upload
+ *     tags: [HEDIS]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - patientId
+ *               - chartId
+ *               - document
+ *             properties:
+ *               patientId:
+ *                 type: string
+ *                 format: uuid
+ *               chartId:
+ *                 type: string
+ *                 format: uuid
+ *               measureId:
+ *                 type: string
+ *                 format: uuid
+ *               serviceDate:
+ *                 type: string
+ *                 format: date
+ *               screeningType:
+ *                 type: string
+ *               evidenceType:
+ *                 type: string
+ *               reading:
+ *                 type: string
+ *               cptCode:
+ *                 type: string
+ *               icd10Code:
+ *                 type: string
+ *               evidenceSource:
+ *                 type: string
+ *               notes:
+ *                 type: string
+ *               document:
+ *                 type: string
+ *                 format: binary
+ *                 description: Evidence PDF document
+ *     responses:
+ *       200:
+ *         description: Evidence submitted and PDF merged successfully
+ *       400:
+ *         description: Missing required fields
+ *       500:
+ *         description: Internal server error
+ */
+router.post(
+  "/abstractor/submit-qa",
+  uploadEvidence.single("document"),
+  hedisController.submitAbstractorQA
+);
 
 module.exports = router;
-
-

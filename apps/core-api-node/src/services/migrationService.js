@@ -1312,6 +1312,33 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
       updated_at TIMESTAMP DEFAULT NOW()
     );
   `);
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.hedis_measure_evidence (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      patient_id UUID NOT NULL REFERENCES ${schema}.patients(id) ON DELETE CASCADE,
+      chart_id UUID NOT NULL REFERENCES ${schema}.patient_charts(id) ON DELETE CASCADE,
+      measure_id UUID REFERENCES ${schema}.hedis_evaluations(id) ON DELETE SET NULL,
+      service_date DATE,
+      screening_type TEXT,
+      evidence_type TEXT,
+      reading TEXT,
+      cpt_code TEXT,
+      icd10_code TEXT,
+      evidence_source TEXT,
+      notes TEXT,
+      uploaded_document JSONB,
+      created_by UUID REFERENCES ${schema}.users(id),
+      updated_by UUID REFERENCES ${schema}.users(id),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT uq_patient_chart_measure UNIQUE (patient_id, chart_id, measure_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_hedis_evidence_patient ON ${schema}.hedis_measure_evidence(patient_id);
+    CREATE INDEX IF NOT EXISTS idx_hedis_evidence_chart ON ${schema}.hedis_measure_evidence(chart_id);
+    CREATE INDEX IF NOT EXISTS idx_hedis_evidence_measure ON ${schema}.hedis_measure_evidence(measure_id);
+  `);
 }
 
 module.exports = { runMigrations };

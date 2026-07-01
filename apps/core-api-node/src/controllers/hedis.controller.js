@@ -1,7 +1,8 @@
 const hedisService = require("../services/hedis.service");
 const { v4: uuidv4 } = require("uuid");
-
-
+const pdfMergeService = require("../services/pdfMerge.service");
+const fs = require("fs").promises;
+const path = require("path");
 
 exports.getEvaluations = async (req, res) => {
   try {
@@ -381,13 +382,8 @@ exports.assignAbstractor = async (req, res) => {
     const processedMeasures = [];
 
     for (const decision of decisions) {
-      const {
-        measureId,
-        measureCode,
-        measureName,
-        qaStatus,
-        reasons,
-      } = decision;
+      const { measureId, measureCode, measureName, qaStatus, reasons } =
+        decision;
 
       await client.query(
         `INSERT INTO ${schema}.hedis_qa_measure_decisions
@@ -404,8 +400,6 @@ exports.assignAbstractor = async (req, res) => {
           assignedAbstractorId,
         ]
       );
-
-
 
       if (qaStatus === "REQUEST_REVISION") hasRevision = true;
       if (qaStatus === "QA_FAIL") hasFail = true;
@@ -512,7 +506,9 @@ exports.reviewTimelineEvent = async (req, res) => {
     const { eventId, status, remarks, reviewedBy } = req.body;
 
     if (!eventId || !status) {
-      return res.status(400).json({ error: "Missing required fields: eventId, status" });
+      return res
+        .status(400)
+        .json({ error: "Missing required fields: eventId, status" });
     }
 
     const event = await hedisService.reviewTimelineEvent(
@@ -525,7 +521,7 @@ exports.reviewTimelineEvent = async (req, res) => {
 
     res.json({
       message: `Event ${status.toLowerCase()} successfully`,
-      event
+      event,
     });
   } catch (err) {
     console.error("Review Timeline Event Error:", err);
@@ -560,12 +556,16 @@ exports.getEvidenceTimeline = async (req, res) => {
     }
 
     // 2. Retrieve the reviewed evidence timeline events
-    const timeline = await hedisService.getEvidenceTimeline(req.db, patientId, filters);
+    const timeline = await hedisService.getEvidenceTimeline(
+      req.db,
+      patientId,
+      filters
+    );
 
     res.json({
       patient_id: patientId,
       pdfUrl,
-      timeline
+      timeline,
     });
   } catch (err) {
     console.error("Get Evidence Timeline Error:", err);
@@ -659,4 +659,270 @@ exports.getAbstractorMeasures = async (req, res) => {
   }
 };
 
+exports.submitAbstractorQA = async (req, res) => {
+  const client = req.db;
+  const schema = req.tenant.schema_name;
 
+  try {
+    const {
+      patientId,
+      chartId,
+      measureId,
+      serviceDate,
+      screeningType,
+      evidenceType,
+      reading,
+      cptCode,
+      icd10Code,
+      evidenceSource,
+      notes,
+    } = req.body;
+
+    if (!patientId || !chartId) {
+      return res
+        .status(400)
+        .json({ error: "Missing required fields: patientId, chartId" });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: "No document file uploaded" });
+    }
+
+    // Start a transaction
+    await client.query("BEGIN");
+
+    // 1. Fetch patient's chart
+    const chartResult = await client.query(
+      `SELECT chart_document FROM ${schema}.patient_charts WHERE id = $1 AND patient_id = $2`,
+      [chartId, patientId]
+    );
+
+    if (chartResult.rows.length === 0) {
+      throw new Error(
+        `Chart with ID ${chartId} not found for patient ${patientId}`
+      );
+    }
+
+    const chartDoc = chartResult.rows[0].chart_document || {};
+    const relativeOriginalPath =
+      chartDoc.filePath || `charts/${chartDoc.fileName}`;
+
+    // Resolve original path robustly
+    let absoluteOriginalPath = path.resolve(
+      process.cwd(),
+      "src",
+      "uploads",
+      relativeOriginalPath
+    );
+    if (!require("fs").existsSync(absoluteOriginalPath)) {
+      absoluteOriginalPath = path.resolve(
+        process.cwd(),
+        "uploads",
+        relativeOriginalPath
+      );
+    }
+
+    // If it still doesn't exist, check direct relative or absolute path
+    if (!require("fs").existsSync(absoluteOriginalPath)) {
+      if (require("fs").existsSync(relativeOriginalPath)) {
+        absoluteOriginalPath = relativeOriginalPath;
+      } else {
+        throw new Error(
+          `Original chart file not found on disk: ${relativeOriginalPath}`
+        );
+      }
+    }
+
+    // 2. Prepare merged file path
+    const mergedFileName = `merged_${chartId}.pdf`;
+    const relativeMergedPath = `charts/${mergedFileName}`;
+    const absoluteOutputPath = path.resolve(
+      process.cwd(),
+      "src",
+      "uploads",
+      relativeMergedPath
+    );
+
+    // 3. Merge pages using Helper
+    const absoluteEvidencePath = path.resolve(req.file.path);
+    const mergeResult = await pdfMergeService.mergePDFs(
+      absoluteOriginalPath,
+      absoluteEvidencePath,
+      absoluteOutputPath
+    );
+
+    // 4. Update patient_charts.chart_document
+    const updatedChartDoc = {
+      fileName: mergedFileName,
+      filePath: relativeMergedPath,
+      pages: mergeResult.pagesCount,
+      mimeType: "application/pdf",
+      uploadedAt: new Date().toISOString(),
+      size: mergeResult.size,
+    };
+
+    await client.query(
+      `UPDATE ${schema}.patient_charts
+       SET chart_document = $1, updated_at = NOW()
+       WHERE id = $2`,
+      [JSON.stringify(updatedChartDoc), chartId]
+    );
+
+    // 5. Upsert hedis_measure_evidence
+    const evidenceMetadata = {
+      filename: req.file.filename,
+      filepath: `evidence/${req.file.filename}`,
+      mimeType: req.file.mimetype,
+      size: req.file.size,
+    };
+
+    const upsertQuery = `
+      INSERT INTO ${schema}.hedis_measure_evidence (
+        patient_id, chart_id, measure_id,
+        service_date, screening_type, evidence_type, reading,
+        cpt_code, icd10_code, evidence_source, notes,
+        uploaded_document, created_by, updated_by, created_at, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW(), NOW())
+      ON CONFLICT (patient_id, chart_id, measure_id)
+      DO UPDATE SET
+        service_date = EXCLUDED.service_date,
+        screening_type = EXCLUDED.screening_type,
+        evidence_type = EXCLUDED.evidence_type,
+        reading = EXCLUDED.reading,
+        cpt_code = EXCLUDED.cpt_code,
+        icd10_code = EXCLUDED.icd10_code,
+        evidence_source = EXCLUDED.evidence_source,
+        notes = EXCLUDED.notes,
+        uploaded_document = EXCLUDED.uploaded_document,
+        updated_by = EXCLUDED.updated_by,
+        updated_at = NOW()
+      RETURNING *
+    `;
+
+    const upsertValues = [
+      patientId,
+      chartId,
+      measureId || null,
+      serviceDate || null,
+      screeningType || null,
+      evidenceType || null,
+      reading || null,
+      cptCode || null,
+      icd10Code || null,
+      evidenceSource || null,
+      notes || null,
+      JSON.stringify(evidenceMetadata),
+      req.user?.id || null,
+      req.user?.id || null,
+    ];
+
+    const evidenceResult = await client.query(upsertQuery, upsertValues);
+
+    // 6. Add Manual Evidence entry into Clinical Timeline
+    await client.query(
+      `
+  INSERT INTO ${schema}.clinical_timeline_events (
+      patient_id,
+      chart_id,
+      event_date,
+      event_type,
+      event_title,
+      provider,
+      evidence,
+      source_type,
+      review_status,
+      source_text,
+      source_excerpt,
+      year,
+      month,
+      summary,
+      assigned_abstractor_id,
+      created_at,
+      updated_at
+  )
+  VALUES (
+      $1,
+      $2,
+      $3,
+      $4,
+      $5,
+      $6,
+      $7,
+      'MANUAL',
+      'PENDING',
+      $8,
+      $9,
+      $10,
+      $11,
+      $12,
+      $13,
+      NOW(),
+      NOW()
+  )
+  `,
+      [
+        patientId,
+        chartId,
+
+        // Use serviceDate if provided, otherwise current date
+        new Date(),
+
+        // event_type
+        "Evidence",
+
+        // event_title
+        screeningType || "Manual Evidence",
+
+        // provider
+        req.user?.full_name || req.user?.name || "Abstractor",
+
+        // evidence
+        evidenceType || null,
+
+        // source_text
+        `CPT: ${cptCode || "-"} | ICD-10: ${icd10Code || "-"}`,
+
+        // source_excerpt
+        notes || null,
+
+        // year
+        new Date(serviceDate || new Date()).getFullYear(),
+
+        // month
+        new Intl.DateTimeFormat("en-US", {
+          month: "long",
+        }).format(new Date(serviceDate || new Date())),
+
+        // summary
+        `Manual evidence submitted (${screeningType || "Evidence"})`,
+
+        // assigned_abstractor_id
+        req.user?.id || null,
+      ]
+    );
+
+    await client.query("COMMIT");
+
+    return res.status(200).json({
+      message: "Evidence successfully submitted.",
+      data: evidenceResult.rows[0],
+      chart: updatedChartDoc,
+    });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("Submit Abstractor QA Error:", err);
+
+    // Clean up uploaded file if it exists
+    if (req.file && req.file.path) {
+      try {
+        await fs.unlink(req.file.path);
+      } catch (unlinkErr) {
+        console.error("Failed to delete temp file:", unlinkErr);
+      }
+    }
+
+    return res.status(500).json({
+      error: err.message || "An unexpected error occurred during Submit to QA",
+    });
+  }
+};
