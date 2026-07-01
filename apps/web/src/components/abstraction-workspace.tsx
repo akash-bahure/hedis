@@ -44,6 +44,7 @@ import {
   ShieldAlert,
   BarChart3,
   TrendingDown,
+  Loader2,
 } from "lucide-react";
 // import {
 //   PostApiManualChartAbstractionMutationRequestCptCodeEnumKey,
@@ -54,6 +55,19 @@ import {
 //   usePostApiManualChartAbstraction,
 // } from "@/api";
 import { toast } from "sonner";
+import {
+  useGetApiHedisAbstractorMeasuresPatientid,
+  useGetApiHedisEvidenceTimelineId,
+  useGetApiPatients,
+} from "@/api";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/Page/TextLayer.css";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url,
+).toString();
 
 /* ══════════════════════════════════════════════════════════════
    TYPES
@@ -607,33 +621,48 @@ function DocumentViewer({
   flashCode,
   fullscreen,
   onToggleFullscreen,
+  pdfUrl,
 }: {
   requestPage?: number;
   flashActive?: boolean;
   flashCode?: string | null;
   fullscreen: boolean;
   onToggleFullscreen: () => void;
+  pdfUrl?: string;
 }) {
-  const [activeDoc, setActiveDoc] = useState(0);
+  // const [activeDoc, setActiveDoc] = useState(0);
   const [page, setPage] = useState(1);
   const [zoom, setZoom] = useState(100);
   const [ocrMode, setOcrMode] = useState(false);
   const [hlMode, setHlMode] = useState(true);
+  const [numPages, setNumPages] = useState(0);
+  const [file, setFile] = useState(null);
 
-  const doc = DOCUMENTS[activeDoc];
-  const total = Math.min(PAGES.length, doc.pages);
-  const docPage = PAGES[page - 1] ?? PAGES[0];
+  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+    setNumPages(numPages);
+  };
+
+  const onDocumentLoadError = (error: Error) => {
+    console.error(error);
+  };
+
+  // const doc = DOCUMENTS[activeDoc];
+  // const total = Math.min(PAGES.length, doc.pages);
+  // const docPage = PAGES[page - 1] ?? PAGES[0];
 
   useEffect(() => {
-    if (requestPage && requestPage >= 1 && requestPage <= PAGES.length)
-      setPage(requestPage);
-  }, [requestPage]);
+    if (pdfUrl) {
+      setFile(pdfUrl);
+    } else {
+      setFile(null);
+    }
+  }, [pdfUrl]);
 
   return (
     <div className="flex flex-col h-full bg-[#e8eaed]">
       {/* ── Doc tabs ── */}
       <div className="flex items-center border-b border-border bg-card overflow-x-auto flex-shrink-0 shadow-sm">
-        {DOCUMENTS.map((d, i) => (
+        {/* {DOCUMENTS.map((d, i) => (
           <button
             key={d.id}
             onClick={() => {
@@ -658,7 +687,14 @@ function DocumentViewer({
               </span>
             )}
           </button>
-        ))}
+        ))} */}
+        <div className="flex items-center px-3 py-2">
+          <FileText className="w-4 h-4 mr-2" />
+
+          <span className="text-[11px] font-semibold truncate">
+            {pdfUrl ? pdfUrl.split("/").pop() : "No PDF Selected"}
+          </span>
+        </div>
       </div>
 
       {/* ── Viewer toolbar ── */}
@@ -676,20 +712,20 @@ function DocumentViewer({
             type="number"
             value={page}
             min={1}
-            max={total}
+            max={numPages}
             onChange={(e) =>
               setPage(
-                Math.min(total, Math.max(1, parseInt(e.target.value) || 1)),
+                Math.min(numPages, Math.max(1, parseInt(e.target.value) || 1)),
               )
             }
             className="w-8 text-center bg-white/10 border border-white/20 rounded text-white text-[10px] px-1 py-0.5 focus:outline-none focus:border-white/40"
           />
           <span className="opacity-50">/</span>
-          <span className="opacity-60">{total}</span>
+          <span className="opacity-60">{numPages}</span>
         </div>
         <button
-          onClick={() => setPage((p) => Math.min(total, p + 1))}
-          disabled={page >= total}
+          onClick={() => setPage((p) => Math.min(numPages, p + 1))}
+          disabled={page >= numPages}
           className="p-1.5 rounded hover:bg-white/10 disabled:opacity-30 text-white/70 transition-colors"
         >
           <ChevronRight className="w-3.5 h-3.5" />
@@ -785,7 +821,7 @@ function DocumentViewer({
           }}
         >
           {/* Page header chrome */}
-          <div className="bg-[#1a1f2e] text-white px-5 py-2.5 flex items-center justify-between">
+          {/* <div className="bg-[#1a1f2e] text-white px-5 py-2.5 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 rounded bg-blue-500/30 flex items-center justify-center">
                 <FileText className="w-2.5 h-2.5 text-blue-300" />
@@ -802,13 +838,13 @@ function DocumentViewer({
             <div className="text-right">
               <p className="text-[8px] text-white/40 font-mono">{CHART.mrn}</p>
               <p className="text-[8px] text-white/40">
-                Pg {page} of {total}
+                Pg {page} of {numPages}
               </p>
             </div>
-          </div>
+          </div> */}
 
           {/* OCR mode banner */}
-          {ocrMode && (
+          {/* {ocrMode && (
             <div className="flex items-center gap-2 px-4 py-1.5 bg-blue-50 border-b border-blue-200">
               <Eye className="w-3 h-3 text-blue-600" />
               <span className="text-[10px] text-blue-700 font-semibold">
@@ -819,10 +855,10 @@ function DocumentViewer({
                 extracted
               </span>
             </div>
-          )}
+          )} */}
 
           {/* Document body */}
-          <div
+          {/* <div
             className={`px-6 py-5 ${ocrMode ? "bg-blue-50/10" : ""}`}
             style={{
               fontFamily: "'Courier New', monospace",
@@ -849,16 +885,29 @@ function DocumentViewer({
                 );
               })}
             </div>
-          </div>
+          </div> */}
 
           {/* Page footer */}
-          <div className="border-t border-slate-200 px-5 py-2 flex justify-between items-center bg-slate-50">
+          {/* <div className="border-t border-slate-200 px-5 py-2 flex justify-between items-center bg-slate-50">
             <span className="text-[8px] text-slate-400 font-mono uppercase tracking-wider">
               CONFIDENTIAL — MEDICAL RECORD — DO NOT DISTRIBUTE
             </span>
             <span className="text-[8px] text-slate-400">
-              Page {page} of {total}
+              Page {page} of {numPages}
             </span>
+          </div> */}
+          <div className="flex justify-center bg-slate-200 p-4">
+            {file ? (
+              <iframe
+                src={file}
+                className="w-full h-[85vh] bg-white"
+                title="PDF Viewer"
+              />
+            ) : (
+              <div className="text-center py-20 text-muted-foreground">
+                No PDF Selected
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -893,61 +942,151 @@ function DocumentViewer({
    EVIDENCE TIMELINE
 ══════════════════════════════════════════════════════════════ */
 function EvidenceTimeline({
+  measure,
+  timeline,
+  loading,
+  filter,
+  search,
+  onFilterChange,
+  onSearchChange,
   onSelectEvent,
   onAutoFillEvidence,
 }: {
+  measure?: any;
+  timeline: Record<string, any>;
+  loading: boolean;
+  filter: string;
+  search: string;
+  onFilterChange: (v: string) => void;
+  onSearchChange: (v: string) => void;
   onSelectEvent: (docPage: number, code: string) => void;
-  onAutoFillEvidence: (ev: TLEvent) => void;
+  onAutoFillEvidence: (ev: any) => void;
 }) {
-  const [filter, setFilter] = useState<EventType | "all" | "hedis">("all");
-  const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<string | null>("e5");
+  if (loading) {
+    return (
+      <div className="flex h-full items-center justify-center bg-card">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <p className="text-xs text-muted-foreground">
+            Loading Evidence Timeline...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const getEvidenceStatus = (ev: any) => {
+    switch (ev.review_status) {
+      case "ACCEPTED":
+        return "satisfies";
+      case "REJECTED":
+        return "fails";
+      case "PENDING":
+      default:
+        return "pending";
+    }
+  };
+
+  const events = Object.entries(timeline).flatMap(([year, months]: any) =>
+    Object.entries(months).flatMap(([month, monthEvents]: any) =>
+      monthEvents.map((event: any) => ({
+        /* ───────── IDs ───────── */
+        id: event.id,
+        patientId: event.patient_id,
+        chartId: event.chart_id,
+
+        /* ───────── CORE DISPLAY ───────── */
+        title: event.event_title,
+        subtitle: event.document_type,
+        type: event.event_type?.toLowerCase(),
+        provider: event.provider ?? "Unknown",
+        date: new Date(event.event_date).toLocaleDateString(),
+        year: Number(year),
+        month,
+
+        /* ───────── QA STATUS (CRITICAL) ───────── */
+        reviewStatus: event.review_status,
+        rejectionReason: event.rejection_reason,
+        reviewedAt: event.reviewed_at,
+        reviewedBy: event.reviewed_by,
+
+        hedisMatch: getEvidenceStatus(event),
+
+        /* ───────── CLINICAL DATA ───────── */
+        summary: event.summary,
+        notes: event.source_text,
+        evidenceText: event.evidence,
+        sourceExcerpt: event.source_excerpt,
+
+        /* ───────── AI / ML ───────── */
+        aiConfidence: event.ai_confidence,
+        aiConfidenceScore: event.ai_confidence_score,
+
+        /* ───────── STRUCTURED DATA ───────── */
+        extractedFields: event.extracted_fields,
+        structuredData: event.extracted_structured_data,
+
+        /* ───────── CODING ───────── */
+        code: event.cpt_code ?? "",
+        codeType: "CPT",
+
+        measures: event.measures ?? [],
+
+        /* ───────── DEFAULT FLAGS ───────── */
+        hedisRelevant: true,
+
+        ...event,
+      })),
+    ),
+  );
 
   type FilterKey = EventType | "all" | "hedis";
   const filters: { key: FilterKey; label: string; count?: number }[] = [
-    { key: "all", label: "All", count: TIMELINE_EVENTS.length },
+    { key: "all", label: "All", count: events.length },
     {
       key: "hedis",
       label: "HEDIS Only",
-      count: TIMELINE_EVENTS.filter((e) => e.hedisRelevant).length,
+      count: events.filter((e) => e.hedisRelevant).length,
     },
     {
       key: "encounter",
       label: "Encounters",
-      count: TIMELINE_EVENTS.filter((e) => e.type === "encounter").length,
+      count: events.filter((e) => e.type === "encounter").length,
     },
     {
       key: "lab",
       label: "Labs",
-      count: TIMELINE_EVENTS.filter((e) => e.type === "lab").length,
+      count: events.filter((e) => e.type === "lab").length,
     },
     {
       key: "medication",
       label: "Meds",
-      count: TIMELINE_EVENTS.filter((e) => e.type === "medication").length,
+      count: events.filter((e) => e.type === "medication").length,
     },
     {
       key: "document",
       label: "Docs",
-      count: TIMELINE_EVENTS.filter((e) => e.type === "document").length,
+      count: events.filter((e) => e.type === "document").length,
     },
   ];
 
-  const filtered = TIMELINE_EVENTS.filter((e) => {
-    if (filter === "hedis" && !e.hedisRelevant) return false;
-    if (filter !== "all" && filter !== "hedis" && e.type !== filter)
-      return false;
-    if (search) {
-      const q = search.toLowerCase();
-      return (
-        e.title.toLowerCase().includes(q) ||
-        e.code.toLowerCase().includes(q) ||
-        e.provider.toLowerCase().includes(q) ||
-        (e.value ?? "").toLowerCase().includes(q)
-      );
-    }
-    return true;
-  });
+  // const filtered = events.filter((e) => {
+  //   if (filter === "hedis" && !e.hedisRelevant) return false;
+  //   if (filter !== "all" && filter !== "hedis" && e.type !== filter)
+  //     return false;
+  //   if (search) {
+  //     const q = search.toLowerCase();
+  //     return (
+  //       e.title.toLowerCase().includes(q) ||
+  //       e.code.toLowerCase().includes(q) ||
+  //       e.provider.toLowerCase().includes(q) ||
+  //       (e.value ?? "").toLowerCase().includes(q)
+  //     );
+  //   }
+  //   return true;
+  // });
+  const filtered = events;
 
   /* Group by year → month */
   const grouped: {
@@ -968,12 +1107,10 @@ function EvidenceTimeline({
     mg.events.push(ev);
   });
 
-  const satisfiesCount = TIMELINE_EVENTS.filter(
+  const satisfiesCount = events.filter(
     (e) => e.hedisMatch === "satisfies",
   ).length;
-  const failsCount = TIMELINE_EVENTS.filter(
-    (e) => e.hedisMatch === "fails",
-  ).length;
+  const failsCount = events.filter((e) => e.hedisMatch === "fails").length;
 
   return (
     <div className="flex flex-col h-full bg-card">
@@ -988,7 +1125,8 @@ function EvidenceTimeline({
               </h2>
             </div>
             <p className="text-[9px] text-muted-foreground">
-              {TIMELINE_EVENTS.length} events · Measurement period Jan–Dec 2025
+              {events.length} events · {measure?.measure_code} •{" "}
+              {measure?.measure_name}
             </p>
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -1028,13 +1166,13 @@ function EvidenceTimeline({
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search encounters, codes, providers…"
             className="w-full pl-7 pr-7 py-1.5 text-[11px] border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/60"
           />
           {search && (
             <button
-              onClick={() => setSearch("")}
+              onClick={() => onSearchChange("")}
               className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-muted"
             >
               <X className="w-3 h-3 text-muted-foreground" />
@@ -1047,7 +1185,7 @@ function EvidenceTimeline({
           {filters.map((f) => (
             <button
               key={f.key}
-              onClick={() => setFilter(f.key)}
+              onClick={() => onFilterChange(f.key)}
               className={`flex items-center gap-1 px-2 py-0.5 text-[9px] font-bold rounded-full border transition-all whitespace-nowrap ${
                 filter === f.key
                   ? f.key === "hedis"
@@ -1117,11 +1255,12 @@ function EvidenceTimeline({
 
                       <div className="space-y-2">
                         {mg.events.map((ev, idx) => {
-                          const cfg = EVENT_CFG[ev.type];
+                          const cfg = EVENT_CFG[ev.type] ?? EVENT_CFG.document;
                           const Icon = cfg.icon;
                           const isExp = expanded === ev.id;
-                          const isSat = ev.hedisMatch === "satisfies";
-                          const isFail = ev.hedisMatch === "fails";
+                          const isSat = ev.reviewStatus === "ACCEPTED";
+                          const isFail = ev.reviewStatus === "REJECTED";
+                          const isPending = ev.reviewStatus === "PENDING";
                           const isAI = isSat && ev.id === "e5";
 
                           return (
@@ -1166,7 +1305,7 @@ function EvidenceTimeline({
                                   className="w-full flex items-start gap-2.5 px-3 py-2.5 text-left"
                                 >
                                   <div
-                                    className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${cfg.bg} ${cfg.border} border`}
+                                    className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${cfg?.bg} ${cfg?.border} border`}
                                   >
                                     <Icon className={`w-3 h-3 ${cfg.text}`} />
                                   </div>
@@ -1212,7 +1351,11 @@ function EvidenceTimeline({
                                         </span>
                                       )}
                                       <span className="text-[9px] text-muted-foreground truncate">
-                                        {ev.provider.split(",")[0]}
+                                        {
+                                          (ev.provider ?? "Unknown").split(
+                                            ",",
+                                          )[0]
+                                        }
                                       </span>
                                     </div>
                                   </div>
@@ -2096,6 +2239,9 @@ export function AbstractionWorkspace({
   const [prefill, setPrefill] = useState<Partial<FormData> | undefined>(
     undefined,
   );
+  const [selectedMeasureId, setSelectedMeasureId] = useState<string>("");
+  const [timelineFilter, setTimelineFilter] = useState("all");
+  const [timelineSearch, setTimelineSearch] = useState("");
 
   const slaAtRisk = CHART.slaHrsLeft <= 12;
   const now = new Date();
@@ -2106,6 +2252,33 @@ export function AbstractionWorkspace({
     hour: "2-digit",
     minute: "2-digit",
   });
+  const { data: patientsResponse } = useGetApiPatients();
+
+  const patients = Array.isArray(patientsResponse)
+    ? patientsResponse
+    : (patientsResponse?.patients ?? patientsResponse?.data ?? []);
+
+  const patient = patients.find(
+    (p: any) => p.patientId === patientId || p.id === patientId,
+  );
+  console.log("Selected Patient:", patient);
+  const selectedPatient = patient
+    ? {
+        patientName: `${patient.first_name} ${patient.last_name}`,
+        mrn: patient.patient_id,
+        dob: patient.dob,
+        gender: patient.gender,
+        plan: patient.plan,
+        age: patient.dob
+          ? new Date().getFullYear() - new Date(patient.dob).getFullYear()
+          : "",
+      }
+    : null;
+  const formatDOB = (dob?: string) => {
+    if (!dob) return "—";
+
+    return new Date(dob).toLocaleDateString("en-GB");
+  };
 
   const handleSelectEvent = (docPage: number, code: string) => {
     setViewerPage(docPage);
@@ -2136,6 +2309,35 @@ export function AbstractionWorkspace({
     }, 800);
   };
 
+  const { data } = useGetApiHedisAbstractorMeasuresPatientid(patientId);
+
+  const measureList = data?.measures ?? [];
+
+  useEffect(() => {
+    if (measureList.length > 0 && !selectedMeasureId) {
+      setSelectedMeasureId(measureList[0].measure_id);
+    }
+  }, [measureList, selectedMeasureId]);
+
+  const selectedMeasure = measureList.find(
+    (m: any) => m.measure_id === selectedMeasureId,
+  );
+  const { data: timelineData, isLoading: timelineLoading } =
+    useGetApiHedisEvidenceTimelineId(patientId, {
+      filter: timelineFilter,
+      search: timelineSearch,
+    });
+
+  console.log("Timeline Response:", timelineData);
+  useEffect(() => {
+    console.log("FULL API RESPONSE:", data);
+  }, [data]);
+
+  useEffect(() => {
+    console.log("MEASURE LIST:", measureList);
+  }, [measureList]);
+  console.log("PDF URL:", selectedMeasure?.chart_url);
+
   return (
     <div
       className="flex flex-col bg-[#f4f6f9]"
@@ -2156,25 +2358,33 @@ export function AbstractionWorkspace({
 
           {/* Avatar */}
           <div className="w-8 h-8 rounded-full bg-primary/15 border-2 border-primary/25 flex items-center justify-center flex-shrink-0">
-            <span className="text-[10px] font-black text-primary">AJ</span>
+            <span className="text-[10px] font-black text-primary">
+              {" "}
+              {(patientData?.patientName || CHART.patientName)
+                ?.split(",")[0]
+                ?.trim()
+                .substring(0, 2)
+                .toUpperCase() || "JD"}
+            </span>
           </div>
 
           <div className="flex items-center gap-3 flex-wrap min-w-0">
             <span className="text-[13px] font-black text-foreground whitespace-nowrap">
-              {CHART.patientName}
+              {selectedPatient?.patientName ?? CHART.patientName}
             </span>
             <span className="text-[9px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded border border-border whitespace-nowrap">
-              {CHART.mrn}
+              {selectedPatient?.mrn ?? CHART.mrn}
             </span>
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground whitespace-nowrap">
               <Calendar className="w-2.5 h-2.5" />
-              DOB {CHART.dob}
+              DOB {formatDOB(selectedPatient?.dob) ?? CHART.dob}
             </div>
             <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-              {CHART.age}y · {CHART.gender}
+              {selectedPatient?.age ?? CHART.age}y ·{" "}
+              {patient?.gender ?? CHART.gender}
             </span>
             <span className="text-[9px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded border border-border whitespace-nowrap">
-              {CHART.plan}
+              {selectedPatient?.plan ?? CHART.plan}
             </span>
           </div>
 
@@ -2205,9 +2415,9 @@ export function AbstractionWorkspace({
         </div>
 
         {/* Row 2: Measure + actions */}
-        <div className="flex items-center gap-3 px-4 py-2">
-          {/* Measure badge */}
-          <div className="flex items-center gap-2 min-w-0">
+        {/* <div className="flex items-center gap-3 px-4 py-2"> */}
+        {/* Measure badge */}
+        {/* <div className="flex items-center gap-2 min-w-0">
             <span className="text-[9px] font-black px-2 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 whitespace-nowrap">
               {CHART.measureCode}
             </span>
@@ -2216,8 +2426,38 @@ export function AbstractionWorkspace({
             </span>
             <span className="text-[9px] text-muted-foreground hidden lg:block">
               · {CHART.measurePeriod}
-            </span>
-          </div>
+            </span> */}
+
+        {/* </div> */}
+
+        <div className="flex items-center gap-2 min-w-0">
+          {/* Measure Code Badge */}
+          <span className="text-[9px] font-black px-2 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 whitespace-nowrap">
+            {selectedMeasure ? selectedMeasure.measure_code : "-"}
+          </span>
+
+          {/* Measure Dropdown */}
+          <select
+            value={selectedMeasureId}
+            onChange={(e) => setSelectedMeasureId(e.target.value)}
+            disabled={measureList.length === 0}
+            className="h-8 rounded border px-2 text-sm"
+          >
+            {measureList.length === 0 ? (
+              <option>No Measures Assigned</option>
+            ) : (
+              measureList.map((measure: any) => (
+                <option key={measure.measure_id} value={measure.measure_id}>
+                  {measure.measure_name}
+                </option>
+              ))
+            )}
+          </select>
+
+          {/* Measurement Year */}
+          <span className="text-[9px] text-muted-foreground hidden lg:block">
+            · {selectedMeasure?.measurementYear ?? ""}
+          </span>
 
           {/* Gap open badge */}
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 border border-red-300 text-red-700 text-[9px] font-black whitespace-nowrap flex-shrink-0">
@@ -2298,6 +2538,7 @@ export function AbstractionWorkspace({
           } ${viewerFull ? "fixed inset-0 z-40 w-full" : ""}`}
         >
           <DocumentViewer
+            pdfUrl={data?.pdfUrl ?? null}
             requestPage={viewerPage}
             flashActive={flashActive}
             flashCode={flashCode}
@@ -2313,6 +2554,13 @@ export function AbstractionWorkspace({
           }`}
         >
           <EvidenceTimeline
+            measure={selectedMeasure}
+            timeline={timelineData?.timeline ?? {}}
+            loading={timelineLoading}
+            filter={timelineFilter}
+            search={timelineSearch}
+            onFilterChange={setTimelineFilter}
+            onSearchChange={setTimelineSearch}
             onSelectEvent={handleSelectEvent}
             onAutoFillEvidence={handleAutoFill}
           />
