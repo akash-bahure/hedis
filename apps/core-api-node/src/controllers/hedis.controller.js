@@ -22,33 +22,6 @@ exports.getEvaluations = async (req, res) => {
 
     let evaluations = await hedisService.getEvaluations(req.db, patientId);
 
-    // If no evaluations exist, try to trigger AI analysis from patient chart
-    if (evaluations.length === 0) {
-      console.log(`No evaluations found for patient ${patientId}. Checking for chart to trigger AI analysis...`);
-
-      const chartResult = await req.db.query(
-        `SELECT chart_document FROM ${schema}.patient_charts WHERE patient_id = $1 LIMIT 1`,
-        [patientId]
-      );
-
-      if (chartResult.rows.length > 0) {
-        const chartDoc = chartResult.rows[0].chart_document || {};
-        const filePath = chartDoc.filePath || `charts/${chartDoc.fileName}`;
-        const pdfPath = `/app/uploads/${filePath}`;
-
-        console.log(`Triggering internal HEDIS analysis for Patient: ${patientId}, Path: ${pdfPath}`);
-
-        evaluations = await hedisService.evaluatePatientChartByPath(
-          patientId,
-          pdfPath,
-          subdomain,
-          req.db
-        );
-      } else {
-        console.log(`No chart found for patient ${patientId}. Cannot trigger AI analysis.`);
-      }
-    }
-
     res.json({
       patient_id: patientId,
       evaluations,
@@ -318,82 +291,11 @@ exports.getQAReviewDetails = async (req, res) => {
     }
 
     console.log(
-      `No cached analysis found. Triggering fresh QA review for evaluation: ${evaluationId}`
+      `No cached analysis found for evaluation ${evaluationId}. Background queuing handles reviews.`
     );
 
-    // 4. Fetch measure rules from Measure Library
-    const measureResult = await req.db.query(
-      `SELECT * FROM ${schema}.measures WHERE measure_code = $1`,
-      [measure_code]
-    );
-
-    const measureRules = measureResult.rows[0] || {};
-
-    // 5. Call AI Service
-    const aiServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8001";
-    console.log(
-      `Calling AI Service at ${aiServiceUrl}/api/hedis/qa-review-analysis`
-    );
-
-    const axios = require("axios");
-
-    const aiResponse = await axios.post(
-      `${aiServiceUrl}/api/hedis/qa-review-analysis`,
-      {
-        patientId: patient_id,
-        measureCode: measure_code,
-        pdfPath,
-        measureRules,
-      },
-      {
-        timeout: 300000, // 5 minutes
-      }
-    );
-
-    const analysisData = aiResponse.data;
-
-    // 6. Persist result to DB (cache)
-    await req.db.query(
-      `INSERT INTO ${schema}.hedis_qa_review_analyses
-        (
-          evaluation_id,
-          patient_id,
-          measure_code,
-          measure_name,
-          pdf_path,
-          extracted_evidence,
-          validation_checklist,
-          summary,
-          abstractor_evidence,
-          measure_rules,
-          all_evidences
-        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NULL, $9, $10)`,
-      [
-        evaluationId,
-        patient_id,
-        measure_code,
-        measure_name,
-        pdfPath,
-        JSON.stringify(analysisData.extractedEvidence || []),
-        JSON.stringify(analysisData.validationChecklist || {}),
-        JSON.stringify(analysisData.summary || {}),
-        JSON.stringify(measureRules),
-        JSON.stringify(analysisData.allEvidence || []),
-      ]
-    );
-
-    // 7. Return response
-    res.json({
-      pdfUrl: chartPdfUrl,
-      measure: {
-        id: evaluationId,
-        measureCode: measure_code,
-        measureName: measure_name,
-      },
-      measureRules,
-      ...analysisData,
-      all_evidences: analysisData.allEvidence || [],
+    return res.status(404).json({
+      error: `HEDIS QA Review Analysis for evaluation ID ${evaluationId} has not yet been processed or was not found.`,
     });
   } catch (err) {
     console.error("Get QA Review Details Error:", err);
@@ -566,61 +468,8 @@ exports.getClinicalTimeline = async (req, res) => {
   try {
     const { id: patientId } = req.params;
     const filters = req.query;
-    const { subdomain, schema_name: schema } = req.tenant;
 
-    // Check if timeline already exists for this patient (ignore filters)
-    const existingTimelineResult = await req.db.query(
-      `
-      SELECT COUNT(*) AS total
-      FROM ${schema}.clinical_timeline_events
-      WHERE patient_id = $1
-      `,
-      [patientId]
-    );
-
-    const hasTimeline =
-      Number(existingTimelineResult.rows[0].total) > 0;
-
-    // Trigger extraction only if timeline doesn't exist
-    if (!hasTimeline) {
-      console.log(
-        `No clinical timeline found for patient ${patientId}. Triggering extraction...`
-      );
-
-      const chartResult = await req.db.query(
-        `
-        SELECT chart_document
-        FROM ${schema}.patient_charts
-        WHERE patient_id = $1
-        LIMIT 1
-        `,
-        [patientId]
-      );
-
-      if (chartResult.rows.length > 0) {
-        const chartDoc = chartResult.rows[0].chart_document || {};
-        const filePath =
-          chartDoc.filePath || `charts/${chartDoc.fileName}`;
-        const pdfPath = `/app/uploads/${filePath}`;
-
-        console.log(
-          `Triggering Clinical Timeline extraction for Patient: ${patientId}, Path: ${pdfPath}`
-        );
-
-        await hedisService.extractClinicalTimeline(
-          patientId,
-          pdfPath,
-          subdomain,
-          req.db
-        );
-      } else {
-        console.log(
-          `No chart found for patient ${patientId}. Cannot trigger timeline extraction.`
-        );
-      }
-    }
-
-    // Always fetch timeline from DB with filters
+    // Fetch timeline from DB with filters (extraction is done in background via BullMQ)
     const timeline = await hedisService.getClinicalTimeline(
       req.db,
       patientId,

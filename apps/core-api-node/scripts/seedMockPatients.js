@@ -6,8 +6,9 @@ require("dotenv").config({
 });
 
 const pool = require("../src/config/db");
+const hedisService = require("../src/services/hedis.service");
 
-async function syncMockData(client, tenant, data) {
+async function syncMockData(client, tenant, data, jobsToQueue) {
   // Set tenant schema
   await client.query(`SET search_path TO ${tenant.schema_name}, public`);
   console.log(`Using schema: ${tenant.schema_name}`);
@@ -189,6 +190,16 @@ INSERT INTO ${tenant.schema_name}.patient_charts (
             chart.sla_deadline,
           ]
         );
+
+        jobsToQueue.push({
+          patientId: internalPatientId,
+          chartDocument: documentMetadata,
+          tenantSubdomain: tenant.subdomain,
+        });
+
+        console.log(
+          `[SEEDING] Prepared HEDIS + Timeline jobs for Patient: ${internalPatientId}`
+        );
       }
     }
   }
@@ -198,24 +209,42 @@ INSERT INTO ${tenant.schema_name}.patient_charts (
 
 async function run() {
   const client = await pool.connect();
+  let success = true;
 
   try {
     await client.query("BEGIN");
 
     const tenant = {
-      id: "8f8828c3-658f-4cf4-9764-12f8e461d661",
+      id: "e52eac24-fa2c-44be-a7d1-1cd45fa596d7",
       name: "Acme Corp",
-      subdomain: "testmeasures7",
-      schema_name: "testmeasures7_schema",
+      subdomain: "testhedis4",
+      schema_name: "testhedis4_schema",
     };
 
     const dataPath = path.join(__dirname, "mock-patients.json");
 
     const data = JSON.parse(fs.readFileSync(dataPath, "utf8"));
-
-    await syncMockData(client, tenant, data);
-
+    const jobsToQueue = [];
+    await syncMockData(client, tenant, data, jobsToQueue);
     await client.query("COMMIT");
+    console.log(
+      `Transaction committed. Queuing ${jobsToQueue.length} HEDIS jobs...`
+    );
+
+    for (const job of jobsToQueue) {
+      await hedisService.queueHedisAnalysis(
+        job.patientId,
+        job.chartDocument,
+        job.tenantSubdomain
+      );
+      await hedisService.queueTimelineExtraction(
+        job.patientId,
+        job.chartDocument,
+        job.tenantSubdomain
+      );
+    }
+
+    console.log("All HEDIS + Timeline jobs queued successfully.");
 
     // Better verification
     const verifyAfterCommit = await client.query(`
@@ -234,8 +263,21 @@ async function run() {
     await client.query("ROLLBACK");
     console.error(" Sync Error:", err.message);
     console.error(err);
+    success = false;
   } finally {
     client.release();
+    try {
+      const { hedisQueue, qaReviewQueue, timelineQueue } = require("../src/config/queue");
+      if (hedisQueue) await hedisQueue.close();
+      if (qaReviewQueue) await qaReviewQueue.close();
+      if (timelineQueue) await timelineQueue.close();
+      console.log(" Redis connection closed");
+    } catch (e) {}
+    try {
+      await pool.end();
+      console.log(" Database pool closed");
+    } catch (e) {}
+    process.exit(success ? 0 : 1);
   }
 }
 

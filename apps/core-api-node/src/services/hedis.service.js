@@ -1,5 +1,6 @@
 const pool = require("../config/db");
 const axios = require("axios");
+const { hedisQueue, qaReviewQueue, timelineQueue } = require("../config/queue");
 
 class HEDISService {
   /**
@@ -62,9 +63,96 @@ class HEDISService {
     for (const evalResult of evaluations) {
       const saved = await this.saveEvaluation(db, patientId, evalResult);
       savedEvaluations.push(saved);
+
+      // Automatically queue QA Review Analysis for the saved evaluation
+      console.log(`[services/hedis.service] Auto-triggering QA Review Analysis queuing for Evaluation ID: ${saved.id}, Code: ${saved.measure_code}`);
+      try {
+        await this.queueQAReviewAnalysis(
+          saved.id,
+          patientId,
+          saved.measure_code,
+          pdfPath,
+          tenantSubdomain
+        );
+      } catch (err) {
+        console.error(`[services/hedis.service] Failed to auto-trigger QA Review queued job for Evaluation ID ${saved.id}:`, err.message);
+      }
     }
 
     return savedEvaluations;
+  }
+
+  /**
+   * Add a HEDIS analysis job to the background queue.
+   */
+  async queueHedisAnalysis(patientId, chartDocument, tenantSubdomain) {
+    if (!patientId || !chartDocument || !tenantSubdomain) {
+      console.error(`[services/hedis.service] queueHedisAnalysis missing required arguments: patientId=${patientId}, tenantSubdomain=${tenantSubdomain}`);
+      throw new Error("Missing required arguments for queueHedisAnalysis");
+    }
+
+    const chartDoc = chartDocument || {};
+    const filePath = chartDoc.filePath || `charts/${chartDoc.fileName}`;
+    const pdfPath = `/app/uploads/${filePath}`;
+
+    console.log(`[services/hedis.service] Queuing HEDIS analysis for Patient: ${patientId}, Subdomain: ${tenantSubdomain}, Path: ${pdfPath}`);
+
+    const job = await hedisQueue.add("hedis-analysis-job", {
+      patientId,
+      pdfPath,
+      tenantSubdomain,
+    });
+
+    console.log(`[services/hedis.service] HEDIS analysis job successfully queued with ID: ${job.id}`);
+    return job;
+  }
+
+  /**
+   * Add a HEDIS QA Review analysis job to the background queue.
+   */
+  async queueQAReviewAnalysis(evaluationId, patientId, measureCode, pdfPath, tenantSubdomain) {
+    if (!evaluationId || !patientId || !measureCode || !pdfPath || !tenantSubdomain) {
+      console.error(`[services/hedis.service] queueQAReviewAnalysis missing required arguments: evaluationId=${evaluationId}, patientId=${patientId}`);
+      throw new Error("Missing required arguments for queueQAReviewAnalysis");
+    }
+
+    console.log(`[services/hedis.service] Queuing QA Review analysis for Evaluation: ${evaluationId}, Patient: ${patientId}, Measure: ${measureCode}`);
+
+    const job = await qaReviewQueue.add("hedis-qa-review-job", {
+      evaluationId,
+      patientId,
+      measureCode,
+      pdfPath,
+      tenantSubdomain,
+    });
+
+    console.log(`[services/hedis.service] QA Review analysis job successfully queued with ID: ${job.id}`);
+    return job;
+  }
+
+  /**
+   * Add a Clinical Timeline extraction job to the background queue.
+   */
+  async queueTimelineExtraction(patientId, chartDocument, tenantSubdomain) {
+    if (!patientId || !chartDocument || !tenantSubdomain) {
+      console.error(`[services/hedis.service] queueTimelineExtraction missing required arguments: patientId=${patientId}, tenantSubdomain=${tenantSubdomain}`);
+      throw new Error("Missing required arguments for queueTimelineExtraction");
+    }
+
+    const chartDoc = chartDocument || {};
+    const filePath = chartDoc.filePath || `charts/${chartDoc.fileName}`;
+    const pdfPath = `/app/uploads/${filePath}`;
+
+    console.log(`[services/hedis.service] Queuing Clinical Timeline extraction for Patient: ${patientId}, Subdomain: ${tenantSubdomain}, Path: ${pdfPath}`);
+
+    const job = await timelineQueue.add("clinical-timeline-job", {
+      patientId,
+      pdfPath,
+      tenantSubdomain,
+    });
+
+    console.log(`[services/hedis.service] Clinical Timeline job successfully queued with ID: ${job.id}`);
+    return job;
   }
 
   /**
