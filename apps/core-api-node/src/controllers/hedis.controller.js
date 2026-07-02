@@ -684,10 +684,6 @@ exports.submitAbstractorQA = async (req, res) => {
         .json({ error: "Missing required fields: patientId, chartId" });
     }
 
-    if (!req.file) {
-      return res.status(400).json({ error: "No document file uploaded" });
-    }
-
     // Start a transaction
     await client.query("BEGIN");
 
@@ -923,6 +919,103 @@ exports.submitAbstractorQA = async (req, res) => {
 
     return res.status(500).json({
       error: err.message || "An unexpected error occurred during Submit to QA",
+    });
+  }
+};
+
+exports.triggerRecalculation = async (req, res) => {
+  const { patientId, evaluationId } = req.body;
+  const { subdomain, schema_name: schema } = req.tenant;
+
+  if (!patientId) {
+    return res.status(400).json({ error: "patientId is required" });
+  }
+
+  try {
+    // 1. Fetch only evaluations that have matching hedis_measure_evidence (i.e. submitted by Abstractor)
+    let query = `
+      SELECT ev.id as evaluation_id, ev.measure_code, ev.measure_name, ev.patient_id,
+             e.id as evidence_id, e.service_date, e.screening_type, e.evidence_type,
+             e.reading, e.cpt_code, e.icd10_code, e.evidence_source, e.notes,
+             e.uploaded_document, e.chart_id
+      FROM ${schema}.hedis_measure_evidence e
+      INNER JOIN ${schema}.hedis_evaluations ev ON e.measure_id = ev.id
+      WHERE e.patient_id = $1
+    `;
+    const params = [patientId];
+
+    if (evaluationId) {
+      query += ` AND ev.id = $2`;
+      params.push(evaluationId);
+    }
+
+    const { rows } = await req.db.query(query, params);
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        error:
+          "No measures found with submitted manual evidence for recalculation.",
+      });
+    }
+
+    // 2. Fetch the patient chart document to get the merged PDF path
+    const chartQuery = `
+      SELECT chart_document
+      FROM ${schema}.patient_charts
+      WHERE patient_id = $1
+      LIMIT 1
+    `;
+    const chartResult = await req.db.query(chartQuery, [patientId]);
+    if (chartResult.rows.length === 0) {
+      return res.status(404).json({
+        error: `Patient chart not found for patient ${patientId}`,
+      });
+    }
+
+    const chartDoc = chartResult.rows[0].chart_document || {};
+    const filePath = chartDoc.filePath || `charts/${chartDoc.fileName}`;
+    const pdfPath = `/app/uploads/${filePath}`;
+
+    // 3. Queue recalculation job for each matching measure
+    const queuedMeasures = [];
+    for (const row of rows) {
+      const manualEvidence = {
+        service_date: row.service_date,
+        screening_type: row.screening_type,
+        evidence_type: row.evidence_type,
+        reading: row.reading,
+        cpt_code: row.cpt_code,
+        icd10_code: row.icd10_code,
+        evidence_source: row.evidence_source,
+        notes: row.notes,
+        uploaded_document: row.uploaded_document,
+      };
+
+      await hedisService.queueQAReviewAnalysis(
+        row.evaluation_id,
+        patientId,
+        row.measure_code,
+        pdfPath,
+        subdomain,
+        true, // recalculation flag
+        manualEvidence
+      );
+
+      queuedMeasures.push({
+        evaluationId: row.evaluation_id,
+        measureCode: row.measure_code,
+        measureName: row.measure_name,
+      });
+    }
+
+    return res.json({
+      message: "Recalculation successfully triggered for submitted measures.",
+      queuedMeasures,
+    });
+  } catch (err) {
+    console.error("Recalculation API Error:", err);
+    return res.status(500).json({
+      error: err.message || "An unexpected error occurred during recalculation",
     });
   }
 };
