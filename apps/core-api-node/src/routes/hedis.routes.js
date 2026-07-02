@@ -459,7 +459,6 @@ const uploadEvidence = multer({ storage: evidenceStorage });
  *             required:
  *               - patientId
  *               - chartId
- *               - document
  *             properties:
  *               patientId:
  *                 type: string
@@ -504,5 +503,40 @@ router.post(
   uploadEvidence.single("document"),
   hedisController.submitAbstractorQA
 );
+
+/**
+ * @swagger
+ * /api/hedis/recalculate-qa:
+ *   post:
+ *     summary: Trigger AI recalculation for measures submitted by the Abstractor
+ *     tags: [HEDIS]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - patientId
+ *             properties:
+ *               patientId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID of the patient
+ *               evaluationId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: Optional ID of a specific evaluation to recalculate
+ *     responses:
+ *       200:
+ *         description: Recalculation successfully triggered and queued
+ *       400:
+ *         description: Missing required fields
+ *       404:
+ *         description: Patient chart or matching submitted measures not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/recalculate-qa", hedisController.triggerRecalculation);
 
 module.exports = router;

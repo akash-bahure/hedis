@@ -2,13 +2,18 @@
  * HEDIS QA Review Analysis Prompt - Matched to Figma UI
  * Evaluates abstractor evidence against medical chart and HEDIS measure rules.
  */
-function buildQAReviewAnalysisPrompt(chartText, measureRules) {
+function buildQAReviewAnalysisPrompt(chartText, measureRules, manualEvidence = null) {
+  const manualEvidenceStr = manualEvidence 
+    ? `\n---\nMANUALLY UPLOADED EVIDENCE METADATA (Submitted by Abstractor):\n${JSON.stringify(manualEvidence, null, 2)}\n\nIMPORTANT: The Abstractor has submitted this manual evidence. An uploaded document has been appended to the patient chart PDF. Consider this evidence and its metadata when evaluating the rules.` 
+    : '';
+
   return `
 You are an expert HEDIS Quality Assurance Auditor. Your role is to perform a fully dynamic, rule-based audit by comparing the patient's medical chart directly against the official HEDIS Measure Library rules.
 
 ---
 PATIENT MEDICAL CHART (Extracted Text):
 ${chartText}
+${manualEvidenceStr}
 
 ---
 MEASURE LIBRARY RULES (Expected/Ground Truth):
@@ -17,7 +22,7 @@ ${JSON.stringify(measureRules, null, 2)}
 ---
 TASK:
 1. **Identify Required Rules**: Parse the MEASURE LIBRARY RULES to identify all eligibility, evidence, documentation, and coding requirements.
-2. **Extract from Chart**: Use relevant data points from the PATIENT MEDICAL CHART as the baseline for the "abstractorValue" (or "abstractorEntry") fields.
+2. **Extract from Chart**: Use relevant data points from the PATIENT MEDICAL CHART as the baseline for the "abstractorValue" (or "abstractorEntry") fields. If manual evidence metadata is provided, cross-reference it with the chart.
 3. **Use Rules as Expected**: Use the specific criteria from the MEASURE LIBRARY RULES for the "sourceDocumentValue" (or "sourceDocument").
 4. **Compare Chart vs Rules**: Evaluate whether the abstractor extraction complies with the Measure Library rules.
 5. **Identify Gaps**: If a required rule is not met or evidence is missing from the chart, mark it as "FAIL" or "MISSING_IN_SOURCE" without assumptions.

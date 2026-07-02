@@ -110,13 +110,13 @@ class HEDISService {
   /**
    * Add a HEDIS QA Review analysis job to the background queue.
    */
-  async queueQAReviewAnalysis(evaluationId, patientId, measureCode, pdfPath, tenantSubdomain) {
+  async queueQAReviewAnalysis(evaluationId, patientId, measureCode, pdfPath, tenantSubdomain, recalculation = false, manualEvidence = null) {
     if (!evaluationId || !patientId || !measureCode || !pdfPath || !tenantSubdomain) {
       console.error(`[services/hedis.service] queueQAReviewAnalysis missing required arguments: evaluationId=${evaluationId}, patientId=${patientId}`);
       throw new Error("Missing required arguments for queueQAReviewAnalysis");
     }
 
-    console.log(`[services/hedis.service] Queuing QA Review analysis for Evaluation: ${evaluationId}, Patient: ${patientId}, Measure: ${measureCode}`);
+    console.log(`[services/hedis.service] Queuing QA Review analysis for Evaluation: ${evaluationId}, Patient: ${patientId}, Measure: ${measureCode}, Recalculation: ${recalculation}`);
 
     const job = await qaReviewQueue.add("hedis-qa-review-job", {
       evaluationId,
@@ -124,6 +124,8 @@ class HEDISService {
       measureCode,
       pdfPath,
       tenantSubdomain,
+      recalculation,
+      manualEvidence,
     });
 
     console.log(`[services/hedis.service] QA Review analysis job successfully queued with ID: ${job.id}`);
