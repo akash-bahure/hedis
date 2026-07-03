@@ -269,6 +269,20 @@ exports.getQAReviewDetails = async (req, res) => {
       [evaluationId]
     );
 
+    // 4. Check if the measure was marked "Evidence Not Found" by the abstractor
+    const evidenceResult = await req.db.query(
+      `SELECT not_found, not_found_comment 
+       FROM ${schema}.hedis_measure_evidence
+       WHERE measure_id = $1`,
+      [evaluationId]
+    );
+
+    const isNotFound = evidenceResult.rows.length > 0 && evidenceResult.rows[0].not_found === true;
+    const notFoundComment = isNotFound ? evidenceResult.rows[0].not_found_comment : null;
+    const notFoundMessage = isNotFound 
+      ? "Measure marked as 'Evidence Not Found'. A QA reviewer will be notified to manually verify." 
+      : null;
+
     if (cachedResult.rows.length > 0) {
       const cached = cachedResult.rows[0];
 
@@ -288,6 +302,32 @@ exports.getQAReviewDetails = async (req, res) => {
         validationChecklist: cached.validation_checklist,
         summary: cached.summary,
         all_evidences: cached.all_evidences || [],
+        notFound: isNotFound,
+        notFoundComment,
+        notFoundMessage,
+      });
+    }
+
+    // Fallback: If marked "Not Found" but no AI review exists yet, return 200 OK with empty fields
+    if (isNotFound) {
+      console.log(
+        `No cached analysis found for evaluation ${evaluationId}, but marked as Evidence Not Found. Returning fallback JSON.`
+      );
+      return res.json({
+        pdfUrl: chartPdfUrl,
+        measure: {
+          id: evaluationId,
+          measureCode: measure_code,
+          measureName: measure_name,
+        },
+        measureRules: null,
+        extractedEvidence: null,
+        validationChecklist: null,
+        summary: null,
+        all_evidences: [],
+        notFound: true,
+        notFoundComment,
+        notFoundMessage,
       });
     }
 
@@ -777,8 +817,9 @@ exports.submitAbstractorQA = async (req, res) => {
         patient_id, chart_id, measure_id,
         service_date, screening_type, evidence_type, reading,
         cpt_code, icd10_code, evidence_source, notes,
-        uploaded_document, created_by, updated_by, created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW(), NOW())
+        uploaded_document, is_draft, not_found, not_found_comment, not_found_at, not_found_by,
+        created_by, updated_by, created_at, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, FALSE, FALSE, NULL, NULL, NULL, $13, $14, NOW(), NOW())
       ON CONFLICT (patient_id, chart_id, measure_id)
       DO UPDATE SET
         service_date = EXCLUDED.service_date,
@@ -790,6 +831,11 @@ exports.submitAbstractorQA = async (req, res) => {
         evidence_source = EXCLUDED.evidence_source,
         notes = EXCLUDED.notes,
         uploaded_document = EXCLUDED.uploaded_document,
+        is_draft = FALSE,
+        not_found = FALSE,
+        not_found_comment = NULL,
+        not_found_at = NULL,
+        not_found_by = NULL,
         updated_by = EXCLUDED.updated_by,
         updated_at = NOW()
       RETURNING *
@@ -933,6 +979,7 @@ exports.triggerRecalculation = async (req, res) => {
 
   try {
     // 1. Fetch only evaluations that have matching hedis_measure_evidence (i.e. submitted by Abstractor)
+    // Note: We skip measures that are saved as drafts (is_draft = true) or marked as Evidence Not Found (not_found = true).
     let query = `
       SELECT ev.id as evaluation_id, ev.measure_code, ev.measure_name, ev.patient_id,
              e.id as evidence_id, e.service_date, e.screening_type, e.evidence_type,
@@ -941,6 +988,8 @@ exports.triggerRecalculation = async (req, res) => {
       FROM ${schema}.hedis_measure_evidence e
       INNER JOIN ${schema}.hedis_evaluations ev ON e.measure_id = ev.id
       WHERE e.patient_id = $1
+        AND e.is_draft = FALSE
+        AND e.not_found = FALSE
     `;
     const params = [patientId];
 
@@ -1019,3 +1068,146 @@ exports.triggerRecalculation = async (req, res) => {
     });
   }
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ABSTRACTOR DRAFT APIS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * POST /api/hedis/abstractor/save-draft
+ * Save incomplete abstractor work for a single measure without submitting to QA.
+ */
+exports.saveDraft = async (req, res) => {
+  const client = req.db;
+  const schema = req.tenant.schema_name;
+
+  try {
+    const {
+      patientId,
+      chartId,
+      measureId,
+      serviceDate,
+      screeningType,
+      evidenceType,
+      reading,
+      cptCode,
+      icd10Code,
+      evidenceSource,
+      notes,
+      uploadedDocument,
+    } = req.body;
+
+    if (!patientId || !chartId || !measureId) {
+      return res.status(400).json({
+        error: "Missing required fields: patientId, chartId, measureId",
+      });
+    }
+
+    const draftData = {
+      serviceDate,
+      screeningType,
+      evidenceType,
+      reading,
+      cptCode,
+      icd10Code,
+      evidenceSource,
+      notes,
+      uploadedDocument,
+    };
+
+    const saved = await hedisService.saveDraft(client, schema, {
+      patientId,
+      chartId,
+      measureId,
+      draftData,
+      userId: req.user?.id || null,
+    });
+
+    return res.status(200).json({
+      message: "Draft saved successfully.",
+      data: saved,
+    });
+  } catch (err) {
+    console.error("Save Draft Error:", err);
+    const statusCode = err.statusCode || 500;
+    return res.status(statusCode).json({
+      error: err.message || "An unexpected error occurred while saving draft",
+    });
+  }
+};
+
+/**
+ * GET /api/hedis/abstractor/draft/:patientId
+ * Retrieve a previously saved draft for a measure.
+ * Query params: chartId, measureId
+ */
+exports.getDraft = async (req, res) => {
+  const schema = req.tenant.schema_name;
+
+  try {
+    const { patientId } = req.params;
+    const { chartId, measureId } = req.query;
+
+    if (!patientId || !chartId || !measureId) {
+      return res.status(400).json({
+        error:
+          "Missing required fields: patientId (path), chartId, measureId (query params)",
+      });
+    }
+
+    const draft = await hedisService.getDraft(req.db, schema, {
+      patientId,
+      chartId,
+      measureId,
+    });
+
+    return res.status(200).json({
+      draft: draft || null,
+    });
+  } catch (err) {
+    console.error("Get Draft Error:", err);
+    return res.status(500).json({
+      error: err.message || "An unexpected error occurred while fetching draft",
+    });
+  }
+};
+
+/**
+ * POST /api/hedis/abstractor/mark-not-found
+ * Flag a specific measure as "Evidence Not Found" so QA is notified.
+ */
+exports.markNotFound = async (req, res) => {
+  const client = req.db;
+  const schema = req.tenant.schema_name;
+
+  try {
+    const { patientId, chartId, measureId, comment } = req.body;
+
+    if (!patientId || !chartId || !measureId) {
+      return res.status(400).json({
+        error: "Missing required fields: patientId, chartId, measureId",
+      });
+    }
+
+    const record = await hedisService.markNotFound(client, schema, {
+      patientId,
+      chartId,
+      measureId,
+      comment: comment || null,
+      userId: req.user?.id || null,
+    });
+
+    return res.status(200).json({
+      message:
+        "Measure marked as 'Evidence Not Found'. A QA reviewer will be notified to manually verify.",
+      data: record,
+    });
+  } catch (err) {
+    console.error("Mark Not Found Error:", err);
+    return res.status(500).json({
+      error:
+        err.message || "An unexpected error occurred while marking not found",
+    });
+  }
+};
+

@@ -539,4 +539,254 @@ router.post(
  */
 router.post("/recalculate-qa", hedisController.triggerRecalculation);
 
+/**
+ * @swagger
+ * /api/hedis/abstractor/save-draft:
+ *   post:
+ *     summary: Save a draft of abstractor measure fields without submitting to QA
+ *     tags: [HEDIS]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - patientId
+ *               - chartId
+ *               - measureId
+ *             properties:
+ *               patientId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: UUID of the patient
+ *               chartId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: UUID of the patient chart
+ *               measureId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: UUID from hedis_evaluations.id
+ *               serviceDate:
+ *                 type: string
+ *                 format: date
+ *                 example: "2024-06-01"
+ *               screeningType:
+ *                 type: string
+ *                 example: "CBC"
+ *               evidenceType:
+ *                 type: string
+ *                 example: "Office Visit BP Reading"
+ *               reading:
+ *                 type: string
+ *                 example: "120/80"
+ *               cptCode:
+ *                 type: string
+ *                 example: "99213"
+ *               icd10Code:
+ *                 type: string
+ *                 example: "I10"
+ *               evidenceSource:
+ *                 type: string
+ *                 example: "Electronic Health Record (EHR)"
+ *               notes:
+ *                 type: string
+ *                 example: "Draft in progress - needs review"
+ *               uploadedDocument:
+ *                 type: object
+ *                 description: JSON metadata of a previously uploaded document reference (not a file upload)
+ *     responses:
+ *       200:
+ *         description: Draft saved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Draft saved successfully."
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     patient_id:
+ *                       type: string
+ *                     chart_id:
+ *                       type: string
+ *                     measure_id:
+ *                       type: string
+ *                     is_draft:
+ *                       type: boolean
+ *                       example: true
+ *                     not_found:
+ *                       type: boolean
+ *                       example: false
+ *                     service_date:
+ *                       type: string
+ *                     updated_at:
+ *                       type: string
+ *       400:
+ *         description: Missing required fields
+ *       409:
+ *         description: Measure already submitted to QA — cannot overwrite with draft
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/abstractor/save-draft", hedisController.saveDraft);
+
+/**
+ * @swagger
+ * /api/hedis/abstractor/draft/{patientId}:
+ *   get:
+ *     summary: Get a saved draft for a specific measure
+ *     tags: [HEDIS]
+ *     parameters:
+ *       - in: path
+ *         name: patientId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID of the patient
+ *       - in: query
+ *         name: chartId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID of the patient chart
+ *       - in: query
+ *         name: measureId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID from hedis_evaluations.id
+ *     responses:
+ *       200:
+ *         description: Draft returned (null if none exists)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 draft:
+ *                   oneOf:
+ *                     - type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           format: uuid
+ *                         patient_id:
+ *                           type: string
+ *                         chart_id:
+ *                           type: string
+ *                         measure_id:
+ *                           type: string
+ *                         is_draft:
+ *                           type: boolean
+ *                           example: true
+ *                         service_date:
+ *                           type: string
+ *                         screening_type:
+ *                           type: string
+ *                         evidence_type:
+ *                           type: string
+ *                         reading:
+ *                           type: string
+ *                         cpt_code:
+ *                           type: string
+ *                         icd10_code:
+ *                           type: string
+ *                         notes:
+ *                           type: string
+ *                         updated_at:
+ *                           type: string
+ *                     - type: 'null'
+ *                       description: No draft found for this measure
+ *       400:
+ *         description: Missing required query params
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/abstractor/draft/:patientId", hedisController.getDraft);
+
+/**
+ * @swagger
+ * /api/hedis/abstractor/mark-not-found:
+ *   post:
+ *     summary: Flag a measure as 'Evidence Not Found' to notify QA reviewer
+ *     tags: [HEDIS]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - patientId
+ *               - chartId
+ *               - measureId
+ *             properties:
+ *               patientId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: UUID of the patient
+ *               chartId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: UUID of the patient chart
+ *               measureId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: UUID from hedis_evaluations.id
+ *               comment:
+ *                 type: string
+ *                 nullable: true
+ *                 example: "Searched all available records — no evidence found."
+ *     responses:
+ *       200:
+ *         description: Measure successfully flagged as Evidence Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Measure marked as 'Evidence Not Found'. A QA reviewer will be notified to manually verify."
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     patient_id:
+ *                       type: string
+ *                     chart_id:
+ *                       type: string
+ *                     measure_id:
+ *                       type: string
+ *                     not_found:
+ *                       type: boolean
+ *                       example: true
+ *                     not_found_comment:
+ *                       type: string
+ *                     not_found_at:
+ *                       type: string
+ *                       format: date-time
+ *                     is_draft:
+ *                       type: boolean
+ *                       example: false
+ *       400:
+ *         description: Missing required fields
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/abstractor/mark-not-found", hedisController.markNotFound);
+
 module.exports = router;

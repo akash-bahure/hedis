@@ -1339,6 +1339,23 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
     CREATE INDEX IF NOT EXISTS idx_hedis_evidence_chart ON ${schema}.hedis_measure_evidence(chart_id);
     CREATE INDEX IF NOT EXISTS idx_hedis_evidence_measure ON ${schema}.hedis_measure_evidence(measure_id);
   `);
+
+  // Draft & Not-Found status columns for abstractor save-draft / mark-not-found workflows
+  try {
+    await client.query(`
+      ALTER TABLE ${schema}.hedis_measure_evidence
+        ADD COLUMN IF NOT EXISTS is_draft BOOLEAN DEFAULT FALSE,
+        ADD COLUMN IF NOT EXISTS not_found BOOLEAN DEFAULT FALSE,
+        ADD COLUMN IF NOT EXISTS not_found_comment TEXT,
+        ADD COLUMN IF NOT EXISTS not_found_at TIMESTAMP,
+        ADD COLUMN IF NOT EXISTS not_found_by UUID REFERENCES ${schema}.users(id);
+    `);
+  } catch (err) {
+    console.warn(
+      `[Migration] Could not add draft/not-found columns to hedis_measure_evidence in ${schema}:`,
+      err.message
+    );
+  }
 }
 
 module.exports = { runMigrations };
