@@ -65,9 +65,9 @@ export type PostApiHedisAbstractorSubmitQaMutationRequest = {
   notes?: string;
   /**
    * @description Evidence PDF document
-   * @type string, binary
+   * @type string | undefined, binary
    */
-  document: Blob;
+  document?: Blob;
 };
 
 export type PostApiHedisAbstractorSubmitQaMutationResponse =
