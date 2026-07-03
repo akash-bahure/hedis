@@ -140,6 +140,15 @@ export type {
   GetApiDepartmentsQueryResponse,
 } from "./GetApiDepartments.ts";
 export type {
+  GetApiHedisAbstractorDraftPatientid200,
+  GetApiHedisAbstractorDraftPatientid400,
+  GetApiHedisAbstractorDraftPatientid500,
+  GetApiHedisAbstractorDraftPatientidPathParams,
+  GetApiHedisAbstractorDraftPatientidQuery,
+  GetApiHedisAbstractorDraftPatientidQueryParams,
+  GetApiHedisAbstractorDraftPatientidQueryResponse,
+} from "./GetApiHedisAbstractorDraftPatientid.ts";
+export type {
   GetApiHedisAbstractorMeasuresPatientid200,
   GetApiHedisAbstractorMeasuresPatientid404,
   GetApiHedisAbstractorMeasuresPatientidPathParams,
@@ -735,6 +744,23 @@ export type {
   PostApiDepartmentsMutationResponse,
 } from "./PostApiDepartments.ts";
 export type {
+  PostApiHedisAbstractorMarkNotFound200,
+  PostApiHedisAbstractorMarkNotFound400,
+  PostApiHedisAbstractorMarkNotFound500,
+  PostApiHedisAbstractorMarkNotFoundMutation,
+  PostApiHedisAbstractorMarkNotFoundMutationRequest,
+  PostApiHedisAbstractorMarkNotFoundMutationResponse,
+} from "./PostApiHedisAbstractorMarkNotFound.ts";
+export type {
+  PostApiHedisAbstractorSaveDraft200,
+  PostApiHedisAbstractorSaveDraft400,
+  PostApiHedisAbstractorSaveDraft409,
+  PostApiHedisAbstractorSaveDraft500,
+  PostApiHedisAbstractorSaveDraftMutation,
+  PostApiHedisAbstractorSaveDraftMutationRequest,
+  PostApiHedisAbstractorSaveDraftMutationResponse,
+} from "./PostApiHedisAbstractorSaveDraft.ts";
+export type {
   PostApiHedisAbstractorSubmitQa200,
   PostApiHedisAbstractorSubmitQa400,
   PostApiHedisAbstractorSubmitQa500,
@@ -762,6 +788,15 @@ export type {
   PostApiHedisMarkAsReviewedMutationRequest,
   PostApiHedisMarkAsReviewedMutationResponse,
 } from "./PostApiHedisMarkAsReviewed.ts";
+export type {
+  PostApiHedisRecalculateQa200,
+  PostApiHedisRecalculateQa400,
+  PostApiHedisRecalculateQa404,
+  PostApiHedisRecalculateQa500,
+  PostApiHedisRecalculateQaMutation,
+  PostApiHedisRecalculateQaMutationRequest,
+  PostApiHedisRecalculateQaMutationResponse,
+} from "./PostApiHedisRecalculateQa.ts";
 export type {
   PostApiHedisSendToQa201,
   PostApiHedisSendToQaMutation,
