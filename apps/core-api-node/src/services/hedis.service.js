@@ -110,13 +110,13 @@ class HEDISService {
   /**
    * Add a HEDIS QA Review analysis job to the background queue.
    */
-  async queueQAReviewAnalysis(evaluationId, patientId, measureCode, pdfPath, tenantSubdomain) {
+  async queueQAReviewAnalysis(evaluationId, patientId, measureCode, pdfPath, tenantSubdomain, recalculation = false, manualEvidence = null) {
     if (!evaluationId || !patientId || !measureCode || !pdfPath || !tenantSubdomain) {
       console.error(`[services/hedis.service] queueQAReviewAnalysis missing required arguments: evaluationId=${evaluationId}, patientId=${patientId}`);
       throw new Error("Missing required arguments for queueQAReviewAnalysis");
     }
 
-    console.log(`[services/hedis.service] Queuing QA Review analysis for Evaluation: ${evaluationId}, Patient: ${patientId}, Measure: ${measureCode}`);
+    console.log(`[services/hedis.service] Queuing QA Review analysis for Evaluation: ${evaluationId}, Patient: ${patientId}, Measure: ${measureCode}, Recalculation: ${recalculation}`);
 
     const job = await qaReviewQueue.add("hedis-qa-review-job", {
       evaluationId,
@@ -124,6 +124,8 @@ class HEDISService {
       measureCode,
       pdfPath,
       tenantSubdomain,
+      recalculation,
+      manualEvidence,
     });
 
     console.log(`[services/hedis.service] QA Review analysis job successfully queued with ID: ${job.id}`);
@@ -606,7 +608,170 @@ class HEDISService {
 
     return grouped;
   }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // ABSTRACTOR DRAFT & NOT-FOUND METHODS
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Save Draft — upsert partial measure fields into hedis_measure_evidence
+   * with is_draft = TRUE. Will NOT overwrite a previously submitted
+   * (is_draft = FALSE) record with a draft flag.
+   *
+   * @param {object} db - tenant DB client
+   * @param {string} schema - tenant schema name
+   * @param {object} params
+   * @param {string} params.patientId
+   * @param {string} params.chartId
+   * @param {string} params.measureId  - UUID from hedis_evaluations.id
+   * @param {object} params.draftData  - field values to persist
+   * @param {string} params.userId     - req.user.id (created_by / updated_by)
+   */
+  async saveDraft(db, schema, { patientId, chartId, measureId, draftData, userId }) {
+    // Guard: do not overwrite a fully-submitted record with a draft
+    const existingCheck = await db.query(
+      `SELECT id, is_draft FROM ${schema}.hedis_measure_evidence
+       WHERE patient_id = $1 AND chart_id = $2 AND measure_id = $3`,
+      [patientId, chartId, measureId]
+    );
+
+    if (existingCheck.rows.length > 0 && existingCheck.rows[0].is_draft === false) {
+      const err = new Error(
+        "This measure has already been submitted to QA and cannot be overwritten with a draft. Use submitAbstractorQA to update."
+      );
+      err.statusCode = 409;
+      throw err;
+    }
+
+    const {
+      serviceDate = null,
+      screeningType = null,
+      evidenceType = null,
+      reading = null,
+      cptCode = null,
+      icd10Code = null,
+      evidenceSource = null,
+      notes = null,
+      uploadedDocument = null,
+    } = draftData || {};
+
+    const upsertQuery = `
+      INSERT INTO ${schema}.hedis_measure_evidence (
+        patient_id, chart_id, measure_id,
+        service_date, screening_type, evidence_type, reading,
+        cpt_code, icd10_code, evidence_source, notes,
+        uploaded_document, is_draft,
+        created_by, updated_by, created_at, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, TRUE, $13, $14, NOW(), NOW())
+      ON CONFLICT (patient_id, chart_id, measure_id)
+      DO UPDATE SET
+        service_date      = EXCLUDED.service_date,
+        screening_type    = EXCLUDED.screening_type,
+        evidence_type     = EXCLUDED.evidence_type,
+        reading           = EXCLUDED.reading,
+        cpt_code          = EXCLUDED.cpt_code,
+        icd10_code        = EXCLUDED.icd10_code,
+        evidence_source   = EXCLUDED.evidence_source,
+        notes             = EXCLUDED.notes,
+        uploaded_document = EXCLUDED.uploaded_document,
+        is_draft          = TRUE,
+        updated_by        = EXCLUDED.updated_by,
+        updated_at        = NOW()
+      RETURNING *
+    `;
+
+    const values = [
+      patientId,
+      chartId,
+      measureId,
+      serviceDate,
+      screeningType,
+      evidenceType,
+      reading,
+      cptCode,
+      icd10Code,
+      evidenceSource,
+      notes,
+      uploadedDocument ? JSON.stringify(uploadedDocument) : null,
+      userId || null,
+      userId || null,
+    ];
+
+    const result = await db.query(upsertQuery, values);
+    return result.rows[0];
+  }
+
+  /**
+   * Get Draft — fetch the saved draft for a specific measure.
+   * Returns null if no draft exists (or the record was already submitted).
+   *
+   * @param {object} db
+   * @param {string} schema
+   * @param {object} params
+   * @param {string} params.patientId
+   * @param {string} params.chartId
+   * @param {string} params.measureId
+   */
+  async getDraft(db, schema, { patientId, chartId, measureId }) {
+    const result = await db.query(
+      `SELECT * FROM ${schema}.hedis_measure_evidence
+       WHERE patient_id = $1 AND chart_id = $2 AND measure_id = $3
+         AND is_draft = TRUE`,
+      [patientId, chartId, measureId]
+    );
+
+    if (result.rows.length === 0) return null;
+    return result.rows[0];
+  }
+
+  /**
+   * Mark Not Found — record that the abstractor could not locate evidence
+   * for the selected measure. Sets not_found = TRUE and is_draft = FALSE
+   * so the measure becomes visible to QA.
+   *
+   * Never deletes uploaded files, drafts, or previous evidence.
+   *
+   * @param {object} db
+   * @param {string} schema
+   * @param {object} params
+   * @param {string} params.patientId
+   * @param {string} params.chartId
+   * @param {string} params.measureId
+   * @param {string|null} params.comment
+   * @param {string|null} params.userId
+   */
+  async markNotFound(db, schema, { patientId, chartId, measureId, comment, userId }) {
+    const upsertQuery = `
+      INSERT INTO ${schema}.hedis_measure_evidence (
+        patient_id, chart_id, measure_id,
+        not_found, not_found_comment, not_found_at, not_found_by,
+        is_draft, created_by, updated_by, created_at, updated_at
+      ) VALUES ($1, $2, $3, TRUE, $4, NOW(), $5, FALSE, $6, $7, NOW(), NOW())
+      ON CONFLICT (patient_id, chart_id, measure_id)
+      DO UPDATE SET
+        not_found         = TRUE,
+        not_found_comment = EXCLUDED.not_found_comment,
+        not_found_at      = NOW(),
+        not_found_by      = EXCLUDED.not_found_by,
+        is_draft          = FALSE,
+        updated_by        = EXCLUDED.updated_by,
+        updated_at        = NOW()
+      RETURNING *
+    `;
+
+    const values = [
+      patientId,
+      chartId,
+      measureId,
+      comment || null,
+      userId || null,
+      userId || null,
+      userId || null,
+    ];
+
+    const result = await db.query(upsertQuery, values);
+    return result.rows[0];
+  }
 }
 
 module.exports = new HEDISService();
-

@@ -735,6 +735,14 @@ export type {
   PostApiDepartmentsMutationResponse,
 } from "./PostApiDepartments.ts";
 export type {
+  PostApiHedisAbstractorSubmitQa200,
+  PostApiHedisAbstractorSubmitQa400,
+  PostApiHedisAbstractorSubmitQa500,
+  PostApiHedisAbstractorSubmitQaMutation,
+  PostApiHedisAbstractorSubmitQaMutationRequest,
+  PostApiHedisAbstractorSubmitQaMutationResponse,
+} from "./PostApiHedisAbstractorSubmitQa.ts";
+export type {
   DecisionsQaStatusEnumKey,
   PostApiHedisAssignAbstractor200,
   PostApiHedisAssignAbstractorMutation,
@@ -754,6 +762,15 @@ export type {
   PostApiHedisMarkAsReviewedMutationRequest,
   PostApiHedisMarkAsReviewedMutationResponse,
 } from "./PostApiHedisMarkAsReviewed.ts";
+export type {
+  PostApiHedisRecalculateQa200,
+  PostApiHedisRecalculateQa400,
+  PostApiHedisRecalculateQa404,
+  PostApiHedisRecalculateQa500,
+  PostApiHedisRecalculateQaMutation,
+  PostApiHedisRecalculateQaMutationRequest,
+  PostApiHedisRecalculateQaMutationResponse,
+} from "./PostApiHedisRecalculateQa.ts";
 export type {
   PostApiHedisSendToQa201,
   PostApiHedisSendToQaMutation,

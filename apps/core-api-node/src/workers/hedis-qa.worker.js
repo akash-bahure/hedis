@@ -8,8 +8,8 @@ console.log("[HEDIS QA WORKER] Initializing worker process...");
 const worker = new Worker(
   "hedis-qa-review",
   async (job) => {
-    const { evaluationId, patientId, measureCode, pdfPath, tenantSubdomain } = job.data;
-    console.log(`[HEDIS QA WORKER] Job started: ${job.id} for Evaluation ID: ${evaluationId}, Patient ID: ${patientId}, Measure: ${measureCode}`);
+    const { evaluationId, patientId, measureCode, pdfPath, tenantSubdomain, recalculation, manualEvidence } = job.data;
+    console.log(`[HEDIS QA WORKER] Job started: ${job.id} for Evaluation ID: ${evaluationId}, Patient ID: ${patientId}, Measure: ${measureCode}, Recalculation: ${recalculation}`);
 
     if (!evaluationId || !patientId || !measureCode || !pdfPath || !tenantSubdomain) {
       throw new Error(`Invalid job data. Required details: evaluationId, patientId, measureCode, pdfPath, tenantSubdomain. Got: ${JSON.stringify(job.data)}`);
@@ -37,9 +37,17 @@ const worker = new Worker(
         "SELECT id FROM hedis_qa_review_analyses WHERE evaluation_id = $1 LIMIT 1",
         [evaluationId]
       );
-      if (checkResult.rows.length > 0) {
+      if (checkResult.rows.length > 0 && !recalculation) {
         console.log(`[HEDIS QA WORKER] Cached analysis already exists for evaluation ${evaluationId}. Skipping processing.`);
         return { skipped: true, reason: "Already exists" };
+      }
+
+      if (recalculation) {
+        console.log(`[HEDIS QA WORKER] Deleting existing QA analysis for evaluation: ${evaluationId}`);
+        await client.query(
+          "DELETE FROM hedis_qa_review_analyses WHERE evaluation_id = $1",
+          [evaluationId]
+        );
       }
 
       // 3. Fetch measure rules from Measure Library
@@ -62,6 +70,7 @@ const worker = new Worker(
           measureCode,
           pdfPath,
           measureRules,
+          manualEvidence,
         },
         {
           timeout: 300000, // 5 minutes
@@ -101,6 +110,43 @@ const worker = new Worker(
           JSON.stringify(analysisData.allEvidence || []),
         ]
       );
+
+      if (recalculation) {
+        console.log(`[HEDIS QA WORKER] Updating hedis_evaluations with recalculated results for evaluation: ${evaluationId}`);
+        const validationChecklist = analysisData.validationChecklist || {};
+        const eligible = !validationChecklist.eligibility?.some(item => item.status === 'FAIL');
+        const denominator = eligible;
+        const numerator = !validationChecklist.evidence?.some(item => item.status === 'FAIL');
+        const status = numerator ? 'Compliant' : 'Non-Compliant';
+        const confidence = parseFloat(analysisData.summary?.confidence || 0);
+        const reasoning = `QA Review Recalculation: ${analysisData.summary?.passed || 0} checks passed, ${analysisData.summary?.failed || 0} checks failed.`;
+        const evidence = analysisData.allEvidence || analysisData.extractedEvidence || [];
+
+        await client.query(
+          `UPDATE hedis_evaluations
+           SET eligible = $1,
+               denominator = $2,
+               numerator = $3,
+               status = $4,
+               confidence = $5,
+               reasoning = $6,
+               evidence = $7,
+               detailed_response = $8,
+               created_at = NOW()
+           WHERE id = $9`,
+          [
+            eligible,
+            denominator,
+            numerator,
+            status,
+            confidence,
+            reasoning,
+            JSON.stringify(evidence),
+            JSON.stringify(analysisData),
+            evaluationId
+          ]
+        );
+      }
 
       console.log(`[HEDIS QA WORKER] Job completed successfully: ${job.id}`);
       return { success: true };
