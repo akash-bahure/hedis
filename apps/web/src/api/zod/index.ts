@@ -226,14 +226,6 @@ export {
   postApiHedisMarkAsReviewedMutationResponseSchema,
 } from "./HEDISSchemas/postApiHedisMarkAsReviewedSchema.ts";
 export {
-  postApiHedisRecalculateQa200Schema,
-  postApiHedisRecalculateQa400Schema,
-  postApiHedisRecalculateQa404Schema,
-  postApiHedisRecalculateQa500Schema,
-  postApiHedisRecalculateQaMutationRequestSchema,
-  postApiHedisRecalculateQaMutationResponseSchema,
-} from "./HEDISSchemas/postApiHedisRecalculateQaSchema.ts";
-export {
   postApiHedisSendToQa201Schema,
   postApiHedisSendToQaMutationRequestSchema,
   postApiHedisSendToQaMutationResponseSchema,
