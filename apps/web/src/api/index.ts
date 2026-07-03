@@ -68,7 +68,6 @@ export type { GetApiHedisQaReviewEvaluationidSuspenseInfiniteQueryKey } from "./
 export type { PostApiHedisAbstractorSubmitQaMutationKey } from "./hooks/HEDISHooks/usePostApiHedisAbstractorSubmitQa.ts";
 export type { PostApiHedisAssignAbstractorMutationKey } from "./hooks/HEDISHooks/usePostApiHedisAssignAbstractor.ts";
 export type { PostApiHedisMarkAsReviewedMutationKey } from "./hooks/HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
-export type { PostApiHedisRecalculateQaMutationKey } from "./hooks/HEDISHooks/usePostApiHedisRecalculateQa.ts";
 export type { PostApiHedisSendToQaMutationKey } from "./hooks/HEDISHooks/usePostApiHedisSendToQa.ts";
 export type { PostApiHedisUpdateQaStatusMutationKey } from "./hooks/HEDISHooks/usePostApiHedisUpdateQaStatus.ts";
 export type { GetApiMeasureLibraryQueryKey } from "./hooks/Measure LibraryHooks/useGetApiMeasureLibrary.ts";
@@ -997,15 +996,6 @@ export type {
   PostApiHedisMarkAsReviewedMutationResponse,
 } from "./types/PostApiHedisMarkAsReviewed.ts";
 export type {
-  PostApiHedisRecalculateQa200,
-  PostApiHedisRecalculateQa400,
-  PostApiHedisRecalculateQa404,
-  PostApiHedisRecalculateQa500,
-  PostApiHedisRecalculateQaMutation,
-  PostApiHedisRecalculateQaMutationRequest,
-  PostApiHedisRecalculateQaMutationResponse,
-} from "./types/PostApiHedisRecalculateQa.ts";
-export type {
   PostApiHedisSendToQa201,
   PostApiHedisSendToQaMutation,
   PostApiHedisSendToQaMutationRequest,
@@ -1279,7 +1269,6 @@ export { postApiHedisAbstractorSubmitQa } from "./clients/postApiHedisAbstractor
 export { postApiHedisAssignAbstractor } from "./clients/postApiHedisAssignAbstractor.ts";
 export { postApiHedisClinicalTimelineReview } from "./clients/postApiHedisClinicalTimelineReview.ts";
 export { postApiHedisMarkAsReviewed } from "./clients/postApiHedisMarkAsReviewed.ts";
-export { postApiHedisRecalculateQa } from "./clients/postApiHedisRecalculateQa.ts";
 export { postApiHedisSendToQa } from "./clients/postApiHedisSendToQa.ts";
 export { postApiHedisUpdateQaStatus } from "./clients/postApiHedisUpdateQaStatus.ts";
 export { postApiPatientsIdAssign } from "./clients/postApiPatientsIdAssign.ts";
@@ -1510,9 +1499,6 @@ export { usePostApiHedisAssignAbstractor } from "./hooks/HEDISHooks/usePostApiHe
 export { postApiHedisMarkAsReviewedMutationKey } from "./hooks/HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
 export { postApiHedisMarkAsReviewedMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
 export { usePostApiHedisMarkAsReviewed } from "./hooks/HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
-export { postApiHedisRecalculateQaMutationKey } from "./hooks/HEDISHooks/usePostApiHedisRecalculateQa.ts";
-export { postApiHedisRecalculateQaMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisRecalculateQa.ts";
-export { usePostApiHedisRecalculateQa } from "./hooks/HEDISHooks/usePostApiHedisRecalculateQa.ts";
 export { postApiHedisSendToQaMutationKey } from "./hooks/HEDISHooks/usePostApiHedisSendToQa.ts";
 export { postApiHedisSendToQaMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisSendToQa.ts";
 export { usePostApiHedisSendToQa } from "./hooks/HEDISHooks/usePostApiHedisSendToQa.ts";
@@ -2312,14 +2298,6 @@ export {
   postApiHedisMarkAsReviewedMutationRequestSchema,
   postApiHedisMarkAsReviewedMutationResponseSchema,
 } from "./zod/HEDISSchemas/postApiHedisMarkAsReviewedSchema.ts";
-export {
-  postApiHedisRecalculateQa200Schema,
-  postApiHedisRecalculateQa400Schema,
-  postApiHedisRecalculateQa404Schema,
-  postApiHedisRecalculateQa500Schema,
-  postApiHedisRecalculateQaMutationRequestSchema,
-  postApiHedisRecalculateQaMutationResponseSchema,
-} from "./zod/HEDISSchemas/postApiHedisRecalculateQaSchema.ts";
 export {
   postApiHedisSendToQa201Schema,
   postApiHedisSendToQaMutationRequestSchema,

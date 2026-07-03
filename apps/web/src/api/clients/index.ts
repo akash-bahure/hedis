@@ -98,7 +98,6 @@ export { postApiHedisAbstractorSubmitQa } from "./postApiHedisAbstractorSubmitQa
 export { postApiHedisAssignAbstractor } from "./postApiHedisAssignAbstractor.ts";
 export { postApiHedisClinicalTimelineReview } from "./postApiHedisClinicalTimelineReview.ts";
 export { postApiHedisMarkAsReviewed } from "./postApiHedisMarkAsReviewed.ts";
-export { postApiHedisRecalculateQa } from "./postApiHedisRecalculateQa.ts";
 export { postApiHedisSendToQa } from "./postApiHedisSendToQa.ts";
 export { postApiHedisUpdateQaStatus } from "./postApiHedisUpdateQaStatus.ts";
 export { postApiPatientsIdAssign } from "./postApiPatientsIdAssign.ts";

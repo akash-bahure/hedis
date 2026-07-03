@@ -68,7 +68,6 @@ export type { GetApiHedisQaReviewEvaluationidSuspenseInfiniteQueryKey } from "./
 export type { PostApiHedisAbstractorSubmitQaMutationKey } from "./HEDISHooks/usePostApiHedisAbstractorSubmitQa.ts";
 export type { PostApiHedisAssignAbstractorMutationKey } from "./HEDISHooks/usePostApiHedisAssignAbstractor.ts";
 export type { PostApiHedisMarkAsReviewedMutationKey } from "./HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
-export type { PostApiHedisRecalculateQaMutationKey } from "./HEDISHooks/usePostApiHedisRecalculateQa.ts";
 export type { PostApiHedisSendToQaMutationKey } from "./HEDISHooks/usePostApiHedisSendToQa.ts";
 export type { PostApiHedisUpdateQaStatusMutationKey } from "./HEDISHooks/usePostApiHedisUpdateQaStatus.ts";
 export type { GetApiMeasureLibraryQueryKey } from "./Measure LibraryHooks/useGetApiMeasureLibrary.ts";
@@ -442,9 +441,6 @@ export { usePostApiHedisAssignAbstractor } from "./HEDISHooks/usePostApiHedisAss
 export { postApiHedisMarkAsReviewedMutationKey } from "./HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
 export { postApiHedisMarkAsReviewedMutationOptions } from "./HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
 export { usePostApiHedisMarkAsReviewed } from "./HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
-export { postApiHedisRecalculateQaMutationKey } from "./HEDISHooks/usePostApiHedisRecalculateQa.ts";
-export { postApiHedisRecalculateQaMutationOptions } from "./HEDISHooks/usePostApiHedisRecalculateQa.ts";
-export { usePostApiHedisRecalculateQa } from "./HEDISHooks/usePostApiHedisRecalculateQa.ts";
 export { postApiHedisSendToQaMutationKey } from "./HEDISHooks/usePostApiHedisSendToQa.ts";
 export { postApiHedisSendToQaMutationOptions } from "./HEDISHooks/usePostApiHedisSendToQa.ts";
 export { usePostApiHedisSendToQa } from "./HEDISHooks/usePostApiHedisSendToQa.ts";

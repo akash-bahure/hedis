@@ -43,7 +43,7 @@ export const postApiHedisAbstractorSubmitQaMutationRequestSchema = z.object({
   icd10Code: z.optional(z.string()),
   evidenceSource: z.optional(z.string()),
   notes: z.optional(z.string()),
-  document: z.optional(z.instanceof(File).describe("Evidence PDF document")),
+  document: z.instanceof(File).describe("Evidence PDF document"),
 }) as unknown as ToZod<PostApiHedisAbstractorSubmitQaMutationRequest>;
 
 export const postApiHedisAbstractorSubmitQaMutationResponseSchema = z.lazy(
