@@ -48,10 +48,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import {
+  useGetApiHedisAbstractorDraftPatientid,
   useGetApiHedisAbstractorMeasuresPatientid,
   useGetApiHedisEvidenceTimelineId,
   useGetApiMeasureLibraryId,
   useGetApiPatients,
+  usePostApiHedisAbstractorMarkNotFound,
+  usePostApiHedisAbstractorSaveDraft,
   usePostApiHedisSendToQa,
 } from "@/api";
 import { Document, Page, pdfjs } from "react-pdf";
@@ -1988,9 +1991,13 @@ const ENGINE_STEPS = [
 function SubmitModal({
   mode,
   onClose,
+  onSubmitQA,
+  onMarkNotFound,
 }: {
   mode: SubmitMode;
   onClose: () => void;
+  onSubmitQA: () => Promise<void>;
+  onMarkNotFound: () => Promise<void>;
 }) {
   const [phase, setPhase] = useState<"confirm" | "running" | "done">("confirm");
   const [step, setStep] = useState(0);
@@ -2017,18 +2024,29 @@ function SubmitModal({
         accent: "#d97706",
       };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    if (isQA) {
+      await onSubmitQA();
+    } else {
+      await onMarkNotFound();
+    }
+
     setPhase("running");
+
     ENGINE_STEPS.forEach((s, i) => {
       setTimeout(() => {
         setStep(i + 1);
         setProgress(Math.round(((i + 1) / ENGINE_STEPS.length) * 100));
       }, s.dur);
     });
+
     setTimeout(() => {
       setPhase("done");
     }, 2200);
-    setTimeout(() => onClose(), 3800);
+
+    setTimeout(() => {
+      onClose();
+    }, 3800);
   };
 
   return (
@@ -2299,13 +2317,53 @@ export function AbstractionWorkspace({
     });
   };
 
-  const handleSaveDraft = () => {
-    setSavedStatus("saving");
-    setTimeout(() => {
+  const handleSaveDraft = async () => {
+    try {
+      setSavedStatus("saving");
+
+      await saveDraftMutation.mutateAsync({
+        data: {
+          patientId,
+
+          chartId,
+
+          measureId: selectedMeasureId,
+
+          serviceDate: formData.serviceDate,
+
+          screeningType: formData.screeningType,
+
+          evidenceType: formData.evidenceType,
+
+          reading: formData.numerator,
+
+          cptCode: formData.cptCode,
+
+          icd10Code: formData.icdCode,
+
+          evidenceSource: formData.evidenceSource,
+
+          notes: formData.notes,
+        },
+      });
+
+      await refetchDraft();
+
       setSavedStatus("saved");
-      setTimeout(() => setSavedStatus("idle"), 2200);
-    }, 800);
+
+      toast.success("Draft Saved Successfully");
+
+      setTimeout(() => {
+        setSavedStatus("idle");
+      }, 2000);
+    } catch (error) {
+      setSavedStatus("idle");
+
+      toast.error("Unable to Save Draft");
+    }
   };
+  const markNotFoundMutation = usePostApiHedisAbstractorMarkNotFound();
+  const saveDraftMutation = usePostApiHedisAbstractorSaveDraft();
 
   const { data } = useGetApiHedisAbstractorMeasuresPatientid(patientId);
 
@@ -2320,6 +2378,43 @@ export function AbstractionWorkspace({
   const selectedMeasure = measureList.find(
     (m: any) => m.measure_id === selectedMeasureId,
   );
+
+  const { data: draftData, refetch: refetchDraft } =
+    useGetApiHedisAbstractorDraftPatientid(
+      patientId,
+      {
+        chartId: chartId!,
+        measureId: selectedMeasureId,
+      },
+      {
+        query: {
+          enabled: !!patientId && !!chartId && !!selectedMeasureId,
+        },
+      },
+    );
+
+  useEffect(() => {
+    const draft = draftData?.draft;
+
+    if (!draft) {
+      setFormData(EMPTY_FORM);
+      return;
+    }
+
+    setFormData({
+      ...EMPTY_FORM,
+
+      serviceDate: draft.service_date ?? "",
+      screeningType: draft.screening_type ?? "",
+      evidenceType: draft.evidence_type ?? "",
+      numerator: draft.reading ?? "",
+      cptCode: draft.cpt_code ?? "",
+      icdCode: draft.icd10_code ?? "",
+      evidenceSource: "",
+      notes: draft.notes ?? "",
+    });
+  }, [draftData]);
+
   const { data: timelineData, isLoading: timelineLoading } =
     useGetApiHedisEvidenceTimelineId(patientId, {
       filter: timelineFilter,
@@ -2333,6 +2428,27 @@ export function AbstractionWorkspace({
       },
     });
   const sendToQaMutation = usePostApiHedisSendToQa();
+  const handleMarkNotFound = async () => {
+    try {
+      await markNotFoundMutation.mutateAsync({
+        data: {
+          patientId: patientId!,
+          chartId: chartId!,
+          measureId: selectedMeasureId,
+          comment: formData.notes || "Evidence not found by Abstractor.",
+        },
+      });
+
+      toast.success("Evidence marked as Not Found.");
+
+      setSubmitMode("notfound");
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ??
+          "Unable to mark evidence as Not Found.",
+      );
+    }
+  };
   const handleSubmitQA = async () => {
     try {
       await sendToQaMutation.mutateAsync({
@@ -2359,17 +2475,6 @@ export function AbstractionWorkspace({
       );
     }
   };
-  console.log("Measure Library", measureLibrary);
-
-  console.log("Timeline Response:", timelineData);
-  useEffect(() => {
-    console.log("FULL API RESPONSE:", data);
-  }, [data]);
-
-  useEffect(() => {
-    console.log("MEASURE LIST:", measureList);
-  }, [measureList]);
-  console.log("PDF URL:", selectedMeasure?.chart_url);
 
   return (
     <div
@@ -2610,7 +2715,7 @@ export function AbstractionWorkspace({
             setForm={setFormData}
             onSubmitQA={handleSubmitQA}
             onSaveDraft={handleSaveDraft}
-            onMarkNotFound={() => setSubmitMode("notfound")}
+            onMarkNotFound={handleMarkNotFound}
             prefillData={prefill}
             measure={measureLibrary}
           />
@@ -2652,7 +2757,17 @@ export function AbstractionWorkspace({
       </div>
 
       {/* ══ SUBMIT MODAL ══ */}
-      <SubmitModal mode={submitMode} onClose={() => setSubmitMode(null)} />
+      <SubmitModal
+        mode={submitMode}
+        onClose={() => setSubmitMode(null)}
+        onConfirm={async (mode) => {
+          if (mode === "qa") {
+            await handleSubmitQA();
+          } else {
+            await handleMarkNotFound();
+          }
+        }}
+      />
     </div>
   );
 }
