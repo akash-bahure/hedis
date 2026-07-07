@@ -8,17 +8,37 @@ console.log("[HEDIS QA WORKER] Initializing worker process...");
 const worker = new Worker(
   "hedis-qa-review",
   async (job) => {
-    const { evaluationId, patientId, measureCode, pdfPath, tenantSubdomain, recalculation, manualEvidence } = job.data;
-    console.log(`[HEDIS QA WORKER] Job started: ${job.id} for Evaluation ID: ${evaluationId}, Patient ID: ${patientId}, Measure: ${measureCode}, Recalculation: ${recalculation}`);
+    const {
+      evaluationId,
+      patientId,
+      measureCode,
+      pdfPath,
+      tenantSubdomain,
+      recalculation,
+      manualEvidence,
+    } = job.data;
+    console.log(
+      `[HEDIS QA WORKER] Job started: ${job.id} for Evaluation ID: ${evaluationId}, Patient ID: ${patientId}, Measure: ${measureCode}, Recalculation: ${recalculation}`
+    );
 
-    if (!evaluationId || !patientId || !measureCode || !pdfPath || !tenantSubdomain) {
-      throw new Error(`Invalid job data. Required details: evaluationId, patientId, measureCode, pdfPath, tenantSubdomain. Got: ${JSON.stringify(job.data)}`);
+    if (
+      !evaluationId ||
+      !patientId ||
+      !measureCode ||
+      !pdfPath ||
+      !tenantSubdomain
+    ) {
+      throw new Error(
+        `Invalid job data. Required details: evaluationId, patientId, measureCode, pdfPath, tenantSubdomain. Got: ${JSON.stringify(job.data)}`
+      );
     }
 
     const client = await pool.connect();
     try {
       // 1. Fetch tenant schema name to set search_path
-      console.log(`[HEDIS QA WORKER] Fetching tenant info for subdomain: ${tenantSubdomain}`);
+      console.log(
+        `[HEDIS QA WORKER] Fetching tenant info for subdomain: ${tenantSubdomain}`
+      );
       const tenantResult = await client.query(
         "SELECT schema_name FROM public.tenants WHERE subdomain = $1",
         [tenantSubdomain]
@@ -29,7 +49,9 @@ const worker = new Worker(
       }
 
       const schema = tenantResult.rows[0].schema_name;
-      console.log(`[HEDIS QA WORKER] Configuring search path to: ${schema}, public`);
+      console.log(
+        `[HEDIS QA WORKER] Configuring search path to: ${schema}, public`
+      );
       await client.query(`SET search_path TO ${schema}, public`);
 
       // 2. Check if cached analysis already exists (prevent duplicate insertion)
@@ -38,12 +60,16 @@ const worker = new Worker(
         [evaluationId]
       );
       if (checkResult.rows.length > 0 && !recalculation) {
-        console.log(`[HEDIS QA WORKER] Cached analysis already exists for evaluation ${evaluationId}. Skipping processing.`);
+        console.log(
+          `[HEDIS QA WORKER] Cached analysis already exists for evaluation ${evaluationId}. Skipping processing.`
+        );
         return { skipped: true, reason: "Already exists" };
       }
 
       if (recalculation) {
-        console.log(`[HEDIS QA WORKER] Deleting existing QA analysis for evaluation: ${evaluationId}`);
+        console.log(
+          `[HEDIS QA WORKER] Deleting existing QA analysis for evaluation: ${evaluationId}`
+        );
         await client.query(
           "DELETE FROM hedis_qa_review_analyses WHERE evaluation_id = $1",
           [evaluationId]
@@ -51,7 +77,9 @@ const worker = new Worker(
       }
 
       // 3. Fetch measure rules from Measure Library
-      console.log(`[HEDIS QA WORKER] Fetching measure rules for code: ${measureCode}`);
+      console.log(
+        `[HEDIS QA WORKER] Fetching measure rules for code: ${measureCode}`
+      );
       const measureResult = await client.query(
         "SELECT * FROM measures WHERE measure_code = $1",
         [measureCode]
@@ -60,8 +88,11 @@ const worker = new Worker(
       const measureName = measureRules.measure_name || measureCode;
 
       // 4. Call AI Service
-      const aiServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8001";
-      console.log(`[HEDIS QA WORKER] Calling AI Service at ${aiServiceUrl}/api/hedis/qa-review-analysis`);
+      const aiServiceUrl =
+        process.env.AI_SERVICE_URL || "http://localhost:8001";
+      console.log(
+        `[HEDIS QA WORKER] Calling AI Service at ${aiServiceUrl}/api/hedis/qa-review-analysis`
+      );
 
       const aiResponse = await axios.post(
         `${aiServiceUrl}/api/hedis/qa-review-analysis`,
@@ -80,7 +111,9 @@ const worker = new Worker(
       const analysisData = aiResponse.data;
 
       // 5. Persist result to DB
-      console.log(`[HEDIS QA WORKER] Saving QA Review Analysis to DB for evaluation: ${evaluationId}`);
+      console.log(
+        `[HEDIS QA WORKER] Saving QA Review Analysis to DB for evaluation: ${evaluationId}`
+      );
       await client.query(
         `INSERT INTO hedis_qa_review_analyses
           (
@@ -112,15 +145,22 @@ const worker = new Worker(
       );
 
       if (recalculation) {
-        console.log(`[HEDIS QA WORKER] Updating hedis_evaluations with recalculated results for evaluation: ${evaluationId}`);
+        console.log(
+          `[HEDIS QA WORKER] Updating hedis_evaluations with recalculated results for evaluation: ${evaluationId}`
+        );
         const validationChecklist = analysisData.validationChecklist || {};
-        const eligible = !validationChecklist.eligibility?.some(item => item.status === 'FAIL');
+        const eligible = !validationChecklist.eligibility?.some(
+          (item) => item.status === "FAIL"
+        );
         const denominator = eligible;
-        const numerator = !validationChecklist.evidence?.some(item => item.status === 'FAIL');
-        const status = numerator ? 'Compliant' : 'Non-Compliant';
+        const numerator = !validationChecklist.evidence?.some(
+          (item) => item.status === "FAIL"
+        );
+        const status = numerator ? "complete" : "gap";
         const confidence = parseFloat(analysisData.summary?.confidence || 0);
         const reasoning = `QA Review Recalculation: ${analysisData.summary?.passed || 0} checks passed, ${analysisData.summary?.failed || 0} checks failed.`;
-        const evidence = analysisData.allEvidence || analysisData.extractedEvidence || [];
+        const evidence =
+          analysisData.allEvidence || analysisData.extractedEvidence || [];
 
         await client.query(
           `UPDATE hedis_evaluations
@@ -143,7 +183,7 @@ const worker = new Worker(
             reasoning,
             JSON.stringify(evidence),
             JSON.stringify(analysisData),
-            evaluationId
+            evaluationId,
           ]
         );
       }
@@ -165,7 +205,10 @@ const worker = new Worker(
 );
 
 worker.on("failed", (job, err) => {
-  console.error(`[HEDIS QA WORKER] Job ${job.id || "unknown"} failed permanently:`, err.message);
+  console.error(
+    `[HEDIS QA WORKER] Job ${job.id || "unknown"} failed permanently:`,
+    err.message
+  );
 });
 
 worker.on("error", (err) => {
