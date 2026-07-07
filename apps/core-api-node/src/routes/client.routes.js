@@ -401,4 +401,74 @@ router.patch("/:id", controller.updateClient);
  */
 router.delete("/:id", controller.deleteClient);
 
+const dashboardController = require("../controllers/clientDashboard.controller");
+
+/**
+ * @swagger
+ * /api/clients/v2:
+ *   post:
+ *     summary: Create client (V2)
+ *     tags: [Clients]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       201:
+ *         description: Client created successfully
+ */
+router.post("/v2", dashboardController.createClientV2);
+
+/**
+ * @swagger
+ * /api/clients/v2:
+ *   get:
+ *     summary: Get clients list (V2)
+ *     tags: [Clients]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Clients retrieved successfully
+ */
+router.get("/v2", dashboardController.getClientsV2);
+
+/**
+ * @swagger
+ * /api/clients/v2/stats:
+ *   get:
+ *     summary: Get clients stats (V2)
+ *     tags: [Clients]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Client stats retrieved successfully
+ */
+router.get("/v2/stats", dashboardController.getClientStatsV2);
+
+/**
+ * @swagger
+ * /api/clients/v2/{id}:
+ *   get:
+ *     summary: Get client by ID (V2)
+ *     tags: [Clients]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Client retrieved successfully
+ */
+router.get("/v2/:id", dashboardController.getClientByIdV2);
+
 module.exports = router;

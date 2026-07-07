@@ -136,5 +136,6 @@ app.use("/api/security-alerts", require("./routes/securityalrestRoute"));
 app.use("/api/reports-analytics", require("./routes/reportsAnalytics.routes"));
 app.use("/api/measures", require("./routes/measure.routes"));
 app.use("/api/hedis", require("./routes/hedis.routes"));
+app.use("/api/dashboard", require("./routes/dashboard.routes"));
 
 module.exports = app;
