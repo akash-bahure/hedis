@@ -42,9 +42,18 @@ import {
   Flag,
   Info,
   Layers,
+  X,
   CircleDot,
 } from "lucide-react";
-
+import {
+  useGetApiDashboardMeasureRates,
+  useGetApiDashboardQueueByMeasure,
+  useGetApiRecentActivity,
+  useGetApiDashboardAbstractionVelocity,
+  useGetApiDashboardQueueByDomain,
+  useGetApiDashboardStats,
+} from "@/api";
+import { Pagination } from "./Pagination";
 /* ─── Colours ──────────────────────────────────────────── */
 const C = {
   primary: "#0891b2",
@@ -370,58 +379,97 @@ function SectionTitle({
   );
 }
 
-/* ─── MEASURE RATE ROW ────────────────────────────────────── */
-function MeasureRateRow({ m }: { m: (typeof hedisRates)[0] }) {
-  const pct = Math.round((m.rate / m.target) * 100);
-  const aboveBench = m.rate >= m.benchmark;
+/* ─── Modal Component (Reusable) ─────────────────────────── */
+function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="bg-card border border-border rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-xl">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+          <button
+            onClick={onClose}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-auto p-6">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Updated MeasureRateRow (handles API shape) ──────────── */
+function MeasureRateRow({ m }: { m: any }) {
+  const rate = m.currentRate ?? 0;
+  const target = m.targetRate ?? 80;
+  const yoy = m.yoy ?? 0;
+  const benchmarkStatus =
+    m.benchmarkStatus || (rate >= target ? "Above" : "Below");
+
+  const pct = Math.round((rate / target) * 100);
+  const aboveBench = benchmarkStatus === "Above";
+
   return (
     <div className="group flex items-center gap-3 px-4 py-2.5 border-b border-border/50 last:border-0 hover:bg-muted/10 transition-colors">
-      {/* Measure chip */}
       <span className="w-10 inline-flex items-center justify-center h-6 bg-primary/10 text-primary border border-primary/20 rounded text-[10px] font-bold flex-shrink-0">
-        {m.measure}
+        {m.measureCode}
       </span>
-      {/* Name */}
+
       <div className="flex-1 min-w-0">
         <div className="text-xs font-semibold text-foreground truncate">
-          {m.name}
+          {m.measureName}
         </div>
         <div className="text-[10px] text-muted-foreground">{m.domain}</div>
       </div>
-      {/* Rate vs benchmark */}
+
       <div className="flex items-center gap-3 flex-shrink-0">
-        {/* Progress bar */}
         <div className="w-28 hidden lg:flex flex-col gap-0.5">
           <div className="flex items-center justify-between text-[9px] text-muted-foreground">
-            <span>{m.rate}%</span>
-            <span>Target {m.target}%</span>
+            <span>{rate}%</span>
+            <span>Target {target}%</span>
           </div>
           <div className="h-1.5 bg-muted rounded-full overflow-hidden relative">
-            {/* Benchmark marker */}
             <div
               className="absolute top-0 bottom-0 w-0.5 bg-amber-400 z-10"
-              style={{ left: `${(m.benchmark / m.target) * 100}%` }}
+              style={{ left: `${((target * 0.9) / target) * 100}%` }} // rough benchmark marker
             />
             <div
               className={`h-full rounded-full ${aboveBench ? "bg-emerald-500" : "bg-primary"}`}
-              style={{ width: `${Math.min(100, (m.rate / m.target) * 100)}%` }}
+              style={{ width: `${Math.min(100, pct)}%` }}
             />
           </div>
         </div>
-        {/* Change */}
+
         <span
           className={`flex items-center gap-0.5 text-[10px] font-bold w-14 justify-end ${
-            m.change >= 0 ? "text-emerald-600" : "text-red-500"
+            yoy >= 0 ? "text-emerald-600" : "text-red-500"
           }`}
         >
-          {m.change >= 0 ? (
+          {yoy >= 0 ? (
             <TrendingUp className="w-3 h-3" />
           ) : (
             <TrendingDown className="w-3 h-3" />
           )}
-          {m.change >= 0 ? "+" : ""}
-          {m.change}%
+          {yoy >= 0 ? "+" : ""}
+          {yoy}%
         </span>
-        {/* Status */}
+
         <span
           className={`text-[9px] font-bold px-1.5 py-0.5 rounded border w-16 text-center flex-shrink-0 ${
             aboveBench
@@ -436,11 +484,472 @@ function MeasureRateRow({ m }: { m: (typeof hedisRates)[0] }) {
   );
 }
 
+function QueueRow({ q }: { q: any }) {
+  const pct = q.completionPercentage ?? 0;
+
+  return (
+    <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border/50 last:border-0 hover:bg-muted/10 transition-colors">
+      <span className="w-10 inline-flex items-center justify-center h-6 bg-primary/10 text-primary border border-primary/20 rounded text-[10px] font-bold flex-shrink-0">
+        {q.measureCode}
+      </span>
+
+      <div className="w-24 flex-shrink-0">
+        <div className="flex items-center gap-1.5">
+          <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full ${
+                pct >= 80
+                  ? "bg-emerald-500"
+                  : pct >= 60
+                    ? "bg-primary"
+                    : "bg-amber-500"
+              }`}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <span className="text-[10px] font-bold text-foreground w-8 text-right">
+            {pct}%
+          </span>
+        </div>
+      </div>
+
+      <span className="flex-1 text-xs font-semibold text-foreground">
+        {q.open}
+      </span>
+      <span className="w-16 text-xs text-muted-foreground text-right">
+        {q.inProgress}
+      </span>
+      <span className="w-20 text-xs font-semibold text-emerald-700 text-right">
+        {q.completed.toLocaleString()}
+      </span>
+    </div>
+  );
+}
+
+/* ─── New: Activity Row with Relative Time ──────────────────────────────── */
+function ActivityRow({ activity }: { activity: any }) {
+  const getIconAndColor = (type: string) => {
+    switch (type?.toLowerCase()) {
+      case "qa approved":
+      case "completed":
+        return { Icon: CheckCircle2, color: "text-emerald-600 bg-emerald-50" };
+      case "qa returned":
+      case "qa fail":
+        return { Icon: RefreshCw, color: "text-blue-600 bg-blue-50" };
+      case "ai evaluation completed":
+      case "ai suggestion":
+        return { Icon: Sparkles, color: "text-violet-600 bg-violet-50" };
+      case "audit":
+        return { Icon: Shield, color: "text-primary bg-primary/10" };
+      case "patient chart uploaded":
+      case "chart uploaded":
+        return { Icon: FileText, color: "text-slate-600 bg-slate-100" };
+      case "exception":
+      case "flagged":
+        return { Icon: AlertTriangle, color: "text-amber-600 bg-amber-50" };
+      default:
+        return { Icon: Clock, color: "text-slate-600 bg-slate-100" };
+    }
+  };
+
+  const { Icon, color } = getIconAndColor(activity.activityType);
+
+  // ── Smart Relative Time ─────────────────────────────────────
+  const getRelativeTime = (dateString: string): string => {
+    const now = new Date();
+    const created = new Date(dateString);
+    const diffMs = now.getTime() - created.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hr ago`;
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return created.toLocaleDateString([], { month: "short", day: "numeric" });
+  };
+
+  const relativeTime = getRelativeTime(activity.createdAt);
+
+  return (
+    <div className="flex items-start gap-2.5 px-4 py-2.5 hover:bg-muted/10 transition-colors">
+      <div
+        className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${color}`}
+      >
+        <Icon className="w-3.5 h-3.5" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-baseline justify-between gap-1">
+          <span className="text-[11px] font-semibold text-foreground truncate">
+            {activity.activityType}
+          </span>
+          <span className="text-[9px] text-muted-foreground/70 flex-shrink-0">
+            {relativeTime}
+          </span>
+        </div>
+        <div className="text-[10px] text-muted-foreground truncate">
+          {activity.description}
+        </div>
+        <div className="text-[9px] text-muted-foreground/60 mt-0.5">
+          {activity.performedBy}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Abstraction Velocity Chart Component ───────────────────────────── */
+function AbstractionVelocityChart() {
+  const {
+    data: velocityResponse,
+    isLoading,
+    error,
+  } = useGetApiDashboardAbstractionVelocity({ days: 14 });
+
+  const chartData =
+    velocityResponse?.data?.map((item: any) => {
+      const date = new Date(item.date);
+      const dayLabel = date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+
+      return {
+        day: dayLabel,
+        charts: item.totalCharts || 0,
+        aiAssist: item.aiAssisted || 0,
+        target: item.target || 40,
+      };
+    }) ?? [];
+
+  // Fallback to mock if no data
+  const finalData = chartData.length > 0 ? chartData : velocityTrend;
+
+  const uid = useId();
+  const gradChartsId = `gradCharts-${uid}`;
+  const gradAIId = `gradAI-${uid}`;
+
+  if (isLoading) {
+    return (
+      <div className="h-[180px] flex items-center justify-center text-muted-foreground">
+        Loading velocity data...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-[180px] flex items-center justify-center text-red-500">
+        Failed to load abstraction velocity.
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <ResponsiveContainer width="100%" height={180}>
+        <AreaChart
+          data={finalData}
+          margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
+        >
+          <defs>
+            <linearGradient id={gradChartsId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={C.primary} stopOpacity={0.15} />
+              <stop offset="95%" stopColor={C.primary} stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id={gradAIId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={C.violet} stopOpacity={0.12} />
+              <stop offset="95%" stopColor={C.violet} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+          <XAxis
+            dataKey="day"
+            tick={{ fontSize: 9, fill: "var(--muted-foreground)" }}
+            tickLine={false}
+            axisLine={false}
+            interval={0}
+          />
+          <YAxis
+            tick={{ fontSize: 9, fill: "var(--muted-foreground)" }}
+            tickLine={false}
+            axisLine={false}
+          />
+          <Tooltip
+            contentStyle={{
+              background: "var(--card)",
+              border: "1px solid var(--border)",
+              borderRadius: 8,
+              fontSize: 11,
+            }}
+            labelStyle={{ fontWeight: 700 }}
+          />
+          <Line
+            type="monotone"
+            dataKey="target"
+            stroke={C.amber}
+            strokeDasharray="4 3"
+            strokeWidth={1.5}
+            dot={false}
+            name="Daily Target"
+          />
+          <Area
+            type="monotone"
+            dataKey="charts"
+            stroke={C.primary}
+            strokeWidth={2}
+            fill={`url(#${gradChartsId})`}
+            name="Total Charts"
+            dot={false}
+          />
+          <Area
+            type="monotone"
+            dataKey="aiAssist"
+            stroke={C.violet}
+            strokeWidth={1.5}
+            fill={`url(#${gradAIId})`}
+            name="AI-Assisted"
+            dot={false}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+
+      <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground">
+        <span className="flex items-center gap-1">
+          <span className="w-3 h-0.5 bg-primary inline-block rounded" />
+          Total Charts
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="w-3 h-0.5 bg-violet-500 inline-block rounded" />
+          AI-Assisted
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="w-3 h-0.5 border-t-2 border-dashed border-amber-400 inline-block" />
+          Target
+        </span>
+      </div>
+    </>
+  );
+}
+
+/* ─── Queue by Domain Chart Component ───────────────────────────── */
+function DomainBreakdownChart() {
+  const {
+    data: domainResponse,
+    isLoading,
+    error,
+  } = useGetApiDashboardQueueByDomain();
+
+  const apiDomainData = domainResponse?.data ?? [];
+
+  // Map API data to chart format + assign colors
+  const chartData = apiDomainData.map((item: any, index: number) => {
+    const colors = [
+      C.emerald,
+      C.primary,
+      C.cyan,
+      C.violet,
+      C.teal,
+      C.amber,
+      "#64748b",
+    ];
+    return {
+      name: item.domain,
+      value: item.percentage || 0,
+      count: item.count || 0,
+      color: colors[index % colors.length],
+    };
+  });
+
+  // Fallback to mock if API returns empty
+  const finalData = chartData.length > 0 ? chartData : domainData;
+
+  if (isLoading) {
+    return (
+      <div className="h-[160px] flex items-center justify-center text-muted-foreground">
+        Loading domain distribution...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-[160px] flex items-center justify-center text-red-500">
+        Failed to load domain breakdown.
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <ResponsiveContainer width="100%" height={160}>
+        <PieChart>
+          <Pie
+            data={finalData}
+            cx="50%"
+            cy="50%"
+            innerRadius={45}
+            outerRadius={70}
+            paddingAngle={2}
+            dataKey="value"
+          >
+            {finalData.map((d: any, index: number) => (
+              <Cell key={`cell-${index}`} fill={d.color} />
+            ))}
+          </Pie>
+          <Tooltip
+            contentStyle={{
+              background: "var(--card)",
+              border: "1px solid var(--border)",
+              borderRadius: 8,
+              fontSize: 11,
+            }}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+
+      <div className="space-y-1.5 mt-1">
+        {finalData.map((d: any) => (
+          <div
+            key={d.name}
+            className="flex items-center justify-between text-[10px]"
+          >
+            <div className="flex items-center gap-1.5">
+              <span
+                className="w-2 h-2 rounded-full flex-shrink-0"
+                style={{ background: d.color }}
+              />
+              <span className="text-muted-foreground">{d.name}</span>
+            </div>
+            <span className="font-semibold text-foreground">{d.value}%</span>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+/* ─── Dashboard KPI Cards Component ───────────────────────────── */
+/* ─── Dashboard KPI Cards Component ───────────────────────────── */
+function DashboardKpiCards() {
+  const { data: statsResponse, isLoading, error } = useGetApiDashboardStats();
+
+  const stats = statsResponse?.data ?? {};
+
+  const getValue = (obj: any, fallback: string = "0") => {
+    const val = obj?.value ?? null;
+    return val !== null && val !== undefined ? val : fallback;
+  };
+
+  const getTrend = (obj: any) => {
+    const trend = obj?.trend ?? "";
+    return trend || "0%";
+  };
+
+  const getTrendUp = (obj: any) => {
+    const type = obj?.trendType;
+    if (type === "up") return true;
+    if (type === "down") return false;
+    return undefined;
+  };
+
+  // Loading skeleton for each card
+  if (isLoading) {
+    return (
+      <>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div
+            key={i}
+            className="bg-card border border-border rounded-xl p-4 flex flex-col gap-3 animate-pulse"
+          >
+            <div className="w-9 h-9 bg-muted rounded-lg" />
+            <div>
+              <div className="h-8 w-16 bg-muted rounded" />
+              <div className="h-3 w-24 bg-muted rounded mt-2" />
+              <div className="h-3 w-20 bg-muted rounded mt-1" />
+            </div>
+          </div>
+        ))}
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="col-span-full h-32 flex items-center justify-center text-red-500 border border-border rounded-xl">
+        Failed to load dashboard statistics.
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <KpiCard
+        label="Open Queue"
+        value={getValue(stats.openQueue).toLocaleString()}
+        sub="charts pending abstraction"
+        icon={ClipboardList}
+        color="bg-primary/10 text-primary"
+        trend={getTrend(stats.openQueue)}
+        trendUp={getTrendUp(stats.openQueue)}
+      />
+
+      <KpiCard
+        label="Completed Today"
+        value={getValue(stats.completedToday).toString()}
+        sub="abstractions finalized"
+        icon={CheckCircle2}
+        color="bg-emerald-100 text-emerald-700"
+        trend={getTrend(stats.completedToday)}
+        trendUp={getTrendUp(stats.completedToday)}
+      />
+
+      <KpiCard
+        label="Overall HEDIS Rate"
+        value={`${getValue(stats.overallHedisRate)}%`}
+        sub="blended MY2026 rate"
+        icon={Target}
+        color="bg-cyan-100 text-cyan-700"
+        trend={getTrend(stats.overallHedisRate)}
+        trendUp={getTrendUp(stats.overallHedisRate)}
+      />
+
+      <KpiCard
+        label="AI Assist Rate"
+        value={`${getValue(stats.aiAssistRate)}%`}
+        sub="suggestions accepted"
+        icon={Sparkles}
+        color="bg-violet-100 text-violet-700"
+        trend={getTrend(stats.aiAssistRate)}
+        trendUp={getTrendUp(stats.aiAssistRate)}
+      />
+
+      <KpiCard
+        label="SLA Compliance"
+        value={`${getValue(stats.slaCompliance)}%`}
+        sub="charts on-time"
+        icon={Shield}
+        color="bg-amber-100 text-amber-700"
+        trend={getTrend(stats.slaCompliance)}
+        trendUp={getTrendUp(stats.slaCompliance)}
+      />
+    </>
+  );
+}
+
 /* ═══════════════════════════════════════════════════════════
    MAIN DASHBOARD
 ═══════════════════════════════════════════════════════════ */
 export function Dashboard() {
   const [activeTab, setActiveTab] = useState<"rates" | "queue">("rates");
+  const [ratesModalOpen, setRatesModalOpen] = useState(false);
+  const [queueModalOpen, setQueueModalOpen] = useState(false);
+  const [activityModalOpen, setActivityModalOpen] = useState(false);
+  const [modalPage, setModalPage] = useState(1);
+  const [queueModalPage, setQueueModalPage] = useState(1);
+  const [activityPage, setActivityPage] = useState(1);
   const uid = useId();
   const gradChartsId = `gradCharts-${uid}`;
   const gradAIId = `gradAI-${uid}`;
@@ -450,11 +959,88 @@ export function Dashboard() {
   const totalCompleted = queueByMeasure.reduce((s, q) => s + q.completed, 0);
   const totalDenominator = queueByMeasure.reduce((s, q) => s + q.total, 0);
   const completionPct = Math.round((totalCompleted / totalDenominator) * 100);
-  const avgRate =
-    Math.round(
-      (hedisRates.reduce((s, m) => s + m.rate, 0) / hedisRates.length) * 10,
-    ) / 10;
-  const aboveBenchCt = hedisRates.filter((m) => m.rate >= m.benchmark).length;
+
+  // API Integration - HEDIS Measure Rates
+  const {
+    data: ratesResponse,
+    isLoading: ratesLoading,
+    error: ratesError,
+  } = useGetApiDashboardMeasureRates({
+    page_no: 1,
+    page_size: 9, // keep small for dashboard preview
+  });
+
+  const apiRates = ratesResponse?.data ?? [];
+  const paginationInfo = ratesResponse?.pagination;
+
+  // Fallback / computed values
+  const avgRate = apiRates.length
+    ? Math.round(
+        (apiRates.reduce((sum, m) => sum + (m.currentRate ?? 0), 0) /
+          apiRates.length) *
+          10
+      ) / 10
+    : 72.8;
+
+  const aboveBenchCt = apiRates.filter(
+    (m) =>
+      m.benchmarkStatus === "Above" ||
+      (m.currentRate ?? 0) >= (m.targetRate ?? 80)
+  ).length;
+
+  // For full modal pagination
+  const { data: fullRatesResponse, isLoading: fullRatesLoading } =
+    useGetApiDashboardMeasureRates(
+      {
+        page_no: modalPage,
+        page_size: 10,
+      },
+      { enabled: ratesModalOpen }
+    );
+
+  const fullRates = fullRatesResponse?.data ?? [];
+  const fullPagination = fullRatesResponse?.pagination;
+
+  // ====================== QUEUE API ======================
+  const {
+    data: queueResponse,
+    isLoading: queueLoading,
+    error: queueError,
+  } = useGetApiDashboardQueueByMeasure({ page_no: 1, page_size: 8 });
+
+  const apiQueue = queueResponse?.data ?? [];
+  const summary = queueResponse?.summary ?? {
+    totalOpen: 0,
+    totalInProgress: 0,
+    totalCompleted: 0,
+    completionPercentage: 0,
+  };
+
+  // Full modal data for Queue
+  const { data: fullQueueResponse, isLoading: fullQueueLoading } =
+    useGetApiDashboardQueueByMeasure(
+      { page_no: queueModalPage, page_size: 10 },
+      { enabled: queueModalOpen }
+    );
+
+  const fullQueue = fullQueueResponse?.data ?? [];
+  const fullQueuePagination = fullQueueResponse?.pagination;
+
+  const {
+    data: activityResponse,
+    isLoading: activityLoading,
+    error: activityError,
+  } = useGetApiRecentActivity({ page: 1, limit: 6 }); // small for sidebar
+  const recentActivities = activityResponse?.data ?? [];
+
+  const { data: fullActivityResponse, isLoading: fullActivityLoading } =
+    useGetApiRecentActivity(
+      { page: activityPage, limit: 10 },
+      { enabled: activityModalOpen }
+    );
+
+  const fullActivities = fullActivityResponse?.data ?? [];
+  const activityMeta = fullActivityResponse?.metadata;
 
   return (
     <div className="space-y-5">
@@ -483,56 +1069,14 @@ export function Dashboard() {
         </div>
 
         {/* ── KPI Cards ── */}
+        {/* ── KPI Cards ── */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-          <KpiCard
-            label="Open Queue"
-            value={totalOpen.toLocaleString()}
-            sub="charts pending abstraction"
-            icon={ClipboardList}
-            color="bg-primary/10 text-primary"
-            trend="↑ 12 today"
-            trendUp={false}
-          />
-          <KpiCard
-            label="Completed Today"
-            value="52"
-            sub="abstractions finalized"
-            icon={CheckCircle2}
-            color="bg-emerald-100 text-emerald-700"
-            trend="+30% vs avg"
-            trendUp={true}
-          />
-          <KpiCard
-            label="Overall HEDIS Rate"
-            value={`${avgRate}%`}
-            sub="blended MY2026 rate"
-            icon={Target}
-            color="bg-cyan-100 text-cyan-700"
-            trend="+1.4% vs MY2025"
-            trendUp={true}
-          />
-          <KpiCard
-            label="AI Assist Rate"
-            value="87.3%"
-            sub="suggestions accepted"
-            icon={Sparkles}
-            color="bg-violet-100 text-violet-700"
-            trend="+3.1% this wk"
-            trendUp={true}
-          />
-          <KpiCard
-            label="SLA Compliance"
-            value="91.2%"
-            sub="charts on-time"
-            icon={Shield}
-            color="bg-amber-100 text-amber-700"
-            trend="-0.8% this wk"
-            trendUp={false}
-          />
+          <DashboardKpiCards />
         </div>
 
         {/* ── Row 2: Velocity + Domain Breakdown ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Abstraction Velocity */}
           {/* Abstraction Velocity */}
           <div className="lg:col-span-2 bg-card border border-border rounded-xl p-5">
             <SectionTitle
@@ -544,152 +1088,18 @@ export function Dashboard() {
                 Last 14 days
               </span>
             </SectionTitle>
-            <ResponsiveContainer width="100%" height={180}>
-              <AreaChart
-                data={velocityTrend}
-                margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
-              >
-                <defs>
-                  <linearGradient id={gradChartsId} x1="0" y1="0" x2="0" y2="1">
-                    <stop
-                      offset="5%"
-                      stopColor={C.primary}
-                      stopOpacity={0.15}
-                    />
-                    <stop offset="95%" stopColor={C.primary} stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id={gradAIId} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={C.violet} stopOpacity={0.12} />
-                    <stop offset="95%" stopColor={C.violet} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="var(--border)"
-                  key="cartesian-grid"
-                />
-                <XAxis
-                  dataKey="day"
-                  tick={{ fontSize: 9, fill: "var(--muted-foreground)" }}
-                  tickLine={false}
-                  axisLine={false}
-                  interval={1}
-                  key="x-axis"
-                />
-                <YAxis
-                  tick={{ fontSize: 9, fill: "var(--muted-foreground)" }}
-                  tickLine={false}
-                  axisLine={false}
-                  key="y-axis"
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--card)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 8,
-                    fontSize: 11,
-                  }}
-                  labelStyle={{ fontWeight: 700 }}
-                  key="tooltip"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="target"
-                  stroke={C.amber}
-                  strokeDasharray="4 3"
-                  strokeWidth={1.5}
-                  dot={false}
-                  name="Daily Target"
-                  key="target-line"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="charts"
-                  stroke={C.primary}
-                  strokeWidth={2}
-                  fill={`url(#${gradChartsId})`}
-                  name="Total Charts"
-                  dot={false}
-                  key="charts-area"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="aiAssist"
-                  stroke={C.violet}
-                  strokeWidth={1.5}
-                  fill={`url(#${gradAIId})`}
-                  name="AI-Assisted"
-                  dot={false}
-                  key="ai-area"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-            <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <span className="w-3 h-0.5 bg-primary inline-block rounded" />
-                Total Charts
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="w-3 h-0.5 bg-violet-500 inline-block rounded" />
-                AI-Assisted
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="w-3 h-0.5 border-t-2 border-dashed border-amber-400 inline-block" />
-                Target
-              </span>
-            </div>
+
+            <AbstractionVelocityChart />
           </div>
 
+          {/* Domain Breakdown */}
           {/* Domain Breakdown */}
           <div className="bg-card border border-border rounded-xl p-5">
             <SectionTitle
               title="Queue by Domain"
               sub="Open charts by HEDIS domain"
             />
-            <ResponsiveContainer width="100%" height={160}>
-              <PieChart>
-                <Pie
-                  data={domainData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={45}
-                  outerRadius={70}
-                  paddingAngle={2}
-                  dataKey="value"
-                >
-                  {domainData.map((d) => (
-                    <Cell key={d.name} fill={d.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--card)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 8,
-                    fontSize: 11,
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="space-y-1.5 mt-1">
-              {domainData.map((d) => (
-                <div
-                  key={d.name}
-                  className="flex items-center justify-between text-[10px]"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className="w-2 h-2 rounded-full flex-shrink-0"
-                      style={{ background: d.color }}
-                    />
-                    <span className="text-muted-foreground">{d.name}</span>
-                  </div>
-                  <span className="font-semibold text-foreground">
-                    {d.value}%
-                  </span>
-                </div>
-              ))}
-            </div>
+            <DomainBreakdownChart />
           </div>
         </div>
 
@@ -720,15 +1130,24 @@ export function Dashboard() {
                 Queue by Measure
               </button>
               <div className="ml-auto flex items-center gap-2 pb-2">
-                <span className="text-[10px] text-muted-foreground">
-                  {aboveBenchCt}/{hedisRates.length} above benchmark
-                </span>
-                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
-                  {Math.round((aboveBenchCt / hedisRates.length) * 100)}%
-                </span>
+                {activeTab === "rates" && (
+                  <button
+                    onClick={() => setRatesModalOpen(true)}
+                    className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+                  >
+                    View All <ChevronRight className="w-3 h-3" />
+                  </button>
+                )}
+                {activeTab === "queue" && (
+                  <button
+                    onClick={() => setQueueModalOpen(true)}
+                    className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+                  >
+                    View All <ChevronRight className="w-3 h-3" />
+                  </button>
+                )}
               </div>
             </div>
-
             {activeTab === "rates" ? (
               <div className="divide-y divide-border/30">
                 <div className="flex items-center gap-3 px-4 py-2 bg-muted/20">
@@ -748,9 +1167,19 @@ export function Dashboard() {
                     Bench
                   </span>
                 </div>
-                {hedisRates.map((m) => (
-                  <MeasureRateRow key={m.measure} m={m} />
-                ))}
+                {ratesLoading ? (
+                  <div className="p-8 text-center text-muted-foreground">
+                    Loading measure rates...
+                  </div>
+                ) : ratesError ? (
+                  <div className="p-8 text-center text-red-500">
+                    Failed to load rates. Please try again.
+                  </div>
+                ) : (
+                  apiRates.map((m: any) => (
+                    <MeasureRateRow key={m.measureCode} m={m} />
+                  ))
+                )}
               </div>
             ) : (
               <div>
@@ -771,58 +1200,36 @@ export function Dashboard() {
                     Completed
                   </span>
                 </div>
-                {queueByMeasure.map((q) => {
-                  const pct = Math.round((q.completed / q.total) * 100);
-                  return (
-                    <div
-                      key={q.measure}
-                      className="flex items-center gap-3 px-4 py-2.5 border-b border-border/50 last:border-0 hover:bg-muted/10 transition-colors"
-                    >
-                      <span className="w-10 inline-flex items-center justify-center h-6 bg-primary/10 text-primary border border-primary/20 rounded text-[10px] font-bold flex-shrink-0">
-                        {q.measure}
-                      </span>
-                      <div className="w-24 flex-shrink-0">
-                        <div className="flex items-center gap-1.5">
-                          <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${pct >= 80 ? "bg-emerald-500" : pct >= 60 ? "bg-primary" : "bg-amber-500"}`}
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                          <span className="text-[10px] font-bold text-foreground w-8 text-right">
-                            {pct}%
-                          </span>
-                        </div>
-                      </div>
-                      <span className="flex-1 text-xs font-semibold text-foreground">
-                        {q.open}
-                      </span>
-                      <span className="w-16 text-xs text-muted-foreground text-right">
-                        {q.inProgress}
-                      </span>
-                      <span className="w-20 text-xs font-semibold text-emerald-700 text-right">
-                        {q.completed.toLocaleString()}
-                      </span>
-                    </div>
-                  );
-                })}
+                {queueLoading ? (
+                  <div className="p-8 text-center">Loading queue...</div>
+                ) : queueError ? (
+                  <div className="p-8 text-center text-red-500">
+                    Failed to load queue data.
+                  </div>
+                ) : (
+                  apiQueue.map((q: any) => (
+                    <QueueRow key={q.measureCode} q={q} />
+                  ))
+                )}
+
+                {/* Summary Footer */}
                 <div className="flex items-center gap-3 px-4 py-2.5 bg-muted/10 border-t border-border">
                   <span className="w-10 flex-shrink-0 text-[10px] font-black text-muted-foreground">
                     TOTAL
                   </span>
                   <div className="w-24 flex-shrink-0">
                     <span className="text-[10px] font-black text-foreground">
-                      {completionPct}% done
+                      {summary.completionPercentage}% done
                     </span>
                   </div>
                   <span className="flex-1 text-xs font-bold text-foreground">
-                    {totalOpen}
+                    {summary.totalOpen}
                   </span>
                   <span className="w-16 text-xs font-semibold text-foreground text-right">
-                    {totalProgress}
+                    {summary.totalInProgress}
                   </span>
                   <span className="w-20 text-xs font-bold text-emerald-700 text-right">
-                    {totalCompleted.toLocaleString()}
+                    {summary.totalCompleted.toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -838,43 +1245,30 @@ export function Dashboard() {
                   <span className="text-xs font-bold text-foreground">
                     Recent Activity
                   </span>
-                  <button className="text-[10px] text-primary hover:underline">
+                  <button
+                    onClick={() => setActivityModalOpen(true)}
+                    className="text-[10px] text-primary hover:underline"
+                  >
                     View all
                   </button>
                 </div>
               </div>
               <div className="divide-y divide-border">
-                {recentActivity.map((a) => {
-                  const Icon = a.icon;
-                  return (
-                    <div
-                      key={a.id}
-                      className="flex items-start gap-2.5 px-4 py-2.5 hover:bg-muted/10 transition-colors"
-                    >
-                      <div
-                        className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${a.color}`}
-                      >
-                        <Icon className="w-3.5 h-3.5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-baseline justify-between gap-1">
-                          <span className="text-[11px] font-semibold text-foreground truncate">
-                            {a.action}
-                          </span>
-                          <span className="text-[9px] text-muted-foreground/70 flex-shrink-0">
-                            {a.time}
-                          </span>
-                        </div>
-                        <div className="text-[10px] text-muted-foreground truncate">
-                          {a.detail}
-                        </div>
-                        <div className="text-[9px] text-muted-foreground/60 mt-0.5">
-                          {a.user}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                {activityLoading ? (
+                  <div className="p-8 text-center text-muted-foreground">
+                    Loading activity...
+                  </div>
+                ) : activityError ? (
+                  <div className="p-8 text-center text-red-500">
+                    Failed to load recent activity.
+                  </div>
+                ) : (
+                  recentActivities
+                    .slice(0, 6)
+                    .map((act: any) => (
+                      <ActivityRow key={act.id} activity={act} />
+                    ))
+                )}
               </div>
             </div>
 
@@ -1158,6 +1552,139 @@ export function Dashboard() {
 
         <div className="h-2" />
       </div>
+
+      {/* ── FULL RATES MODAL ── */}
+      <Modal
+        isOpen={ratesModalOpen}
+        onClose={() => {
+          setRatesModalOpen(false);
+          setModalPage(1);
+        }}
+        title="All HEDIS Measure Rates"
+      >
+        <div className="space-y-4">
+          <div className="divide-y divide-border/30 rounded-xl border border-border overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center gap-3 px-4 py-2 bg-muted/20">
+              <span className="w-10 text-[9px] font-black text-muted-foreground uppercase">
+                Code
+              </span>
+              <span className="flex-1 text-[9px] font-black text-muted-foreground uppercase">
+                Measure Name
+              </span>
+              <span className="w-28 text-[9px] font-black text-muted-foreground uppercase hidden lg:block">
+                Rate vs Target
+              </span>
+              <span className="w-14 text-[9px] font-black text-muted-foreground uppercase text-right">
+                YoY
+              </span>
+              <span className="w-16 text-[9px] font-black text-muted-foreground uppercase text-center">
+                Bench
+              </span>
+            </div>
+
+            {fullRatesLoading ? (
+              <div className="p-12 text-center">Loading...</div>
+            ) : (
+              fullRates.map((m: any) => (
+                <MeasureRateRow key={m.measureCode} m={m} />
+              ))
+            )}
+          </div>
+
+          {fullPagination && (
+            <Pagination
+              page={fullPagination.page}
+              totalPages={fullPagination.totalPages}
+              totalRecords={fullPagination.total}
+              pageSize={fullPagination.limit}
+              onPageChange={setModalPage}
+              recordLabel="measures"
+            />
+          )}
+        </div>
+      </Modal>
+
+      {/* QUEUE MODAL */}
+      <Modal
+        isOpen={queueModalOpen}
+        onClose={() => {
+          setQueueModalOpen(false);
+          setQueueModalPage(1);
+        }}
+        title="All Queue by Measure"
+      >
+        <div className="space-y-4">
+          <div className="divide-y divide-border/30 rounded-xl border border-border overflow-hidden">
+            <div className="flex items-center gap-3 px-4 py-2 bg-muted/20">
+              <span className="w-10 text-[9px] font-black text-muted-foreground uppercase">
+                Code
+              </span>
+              <span className="w-24 text-[9px] font-black text-muted-foreground uppercase">
+                Completion
+              </span>
+              <span className="flex-1 text-[9px] font-black text-muted-foreground uppercase">
+                Open
+              </span>
+              <span className="w-16 text-[9px] font-black text-muted-foreground uppercase text-right">
+                In Progress
+              </span>
+              <span className="w-20 text-[9px] font-black text-muted-foreground uppercase text-right">
+                Completed
+              </span>
+            </div>
+
+            {fullQueueLoading ? (
+              <div className="p-12 text-center">Loading...</div>
+            ) : (
+              fullQueue.map((q: any) => <QueueRow key={q.measureCode} q={q} />)
+            )}
+          </div>
+
+          {fullQueuePagination && (
+            <Pagination
+              page={fullQueuePagination.page}
+              totalPages={fullQueuePagination.totalPages}
+              totalRecords={fullQueuePagination.total}
+              pageSize={fullQueuePagination.limit}
+              onPageChange={setQueueModalPage}
+              recordLabel="measures"
+            />
+          )}
+        </div>
+      </Modal>
+      {/* ACTIVITY MODAL */}
+      <Modal
+        isOpen={activityModalOpen}
+        onClose={() => {
+          setActivityModalOpen(false);
+          setActivityPage(1);
+        }}
+        title="All Recent Activity"
+      >
+        <div className="space-y-4">
+          <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
+            {fullActivityLoading ? (
+              <div className="p-12 text-center">Loading activities...</div>
+            ) : (
+              fullActivities.map((act: any) => (
+                <ActivityRow key={act.id} activity={act} />
+              ))
+            )}
+          </div>
+
+          {activityMeta && (
+            <Pagination
+              page={activityMeta.current_page}
+              totalPages={activityMeta.pages}
+              totalRecords={activityMeta.total}
+              pageSize={activityMeta.limit}
+              onPageChange={setActivityPage}
+              recordLabel="activities"
+            />
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }
