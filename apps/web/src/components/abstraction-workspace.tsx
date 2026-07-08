@@ -46,19 +46,16 @@ import {
   TrendingDown,
   Loader2,
 } from "lucide-react";
-// import {
-//   PostApiManualChartAbstractionMutationRequestCptCodeEnumKey,
-//   PostApiManualChartAbstractionMutationRequestEvidenceTypeEnumKey,
-//   PostApiManualChartAbstractionMutationRequestIcd10CodeEnumKey,
-//   PostApiManualChartAbstractionMutationRequestScreeningTypeEnumKey,
-//   PostApiManualChartAbstractionMutationRequestSourceTypeEnumKey,
-//   usePostApiManualChartAbstraction,
-// } from "@/api";
 import { toast } from "sonner";
 import {
+  useGetApiHedisAbstractorDraftPatientid,
   useGetApiHedisAbstractorMeasuresPatientid,
   useGetApiHedisEvidenceTimelineId,
+  useGetApiMeasureLibraryId,
   useGetApiPatients,
+  usePostApiHedisAbstractorMarkNotFound,
+  usePostApiHedisAbstractorSaveDraft,
+  usePostApiHedisSendToQa,
 } from "@/api";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -103,6 +100,7 @@ interface FormData {
   icdCode: string;
   evidenceSource: string;
   notes: string;
+  numerator: string;
 }
 interface DocSegment {
   text: string;
@@ -610,6 +608,7 @@ const EMPTY_FORM: FormData = {
   icdCode: "",
   evidenceSource: "",
   notes: "",
+  numerator: "",
 };
 
 /* ══════════════════════════════════════════════════════════════
@@ -1440,17 +1439,22 @@ function EvidenceTimeline({
    ABSTRACTION FORM
 ══════════════════════════════════════════════════════════════ */
 function AbstractionForm({
+  form,
+  setForm,
   onSubmitQA,
   onSaveDraft,
   onMarkNotFound,
   prefillData,
+  measure,
 }: {
+  form: FormData;
+  setForm: React.Dispatch<React.SetStateAction<FormData>>;
   onSubmitQA: () => void;
   onSaveDraft: () => void;
   onMarkNotFound: () => void;
   prefillData?: Partial<FormData>;
+  measure?: any;
 }) {
-  const [form, setForm] = useState<FormData>(EMPTY_FORM);
   const [files, setFiles] = useState<string[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
@@ -1464,95 +1468,39 @@ function AbstractionForm({
   const set = (k: keyof FormData, v: string) =>
     setForm((f) => ({ ...f, [k]: v }));
 
-  const sys = parseInt(form.systolic, 10);
-  const dia = parseInt(form.diastolic, 10);
-  const bpEntered =
-    !isNaN(sys) && !isNaN(dia) && form.systolic !== "" && form.diastolic !== "";
-  const bpSatisfies = bpEntered && sys < 140 && dia < 90;
-  const bpFails = bpEntered && !bpSatisfies;
+  // =======================
+  // Measure Library Mapping
+  // =======================
 
+  const screeningTypes = measure?.documentation?.highlightRequirements ?? [];
+
+  const evidenceTypes = measure?.documentation?.acceptedEvidenceTypes ?? [];
+
+  const cptCodes =
+    measure?.numerator?.codes?.filter(
+      (code: any) => code.codeSystem === "CPT",
+    ) ?? [];
+
+  const icdCodes = measure?.denominator?.requiredDiagnoses ?? [];
+  const numeratorThreshold = measure?.numerator?.complianceThresholds ?? "";
+  const requiredServices = measure?.numerator?.requiredServices ?? [];
+  const abstractionNotes = measure?.numerator?.abstractionNotes ?? [];
+  const commonErrors = measure?.documentation?.commonErrorsToAvoid ?? [];
+  const fileRequirements = measure?.documentation?.fileRequirements ?? [];
+  const highlightRequirements =
+    measure?.documentation?.highlightRequirements ?? [];
+  const evidenceSources = measure?.documentation?.fileRequirements ?? [];
   const fields = [
     form.serviceDate,
     form.screeningType,
     form.evidenceType,
-    form.systolic,
-    form.diastolic,
+    form.numerator,
     form.cptCode,
     form.evidenceSource,
   ];
   const filledCount = fields.filter(Boolean).length;
   const completePct = Math.round((filledCount / fields.length) * 100);
   const requiredFilled = fields.every(Boolean);
-
-  // const abstractionMutation = usePostApiManualChartAbstraction({
-  //   mutation: {
-  //     onSuccess: () => {
-  //       toast.success("Abstraction submitted successfully");
-  //       onSubmitQA();
-  //     },
-
-  //     onError: (error) => {
-  //       console.error(error);
-
-  //       toast.error("Failed to submit abstraction");
-  //     },
-  //   },
-  // });
-
-  // const handleSubmitForQA = async () => {
-  //   try {
-  //     const payload = {
-  //       patient_id: CHART.patientId,
-  //       patient_chart_id: CHART.chartId,
-
-  //       service_date: form.serviceDate,
-
-  //       screening_type:
-  //         form.screeningType as PostApiManualChartAbstractionMutationRequestScreeningTypeEnumKey,
-
-  //       evidence_type:
-  //         form.evidenceType as PostApiManualChartAbstractionMutationRequestEvidenceTypeEnumKey,
-
-  //       systolic: Number(form.systolic),
-
-  //       diastolic: Number(form.diastolic),
-
-  //       cpt_code: form.cptCode
-  //         ? (form.cptCode as PostApiManualChartAbstractionMutationRequestCptCodeEnumKey)
-  //         : undefined,
-
-  //       icd_10_code: form.icdCode
-  //         ? (form.icdCode as PostApiManualChartAbstractionMutationRequestIcd10CodeEnumKey)
-  //         : undefined,
-
-  //       source_type: form.evidenceSource
-  //         ? (form.evidenceSource as PostApiManualChartAbstractionMutationRequestSourceTypeEnumKey)
-  //         : undefined,
-
-  //       evidence_source: form.evidenceSource || undefined,
-
-  //       uploaded_document:
-  //         files.length > 0
-  //           ? {
-  //               file_name: files[0],
-  //               file_url: "",
-  //             }
-  //           : undefined,
-
-  //       notes: form.notes || undefined,
-
-  //       assigned_qa: undefined,
-  //     };
-
-  //     console.log("ABSTRACTION PAYLOAD =>", payload);
-
-  //     await abstractionMutation.mutateAsync({
-  //       data: payload,
-  //     });
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -1586,17 +1534,17 @@ function AbstractionForm({
                 HEDIS Measure
               </span>
               <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
-                CBP
+                {measure?.measure_code}
               </span>
               <span className="text-[9px] font-mono text-muted-foreground">
-                MY2025
+                {measure?.measurement_year}
               </span>
             </div>
             <h2 className="text-[13px] font-black text-foreground">
-              Controlling Blood Pressure
+              {measure?.measure_name}
             </h2>
             <p className="text-[9px] text-muted-foreground mt-0.5 leading-snug">
-              Numerator: Most recent BP &lt;140/90 · Period:{" "}
+              {measure?.description}
               {CHART.measurePeriod}
             </p>
           </div>
@@ -1645,9 +1593,12 @@ function AbstractionForm({
                 onChange={(e) => set("screeningType", e.target.value)}
                 className="form-input"
               >
-                <option value="">Select type…</option>
-                {SCREENING_TYPES.map((t) => (
-                  <option key={t}>{t}</option>
+                <option value="">Select Screening Type</option>
+
+                {screeningTypes.map((item: string) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
                 ))}
               </select>
             </FormField>
@@ -1658,27 +1609,53 @@ function AbstractionForm({
                   onChange={(e) => set("evidenceType", e.target.value)}
                   className="form-input"
                 >
-                  <option value="">Select evidence type…</option>
-                  {EVIDENCE_TYPES.map((t) => (
-                    <option key={t}>{t}</option>
+                  <option value="">Select Evidence Type</option>
+
+                  {evidenceTypes.map((item: any) => (
+                    <option key={item.type} value={item.type}>
+                      {item.type}
+                    </option>
                   ))}
                 </select>
+                {form.evidenceType && (
+                  <div className="mt-2 p-3 rounded bg-slate-50 border">
+                    {evidenceTypes
+
+                      .filter((e: any) => e.type === form.evidenceType)
+
+                      .map((e: any) => (
+                        <div key={e.type}>
+                          <p>
+                            <b>Priority:</b>
+
+                            {e.priority}
+                          </p>
+
+                          <p>
+                            <b>Notes:</b>
+
+                            {e.notes}
+                          </p>
+                        </div>
+                      ))}
+                  </div>
+                )}
               </FormField>
             </div>
           </div>
         </section>
 
         {/* ─── SECTION 2: BP Reading ─── */}
-        <section>
-          <div className="flex items-center justify-between mb-2">
+        {/* <section> */}
+        {/* <div className="flex items-center justify-between mb-2">
             <SectionHeader
               icon={Heart}
               label="Numerator Evidence — BP Reading"
               required
             />
-          </div>
+          </div> */}
 
-          <div className="grid grid-cols-2 gap-3 mb-2">
+        {/* <div className="grid grid-cols-2 gap-3 mb-2">
             <FormField label="Systolic (mmHg)" required>
               <input
                 type="number"
@@ -1701,10 +1678,10 @@ function AbstractionForm({
                 className={`form-input ${bpEntered ? (bpSatisfies ? "border-emerald-400 ring-emerald-200" : "border-red-300 ring-red-200") : ""}`}
               />
             </FormField>
-          </div>
+          </div> */}
 
-          {/* Live BP validation banner */}
-          {bpEntered ? (
+        {/* Live BP validation banner */}
+        {/* {bpEntered ? (
             <div
               className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-[11px] font-bold ${
                 bpSatisfies
@@ -1734,7 +1711,24 @@ function AbstractionForm({
               Enter BP values above to check CBP numerator compliance in
               real-time
             </div>
-          )}
+          )} */}
+        {/* </section> */}
+        <section>
+          <SectionHeader icon={Heart} label="Numerator Evidence" />
+
+          <FormField label="Compliance Threshold" required>
+            <input
+              className="form-input"
+              value={form.numerator}
+              onChange={(e) => set("numerator", e.target.value)}
+              placeholder={numeratorThreshold}
+            />
+          </FormField>
+
+          <p className="text-xs text-muted-foreground mt-2">
+            Expected:
+            <strong>{numeratorThreshold}</strong>
+          </p>
         </section>
 
         {/* ─── SECTION 3: Code Documentation ─── */}
@@ -1747,10 +1741,11 @@ function AbstractionForm({
                 onChange={(e) => set("cptCode", e.target.value)}
                 className="form-input"
               >
-                <option value="">Select CPT code…</option>
-                {CPT_OPTIONS.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
+                <option value="">Select CPT</option>
+
+                {cptCodes.map((code: any) => (
+                  <option key={code.code} value={code.code}>
+                    {code.code}-{code.description}
                   </option>
                 ))}
               </select>
@@ -1761,10 +1756,11 @@ function AbstractionForm({
                 onChange={(e) => set("icdCode", e.target.value)}
                 className="form-input"
               >
-                <option value="">Select ICD-10 code…</option>
-                {ICD_OPTIONS.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
+                <option value="">Select ICD-10</option>
+
+                {icdCodes.map((code: any) => (
+                  <option key={code.code} value={code.code}>
+                    {code.code}-{code.description}
                   </option>
                 ))}
               </select>
@@ -1775,9 +1771,12 @@ function AbstractionForm({
                 onChange={(e) => set("evidenceSource", e.target.value)}
                 className="form-input"
               >
-                <option value="">Select source document…</option>
-                {EVIDENCE_SOURCES.map((s) => (
-                  <option key={s}>{s}</option>
+                <option value="">Select Source</option>
+
+                {evidenceSources.map((source: string) => (
+                  <option key={source} value={source}>
+                    {source}
+                  </option>
                 ))}
               </select>
             </FormField>
@@ -1806,7 +1805,8 @@ function AbstractionForm({
               Drop files or click to upload
             </p>
             <p className="text-[9px] text-muted-foreground mt-0.5">
-              PDF · PNG · JPG · up to 25 MB each
+              Accepted Files
+              {fileRequirements.join(" • ")}
             </p>
           </div>
           <input
@@ -1915,7 +1915,7 @@ function AbstractionForm({
 
         {/* Primary submit */}
         <button
-          // onClick={handleSubmitForQA}
+          onClick={onSubmitQA}
           disabled={!requiredFilled}
           className="w-full inline-flex items-center justify-center gap-2 py-2.5 text-[12px] font-black rounded-xl text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm whitespace-nowrap"
           style={{
@@ -1991,9 +1991,13 @@ const ENGINE_STEPS = [
 function SubmitModal({
   mode,
   onClose,
+  onSubmitQA,
+  onMarkNotFound,
 }: {
   mode: SubmitMode;
   onClose: () => void;
+  onSubmitQA: () => Promise<void>;
+  onMarkNotFound: () => Promise<void>;
 }) {
   const [phase, setPhase] = useState<"confirm" | "running" | "done">("confirm");
   const [step, setStep] = useState(0);
@@ -2020,18 +2024,29 @@ function SubmitModal({
         accent: "#d97706",
       };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    if (isQA) {
+      await onSubmitQA();
+    } else {
+      await onMarkNotFound();
+    }
+
     setPhase("running");
+
     ENGINE_STEPS.forEach((s, i) => {
       setTimeout(() => {
         setStep(i + 1);
         setProgress(Math.round(((i + 1) / ENGINE_STEPS.length) * 100));
       }, s.dur);
     });
+
     setTimeout(() => {
       setPhase("done");
     }, 2200);
-    setTimeout(() => onClose(), 3800);
+
+    setTimeout(() => {
+      onClose();
+    }, 3800);
   };
 
   return (
@@ -2236,6 +2251,7 @@ export function AbstractionWorkspace({
     "timeline",
   );
   const [viewerFull, setViewerFull] = useState(false);
+  const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
   const [prefill, setPrefill] = useState<Partial<FormData> | undefined>(
     undefined,
   );
@@ -2301,13 +2317,53 @@ export function AbstractionWorkspace({
     });
   };
 
-  const handleSaveDraft = () => {
-    setSavedStatus("saving");
-    setTimeout(() => {
+  const handleSaveDraft = async () => {
+    try {
+      setSavedStatus("saving");
+
+      await saveDraftMutation.mutateAsync({
+        data: {
+          patientId,
+
+          chartId,
+
+          measureId: selectedMeasureId,
+
+          serviceDate: formData.serviceDate,
+
+          screeningType: formData.screeningType,
+
+          evidenceType: formData.evidenceType,
+
+          reading: formData.numerator,
+
+          cptCode: formData.cptCode,
+
+          icd10Code: formData.icdCode,
+
+          evidenceSource: formData.evidenceSource,
+
+          notes: formData.notes,
+        },
+      });
+
+      await refetchDraft();
+
       setSavedStatus("saved");
-      setTimeout(() => setSavedStatus("idle"), 2200);
-    }, 800);
+
+      toast.success("Draft Saved Successfully");
+
+      setTimeout(() => {
+        setSavedStatus("idle");
+      }, 2000);
+    } catch (error) {
+      setSavedStatus("idle");
+
+      toast.error("Unable to Save Draft");
+    }
   };
+  const markNotFoundMutation = usePostApiHedisAbstractorMarkNotFound();
+  const saveDraftMutation = usePostApiHedisAbstractorSaveDraft();
 
   const { data } = useGetApiHedisAbstractorMeasuresPatientid(patientId);
 
@@ -2322,21 +2378,103 @@ export function AbstractionWorkspace({
   const selectedMeasure = measureList.find(
     (m: any) => m.measure_id === selectedMeasureId,
   );
+
+  const { data: draftData, refetch: refetchDraft } =
+    useGetApiHedisAbstractorDraftPatientid(
+      patientId,
+      {
+        chartId: chartId!,
+        measureId: selectedMeasureId,
+      },
+      {
+        query: {
+          enabled: !!patientId && !!chartId && !!selectedMeasureId,
+        },
+      },
+    );
+
+  useEffect(() => {
+    const draft = draftData?.draft;
+
+    if (!draft) {
+      setFormData(EMPTY_FORM);
+      return;
+    }
+
+    setFormData({
+      ...EMPTY_FORM,
+
+      serviceDate: draft.service_date ?? "",
+      screeningType: draft.screening_type ?? "",
+      evidenceType: draft.evidence_type ?? "",
+      numerator: draft.reading ?? "",
+      cptCode: draft.cpt_code ?? "",
+      icdCode: draft.icd10_code ?? "",
+      evidenceSource: "",
+      notes: draft.notes ?? "",
+    });
+  }, [draftData]);
+
   const { data: timelineData, isLoading: timelineLoading } =
     useGetApiHedisEvidenceTimelineId(patientId, {
       filter: timelineFilter,
       search: timelineSearch,
     });
 
-  console.log("Timeline Response:", timelineData);
-  useEffect(() => {
-    console.log("FULL API RESPONSE:", data);
-  }, [data]);
+  const { data: measureLibrary, isLoading: measureLibraryLoading } =
+    useGetApiMeasureLibraryId(selectedMeasure?.measure_id, {
+      query: {
+        enabled: !!selectedMeasure?.measure_id,
+      },
+    });
+  const sendToQaMutation = usePostApiHedisSendToQa();
+  const handleMarkNotFound = async () => {
+    try {
+      await markNotFoundMutation.mutateAsync({
+        data: {
+          patientId: patientId!,
+          chartId: chartId!,
+          measureId: selectedMeasureId,
+          comment: formData.notes || "Evidence not found by Abstractor.",
+        },
+      });
 
-  useEffect(() => {
-    console.log("MEASURE LIST:", measureList);
-  }, [measureList]);
-  console.log("PDF URL:", selectedMeasure?.chart_url);
+      toast.success("Evidence marked as Not Found.");
+
+      setSubmitMode("notfound");
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ??
+          "Unable to mark evidence as Not Found.",
+      );
+    }
+  };
+  const handleSubmitQA = async () => {
+    try {
+      await sendToQaMutation.mutateAsync({
+        data: {
+          patientId,
+          patientName: selectedPatient?.patientName,
+          chartId,
+          measureCode: selectedMeasure?.measure_code,
+          measureName: selectedMeasure?.measure_name,
+          qaAssigneeId: selectedMeasure?.qa_assignee_id,
+          notes: formData.notes,
+        },
+      });
+
+      toast.success(
+        "Patient successfully submitted to QA. Evidence has been saved and is ready for QA review.",
+      );
+
+      setSubmitMode("qa");
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ??
+          "Unable to submit patient to QA. Please try again.",
+      );
+    }
+  };
 
   return (
     <div
@@ -2573,10 +2711,13 @@ export function AbstractionWorkspace({
           }`}
         >
           <AbstractionForm
-            onSubmitQA={() => setSubmitMode("qa")}
+            form={formData}
+            setForm={setFormData}
+            onSubmitQA={handleSubmitQA}
             onSaveDraft={handleSaveDraft}
-            onMarkNotFound={() => setSubmitMode("notfound")}
+            onMarkNotFound={handleMarkNotFound}
             prefillData={prefill}
+            measure={measureLibrary}
           />
         </div>
       </div>
@@ -2616,7 +2757,17 @@ export function AbstractionWorkspace({
       </div>
 
       {/* ══ SUBMIT MODAL ══ */}
-      <SubmitModal mode={submitMode} onClose={() => setSubmitMode(null)} />
+      <SubmitModal
+        mode={submitMode}
+        onClose={() => setSubmitMode(null)}
+        onConfirm={async (mode) => {
+          if (mode === "qa") {
+            await handleSubmitQA();
+          } else {
+            await handleMarkNotFound();
+          }
+        }}
+      />
     </div>
   );
 }
