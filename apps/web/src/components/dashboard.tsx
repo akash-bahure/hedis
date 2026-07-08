@@ -44,6 +44,7 @@ import {
   Layers,
   CircleDot,
 } from "lucide-react";
+import { useGetApiDashboardDeadlines } from "@/api";
 
 /* ─── Colours ──────────────────────────────────────────── */
 const C = {
@@ -455,6 +456,23 @@ export function Dashboard() {
       (hedisRates.reduce((s, m) => s + m.rate, 0) / hedisRates.length) * 10,
     ) / 10;
   const aboveBenchCt = hedisRates.filter((m) => m.rate >= m.benchmark).length;
+  const {
+    data: deadlinesData,
+    isLoading: deadlinesLoading,
+    isError: deadlinesError,
+    refetch,
+  } = useGetApiDashboardDeadlines();
+  const deadlines =
+    deadlinesData?.map((item: any) => ({
+      measure: item.measure,
+      label: item.measure_name,
+      due: item.due_date,
+      remaining: item.remaining_days,
+      total: item.total,
+      completed: item.completed,
+      open: item.open,
+      urgency: item.urgency,
+    })) ?? [];
 
   return (
     <div className="space-y-5">
@@ -948,61 +966,120 @@ export function Dashboard() {
               Full SLA Report <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border">
-            {deadlines.map((d) => {
-              const pct = Math.round(((d.total - d.open) / d.total) * 100);
-              const urgencyColor =
-                d.urgency === "high"
-                  ? "text-red-600 bg-red-50 border-red-200"
-                  : d.urgency === "medium"
-                    ? "text-amber-600 bg-amber-50 border-amber-200"
-                    : "text-emerald-600 bg-emerald-50 border-emerald-200";
-              return (
-                <div key={d.measure} className="px-5 py-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <span className="inline-flex items-center justify-center w-10 h-5 bg-primary/10 text-primary border border-primary/20 rounded text-[10px] font-bold">
-                        {d.measure}
-                      </span>
-                      <div className="text-xs font-semibold text-foreground mt-1.5 leading-snug">
-                        {d.label}
-                      </div>
-                    </div>
-                    <span
-                      className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${urgencyColor}`}
-                    >
-                      {d.remaining}d left
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-3">
-                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${
-                          d.urgency === "high"
-                            ? "bg-red-500"
-                            : d.urgency === "medium"
-                              ? "bg-amber-500"
-                              : "bg-emerald-500"
-                        }`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <span className="text-[10px] font-bold text-foreground flex-shrink-0">
-                      {pct}%
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between mt-1.5 text-[10px] text-muted-foreground">
-                    <span>
-                      Due <strong className="text-foreground">{d.due}</strong>
-                    </span>
-                    <span>
-                      {d.open} open · {d.completed} done
-                    </span>
+          {deadlinesLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 p-5">
+              {[1, 2, 3, 4].map((item) => (
+                <div
+                  key={item}
+                  className="border border-border rounded-lg p-4 animate-pulse"
+                >
+                  <div className="h-5 w-14 bg-muted rounded mb-3" />
+                  <div className="h-4 w-40 bg-muted rounded mb-4" />
+                  <div className="h-2 bg-muted rounded-full mb-3" />
+                  <div className="flex justify-between">
+                    <div className="h-3 w-16 bg-muted rounded" />
+                    <div className="h-3 w-20 bg-muted rounded" />
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          ) : deadlinesError ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <AlertTriangle className="w-10 h-10 text-red-500 mb-3" />
+
+              <h3 className="text-sm font-semibold text-foreground">
+                Failed to load deadlines
+              </h3>
+
+              <p className="text-xs text-muted-foreground mt-2">
+                Please try refreshing the dashboard.
+              </p>
+
+              <button
+                onClick={() => refetch()}
+                className="mt-4 px-4 py-2 rounded-lg bg-primary text-white text-xs font-medium"
+              >
+                Retry
+              </button>
+            </div>
+          ) : deadlines.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-14">
+              <CheckCircle2 className="w-12 h-12 text-emerald-500 mb-3" />
+
+              <h3 className="text-sm font-semibold text-foreground">
+                No Upcoming Deadlines
+              </h3>
+
+              <p className="text-xs text-muted-foreground mt-2 text-center max-w-md">
+                Great! There are currently no upcoming abstraction deadlines.
+                All HEDIS measures are on schedule.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border">
+              {deadlines.map((d) => {
+                const pct = Math.round(((d.total - d.open) / d.total) * 100);
+
+                const urgencyColor =
+                  d.urgency === "high"
+                    ? "text-red-600 bg-red-50 border-red-200"
+                    : d.urgency === "medium"
+                      ? "text-amber-600 bg-amber-50 border-amber-200"
+                      : "text-emerald-600 bg-emerald-50 border-emerald-200";
+
+                return (
+                  <div key={d.measure} className="px-5 py-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <span className="inline-flex items-center justify-center w-10 h-5 bg-primary/10 text-primary border border-primary/20 rounded text-[10px] font-bold">
+                          {d.measure}
+                        </span>
+
+                        <div className="text-xs font-semibold text-foreground mt-1.5 leading-snug">
+                          {d.label}
+                        </div>
+                      </div>
+
+                      <span
+                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${urgencyColor}`}
+                      >
+                        {d.remaining}d left
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-3">
+                      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${
+                            d.urgency === "high"
+                              ? "bg-red-500"
+                              : d.urgency === "medium"
+                                ? "bg-amber-500"
+                                : "bg-emerald-500"
+                          }`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+
+                      <span className="text-[10px] font-bold text-foreground">
+                        {pct}%
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-1.5 text-[10px] text-muted-foreground">
+                      <span>
+                        Due <strong className="text-foreground">{d.due}</strong>
+                      </span>
+
+                      <span>
+                        {d.open} open · {d.completed} done
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* ── Row 5: My Queue Preview ── */}

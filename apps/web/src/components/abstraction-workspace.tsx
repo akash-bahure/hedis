@@ -53,6 +53,7 @@ import {
   useGetApiHedisEvidenceTimelineId,
   useGetApiMeasureLibraryId,
   useGetApiPatients,
+  useGetApiProfileMe,
   usePostApiHedisAbstractorMarkNotFound,
   usePostApiHedisAbstractorSaveDraft,
   usePostApiHedisSendToQa,
@@ -993,7 +994,7 @@ function EvidenceTimeline({
         /* ───────── IDs ───────── */
         id: event.id,
         patientId: event.patient_id,
-        chartId: event.chart_id,
+        chartUuid: chartUuid,
 
         /* ───────── CORE DISPLAY ───────── */
         title: event.event_title,
@@ -1990,14 +1991,18 @@ const ENGINE_STEPS = [
 
 function SubmitModal({
   mode,
-  onClose,
   onSubmitQA,
   onMarkNotFound,
+  patientName,
+  chartUuid,
+  submittedBy,
 }: {
   mode: SubmitMode;
-  onClose: () => void;
   onSubmitQA: () => Promise<void>;
   onMarkNotFound: () => Promise<void>;
+  patientName: string;
+  chartUuid: string;
+  submittedBy: string;
 }) {
   const [phase, setPhase] = useState<"confirm" | "running" | "done">("confirm");
   const [step, setStep] = useState(0);
@@ -2071,11 +2076,11 @@ function SubmitModal({
                   {cfg.title}
                 </h3>
                 <p className="text-[10px] text-muted-foreground">
-                  {CHART.id} · {CHART.patientName}
+                  {chartUuid} · {patientName}
                 </p>
               </div>
               <button
-                onClick={onClose}
+                // onClick={onClose}
                 className="p-1.5 rounded-lg hover:bg-muted transition-colors"
               >
                 <X className="w-4 h-4 text-muted-foreground" />
@@ -2107,7 +2112,7 @@ function SubmitModal({
                 <span className="text-[10px] text-muted-foreground">
                   Submitting as{" "}
                   <span className="font-bold text-foreground">
-                    {CHART.assignedTo}
+                    {submittedBy}
                   </span>
                 </span>
                 <span className="ml-auto text-[9px] font-mono text-muted-foreground">
@@ -2217,7 +2222,7 @@ function SubmitModal({
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-[10px] text-emerald-700 font-semibold w-full justify-center">
               <BadgeCheck className="w-3.5 h-3.5" />
-              Chart ID {CHART.id} · Audit trail recorded
+              Chart ID {chartUuid} · Audit trail recorded
             </div>
           </div>
         )}
@@ -2232,12 +2237,12 @@ function SubmitModal({
 export function AbstractionWorkspace({
   onBack,
   patientId,
-  chartId,
+  chartUuid,
   patientData,
 }: {
   onBack?: () => void;
   patientId?: string;
-  chartId?: string;
+  chartUuid?: string;
   patientData?: any;
 }) {
   const [viewerPage, setViewerPage] = useState(1);
@@ -2255,7 +2260,7 @@ export function AbstractionWorkspace({
   const [prefill, setPrefill] = useState<Partial<FormData> | undefined>(
     undefined,
   );
-  const [selectedMeasureId, setSelectedMeasureId] = useState<string>("");
+  const [selectedMeasureCode, setSelectedMeasureCode] = useState<string>("");
   const [timelineFilter, setTimelineFilter] = useState("all");
   const [timelineSearch, setTimelineSearch] = useState("");
 
@@ -2269,6 +2274,7 @@ export function AbstractionWorkspace({
     minute: "2-digit",
   });
   const { data: patientsResponse } = useGetApiPatients();
+  const { data: profile } = useGetApiProfileMe();
 
   const patients = Array.isArray(patientsResponse)
     ? patientsResponse
@@ -2280,7 +2286,10 @@ export function AbstractionWorkspace({
   console.log("Selected Patient:", patient);
   const selectedPatient = patient
     ? {
+        first_name: patient.first_name,
+        last_name: patient.last_name,
         patientName: `${patient.first_name} ${patient.last_name}`,
+        chart_id: patient.chart_id,
         mrn: patient.patient_id,
         dob: patient.dob,
         gender: patient.gender,
@@ -2295,6 +2304,7 @@ export function AbstractionWorkspace({
 
     return new Date(dob).toLocaleDateString("en-GB");
   };
+  const currentChartUuid = patientData?.chart_uuid ?? chartUuid ?? "";
 
   const handleSelectEvent = (docPage: number, code: string) => {
     setViewerPage(docPage);
@@ -2325,9 +2335,9 @@ export function AbstractionWorkspace({
         data: {
           patientId,
 
-          chartId,
+          chartUuid: currentChartUuid,
 
-          measureId: selectedMeasureId,
+          measurecode: selectedMeasure?.measure_code,
 
           serviceDate: formData.serviceDate,
 
@@ -2370,25 +2380,28 @@ export function AbstractionWorkspace({
   const measureList = data?.measures ?? [];
 
   useEffect(() => {
-    if (measureList.length > 0 && !selectedMeasureId) {
-      setSelectedMeasureId(measureList[0].measure_id);
+    if (measureList.length > 0 && !selectedMeasureCode) {
+      setSelectedMeasureCode(measureList[0].measure_code);
     }
-  }, [measureList, selectedMeasureId]);
+  }, [measureList, selectedMeasureCode]);
 
   const selectedMeasure = measureList.find(
-    (m: any) => m.measure_id === selectedMeasureId,
+    (m: any) => m.measure_code === selectedMeasureCode,
   );
 
   const { data: draftData, refetch: refetchDraft } =
     useGetApiHedisAbstractorDraftPatientid(
       patientId,
       {
-        chartId: chartId!,
-        measureId: selectedMeasureId,
+        chartUuid: currentChartUuid,
+        measureCode: selectedMeasure?.measure_code,
       },
       {
         query: {
-          enabled: !!patientId && !!chartId && !!selectedMeasureId,
+          enabled:
+            !!patientId &&
+            !!currentChartUuid &&
+            !!selectedMeasure?.measure_code,
         },
       },
     );
@@ -2421,20 +2434,22 @@ export function AbstractionWorkspace({
       search: timelineSearch,
     });
 
-  const { data: measureLibrary, isLoading: measureLibraryLoading } =
-    useGetApiMeasureLibraryId(selectedMeasure?.measure_id, {
+  const { data: measureLibrary } = useGetApiMeasureLibraryId(
+    selectedMeasure?.measure_code,
+    {
       query: {
-        enabled: !!selectedMeasure?.measure_id,
+        enabled: !!selectedMeasure?.measure_code,
       },
-    });
+    },
+  );
   const sendToQaMutation = usePostApiHedisSendToQa();
   const handleMarkNotFound = async () => {
     try {
       await markNotFoundMutation.mutateAsync({
         data: {
           patientId: patientId!,
-          chartId: chartId!,
-          measureId: selectedMeasureId,
+          chartUuid: currentChartUuid,
+          measureId: selectedMeasure,
           comment: formData.notes || "Evidence not found by Abstractor.",
         },
       });
@@ -2455,7 +2470,7 @@ export function AbstractionWorkspace({
         data: {
           patientId,
           patientName: selectedPatient?.patientName,
-          chartId,
+          chartUuid: currentChartUuid,
           measureCode: selectedMeasure?.measure_code,
           measureName: selectedMeasure?.measure_name,
           qaAssigneeId: selectedMeasure?.qa_assignee_id,
@@ -2576,8 +2591,8 @@ export function AbstractionWorkspace({
 
           {/* Measure Dropdown */}
           <select
-            value={selectedMeasureId}
-            onChange={(e) => setSelectedMeasureId(e.target.value)}
+            value={selectedMeasureCode}
+            onChange={(e) => setSelectedMeasureCode(e.target.value)}
             disabled={measureList.length === 0}
             className="h-8 rounded border px-2 text-sm"
           >
@@ -2585,7 +2600,7 @@ export function AbstractionWorkspace({
               <option>No Measures Assigned</option>
             ) : (
               measureList.map((measure: any) => (
-                <option key={measure.measure_id} value={measure.measure_id}>
+                <option key={measure.measure_code} value={measure.measure_code}>
                   {measure.measure_name}
                 </option>
               ))
@@ -2759,14 +2774,11 @@ export function AbstractionWorkspace({
       {/* ══ SUBMIT MODAL ══ */}
       <SubmitModal
         mode={submitMode}
-        onClose={() => setSubmitMode(null)}
-        onConfirm={async (mode) => {
-          if (mode === "qa") {
-            await handleSubmitQA();
-          } else {
-            await handleMarkNotFound();
-          }
-        }}
+        onSubmitQA={handleSubmitQA}
+        onMarkNotFound={handleMarkNotFound}
+        patientName={selectedPatient?.patientName ?? ""}
+        chartUuid={currentChartUuid}
+        submittedBy={profile?.data?.full_name ?? ""}
       />
     </div>
   );
