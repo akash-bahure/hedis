@@ -117,6 +117,19 @@ export {
   getApiClientsStatsQueryResponseSchema,
 } from "./ClientsSchemas/getApiClientsStatsSchema.ts";
 export {
+  getApiClientsV2Id200Schema,
+  getApiClientsV2IdPathParamsSchema,
+  getApiClientsV2IdQueryResponseSchema,
+} from "./ClientsSchemas/getApiClientsV2IdSchema.ts";
+export {
+  getApiClientsV2200Schema,
+  getApiClientsV2QueryResponseSchema,
+} from "./ClientsSchemas/getApiClientsV2Schema.ts";
+export {
+  getApiClientsV2Stats200Schema,
+  getApiClientsV2StatsQueryResponseSchema,
+} from "./ClientsSchemas/getApiClientsV2StatsSchema.ts";
+export {
   patchApiClientsId200Schema,
   patchApiClientsIdMutationResponseSchema,
   patchApiClientsIdPathParamsSchema,
@@ -127,6 +140,11 @@ export {
   postApiClientsMutationRequestSchema,
   postApiClientsMutationResponseSchema,
 } from "./ClientsSchemas/postApiClientsSchema.ts";
+export {
+  postApiClientsV2201Schema,
+  postApiClientsV2MutationRequestSchema,
+  postApiClientsV2MutationResponseSchema,
+} from "./ClientsSchemas/postApiClientsV2Schema.ts";
 export {
   getApiClinicalTimelineEvidenceEventidReviewEvidence200Schema,
   getApiClinicalTimelineEvidenceEventidReviewEvidencePathParamsSchema,
@@ -167,6 +185,55 @@ export {
   putApiClinicalTimelineEvidenceEventidMutationResponseSchema,
   putApiClinicalTimelineEvidenceEventidPathParamsSchema,
 } from "./Clinical TimelineSchemas/putApiClinicalTimelineEvidenceEventidSchema.ts";
+export {
+  getApiDashboardAbstractionVelocity200Schema,
+  getApiDashboardAbstractionVelocity400Schema,
+  getApiDashboardAbstractionVelocity401Schema,
+  getApiDashboardAbstractionVelocity500Schema,
+  getApiDashboardAbstractionVelocityQueryParamsSchema,
+  getApiDashboardAbstractionVelocityQueryResponseSchema,
+} from "./Dashboard AnalyticsSchemas/getApiDashboardAbstractionVelocitySchema.ts";
+export {
+  getApiDashboardMeasureRates200Schema,
+  getApiDashboardMeasureRates400Schema,
+  getApiDashboardMeasureRates401Schema,
+  getApiDashboardMeasureRates500Schema,
+  getApiDashboardMeasureRatesQueryParamsSchema,
+  getApiDashboardMeasureRatesQueryResponseSchema,
+} from "./Dashboard AnalyticsSchemas/getApiDashboardMeasureRatesSchema.ts";
+export {
+  getApiDashboardQueueByDomain200Schema,
+  getApiDashboardQueueByDomain401Schema,
+  getApiDashboardQueueByDomain500Schema,
+  getApiDashboardQueueByDomainQueryResponseSchema,
+} from "./Dashboard AnalyticsSchemas/getApiDashboardQueueByDomainSchema.ts";
+export {
+  getApiDashboardQueueByMeasure200Schema,
+  getApiDashboardQueueByMeasure400Schema,
+  getApiDashboardQueueByMeasure401Schema,
+  getApiDashboardQueueByMeasure500Schema,
+  getApiDashboardQueueByMeasureQueryParamsSchema,
+  getApiDashboardQueueByMeasureQueryResponseSchema,
+} from "./Dashboard AnalyticsSchemas/getApiDashboardQueueByMeasureSchema.ts";
+export {
+  getApiDashboardStats200Schema,
+  getApiDashboardStats401Schema,
+  getApiDashboardStats500Schema,
+  getApiDashboardStatsQueryResponseSchema,
+} from "./Dashboard AnalyticsSchemas/getApiDashboardStatsSchema.ts";
+export {
+  getApiDashboardDeadlines200Schema,
+  getApiDashboardDeadlinesQueryResponseSchema,
+} from "./DashboardSchemas/getApiDashboardDeadlinesSchema.ts";
+export {
+  getApiDashboardMyQueue200Schema,
+  getApiDashboardMyQueueQueryParamsSchema,
+  getApiDashboardMyQueueQueryResponseSchema,
+} from "./DashboardSchemas/getApiDashboardMyQueueSchema.ts";
+export {
+  getApiDashboardSummary200Schema,
+  getApiDashboardSummaryQueryResponseSchema,
+} from "./DashboardSchemas/getApiDashboardSummarySchema.ts";
 export {
   getApiDepartments200Schema,
   getApiDepartments500Schema,
@@ -501,6 +568,14 @@ export {
   getApiChartsJobsJobidPathParamsSchema,
   getApiChartsJobsJobidQueryResponseSchema,
 } from "./QueueSchemas/getApiChartsJobsJobidSchema.ts";
+export {
+  getApiRecentActivity200Schema,
+  getApiRecentActivity400Schema,
+  getApiRecentActivity401Schema,
+  getApiRecentActivity500Schema,
+  getApiRecentActivityQueryParamsSchema,
+  getApiRecentActivityQueryResponseSchema,
+} from "./Recent ActivitySchemas/getApiRecentActivitySchema.ts";
 export {
   getApiReportsAnalyticsAbstractorProductivity200Schema,
   getApiReportsAnalyticsAbstractorProductivity401Schema,
