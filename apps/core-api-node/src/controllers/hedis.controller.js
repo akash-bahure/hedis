@@ -1211,3 +1211,215 @@ exports.markNotFound = async (req, res) => {
   }
 };
 
+/**
+ * POST /api/hedis/add-measure
+ * Manually add a missing HEDIS measure for a patient and trigger AI evaluation
+ * for that single measure only. Does not re-run evaluation for all measures.
+ */
+exports.addMeasure = async (req, res) => {
+  const { subdomain, schema_name: schema } = req.tenant;
+
+  try {
+    const { patientId, measureId, measureCode } = req.body;
+
+    // 1. Validate inputs
+    if (!patientId || (!measureId && !measureCode)) {
+      return res.status(400).json({
+        error:
+          "Missing required fields: patientId, and either measureId or measureCode",
+      });
+    }
+
+    // 2. Verify patient exists
+    const patientCheck = await req.db.query(
+      `SELECT id FROM ${schema}.patients WHERE id = $1`,
+      [patientId]
+    );
+    if (patientCheck.rows.length === 0) {
+      return res.status(404).json({
+        error: `Patient with ID ${patientId} not found.`,
+      });
+    }
+
+    // 3. Fetch the measure from the Measure Library
+    const measureQuery = measureId
+      ? `SELECT * FROM ${schema}.measures WHERE id = $1`
+      : `SELECT * FROM ${schema}.measures WHERE measure_code = $1`;
+    const measureResult = await req.db.query(measureQuery, [
+      measureId || measureCode,
+    ]);
+
+    if (measureResult.rows.length === 0) {
+      return res.status(404).json({
+        error: `Measure '${measureId || measureCode}' not found in the Measure Library.`,
+      });
+    }
+
+    const m = measureResult.rows[0];
+    // Shape the measure object to match what the AI service expects (camelCase fields)
+    const measureData = {
+      ...m,
+      measureCode: m.measure_code,
+      measureName: m.measure_name,
+      measureType: m.measure_type,
+      productLines: m.product_lines,
+      measurementYear: m.measurement_year,
+    };
+
+    // 4. Guard: check for existing evaluation (avoid duplicates)
+    const existingCheck = await req.db.query(
+      `SELECT id FROM ${schema}.hedis_evaluations
+       WHERE patient_id = $1 AND measure_code = $2
+       LIMIT 1`,
+      [patientId, measureData.measureCode]
+    );
+    if (existingCheck.rows.length > 0) {
+      return res.status(409).json({
+        error: `An evaluation for measure '${measureData.measureCode}' already exists for this patient. Use recalculate-qa to re-evaluate.`,
+        existing_evaluation_id: existingCheck.rows[0].id,
+      });
+    }
+
+    // 5. Fetch patient chart to get the PDF path
+    const chartResult = await req.db.query(
+      `SELECT chart_document
+       FROM ${schema}.patient_charts
+       WHERE patient_id = $1
+       LIMIT 1`,
+      [patientId]
+    );
+
+    if (chartResult.rows.length === 0) {
+      return res.status(404).json({
+        error: `No chart found for patient ${patientId}. Please upload a chart before adding a measure.`,
+      });
+    }
+
+    const chartDoc = chartResult.rows[0].chart_document || {};
+    const filePath = chartDoc.filePath || `charts/${chartDoc.fileName}`;
+    const pdfPath = `/app/uploads/${filePath}`;
+
+    // 6. Run AI evaluation for this single measure only
+    console.log(
+      `[addMeasure] Triggering single-measure evaluation for patient ${patientId}, measure ${measureData.measureCode}`
+    );
+    const savedEvaluation = await hedisService.evaluateSingleMeasure(
+      patientId,
+      pdfPath,
+      measureData,
+      subdomain,
+      req.db
+    );
+
+    return res.status(201).json({
+      message: `Measure '${measureData.measureCode}' successfully evaluated and added.`,
+      evaluation: savedEvaluation,
+    });
+  } catch (err) {
+    console.error("Add Measure Error:", err);
+    return res.status(500).json({
+      error: err.message || "An unexpected error occurred while adding measure",
+    });
+  }
+};
+
+/**
+ * POST /api/hedis/add-missing-evidence
+ * Manually insert a missing evidence record into clinical_timeline_events.
+ * No AI extraction — pure CRUD insert from the frontend popup.
+ */
+exports.addMissingEvidence = async (req, res) => {
+  const schema = req.tenant.schema_name;
+
+  try {
+    const {
+      patientId,
+      chartId,
+      eventTitle,
+      summary,
+      eventDate,
+      documentType,
+    } = req.body;
+
+    // 1. Validate required fields
+    if (!patientId || !eventTitle) {
+      return res.status(400).json({
+        error: "Missing required fields: patientId, eventTitle",
+      });
+    }
+
+    // 2. Verify patient exists
+    const patientCheck = await req.db.query(
+      `SELECT id FROM ${schema}.patients WHERE id = $1`,
+      [patientId]
+    );
+    if (patientCheck.rows.length === 0) {
+      return res.status(404).json({
+        error: `Patient with ID ${patientId} not found.`,
+      });
+    }
+
+    // 3. Derive values from request / logged-in user
+    const effectiveDate = eventDate ? new Date(eventDate) : new Date();
+    const year = effectiveDate.getFullYear();
+    const month = new Intl.DateTimeFormat("en-US", { month: "long" }).format(effectiveDate);
+    const provider =
+      req.user?.full_name || req.user?.name || req.user?.email || "Abstractor";
+
+    // 4. Insert into clinical_timeline_events
+    const insertQuery = `
+      INSERT INTO ${schema}.clinical_timeline_events (
+        patient_id,
+        chart_id,
+        event_date,
+        event_type,
+        event_title,
+        summary,
+        document_type,
+        provider,
+        source_type,
+        review_status,
+        year,
+        month,
+        assigned_abstractor_id,
+        created_at,
+        updated_at
+      ) VALUES (
+        $1, $2, $3,
+        'Evidence',
+        $4, $5, $6, $7,
+        'MANUAL',
+        'PENDING',
+        $8, $9, $10,
+        NOW(), NOW()
+      )
+      RETURNING *
+    `;
+
+    const values = [
+      patientId,
+      chartId || null,
+      effectiveDate,
+      eventTitle,
+      summary || null,
+      documentType || "External Document",
+      provider,
+      year,
+      month,
+      req.user?.id || null,
+    ];
+
+    const result = await req.db.query(insertQuery, values);
+
+    return res.status(201).json({
+      message: "Missing evidence record added successfully.",
+      data: result.rows[0],
+    });
+  } catch (err) {
+    console.error("Add Missing Evidence Error:", err);
+    return res.status(500).json({
+      error: err.message || "An unexpected error occurred while adding missing evidence",
+    });
+  }
+};
+
