@@ -107,6 +107,8 @@ export type { GetApiHedisQaReviewEvaluationidSuspenseInfiniteQueryKey } from "./
 export type { PostApiHedisAbstractorMarkNotFoundMutationKey } from "./hooks/HEDISHooks/usePostApiHedisAbstractorMarkNotFound.ts";
 export type { PostApiHedisAbstractorSaveDraftMutationKey } from "./hooks/HEDISHooks/usePostApiHedisAbstractorSaveDraft.ts";
 export type { PostApiHedisAbstractorSubmitQaMutationKey } from "./hooks/HEDISHooks/usePostApiHedisAbstractorSubmitQa.ts";
+export type { PostApiHedisAddMeasureMutationKey } from "./hooks/HEDISHooks/usePostApiHedisAddMeasure.ts";
+export type { PostApiHedisAddMissingEvidenceMutationKey } from "./hooks/HEDISHooks/usePostApiHedisAddMissingEvidence.ts";
 export type { PostApiHedisAssignAbstractorMutationKey } from "./hooks/HEDISHooks/usePostApiHedisAssignAbstractor.ts";
 export type { PostApiHedisMarkAsReviewedMutationKey } from "./hooks/HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
 export type { PostApiHedisRecalculateQaMutationKey } from "./hooks/HEDISHooks/usePostApiHedisRecalculateQa.ts";
@@ -1142,6 +1144,25 @@ export type {
   PostApiHedisAbstractorSubmitQaMutationResponse,
 } from "./types/PostApiHedisAbstractorSubmitQa.ts";
 export type {
+  PostApiHedisAddMeasure201,
+  PostApiHedisAddMeasure400,
+  PostApiHedisAddMeasure404,
+  PostApiHedisAddMeasure409,
+  PostApiHedisAddMeasure500,
+  PostApiHedisAddMeasureMutation,
+  PostApiHedisAddMeasureMutationRequest,
+  PostApiHedisAddMeasureMutationResponse,
+} from "./types/PostApiHedisAddMeasure.ts";
+export type {
+  PostApiHedisAddMissingEvidence201,
+  PostApiHedisAddMissingEvidence400,
+  PostApiHedisAddMissingEvidence404,
+  PostApiHedisAddMissingEvidence500,
+  PostApiHedisAddMissingEvidenceMutation,
+  PostApiHedisAddMissingEvidenceMutationRequest,
+  PostApiHedisAddMissingEvidenceMutationResponse,
+} from "./types/PostApiHedisAddMissingEvidence.ts";
+export type {
   DecisionsQaStatusEnumKey,
   PostApiHedisAssignAbstractor200,
   PostApiHedisAssignAbstractorMutation,
@@ -1457,6 +1478,8 @@ export { postApiDepartments } from "./clients/postApiDepartments.ts";
 export { postApiHedisAbstractorMarkNotFound } from "./clients/postApiHedisAbstractorMarkNotFound.ts";
 export { postApiHedisAbstractorSaveDraft } from "./clients/postApiHedisAbstractorSaveDraft.ts";
 export { postApiHedisAbstractorSubmitQa } from "./clients/postApiHedisAbstractorSubmitQa.ts";
+export { postApiHedisAddMeasure } from "./clients/postApiHedisAddMeasure.ts";
+export { postApiHedisAddMissingEvidence } from "./clients/postApiHedisAddMissingEvidence.ts";
 export { postApiHedisAssignAbstractor } from "./clients/postApiHedisAssignAbstractor.ts";
 export { postApiHedisClinicalTimelineReview } from "./clients/postApiHedisClinicalTimelineReview.ts";
 export { postApiHedisMarkAsReviewed } from "./clients/postApiHedisMarkAsReviewed.ts";
@@ -1808,6 +1831,12 @@ export { usePostApiHedisAbstractorSaveDraft } from "./hooks/HEDISHooks/usePostAp
 export { postApiHedisAbstractorSubmitQaMutationKey } from "./hooks/HEDISHooks/usePostApiHedisAbstractorSubmitQa.ts";
 export { postApiHedisAbstractorSubmitQaMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisAbstractorSubmitQa.ts";
 export { usePostApiHedisAbstractorSubmitQa } from "./hooks/HEDISHooks/usePostApiHedisAbstractorSubmitQa.ts";
+export { postApiHedisAddMeasureMutationKey } from "./hooks/HEDISHooks/usePostApiHedisAddMeasure.ts";
+export { postApiHedisAddMeasureMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisAddMeasure.ts";
+export { usePostApiHedisAddMeasure } from "./hooks/HEDISHooks/usePostApiHedisAddMeasure.ts";
+export { postApiHedisAddMissingEvidenceMutationKey } from "./hooks/HEDISHooks/usePostApiHedisAddMissingEvidence.ts";
+export { postApiHedisAddMissingEvidenceMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisAddMissingEvidence.ts";
+export { usePostApiHedisAddMissingEvidence } from "./hooks/HEDISHooks/usePostApiHedisAddMissingEvidence.ts";
 export { postApiHedisAssignAbstractorMutationKey } from "./hooks/HEDISHooks/usePostApiHedisAssignAbstractor.ts";
 export { postApiHedisAssignAbstractorMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisAssignAbstractor.ts";
 export { usePostApiHedisAssignAbstractor } from "./hooks/HEDISHooks/usePostApiHedisAssignAbstractor.ts";
@@ -2712,6 +2741,23 @@ export {
   postApiHedisAbstractorSubmitQaMutationRequestSchema,
   postApiHedisAbstractorSubmitQaMutationResponseSchema,
 } from "./zod/HEDISSchemas/postApiHedisAbstractorSubmitQaSchema.ts";
+export {
+  postApiHedisAddMeasure201Schema,
+  postApiHedisAddMeasure400Schema,
+  postApiHedisAddMeasure404Schema,
+  postApiHedisAddMeasure409Schema,
+  postApiHedisAddMeasure500Schema,
+  postApiHedisAddMeasureMutationRequestSchema,
+  postApiHedisAddMeasureMutationResponseSchema,
+} from "./zod/HEDISSchemas/postApiHedisAddMeasureSchema.ts";
+export {
+  postApiHedisAddMissingEvidence201Schema,
+  postApiHedisAddMissingEvidence400Schema,
+  postApiHedisAddMissingEvidence404Schema,
+  postApiHedisAddMissingEvidence500Schema,
+  postApiHedisAddMissingEvidenceMutationRequestSchema,
+  postApiHedisAddMissingEvidenceMutationResponseSchema,
+} from "./zod/HEDISSchemas/postApiHedisAddMissingEvidenceSchema.ts";
 export {
   postApiHedisAssignAbstractor200Schema,
   postApiHedisAssignAbstractorMutationRequestSchema,
