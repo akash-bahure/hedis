@@ -107,6 +107,8 @@ export type { GetApiHedisQaReviewEvaluationidSuspenseInfiniteQueryKey } from "./
 export type { PostApiHedisAbstractorMarkNotFoundMutationKey } from "./HEDISHooks/usePostApiHedisAbstractorMarkNotFound.ts";
 export type { PostApiHedisAbstractorSaveDraftMutationKey } from "./HEDISHooks/usePostApiHedisAbstractorSaveDraft.ts";
 export type { PostApiHedisAbstractorSubmitQaMutationKey } from "./HEDISHooks/usePostApiHedisAbstractorSubmitQa.ts";
+export type { PostApiHedisAddMeasureMutationKey } from "./HEDISHooks/usePostApiHedisAddMeasure.ts";
+export type { PostApiHedisAddMissingEvidenceMutationKey } from "./HEDISHooks/usePostApiHedisAddMissingEvidence.ts";
 export type { PostApiHedisAssignAbstractorMutationKey } from "./HEDISHooks/usePostApiHedisAssignAbstractor.ts";
 export type { PostApiHedisMarkAsReviewedMutationKey } from "./HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
 export type { PostApiHedisRecalculateQaMutationKey } from "./HEDISHooks/usePostApiHedisRecalculateQa.ts";
@@ -603,6 +605,12 @@ export { usePostApiHedisAbstractorSaveDraft } from "./HEDISHooks/usePostApiHedis
 export { postApiHedisAbstractorSubmitQaMutationKey } from "./HEDISHooks/usePostApiHedisAbstractorSubmitQa.ts";
 export { postApiHedisAbstractorSubmitQaMutationOptions } from "./HEDISHooks/usePostApiHedisAbstractorSubmitQa.ts";
 export { usePostApiHedisAbstractorSubmitQa } from "./HEDISHooks/usePostApiHedisAbstractorSubmitQa.ts";
+export { postApiHedisAddMeasureMutationKey } from "./HEDISHooks/usePostApiHedisAddMeasure.ts";
+export { postApiHedisAddMeasureMutationOptions } from "./HEDISHooks/usePostApiHedisAddMeasure.ts";
+export { usePostApiHedisAddMeasure } from "./HEDISHooks/usePostApiHedisAddMeasure.ts";
+export { postApiHedisAddMissingEvidenceMutationKey } from "./HEDISHooks/usePostApiHedisAddMissingEvidence.ts";
+export { postApiHedisAddMissingEvidenceMutationOptions } from "./HEDISHooks/usePostApiHedisAddMissingEvidence.ts";
+export { usePostApiHedisAddMissingEvidence } from "./HEDISHooks/usePostApiHedisAddMissingEvidence.ts";
 export { postApiHedisAssignAbstractorMutationKey } from "./HEDISHooks/usePostApiHedisAssignAbstractor.ts";
 export { postApiHedisAssignAbstractorMutationOptions } from "./HEDISHooks/usePostApiHedisAssignAbstractor.ts";
 export { usePostApiHedisAssignAbstractor } from "./HEDISHooks/usePostApiHedisAssignAbstractor.ts";

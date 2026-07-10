@@ -111,6 +111,8 @@ export { postApiDepartments } from "./postApiDepartments.ts";
 export { postApiHedisAbstractorMarkNotFound } from "./postApiHedisAbstractorMarkNotFound.ts";
 export { postApiHedisAbstractorSaveDraft } from "./postApiHedisAbstractorSaveDraft.ts";
 export { postApiHedisAbstractorSubmitQa } from "./postApiHedisAbstractorSubmitQa.ts";
+export { postApiHedisAddMeasure } from "./postApiHedisAddMeasure.ts";
+export { postApiHedisAddMissingEvidence } from "./postApiHedisAddMissingEvidence.ts";
 export { postApiHedisAssignAbstractor } from "./postApiHedisAssignAbstractor.ts";
 export { postApiHedisClinicalTimelineReview } from "./postApiHedisClinicalTimelineReview.ts";
 export { postApiHedisMarkAsReviewed } from "./postApiHedisMarkAsReviewed.ts";

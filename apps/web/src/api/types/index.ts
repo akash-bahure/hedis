@@ -864,6 +864,25 @@ export type {
   PostApiHedisAbstractorSubmitQaMutationResponse,
 } from "./PostApiHedisAbstractorSubmitQa.ts";
 export type {
+  PostApiHedisAddMeasure201,
+  PostApiHedisAddMeasure400,
+  PostApiHedisAddMeasure404,
+  PostApiHedisAddMeasure409,
+  PostApiHedisAddMeasure500,
+  PostApiHedisAddMeasureMutation,
+  PostApiHedisAddMeasureMutationRequest,
+  PostApiHedisAddMeasureMutationResponse,
+} from "./PostApiHedisAddMeasure.ts";
+export type {
+  PostApiHedisAddMissingEvidence201,
+  PostApiHedisAddMissingEvidence400,
+  PostApiHedisAddMissingEvidence404,
+  PostApiHedisAddMissingEvidence500,
+  PostApiHedisAddMissingEvidenceMutation,
+  PostApiHedisAddMissingEvidenceMutationRequest,
+  PostApiHedisAddMissingEvidenceMutationResponse,
+} from "./PostApiHedisAddMissingEvidence.ts";
+export type {
   DecisionsQaStatusEnumKey,
   PostApiHedisAssignAbstractor200,
   PostApiHedisAssignAbstractorMutation,
