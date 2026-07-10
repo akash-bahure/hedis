@@ -57,14 +57,17 @@ import {
   usePostApiHedisAbstractorMarkNotFound,
   usePostApiHedisAbstractorSaveDraft,
   usePostApiHedisSendToQa,
+  usePostApiHedisAddMissingEvidence,
+  getApiHedisEvidenceTimelineIdQueryKey,
 } from "@/api";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/TextLayer.css";
 import "react-pdf/dist/Page/AnnotationLayer.css";
+import { useQueryClient } from "@tanstack/react-query";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url,
+  import.meta.url
 ).toString();
 
 /* ══════════════════════════════════════════════════════════════
@@ -715,7 +718,7 @@ function DocumentViewer({
             max={numPages}
             onChange={(e) =>
               setPage(
-                Math.min(numPages, Math.max(1, parseInt(e.target.value) || 1)),
+                Math.min(numPages, Math.max(1, parseInt(e.target.value) || 1))
               )
             }
             className="w-8 text-center bg-white/10 border border-white/20 rounded text-white text-[10px] px-1 py-0.5 focus:outline-none focus:border-white/40"
@@ -951,6 +954,7 @@ function EvidenceTimeline({
   onSearchChange,
   onSelectEvent,
   onAutoFillEvidence,
+  chartUuid,
 }: {
   measure?: any;
   timeline: Record<string, any>;
@@ -961,6 +965,7 @@ function EvidenceTimeline({
   onSearchChange: (v: string) => void;
   onSelectEvent: (docPage: number, code: string) => void;
   onAutoFillEvidence: (ev: any) => void;
+  chartUuid?: string;
 }) {
   const [expanded, setExpanded] = useState<string | null>("e5");
   if (loading) {
@@ -1037,8 +1042,8 @@ function EvidenceTimeline({
         hedisRelevant: true,
 
         ...event,
-      })),
-    ),
+      }))
+    )
   );
 
   type FilterKey = EventType | "all" | "hedis";
@@ -1108,7 +1113,7 @@ function EvidenceTimeline({
   });
 
   const satisfiesCount = events.filter(
-    (e) => e.hedisMatch === "satisfies",
+    (e) => e.hedisMatch === "satisfies"
   ).length;
   const failsCount = events.filter((e) => e.hedisMatch === "fails").length;
 
@@ -1353,7 +1358,7 @@ function EvidenceTimeline({
                                       <span className="text-[9px] text-muted-foreground truncate">
                                         {
                                           (ev.provider ?? "Unknown").split(
-                                            ",",
+                                            ","
                                           )[0]
                                         }
                                       </span>
@@ -1397,7 +1402,7 @@ function EvidenceTimeline({
                                           onClick={() =>
                                             onSelectEvent(
                                               ev.docPage!,
-                                              ev.code || ev.title,
+                                              ev.code || ev.title
                                             )
                                           }
                                           className="inline-flex items-center gap-1 text-[9px] font-black px-2 py-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
@@ -1479,7 +1484,7 @@ function AbstractionForm({
 
   const cptCodes =
     measure?.numerator?.codes?.filter(
-      (code: any) => code.codeSystem === "CPT",
+      (code: any) => code.codeSystem === "CPT"
     ) ?? [];
 
   const icdCodes = measure?.denominator?.requiredDiagnoses ?? [];
@@ -2232,6 +2237,137 @@ function SubmitModal({
 }
 
 /* ══════════════════════════════════════════════════════════════
+   ADD MISSING EVIDENCE MODAL
+══════════════════════════════════════════════════════════════ */
+function AddEvidenceModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  formData,
+  setFormData,
+  isSubmitting,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: () => void;
+  formData: any;
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  isSubmitting: boolean;
+}) {
+  if (!isOpen) return null;
+
+  const updateField = (field: string, value: string) => {
+    setFormData((prev: any) => ({ ...prev, [field]: value }));
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-border">
+          <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
+            <Plus className="w-5 h-5 text-emerald-600" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-black text-foreground">
+              Add Missing Evidence
+            </h3>
+            <p className="text-[10px] text-muted-foreground">
+              Manual timeline entry
+            </p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted">
+            <X className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-5">
+          <div>
+            <label className="text-[10px] font-bold text-muted-foreground block mb-1">
+              Evidence Title <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.eventTitle}
+              onChange={(e) => updateField("eventTitle", e.target.value)}
+              placeholder="e.g. External BP Reading from Home Monitor"
+              className="form-input w-full"
+            />
+          </div>
+
+          <div>
+            <label className="text-[10px] font-bold text-muted-foreground block mb-1">
+              Summary / Notes
+            </label>
+            <textarea
+              value={formData.summary}
+              onChange={(e) => updateField("summary", e.target.value)}
+              rows={4}
+              placeholder="Clinical context, BP values, provider details..."
+              className="form-input w-full resize-y"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[10px] font-bold text-muted-foreground block mb-1">
+                Event Date
+              </label>
+              <input
+                type="date"
+                value={formData.eventDate}
+                onChange={(e) => updateField("eventDate", e.target.value)}
+                className="form-input w-full"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-muted-foreground block mb-1">
+                Document Type
+              </label>
+              <select
+                value={formData.documentType}
+                onChange={(e) => updateField("documentType", e.target.value)}
+                className="form-input w-full"
+              >
+                <option value="External Document">External Document</option>
+                <option value="Lab Report">Lab Report</option>
+                <option value="Office Note">Office Note</option>
+                <option value="Patient Reported">Patient Reported</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-5 py-4 border-t border-border flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 text-[11px] font-semibold border border-border rounded-xl text-muted-foreground hover:bg-muted"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onSubmit}
+            disabled={!formData.eventTitle.trim() || isSubmitting}
+            className="flex-1 py-2.5 text-[11px] font-black rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                Adding...
+              </>
+            ) : (
+              <>
+                <Check className="w-3.5 h-3.5" />
+                Add to Timeline
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
    MAIN WORKSPACE
 ══════════════════════════════════════════════════════════════ */
 export function AbstractionWorkspace({
@@ -2245,20 +2381,22 @@ export function AbstractionWorkspace({
   chartUuid?: string;
   patientData?: any;
 }) {
+  const queryClient = useQueryClient();
+
   const [viewerPage, setViewerPage] = useState(1);
   const [flashCode, setFlashCode] = useState<string | null>(null);
   const [flashActive, setFlashActive] = useState(false);
   const [submitMode, setSubmitMode] = useState<SubmitMode>(null);
   const [savedStatus, setSavedStatus] = useState<"idle" | "saving" | "saved">(
-    "idle",
+    "idle"
   );
   const [mobileTab, setMobileTab] = useState<"doc" | "timeline" | "form">(
-    "timeline",
+    "timeline"
   );
   const [viewerFull, setViewerFull] = useState(false);
   const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
   const [prefill, setPrefill] = useState<Partial<FormData> | undefined>(
-    undefined,
+    undefined
   );
   const [selectedMeasureCode, setSelectedMeasureCode] = useState<string>("");
   const [timelineFilter, setTimelineFilter] = useState("all");
@@ -2281,7 +2419,7 @@ export function AbstractionWorkspace({
     : (patientsResponse?.patients ?? patientsResponse?.data ?? []);
 
   const patient = patients.find(
-    (p: any) => p.patientId === patientId || p.id === patientId,
+    (p: any) => p.patientId === patientId || p.id === patientId
   );
   console.log("Selected Patient:", patient);
   const selectedPatient = patient
@@ -2386,7 +2524,7 @@ export function AbstractionWorkspace({
   }, [measureList, selectedMeasureCode]);
 
   const selectedMeasure = measureList.find(
-    (m: any) => m.measure_code === selectedMeasureCode,
+    (m: any) => m.measure_code === selectedMeasureCode
   );
 
   const { data: draftData, refetch: refetchDraft } =
@@ -2403,7 +2541,7 @@ export function AbstractionWorkspace({
             !!currentChartUuid &&
             !!selectedMeasure?.measure_code,
         },
-      },
+      }
     );
 
   useEffect(() => {
@@ -2440,7 +2578,7 @@ export function AbstractionWorkspace({
       query: {
         enabled: !!selectedMeasure?.measure_code,
       },
-    },
+    }
   );
   const sendToQaMutation = usePostApiHedisSendToQa();
   const handleMarkNotFound = async () => {
@@ -2460,7 +2598,7 @@ export function AbstractionWorkspace({
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ??
-          "Unable to mark evidence as Not Found.",
+          "Unable to mark evidence as Not Found."
       );
     }
   };
@@ -2479,14 +2617,70 @@ export function AbstractionWorkspace({
       });
 
       toast.success(
-        "Patient successfully submitted to QA. Evidence has been saved and is ready for QA review.",
+        "Patient successfully submitted to QA. Evidence has been saved and is ready for QA review."
       );
 
       setSubmitMode("qa");
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ??
-          "Unable to submit patient to QA. Please try again.",
+          "Unable to submit patient to QA. Please try again."
+      );
+    }
+  };
+
+  const addMissingEvidenceMutation = usePostApiHedisAddMissingEvidence();
+
+  const [showAddEvidenceModal, setShowAddEvidenceModal] = useState(false);
+  const [addEvidenceForm, setAddEvidenceForm] = useState({
+    eventTitle: "",
+    summary: "",
+    eventDate: new Date().toISOString().split("T")[0], // today
+    documentType: "External Document",
+  });
+
+  const handleAddMissingEvidence = async () => {
+    if (!addEvidenceForm.eventTitle.trim()) {
+      toast.error("Evidence title is required");
+      return;
+    }
+
+    try {
+      await addMissingEvidenceMutation.mutateAsync({
+        data: {
+          patientId: patientId!,
+          chartId: currentChartUuid,
+          eventTitle: addEvidenceForm.eventTitle,
+          summary: addEvidenceForm.summary,
+          eventDate: addEvidenceForm.eventDate,
+          documentType: addEvidenceForm.documentType,
+        },
+      });
+
+      toast.success("Missing evidence added successfully to timeline!");
+      queryClient?.invalidateQueries({
+        queryKey: getApiHedisEvidenceTimelineIdQueryKey(patientId, {
+          filter: timelineFilter,
+          search: timelineSearch,
+        }),
+      });
+      // Refresh timeline
+      // Note: If timeline query has refetch, call it. For now assume we can refetch via invalidation or manual
+      // Since it's react-query, better to use queryClient if available, but for simplicity:
+      // You can add refetchTimeline if exposed, or rely on key change. For now:
+      setShowAddEvidenceModal(false);
+      setAddEvidenceForm({
+        eventTitle: "",
+        summary: "",
+        eventDate: new Date().toISOString().split("T")[0],
+        documentType: "External Document",
+      });
+
+      // Optionally refetch timeline data
+      // timeline refetch would be good if you extract it
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ?? "Failed to add missing evidence"
       );
     }
   };
@@ -2623,6 +2817,13 @@ export function AbstractionWorkspace({
           {/* Action buttons */}
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
+              onClick={() => setShowAddEvidenceModal(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold border border-emerald-300 rounded-xl text-emerald-700 hover:bg-emerald-50 transition-colors whitespace-nowrap"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Add Evidence
+            </button>
+            <button
               onClick={handleSaveDraft}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold border border-border rounded-xl text-foreground hover:bg-muted transition-colors whitespace-nowrap"
             >
@@ -2716,6 +2917,7 @@ export function AbstractionWorkspace({
             onSearchChange={setTimelineSearch}
             onSelectEvent={handleSelectEvent}
             onAutoFillEvidence={handleAutoFill}
+            chartUuid={currentChartUuid}
           />
         </div>
 
@@ -2779,6 +2981,16 @@ export function AbstractionWorkspace({
         patientName={selectedPatient?.patientName ?? ""}
         chartUuid={currentChartUuid}
         submittedBy={profile?.data?.full_name ?? ""}
+      />
+
+      {/* ══ ADD EVIDENCE MODAL ══ */}
+      <AddEvidenceModal
+        isOpen={showAddEvidenceModal}
+        onClose={() => setShowAddEvidenceModal(false)}
+        onSubmit={handleAddMissingEvidence}
+        formData={addEvidenceForm}
+        setFormData={setAddEvidenceForm}
+        isSubmitting={addMissingEvidenceMutation.isPending}
       />
     </div>
   );

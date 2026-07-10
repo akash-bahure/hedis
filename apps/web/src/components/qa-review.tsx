@@ -37,6 +37,7 @@ import {
   UserCheck2,
   Info,
   Save,
+  Plus,
   ExternalLink,
   ArrowLeft,
 } from "lucide-react";
@@ -44,7 +45,9 @@ import {
   useGetApiHedisQaReviewEvaluationid,
   useGetApiHedisEvaluationsId,
   usePostApiHedisAssignAbstractor,
+  usePostApiHedisAddMissingEvidence,
 } from "@/api";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
@@ -634,6 +637,134 @@ function CheckItem({
   );
 }
 
+/* ══════════════════════════════════════════════════════════════
+   ADD MISSING EVIDENCE MODAL (QA Version)
+══════════════════════════════════════════════════════════════ */
+function AddEvidenceModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  formData,
+  setFormData,
+  isSubmitting,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: () => void;
+  formData: any;
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  isSubmitting: boolean;
+}) {
+  if (!isOpen) return null;
+
+  const updateField = (field: string, value: string) => {
+    setFormData((prev: any) => ({ ...prev, [field]: value }));
+  };
+
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-border">
+          <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+            <Plus className="w-5 h-5 text-emerald-600" />
+          </div>
+          <div>
+            <h3 className="font-bold text-foreground">Add Missing Evidence</h3>
+            <p className="text-[11px] text-muted-foreground">
+              Manual timeline entry for QA review
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="ml-auto p-1 text-muted-foreground hover:text-foreground"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-5">
+          <div>
+            <label className="block text-[10px] font-bold text-muted-foreground mb-1">
+              Evidence Title <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.eventTitle}
+              onChange={(e) => updateField("eventTitle", e.target.value)}
+              placeholder="e.g. Home BP Reading - 138/82 mmHg"
+              className="form-input w-full"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-bold text-muted-foreground mb-1">
+              Summary / Clinical Context
+            </label>
+            <textarea
+              value={formData.summary}
+              onChange={(e) => updateField("summary", e.target.value)}
+              rows={4}
+              placeholder="Patient reported BP reading from home monitor on Jul 22..."
+              className="form-input w-full resize-y min-h-[80px]"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-bold text-muted-foreground mb-1">
+                Event Date
+              </label>
+              <input
+                type="date"
+                value={formData.eventDate}
+                onChange={(e) => updateField("eventDate", e.target.value)}
+                className="form-input w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-muted-foreground mb-1">
+                Document Type
+              </label>
+              <select
+                value={formData.documentType}
+                onChange={(e) => updateField("documentType", e.target.value)}
+                className="form-input w-full"
+              >
+                <option value="External Document">External Document</option>
+                <option value="Patient Reported">Patient Reported</option>
+                <option value="Lab Report">Lab Report</option>
+                <option value="Office Note">Office Note</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-5 py-4 border-t flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 text-sm font-semibold border border-border rounded-xl hover:bg-muted"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onSubmit}
+            disabled={!formData.eventTitle.trim() || isSubmitting}
+            className="flex-1 py-2.5 text-sm font-bold bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl flex items-center justify-center gap-2 transition-all"
+          >
+            {isSubmitting ? (
+              <>Adding to Timeline...</>
+            ) : (
+              <>
+                <Plus className="w-4 h-4" /> Add Evidence
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─────────────────────────────────────────────────────────────
    MAIN COMPONENT
 ───────────────────────────────────────────────────────────── */
@@ -1050,6 +1181,53 @@ export function QAReview({
     checklist.filter((c) => c.group === g);
   const canSave = Object.keys(measureDecisions).length > 0;
 
+  // === ADD EVIDENCE STATE ===
+  const queryClient = useQueryClient();
+  const addMissingEvidenceMutation = usePostApiHedisAddMissingEvidence();
+
+  const [showAddEvidenceModal, setShowAddEvidenceModal] = useState(false);
+  const [addEvidenceForm, setAddEvidenceForm] = useState({
+    eventTitle: "",
+    summary: "",
+    eventDate: new Date().toISOString().split("T")[0],
+    documentType: "External Document",
+  });
+
+  const handleAddMissingEvidence = async () => {
+    if (!addEvidenceForm.eventTitle.trim()) {
+      toast.error("Evidence title is required");
+      return;
+    }
+
+    try {
+      await addMissingEvidenceMutation.mutateAsync({
+        data: {
+          patientId: patientId!,
+          chartId: patientData?.chart_uuid || "", // or selected measure's chart if available
+          eventTitle: addEvidenceForm.eventTitle,
+          summary: addEvidenceForm.summary,
+          eventDate: addEvidenceForm.eventDate,
+          documentType: addEvidenceForm.documentType,
+        },
+      });
+
+      toast.success("Missing evidence added successfully to timeline!");
+
+      // Close modal & reset
+      setShowAddEvidenceModal(false);
+      setAddEvidenceForm({
+        eventTitle: "",
+        summary: "",
+        eventDate: new Date().toISOString().split("T")[0],
+        documentType: "External Document",
+      });
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ?? "Failed to add missing evidence"
+      );
+    }
+  };
+
   return (
     <div className="flex h-full overflow-hidden bg-background">
       {/* ══════════════════════════════════════════════════════
@@ -1165,6 +1343,13 @@ export function QAReview({
 
             {/* Action buttons */}
             <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={() => setShowAddEvidenceModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold border border-emerald-300 rounded-lg text-emerald-700 hover:bg-emerald-50 transition-colors whitespace-nowrap"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Add Evidence
+              </button>
               <button
                 onClick={() => setPhiVisible((v) => !v)}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors"
@@ -2054,6 +2239,16 @@ export function QAReview({
           abstractorId={selectedCase.memberId || "system"} // Use memberId as a placeholder or fetch real ID
         />
       </div>
+
+      {/* ADD EVIDENCE MODAL */}
+      <AddEvidenceModal
+        isOpen={showAddEvidenceModal}
+        onClose={() => setShowAddEvidenceModal(false)}
+        onSubmit={handleAddMissingEvidence}
+        formData={addEvidenceForm}
+        setFormData={setAddEvidenceForm}
+        isSubmitting={addMissingEvidenceMutation.isPending}
+      />
     </div>
   );
 }
