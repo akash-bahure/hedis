@@ -49,6 +49,7 @@ import {
   useGetApiHedisClinicalTimelinePatientid,
   useGetApiHedisEvaluationsId,
   usePostApiHedisClinicalTimelineReview,
+  usePostApiHedisRecalculateQa,
   // usePostApiHedisEvaluateId,
   usePostApiHedisSendToQa,
 } from "@/api";
@@ -896,7 +897,7 @@ function EvidenceDrawer({
   const Icon = m.icon;
   const queryClient = useQueryClient();
   const eventDetailsQuery = useGetApiHedisClinicalTimelineEventEventid(
-    event.id,
+    event.id
   );
 
   const reviewMutation = usePostApiHedisClinicalTimelineReview({
@@ -905,7 +906,7 @@ function EvidenceDrawer({
         toast.success(
           variables.data.status === "ACCEPTED"
             ? "Evidence accepted successfully."
-            : "Evidence rejected successfully.",
+            : "Evidence rejected successfully."
         );
 
         // Refresh event details
@@ -928,7 +929,7 @@ function EvidenceDrawer({
         toast.error(
           error?.response?.data?.message ??
             error?.message ??
-            "Failed to update evidence review.",
+            "Failed to update evidence review."
         );
       },
     },
@@ -1162,7 +1163,7 @@ function EvidenceDrawer({
                   ${Number(detail?.ai_confidence || detail?.ai_confidence_score) >= 90 ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
                 >
                   {Number(
-                    detail?.ai_confidence || detail?.ai_confidence_score,
+                    detail?.ai_confidence || detail?.ai_confidence_score
                   ) >= 90
                     ? "High"
                     : "Medium"}
@@ -1170,7 +1171,7 @@ function EvidenceDrawer({
               </div>
               <ConfidenceBar
                 score={Number(
-                  detail?.ai_confidence || detail?.ai_confidence_score || 0,
+                  detail?.ai_confidence || detail?.ai_confidence_score || 0
                 )}
               />
               <p className="text-[10px] text-muted-foreground mt-1.5">
@@ -1713,6 +1714,33 @@ function MeasurePanel({
   onSendToQA?: () => void; // ← Added
   isSendingToQA?: boolean; // ← Added
 }) {
+  // Show processing message when no measures are available yet
+  if (measures.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center p-6">
+        <div className="text-center max-w-xs">
+          <div className="mx-auto w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mb-4">
+            <Loader2 className="w-6 h-6 text-amber-600 animate-spin" />
+          </div>
+
+          <h3 className="text-[15px] font-semibold text-foreground mb-2">
+            Evaluation in Progress
+          </h3>
+
+          <p className="text-[13px] text-muted-foreground leading-relaxed mb-6">
+            The HEDIS evaluation for this patient has not been processed yet.
+            <br />
+            Background workers are currently running the analysis.
+          </p>
+
+          <div className="text-[11px] text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-3">
+            Please wait a moment and refresh, or check back shortly.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const measure = measures.find((m) => m.id === selectedMeasure);
   if (!measure) return null;
   console.log("detail", detail);
@@ -2284,7 +2312,7 @@ export function Patient360({
       query: {
         enabled: true,
       },
-    },
+    }
   );
 
   useEffect(() => {
@@ -2464,9 +2492,7 @@ export function Patient360({
     // Filter non-eligible first
     let filtered = evaluationResponse.evaluations.filter(
       (ev: any) =>
-        ev.status !== "Not Eligible" &&
-        ev.eligible !== false &&
-        ev.measure_code, // must have a code
+        ev.status !== "Not Eligible" && ev.eligible !== false && ev.measure_code // must have a code
     );
 
     // Deduplicate by measure_code (keep the one with highest confidence or latest)
@@ -2563,8 +2589,61 @@ export function Patient360({
   // };
 
   const sendToQaMutation = usePostApiHedisSendToQa();
+
+  const { mutate: triggerRecalculation, isPending: isRecalculating } =
+    usePostApiHedisRecalculateQa({
+      mutation: {
+        onSuccess: (response) => {
+          toast.success(
+            response?.message || "Recalculation triggered successfully."
+          );
+          refetchEval(); // refresh measures
+        },
+        onError: (error: any) => {
+          const rawErrorMsg =
+            error?.response?.data?.error ||
+            error?.response?.data?.message ||
+            error?.message ||
+            "Failed to trigger recalculation.";
+
+          // Handle the specific common error
+          if (
+            rawErrorMsg.includes(
+              "No measures found with submitted manual evidence"
+            )
+          ) {
+            toast.error(
+              "No measures are ready for recalculation yet.\n\nPlease submit some manual evidence first, then try again.",
+              {
+                id: "recalc-error",
+                duration: 7000,
+              }
+            );
+          }
+          // Generic fallback
+          else {
+            toast.error(rawErrorMsg, {
+              id: "recalc-error",
+              duration: 5000,
+            });
+          }
+        },
+      },
+    });
+
+  const handleTriggerRecalculation = () => {
+    if (!patientId) {
+      toast.error("Patient ID is required.");
+      return;
+    }
+
+    triggerRecalculation({
+      data: { patientId },
+    });
+  };
+
   const selectedEval = evaluations.find(
-    (ev: any) => ev.measure_code === selectedMeasure,
+    (ev: any) => ev.measure_code === selectedMeasure
   );
   const handleSendToQa = async () => {
     if (!selectedEval) return;
@@ -2637,7 +2716,7 @@ export function Patient360({
     };
   }, [selectedEval]);
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(
-    null,
+    null
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [acceptedEvents, setAcceptedEvents] = useState<Set<string>>(new Set());
@@ -2776,19 +2855,6 @@ export function Patient360({
                 — Longitudinal record view
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              {acceptedEvents.size > 0 && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">
-                  <CheckCircle2 className="w-3 h-3" /> {acceptedEvents.size}{" "}
-                  accepted
-                </span>
-              )}
-              {filters.hedisOnly && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-full">
-                  <Tag className="w-3 h-3" /> HEDIS filter active
-                </span>
-              )}
-            </div>
           </div>
 
           {timelineQuery.isLoading ? (
@@ -2813,7 +2879,6 @@ export function Patient360({
                     d="M4 12a8 8 0 018-8v8z"
                   />
                 </svg>
-
                 <p className="text-sm text-muted-foreground">
                   Loading Clinical Timeline...
                 </p>
@@ -2823,24 +2888,47 @@ export function Patient360({
             <div className="flex h-full items-center justify-center">
               <div className="text-center space-y-3">
                 <AlertCircle className="h-10 w-10 text-red-500 mx-auto" />
-
                 <div>
                   <h3 className="font-semibold text-foreground">
                     Unable to load Clinical Timeline
                   </h3>
-
                   <p className="text-sm text-muted-foreground mt-1">
                     An error occurred while loading the patient's timeline.
                   </p>
                 </div>
-
                 <button
-                  variant="outline"
-                  size="sm"
                   onClick={() => timelineQuery.refetch()}
+                  className="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary/90"
                 >
                   Retry
                 </button>
+              </div>
+            </div>
+          ) : timelineData.length === 0 ||
+            !timelineQuery.data?.timeline ||
+            Object.keys(timelineQuery.data.timeline).length === 0 ? (
+            /* ─────── EMPTY TIMELINE STATE ─────── */
+            <div className="flex h-full items-center justify-center p-8">
+              <div className="text-center max-w-md">
+                <div className="mx-auto w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center mb-5">
+                  <Clock className="w-7 h-7 text-blue-600" />
+                </div>
+
+                <h3 className="text-[16px] font-semibold text-foreground mb-2">
+                  No Timeline Data Available Yet
+                </h3>
+
+                <p className="text-[14px] text-muted-foreground leading-relaxed mb-6">
+                  The clinical timeline for this patient is currently empty.
+                  <br />
+                  Background processing is likely still running to extract and
+                  organize records.
+                </p>
+
+                <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-700 text-xs px-3 py-1.5 rounded-full border border-amber-200">
+                  <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+                  Workers are processing...
+                </div>
               </div>
             </div>
           ) : (
@@ -2899,8 +2987,8 @@ export function Patient360({
                 onOpenWorkspace={onOpenWorkspace}
                 measures={dynamicMeasures}
                 detail={dynamicDetail}
-                // onRecalculate={handleRecalculate}
-                // isRecalculating={evaluateMutation.isLoading}
+                onRecalculate={handleTriggerRecalculation}
+                isRecalculating={isRecalculating}
                 onSendToQA={handleSendToQa}
                 isSendingToQA={sendToQaMutation.isLoading}
               />
