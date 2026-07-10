@@ -417,6 +417,28 @@ const dashboardController = require("../controllers/clientDashboard.controller")
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - client_name
+ *               - contact_email
+ *             properties:
+ *               client_name:
+ *                 type: string
+ *                 example: "Blue Cross Health Plan"
+ *               plan_type:
+ *                 type: string
+ *                 example: "Medicare"
+ *               contract_id:
+ *                 type: string
+ *                 example: "H1234"
+ *               program_year:
+ *                 type: string
+ *                 example: "MY2026"
+ *               contact_name:
+ *                 type: string
+ *                 example: "Jane Smith"
+ *               contact_email:
+ *                 type: string
+ *                 example: "jane.smith@healthplan.com"
  *     responses:
  *       201:
  *         description: Client created successfully
@@ -434,6 +456,51 @@ router.post("/v2", dashboardController.createClientV2);
  *     responses:
  *       200:
  *         description: Clients retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       org_name:
+ *                         type: string
+ *                         description: "Client Name"
+ *                       contract_type:
+ *                         type: string
+ *                         description: "Plan Type (e.g. Health Plan)"
+ *                       status:
+ *                         type: string
+ *                         description: "Active or Onboarding"
+ *                       primary_contact_name:
+ *                         type: string
+ *                         description: "Contact Person"
+ *                       total_patients_enrolled:
+ *                         type: integer
+ *                         description: "Total Members Count"
+ *                       total_charts:
+ *                         type: integer
+ *                         description: "Total Charts Assigned"
+ *                       active_charts:
+ *                         type: integer
+ *                         description: "Charts currently being worked on"
+ *                       completed_charts:
+ *                         type: integer
+ *                         description: "Charts marked as Done"
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total_count:
+ *                       type: integer
+ *                     total_pages:
+ *                       type: integer
+ *                     current_page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
  */
 router.get("/v2", dashboardController.getClientsV2);
 
@@ -448,6 +515,25 @@ router.get("/v2", dashboardController.getClientsV2);
  *     responses:
  *       200:
  *         description: Client stats retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     total_active:
+ *                       type: integer
+ *                       description: "Total Active Clients"
+ *                     total_onboarding:
+ *                       type: integer
+ *                       description: "Total Onboarding Clients"
+ *                     total_cases:
+ *                       type: integer
+ *                       description: "Total Active Charts/Cases across all clients"
  */
 router.get("/v2/stats", dashboardController.getClientStatsV2);
 

@@ -112,9 +112,9 @@ export default function App() {
         return (
           <WorkQueue
             role={role}
-            onStartAbstraction={(patientId, chartId, patientData) => {
+            onStartAbstraction={(patientId, chartUuid, patientData) => {
               setSelectedPatientId(patientId || null);
-              setSelectedChartId(chartId || null);
+              setSelectedChartId(chartUuid || null);
               setSelectedPatientData(patientData || null);
               navigate("abstraction");
             }}
@@ -174,7 +174,7 @@ export default function App() {
         return (
           <AbstractionWorkspace
             patientId={selectedPatientId || ""}
-            chartId={selectedChartId || ""}
+            chartUuid={selectedPatientData?.chart_uuid || ""}
             patientData={selectedPatientData}
             onBack={() => navigate("work-queue")}
           />
