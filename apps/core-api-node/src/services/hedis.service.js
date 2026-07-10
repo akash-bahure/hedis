@@ -83,6 +83,63 @@ class HEDISService {
   }
 
   /**
+   * Evaluate a single manually-selected measure for a patient chart.
+   * Bypasses the full chart analysis + filtering pipeline used by evaluatePatientChartByPath.
+   * Reuses saveEvaluation() and queueQAReviewAnalysis() for consistency.
+   *
+   * @param {string} patientId
+   * @param {string} pdfPath - absolute path to the patient chart PDF
+   * @param {object} measureData - full measure record from the measures table
+   * @param {string} tenantSubdomain
+   * @param {object} db - tenant-scoped DB client
+   * @returns {object} the saved hedis_evaluations row
+   */
+  async evaluateSingleMeasure(patientId, pdfPath, measureData, tenantSubdomain, db) {
+    const aiServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
+    const url = `${aiServiceUrl}/api/hedis/analyze-single`;
+
+    console.log(
+      `[hedis.service] Evaluating single measure ${measureData.measureCode} for patient ${patientId} via ${url}`
+    );
+
+    const response = await axios.post(url, {
+      patient_id: patientId,
+      pdfPath,
+      measure: measureData,
+    });
+
+    const { evaluations } = response.data;
+
+    if (!evaluations || evaluations.length === 0) {
+      throw new Error(`AI service returned no evaluation for measure ${measureData.measureCode}`);
+    }
+
+    const evalResult = evaluations[0];
+    const saved = await this.saveEvaluation(db, patientId, evalResult);
+
+    // Auto-queue QA Review Analysis (same as evaluatePatientChartByPath)
+    console.log(
+      `[hedis.service] Auto-queuing QA Review for new single-measure evaluation ID: ${saved.id}`
+    );
+    try {
+      await this.queueQAReviewAnalysis(
+        saved.id,
+        patientId,
+        saved.measure_code,
+        pdfPath,
+        tenantSubdomain
+      );
+    } catch (err) {
+      console.error(
+        `[hedis.service] Failed to auto-queue QA Review for evaluation ${saved.id}:`,
+        err.message
+      );
+    }
+
+    return saved;
+  }
+
+  /**
    * Add a HEDIS analysis job to the background queue.
    */
   async queueHedisAnalysis(patientId, chartDocument, tenantSubdomain) {

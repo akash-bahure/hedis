@@ -660,7 +660,7 @@ export function QAReview({
   const [pdfZoom, setPdfZoom] = useState(100);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [expanded, setExpanded] = useState<Set<string>>(
-    new Set(["ev2", "dc2"]),
+    new Set(["ev2", "dc2"])
   );
   const [decision, setDecision] = useState<Decision>(null);
   const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
@@ -668,7 +668,7 @@ export function QAReview({
   const [phiVisible, setPhiVisible] = useState(true);
   const [queueCollapsed, setQueueCollapsed] = useState(false);
   const [selectedMeasureCode, setSelectedMeasureCode] = useState<string | null>(
-    null,
+    null
   );
   const [textRenderKey, setTextRenderKey] = useState(0);
   // New state for multi-measure decisions
@@ -692,7 +692,7 @@ export function QAReview({
     string | null
   >(null);
   const [currentHighlightWords, setCurrentHighlightWords] = useState<string[]>(
-    [],
+    []
   );
 
   const HIGHLIGHT_STYLE: React.CSSProperties = {
@@ -739,7 +739,7 @@ export function QAReview({
               </mark>
             ) : (
               <span key={i}>{part}</span>
-            ),
+            )
           )}
         </>
       );
@@ -854,7 +854,7 @@ export function QAReview({
   const syncMeasureDecision = (
     newStatus: Decision,
     newReasons: string[],
-    newNotes: string,
+    newNotes: string
   ) => {
     if (!selectedId) return;
     setMeasureDecisions((prev) => ({
@@ -973,7 +973,7 @@ export function QAReview({
     // Delay slightly so react-pdf finishes painting the text layer
     const timer = setTimeout(() => {
       const mark = document.querySelector<HTMLElement>(
-        ".react-pdf__Page__textContent mark",
+        ".react-pdf__Page__textContent mark"
       );
       if (mark) {
         mark.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -1000,7 +1000,7 @@ export function QAReview({
   // Derive selectedCase from the current selection and patientData
   const selectedCase = useMemo(() => {
     const currentMeasure = eligibleMeasures.find(
-      (m: any) => m.id === selectedId,
+      (m: any) => m.id === selectedId
     );
     return {
       id: selectedId || "",
@@ -1035,7 +1035,7 @@ export function QAReview({
         if (item.id !== id) return item;
         const idx = order.indexOf(item.state);
         return { ...item, state: order[(idx + 1) % order.length] };
-      }),
+      })
     );
   };
   const toggleExpand = (id: string) => {
@@ -1315,8 +1315,44 @@ export function QAReview({
             </div>
 
             {/* Center content */}
+            {/* Center content */}
             <div className="flex-1 overflow-hidden">
-              {centerTab === "evidence" ? (
+              {reviewLoading ? (
+                <div className="flex h-full items-center justify-center">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+                    <p className="text-sm text-muted-foreground">
+                      Loading QA Review...
+                    </p>
+                  </div>
+                </div>
+              ) : reviewError || !detail || !detail.extractedEvidence ? (
+                /* ─────── QA REVIEW NOT READY STATE ─────── */
+                <div className="flex h-full items-center justify-center p-8">
+                  <div className="text-center max-w-md">
+                    <div className="mx-auto w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center mb-5">
+                      <Clock className="w-7 h-7 text-amber-600" />
+                    </div>
+
+                    <h3 className="text-[16px] font-semibold text-foreground mb-2">
+                      QA Analysis in Progress
+                    </h3>
+
+                    <p className="text-[14px] text-muted-foreground leading-relaxed mb-6">
+                      The detailed QA review analysis for this evaluation has
+                      not been processed yet.
+                      <br />
+                      Background workers are currently running the extraction
+                      and validation.
+                    </p>
+
+                    <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-700 text-xs px-3 py-1.5 rounded-full border border-amber-200 mb-6">
+                      <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+                      Processing...
+                    </div>
+                  </div>
+                </div>
+              ) : centerTab === "evidence" ? (
                 /* SPLIT: PDF viewer + Extracted evidence */
                 <div className="flex h-full overflow-hidden">
                   {/* PDF Viewer */}
@@ -1586,7 +1622,7 @@ export function QAReview({
 
                                           setTimeout(
                                             () => setPdfZoom((z) => z),
-                                            80,
+                                            80
                                           );
                                         }
                                       }}
@@ -1611,7 +1647,7 @@ export function QAReview({
                                       </div>
                                     </div>
                                   );
-                                },
+                                }
                               )}
                             </div>
                           </div>
@@ -1648,7 +1684,7 @@ export function QAReview({
                             <AlertTriangle className="w-3 h-3" />
                             {
                               COMPARISON_FIELDS.filter(
-                                (r) => r.match === "discrepancy",
+                                (r) => r.match === "discrepancy"
                               ).length
                             }{" "}
                             discrepancy
@@ -1657,7 +1693,7 @@ export function QAReview({
                             <Check className="w-3 h-3" />
                             {
                               COMPARISON_FIELDS.filter(
-                                (r) => r.match === "match",
+                                (r) => r.match === "match"
                               ).length
                             }{" "}
                             matches
@@ -1867,10 +1903,10 @@ export function QAReview({
               ) : (
                 <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
                   <Shield className="w-12 h-12 mb-4 opacity-40" />
-                  <p className="font-medium">No Validation Checklist</p>
+                  <p className="font-medium">No Validation Checklist Yet</p>
                   <p className="text-sm text-center mt-2 max-w-xs">
-                    The QA review API did not return any checklist items for
-                    this case.
+                    The QA engine is still processing this case. Please refresh
+                    shortly.
                   </p>
                 </div>
               )}
@@ -2055,7 +2091,7 @@ function AssignmentModal({
                 : "REQUEST_REVISION",
           reasons: data.reasons,
         };
-      },
+      }
     );
 
     try {
@@ -2070,7 +2106,7 @@ function AssignmentModal({
       onOpenChange(false);
     } catch (err: any) {
       toast.error(
-        err?.message || "Failed to assign measures. Please try again.",
+        err?.message || "Failed to assign measures. Please try again."
       );
     }
   };
@@ -2186,7 +2222,7 @@ function AssignmentModal({
                 Revise:{" "}
                 {
                   decisionList.filter(
-                    ([_, d]: any) => d.qaStatus === "requestRevision",
+                    ([_, d]: any) => d.qaStatus === "requestRevision"
                   ).length
                 }
               </span>

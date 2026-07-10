@@ -789,4 +789,123 @@ router.get("/abstractor/draft/:patientId", hedisController.getDraft);
  */
 router.post("/abstractor/mark-not-found", hedisController.markNotFound);
 
+/**
+ * @swagger
+ * /api/hedis/add-measure:
+ *   post:
+ *     summary: Manually add a missing HEDIS measure and trigger AI evaluation for that single measure
+ *     tags: [HEDIS]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - patientId
+ *             properties:
+ *               patientId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: UUID of the patient
+ *               measureId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: UUID of the measure from the Measure Library (use this OR measureCode)
+ *               measureCode:
+ *                 type: string
+ *                 description: Measure code (e.g. BCS, CBP) — used if measureId is not provided
+ *     responses:
+ *       201:
+ *         description: Measure evaluated and added to hedis_evaluations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Measure 'BCS' successfully evaluated and added."
+ *                 evaluation:
+ *                   type: object
+ *                   description: The saved hedis_evaluations record
+ *       400:
+ *         description: Missing required fields
+ *       404:
+ *         description: Patient, measure, or patient chart not found
+ *       409:
+ *         description: Evaluation for this measure already exists — use recalculate-qa instead
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/add-measure", hedisController.addMeasure);
+
+/**
+ * @swagger
+ * /api/hedis/add-missing-evidence:
+ *   post:
+ *     summary: Manually add a missing evidence record into the clinical timeline
+ *     description: >
+ *       Inserts a record into clinical_timeline_events without any AI extraction.
+ *       document_type is set to "External Document" and source_type to "MANUAL" by the backend.
+ *       provider is derived from the authenticated user.
+ *     tags: [HEDIS]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - patientId
+ *               - eventTitle
+ *             properties:
+ *               patientId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: UUID of the patient
+ *               chartId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: UUID of the patient chart (optional)
+ *               eventTitle:
+ *                 type: string
+ *                 description: Evidence type / title of the timeline event
+ *                 example: "Annual Wellness Visit"
+ *               summary:
+ *                 type: string
+ *                 description: Free-text summary of the evidence
+ *                 example: "Patient completed annual wellness visit with Dr. Smith"
+ *               eventDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Date of the evidence event (defaults to today if omitted)
+ *                 example: "2024-06-15"
+ *               documentType:
+ *                 type: string
+ *                 description: Document type label (defaults to "External Document" if omitted)
+ *                 example: "External Document"
+ *     responses:
+ *       201:
+ *         description: Evidence record created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Missing evidence record added successfully."
+ *                 data:
+ *                   type: object
+ *                   description: The inserted clinical_timeline_events row
+ *       400:
+ *         description: Missing required fields (patientId or eventTitle)
+ *       404:
+ *         description: Patient not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/add-missing-evidence", hedisController.addMissingEvidence);
+
 module.exports = router;
