@@ -43,6 +43,7 @@ import {
   Upload,
   ArrowLeft,
   Loader2,
+  Plus,
 } from "lucide-react";
 import {
   useGetApiHedisClinicalTimelineEventEventid,
@@ -52,6 +53,8 @@ import {
   usePostApiHedisRecalculateQa,
   // usePostApiHedisEvaluateId,
   usePostApiHedisSendToQa,
+  useGetApiMeasureLibrary, // ← NEW
+  usePostApiHedisAddMeasure, // ← NEW
 } from "@/api";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -1687,6 +1690,187 @@ function OpenAbstractionButton({
 }
 
 /* ─────────────────────────────────────────────────────────────
+   ADD MEASURE MODAL - FIXED SELECTION
+───────────────────────────────────────────────────────────── */
+function AddMeasureModal({
+  patientId,
+  isOpen,
+  onClose,
+  onSuccess,
+}: {
+  patientId: string;
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [selectedId, setSelectedId] = useState<string>(""); // Use only ID for selection
+
+  const { data: measuresData, isLoading } = useGetApiMeasureLibrary(
+    { search, limit: 200, active: true },
+    { query: { enabled: isOpen } }
+  );
+
+  const addMeasureMutation = usePostApiHedisAddMeasure({
+    mutation: {
+      onSuccess: (response) => {
+        toast.success(response?.message || "Measure added successfully.");
+        queryClient.invalidateQueries({
+          queryKey: [{ url: "/api/hedis/evaluations" }],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [{ url: "/api/hedis/clinical-timeline" }],
+        });
+        onSuccess?.();
+        onClose();
+        setSearch("");
+        setSelectedId("");
+      },
+      onError: (error: any) => {
+        const errorMsg = error?.response?.data?.error || error?.message || "";
+        const existingId = error?.response?.data?.existing_evaluation_id;
+
+        // Handle specific "already exists" error
+        if (
+          errorMsg.includes("already exists") ||
+          errorMsg.includes("Use recalculate-qa")
+        ) {
+          toast.error(
+            "This measure already exists for the patient. Use 'Trigger Re-calculation' instead.",
+            { duration: 6000 }
+          );
+        } else {
+          toast.error(errorMsg || "Failed to add measure.");
+        }
+      },
+    },
+  });
+
+  const handleSaveAndRun = () => {
+    if (!selectedId) {
+      toast.error("Please select a measure.");
+      return;
+    }
+
+    const selectedMeasure = measuresData?.data?.find(
+      (m: any) => m.id?.toString() === selectedId
+    );
+
+    addMeasureMutation.mutate({
+      data: {
+        patientId,
+        measureId: selectedId,
+        measureCode:
+          selectedMeasure?.measureCode || selectedMeasure?.measure_code,
+      },
+    });
+  };
+
+  if (!isOpen) return null;
+
+  const measures = measuresData?.data || [];
+
+  // Filter measures based on search
+  const filteredMeasures = measures.filter((m: any) => {
+    const term = search.toLowerCase();
+    return (
+      (m.measureName || m.measure_name || "").toLowerCase().includes(term) ||
+      (m.measureCode || m.measure_code || "").toLowerCase().includes(term)
+    );
+  });
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="bg-card rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold">Add Measure</h3>
+            <p className="text-sm text-muted-foreground">
+              Select from Measure Library
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-6 space-y-4">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search measures..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+            />
+          </div>
+
+          {/* Measure Select - FIXED */}
+          <div>
+            <label className="text-sm font-medium text-foreground block mb-1.5">
+              Select Measure
+            </label>
+            <select
+              value={selectedId}
+              onChange={(e) => {
+                setSelectedId(e.target.value);
+              }}
+              className="w-full px-4 py-3 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+              disabled={isLoading}
+            >
+              <option value="">-- Select a measure --</option>
+              {filteredMeasures.map((m: any) => (
+                <option key={m.id} value={m.id}>
+                  {m.measureName || m.measure_name} (
+                  {m.measureCode || m.measure_code})
+                </option>
+              ))}
+            </select>
+            {isLoading && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Loading measures...
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-border flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 rounded-lg border border-border text-foreground font-medium hover:bg-muted"
+          >
+            Close
+          </button>
+          <button
+            onClick={handleSaveAndRun}
+            disabled={addMeasureMutation.isPending || !selectedId}
+            className="flex-1 py-2.5 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {addMeasureMutation.isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Running...
+              </>
+            ) : (
+              "Save & Run Evaluation"
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
    RIGHT MEASURE PANEL
 ───────────────────────────────────────────────────────────── */
 function MeasurePanel({
@@ -1748,6 +1932,7 @@ function MeasurePanel({
     MEASURE_STATUS_META[measure.status] ?? MEASURE_STATUS_META["gap"];
 
   const StatusIcon = statusMeta.icon;
+  const [showAddMeasureModal, setShowAddMeasureModal] = useState(false);
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -1997,6 +2182,13 @@ function MeasurePanel({
               workflowType={workflowType}
               onOpenWorkspace={onOpenWorkspace}
             />
+            {/* NEW BUTTON */}
+            <button
+              onClick={() => setShowAddMeasureModal(true)}
+              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-violet-200 text-violet-600 text-[12px] font-semibold hover:bg-violet-50 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" /> Add Measure
+            </button>
             <button className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border text-foreground text-[12px] font-semibold hover:bg-muted transition-colors">
               <Eye className="w-3.5 h-3.5" /> Mark Reviewed
             </button>
@@ -2021,6 +2213,14 @@ function MeasurePanel({
           </div>
         )}
       </div>
+
+      {showAddMeasureModal && (
+        <AddMeasureModal
+          patientId={patientId}
+          isOpen={showAddMeasureModal}
+          onClose={() => setShowAddMeasureModal(false)}
+        />
+      )}
     </div>
   );
 }
