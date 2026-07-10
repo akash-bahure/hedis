@@ -47,6 +47,41 @@ exports.analyzeChart = async (req, res) => {
   }
 };
 
+/**
+ * POST /api/hedis/analyze-single
+ * Evaluate a single pre-selected measure against a patient chart.
+ * Skips criteria extraction and measure filtering — used by the Add Measure flow.
+ */
+exports.analyzeSingleMeasure = async (req, res) => {
+  try {
+    const { patient_id, pdfPath, measure } = req.body;
+
+    if (!patient_id || !pdfPath || !measure) {
+      return res.status(400).json({
+        error: "patient_id, pdfPath, and measure are required.",
+      });
+    }
+
+    console.log(
+      `Starting single-measure HEDIS analysis for Patient: ${patient_id}, Measure: ${measure.measureCode}`
+    );
+
+    // 1. Extract chart text from PDF
+    const text = await extractPdfText(pdfPath);
+
+    // 2. Evaluate the single measure directly — no filtering needed
+    const evaluations = await hedisEvaluationService.evaluateMeasures(text, [measure]);
+
+    res.json({
+      patient_id,
+      evaluations,
+    });
+  } catch (err) {
+    console.error("Analyze Single Measure Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.qaReviewAnalysis = async (req, res) => {
   try {
     const { patientId, measureCode, pdfPath, measureRules, manualEvidence } = req.body;
