@@ -52,9 +52,9 @@ import {
   useGetApiDashboardAbstractionVelocity,
   useGetApiDashboardQueueByDomain,
   useGetApiDashboardStats,
+  useGetApiDashboardDeadlines,
 } from "@/api";
 import { Pagination } from "./Pagination";
-import { useGetApiDashboardDeadlines } from "@/api";
 
 /* ─── Colours ──────────────────────────────────────────── */
 const C = {
@@ -990,6 +990,24 @@ export function Dashboard() {
       (m.currentRate ?? 0) >= (m.targetRate ?? 80),
   ).length;
 
+  const {
+    data: deadlinesData,
+    isLoading: deadlinesLoading,
+    isError: deadlinesError,
+    refetch,
+  } = useGetApiDashboardDeadlines();
+  const deadlines =
+    deadlinesData?.map((item: any) => ({
+      measure: item.measure,
+      label: item.measure_name,
+      due: item.due_date,
+      remaining: item.remaining_days,
+      total: item.total,
+      completed: item.completed,
+      open: item.open,
+      urgency: item.urgency,
+    })) ?? [];
+
   // For full modal pagination
   const { data: fullRatesResponse, isLoading: fullRatesLoading } =
     useGetApiDashboardMeasureRates(
@@ -1063,10 +1081,6 @@ export function Dashboard() {
               <RefreshCw className="w-3.5 h-3.5" />
               Refresh
             </button>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-primary/10 border border-primary/20 rounded-lg text-primary font-semibold">
-              <CircleDot className="w-3 h-3 fill-primary" />
-              Live
-            </span>
           </div>
         </div>
 
