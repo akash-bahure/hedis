@@ -53,8 +53,10 @@ import {
   useGetApiDashboardQueueByDomain,
   useGetApiDashboardStats,
   useGetApiDashboardDeadlines,
+  useGetApiDashboardMyQueue,
 } from "@/api";
 import { Pagination } from "./Pagination";
+import { useNavigate } from "@tanstack/react-router";
 
 /* ─── Colours ──────────────────────────────────────────── */
 const C = {
@@ -961,6 +963,7 @@ export function Dashboard() {
   const totalCompleted = queueByMeasure.reduce((s, q) => s + q.completed, 0);
   const totalDenominator = queueByMeasure.reduce((s, q) => s + q.total, 0);
   const completionPct = Math.round((totalCompleted / totalDenominator) * 100);
+  const navigate = useNavigate();
 
   // API Integration - HEDIS Measure Rates
   const {
@@ -1015,15 +1018,18 @@ export function Dashboard() {
       urgency: item.urgency,
     })) ?? [];
   console.log(deadlinesData);
-  const formatDate = (date?: string | null) => {
-    if (!date) return "-";
 
-    return new Date(date).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
+  const {
+    data: myQueueResponse,
+    isLoading: myQueueLoading,
+    error: myQueueError,
+  } = useGetApiDashboardMyQueue({
+    page: 1,
+    limit: 5, // Dashboard Preview
+  });
+
+  const myQueue = myQueueResponse?.data ?? [];
+  const myQueuePagination = myQueueResponse?.pagination;
 
   // For full modal pagination
   const { data: fullRatesResponse, isLoading: fullRatesLoading } =
@@ -1508,8 +1514,22 @@ export function Dashboard() {
                 5 active
               </span>
             </div>
-            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:opacity-90 transition-opacity">
-              Open Work Queue <ArrowUpRight className="w-3.5 h-3.5" />
+            <button
+              onClick={() => {
+                console.log("Clicked");
+
+                try {
+                  navigate({
+                    to: "/work-queue",
+                  });
+                } catch (err) {
+                  console.error(err);
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:opacity-90 transition-opacity"
+            >
+              Open Work Queue
+              <ArrowUpRight className="w-3.5 h-3.5" />
             </button>
           </div>
           <div className="w-full overflow-x-auto">
@@ -1534,115 +1554,109 @@ export function Dashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {[
-                  {
-                    member: "Anderson, Jennifer K.",
-                    id: "MBR-789456",
-                    measure: "CDC",
-                    status: "In Progress",
-                    due: "Feb 28",
-                    pct: 70,
-                    urgency: false,
-                  },
-                  {
-                    member: "Williams, David M.",
-                    id: "MBR-667890",
-                    measure: "CBP",
-                    status: "Not Started",
-                    due: "Feb 28",
-                    pct: 0,
-                    urgency: false,
-                  },
-                  {
-                    member: "Thompson, Sandra A.",
-                    id: "MBR-332178",
-                    measure: "BCS",
-                    status: "In Progress",
-                    due: "Feb 27",
-                    pct: 45,
-                    urgency: true,
-                  },
-                  {
-                    member: "Martinez, Robert L.",
-                    id: "MBR-445512",
-                    measure: "COL",
-                    status: "Not Started",
-                    due: "Feb 26",
-                    pct: 0,
-                    urgency: true,
-                  },
-                  {
-                    member: "Chen, Lisa W.",
-                    id: "MBR-112453",
-                    measure: "CDC",
-                    status: "QA Pending",
-                    due: "Feb 25",
-                    pct: 100,
-                    urgency: false,
-                  },
-                ].map((row) => (
-                  <tr
-                    key={row.id}
-                    className="hover:bg-muted/10 transition-colors group"
-                  >
-                    <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
-                      <div className="font-semibold text-foreground">
-                        {row.member}
-                      </div>
-                      <div className="text-[10px] font-mono text-muted-foreground">
-                        {row.id}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
-                      <span className="inline-flex items-center justify-center w-10 h-5 bg-primary/10 text-primary border border-primary/20 rounded text-[10px] font-bold">
-                        {row.measure}
-                      </span>
-                    </td>
-                    <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
-                      <span
-                        className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${
-                          row.status === "QA Pending"
-                            ? "bg-amber-50 text-amber-700 border-amber-200"
-                            : row.status === "In Progress"
-                              ? "bg-blue-50 text-blue-700 border-blue-200"
-                              : "bg-muted text-muted-foreground border-border"
-                        }`}
-                      >
-                        {row.status}
-                      </span>
-                    </td>
-                    <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
-                      <span
-                        className={`flex items-center gap-1 font-semibold ${row.urgency ? "text-red-600" : "text-foreground"}`}
-                      >
-                        {row.urgency && <AlertTriangle className="w-3 h-3" />}
-                        {row.due}
-                      </span>
-                    </td>
-                    <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
-                      {row.pct > 0 ? (
-                        <div className="flex items-center gap-2">
-                          <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${row.pct === 100 ? "bg-emerald-500" : "bg-primary"}`}
-                              style={{ width: `${row.pct}%` }}
-                            />
-                          </div>
-                          <span className="text-[10px] text-muted-foreground">
-                            {row.pct}%
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground/40">—</span>
-                      )}
-                    </td>
-                    <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
-                      <button className="flex items-center gap-1 text-[11px] text-primary font-semibold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                        Open <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
+                {myQueueLoading ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="py-8 text-center text-muted-foreground"
+                    >
+                      Loading My Queue...
                     </td>
                   </tr>
-                ))}
+                ) : myQueueError ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-red-500">
+                      Failed to load My Queue.
+                    </td>
+                  </tr>
+                ) : myQueue.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="py-8 text-center text-muted-foreground"
+                    >
+                      No charts assigned.
+                    </td>
+                  </tr>
+                ) : (
+                  myQueue.map((row: any) => (
+                    <tr
+                      key={row.id}
+                      className="hover:bg-muted/10 transition-colors group"
+                    >
+                      <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
+                        <div className="font-semibold text-foreground">
+                          {row.patient_name}
+                        </div>
+                        <div className="text-[10px] font-mono text-muted-foreground">
+                          {row.mrn}
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
+                        <span className="inline-flex items-center justify-center w-10 h-5 bg-primary/10 text-primary border border-primary/20 rounded text-[10px] font-bold">
+                          {row.measure_code}
+                        </span>
+                      </td>
+                      <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
+                        <span
+                          className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${
+                            row.status === "QA Pending"
+                              ? "bg-amber-50 text-amber-700 border-amber-200"
+                              : row.status === "In Progress"
+                                ? "bg-blue-50 text-blue-700 border-blue-200"
+                                : "bg-muted text-muted-foreground border-border"
+                          }`}
+                        >
+                          {row.status}
+                        </span>
+                      </td>
+                      <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
+                        <span
+                          className={`flex items-center gap-1 font-semibold ${
+                            row.isOverdue ? "text-red-600" : "text-foreground"
+                          }`}
+                        >
+                          {row.isOverdue && (
+                            <AlertTriangle className="w-3 h-3" />
+                          )}
+
+                          {row.due_date
+                            ? new Date(row.due_date).toLocaleDateString()
+                            : "-"}
+                        </span>
+                      </td>
+                      <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
+                        {row.progress > 0 ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${
+                                  row.progress === 100
+                                    ? "bg-emerald-500"
+                                    : "bg-primary"
+                                }`}
+                                style={{
+                                  width: `${row.progress}%`,
+                                }}
+                              />
+                            </div>
+
+                            <span className="text-[10px] text-muted-foreground">
+                              {row.progress}%
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground/40">—</span>
+                        )}
+                      </td>
+                      <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
+                        <button className="flex items-center gap-1 text-[11px] text-primary font-semibold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                          Open <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

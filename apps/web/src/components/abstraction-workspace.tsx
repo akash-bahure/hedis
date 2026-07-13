@@ -61,6 +61,7 @@ import {
   getApiHedisEvidenceTimelineIdQueryKey,
   getApiHedisAbstractorDraftPatientidQueryKey,
   useGetApiWorkQueue,
+  usePostApiHedisAbstractorSubmitQa,
 } from "@/api";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -1454,6 +1455,11 @@ function AbstractionForm({
   onMarkNotFound,
   prefillData,
   measure,
+  files,
+  setFiles,
+  hasUploadedEvidence,
+  uploadedEvidenceName,
+  isSubmittingQA,
 }: {
   form: FormData;
   setForm: React.Dispatch<React.SetStateAction<FormData>>;
@@ -1462,8 +1468,12 @@ function AbstractionForm({
   onMarkNotFound: () => void;
   prefillData?: Partial<FormData>;
   measure?: any;
+  files: File[];
+  setFiles: React.Dispatch<React.SetStateAction<File[]>>;
+  isSubmittingQA: boolean;
+  hasUploadedEvidence: boolean;
+  uploadedEvidenceName: string;
 }) {
-  const [files, setFiles] = useState<string[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1509,29 +1519,42 @@ function AbstractionForm({
   const exclusionCodes = measure?.eligibility?.exclusions ?? [];
   const evidenceSources = measure?.numerator?.requiredServices ?? [];
   const abstractionNotes = measure?.numerator?.abstractionNotes ?? [];
-  const formHasData = Object.values(form).some((value) => {
-    if (typeof value === "string") {
-      return value.trim() !== "";
-    }
-
-    return value !== null && value !== undefined;
-  });
-
+  const formHasData =
+    form.serviceDate &&
+    form.screeningType &&
+    form.evidenceType &&
+    form.cptCode &&
+    form.icdCode &&
+    form.evidenceSource;
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
-    setFiles((p) => [
-      ...p,
-      ...Array.from(e.dataTransfer.files).map((f) => f.name),
-    ]);
+
+    const droppedFiles = Array.from(e.dataTransfer.files);
+
+    setFiles((prev) => [...prev, ...droppedFiles]);
   };
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFiles((p) => [
-      ...p,
-      ...Array.from(e.target.files ?? []).map((f) => f.name),
-    ]);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    const selectedFiles = Array.from(e.target.files ?? []);
+
+    console.log("========== FILE SELECTED ==========");
+    console.log(selectedFiles);
+
+    setFiles((prev) => {
+      const updated = [...prev, ...selectedFiles];
+
+      console.log("Updated Files:", updated);
+
+      return updated;
+    });
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
+  useEffect(() => {
+    console.log("Files State Changed:", files);
+  }, [files]);
   const handleSave = () => {
     setSavedFlash(true);
     onSaveDraft();
@@ -1818,20 +1841,12 @@ function AbstractionForm({
           <SectionHeader icon={Upload} label="Supporting Documentation" />
           <div
             onDragOver={(e) => {
-              if (!fileRequirements.length) return;
               e.preventDefault();
               setDragOver(true);
             }}
             onDragLeave={() => setDragOver(false)}
-            onDrop={(e) => {
-              if (!fileRequirements.length) return;
-              handleDrop(e);
-            }}
-            onClick={() => {
-              if (fileRequirements.length) {
-                fileInputRef.current?.click();
-              }
-            }}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
             className={`border-2 border-dashed rounded-xl px-4 py-5 text-center transition-all ${
               !fileRequirements.length
                 ? "border-gray-200 bg-gray-50 cursor-not-allowed opacity-70"
@@ -1874,7 +1889,7 @@ function AbstractionForm({
                 >
                   <Paperclip className="w-3 h-3 text-primary flex-shrink-0" />
                   <span className="flex-1 text-[10px] text-foreground truncate">
-                    {f}
+                    {f.name}
                   </span>
                   <span className="text-[8px] text-muted-foreground">
                     Ready
@@ -1887,6 +1902,17 @@ function AbstractionForm({
                   </button>
                 </div>
               ))}
+            </div>
+          )}
+          {hasUploadedEvidence && (
+            <div className="mt-3 rounded-lg border border-green-300 bg-green-50 p-3">
+              <p className="text-sm font-semibold text-green-700">
+                ✓ Manual Evidence Uploaded
+              </p>
+
+              <p className="text-xs text-green-600 mt-1">
+                {uploadedEvidenceName} has been uploaded successfully.
+              </p>
             </div>
           )}
         </section>
@@ -1992,7 +2018,9 @@ function AbstractionForm({
         {/* Primary submit */}
         <button
           onClick={onSubmitQA}
-          disabled={!formHasData}
+          disabled={
+            isSubmittingQA || (!hasUploadedEvidence && files.length === 0)
+          }
           className="w-full inline-flex items-center justify-center gap-2 py-2.5 text-[12px] font-black rounded-xl text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm whitespace-nowrap"
           style={{
             background: formHasData
@@ -2489,6 +2517,22 @@ export function AbstractionWorkspace({
   const [selectedMeasureId, setSelectedMeasureId] = useState<string>("");
   const [timelineFilter, setTimelineFilter] = useState("all");
   const [timelineSearch, setTimelineSearch] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
+  const [hasUploadedEvidence, setHasUploadedEvidence] = useState(false);
+  const [uploadedEvidenceName, setUploadedEvidenceName] = useState("");
+  useEffect(() => {
+    console.log("========== FILE STATE UPDATED ==========");
+    console.log("Files:", files);
+    console.log("Count:", files.length);
+
+    if (files.length > 0) {
+      console.log("First File:", {
+        name: files[0].name,
+        size: files[0].size,
+        type: files[0].type,
+      });
+    }
+  }, [files]);
 
   const slaAtRisk = CHART.slaHrsLeft <= 12;
   const now = new Date();
@@ -2649,22 +2693,11 @@ export function AbstractionWorkspace({
     "Available Measure Codes:",
     measureList.map((m) => m.measure_code),
   );
-  console.log("selectedMeasureCode VALUE:", selectedMeasureId);
-  console.log(
-    "MATCH CHECK:",
-    measureList.map((m) => ({
-      code: m.measure_code,
-      match: m.measure_code === selectedMeasureId,
-    })),
-  );
   useEffect(() => {
     if (measureList.length > 0 && !selectedMeasureId) {
       setSelectedMeasureId(measureList[0].id);
     }
   }, [measureList, selectedMeasureId]);
-
-  console.log("Current Chart ID:", currentChartUuid);
-  console.log("Measure Response:", measureList);
 
   const selectedMeasure = measureList.find(
     (m: any) => m.id === selectedMeasureId,
@@ -2733,6 +2766,12 @@ export function AbstractionWorkspace({
     }
   }, [currentPatientId, currentChartUuid, selectedMeasure?.measure_id]);
 
+  useEffect(() => {
+    setFiles([]);
+    setHasUploadedEvidence(false);
+    setUploadedEvidenceName("");
+  }, [selectedMeasure?.measure_id]);
+
   const { data: timelineData, isLoading: timelineLoading } =
     useGetApiHedisEvidenceTimelineId(currentPatientId, {
       filter: timelineFilter,
@@ -2747,7 +2786,7 @@ export function AbstractionWorkspace({
       },
     },
   );
-  const sendToQaMutation = usePostApiHedisSendToQa();
+  const submitQaMutation = usePostApiHedisAbstractorSubmitQa();
   const handleMarkNotFound = async () => {
     try {
       await markNotFoundMutation.mutateAsync({
@@ -2772,26 +2811,102 @@ export function AbstractionWorkspace({
       );
     }
   };
+  console.log("========== SUBMIT TO QA ==========");
+
+  console.log("Patient ID:", currentPatientId);
+  console.log("Chart UUID:", currentChartUuid);
+  console.log("Selected Measure:", selectedMeasure);
+  console.log("Measure ID:", selectedMeasure?.measure_id);
+  console.log("Measure Code:", selectedMeasure?.measure_code);
+  console.log("========== SUBMIT QA ==========");
+  console.log("Patient:", currentPatientId);
+  console.log("Chart:", currentChartUuid);
+  console.log("Measure:", selectedMeasure?.measure_id);
+
+  console.log("Files:", files);
+
+  if (files.length > 0) {
+    console.log("Uploaded File");
+    console.log({
+      name: files[0].name,
+      type: files[0].type,
+      size: files[0].size,
+    });
+  }
+
+  console.log("Form Data:", formData);
+
+  console.log("Uploaded Files:", files);
+  console.log("========== SUBMIT CLICKED ==========");
+  console.log("Files:", files);
+  console.log("Files Length:", files.length);
+  console.log("First File:", files[0]);
+  console.log("Has Uploaded Evidence:", hasUploadedEvidence);
+  console.log("Selected Measure ID:", selectedMeasureId);
+
+  console.log("Measure List:", measureList);
+
+  console.log("Selected Measure:", selectedMeasure);
   const handleSubmitQA = async () => {
     try {
-      await sendToQaMutation.mutateAsync({
-        data: {
-          patientId: currentPatientId,
-          patientName: selectedPatient?.patientName,
-          chartId: currentChartUuid,
-          measureCode: selectedMeasure?.measure_code,
-          measureName: selectedMeasure?.measure_name,
-          qaAssigneeId: selectedMeasure?.assigned_,
-          notes: formData.notes,
-        },
+      if (!selectedMeasure) {
+        toast.error("Please select a measure.");
+        return;
+      }
+
+      if (!currentPatientId || !currentChartUuid) {
+        toast.error("Patient or Chart not found.");
+        return;
+      }
+
+      // if (!hasUploadedEvidence && files.length === 0) {
+      //   toast.error(
+      //     `Please upload supporting evidence before submitting ${selectedMeasure.measure_code} to QA.`,
+      //   );
+      //   return;
+      // }
+
+      console.log("Files:", files);
+      console.log("Has Uploaded Evidence:", hasUploadedEvidence);
+
+      const payload: any = {
+        patientId: currentPatientId,
+        chartId: currentChartUuid,
+        measureId: selectedMeasure.measure_id,
+        serviceDate: formData.serviceDate || undefined,
+        screeningType: formData.screeningType || undefined,
+        evidenceType: formData.evidenceType || undefined,
+        reading: formData.numerator || undefined,
+        cptCode: formData.cptCode || undefined,
+        icd10Code: formData.icdCode || undefined,
+        evidenceSource: formData.evidenceSource || undefined,
+        notes: formData.notes || undefined,
+      };
+
+      if (files.length > 0) {
+        payload.document = files[0];
+      }
+
+      const response = await submitQaMutation.mutateAsync({
+        data: payload,
       });
+      setHasUploadedEvidence(true);
 
-      toast.success("Patient successfully submitted to QA.");
+      setUploadedEvidenceName(files[0]?.name ?? "");
 
-      setSubmitMode("qa");
+      setFiles([]);
+
+      toast.success(
+        `Evidence for ${selectedMeasure.measure_code} submitted successfully to QA for ${selectedPatient?.patientName}.`,
+      );
+
+      await queryClient.invalidateQueries();
+
+      setSubmitMode(null);
     } catch (error: any) {
       toast.error(
-        error?.response?.data?.message ?? "Unable to submit patient to QA.",
+        error?.response?.data?.message ??
+          `Failed to upload manual evidence for ${selectedMeasure?.measure_code} to QA. Please try again.`,
       );
     }
   };
@@ -3108,6 +3223,11 @@ export function AbstractionWorkspace({
             onMarkNotFound={handleMarkNotFound}
             prefillData={prefill}
             measure={measureLibrary?.data}
+            files={files}
+            setFiles={setFiles}
+            hasUploadedEvidence={hasUploadedEvidence}
+            uploadedEvidenceName={uploadedEvidenceName}
+            isSubmittingQA={submitQaMutation.isPending}
           />
         </div>
       </div>

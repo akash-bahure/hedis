@@ -215,10 +215,10 @@ async function run() {
     await client.query("BEGIN");
 
     const tenant = {
-      id: "e52eac24-fa2c-44be-a7d1-1cd45fa596d7",
+      id: "74f2efd6-bbf2-4c17-bf47-5cf95ea8416b",
       name: "Acme Corp",
-      subdomain: "testhedis4",
-      schema_name: "testhedis4_schema",
+      subdomain: "test123",
+      schema_name: "test123_schema",
     };
 
     const dataPath = path.join(__dirname, "mock-patients.json");
