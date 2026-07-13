@@ -108,7 +108,7 @@ app.use("/api/user-roles", require("./routes/userRoleRoutes"));
 app.use("/api/patients", require("./routes/patientChart.routes"));
 app.use("/api/clinical-timeline/evidence", require("./routes/timeline.routes"));
 app.use("/api/charts", require("./routes/queue.routes"));
-app.use("/api/qa", require("./routes/qa.routes"));
+// app.use("/api/qa", require("./routes/qa.routes"));
 
 // Protected Routes
 app.use(authMiddleware);
@@ -139,5 +139,5 @@ app.use("/api/hedis", require("./routes/hedis.routes"));
 app.use("/api/recent-activity", require("./routes/recentActivity.routes"));
 app.use("/api/dashboard", require("./routes/dashboardAnalytics.routes"));
 app.use("/api/reports", require("./routes/reports.routes"));
-
+app.use("/api/hedis-reports", require("./routes/hedisReport.route"))
 module.exports = app;

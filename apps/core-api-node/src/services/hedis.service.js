@@ -340,75 +340,7 @@ class HEDISService {
     return result.rows;
   }
 
-  /**
-   * Update QA status (stage) for selected measures.
-   */
-  async updateQAStatus(db, qaQueueIds, action, reason, additionalNotes) {
-    const actionToStage = {
-      requestRevision: "QA Returned",
-      qaFail: "Rework",
-      qaPass: "Completed",
-    };
 
-    const stage = actionToStage[action];
-
-    if (!stage) {
-      throw new Error(`Invalid action: ${action}`);
-    }
-
-    // Get selected queue records
-    const queueResult = await db.query(
-      `
-    SELECT patient_id, measure_code
-    FROM hedis_qa_queue
-    WHERE id = ANY($1)
-    `,
-      [qaQueueIds]
-    );
-
-    if (queueResult.rows.length === 0) {
-      throw new Error("No matching QA queue records found.");
-    }
-
-    const patientId = queueResult.rows[0].patient_id;
-
-    const measureCodes = queueResult.rows.map((row) => row.measure_code);
-
-    // Update hedis_evaluations
-    const result = await db.query(
-      `
-    UPDATE hedis_evaluations
-    SET
-      stage = $1,
-      reason = $2,
-      reasoning = COALESCE($3, reasoning)
-    WHERE patient_id = $4
-      AND measure_code = ANY($5)
-    RETURNING *
-    `,
-      [stage, reason || null, additionalNotes || null, patientId, measureCodes]
-    );
-
-    // // Optional: update QA queue status
-    // await db.query(
-    //   `
-    //   UPDATE hedis_qa_queue
-    //   SET
-    //     status = $1,
-    //     reviewed_at = NOW(),
-    //     notes = $2,
-    //     updated_at = NOW()
-    //   WHERE id = ANY($3)
-    //   `,
-    //   [
-    //     stage,
-    //     additionalNotes || null,
-    //     qaQueueIds,
-    //   ]
-    // );
-
-    return result.rows;
-  }
   /**
    * Get clinical timeline for a patient with filters and grouping.
    */
@@ -647,8 +579,8 @@ class HEDISService {
         event.month ||
         (event.event_date
           ? new Intl.DateTimeFormat("en-US", { month: "long" }).format(
-              new Date(event.event_date)
-            )
+            new Date(event.event_date)
+          )
           : "Unknown");
 
       if (!grouped[year]) grouped[year] = {};
