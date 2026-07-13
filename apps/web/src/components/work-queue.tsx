@@ -79,27 +79,6 @@ type Status =
   | "Audit Sample"
   | "Submission Ready";
 
-// Stage Mapping from Backend → UI Pipeline
-const STAGE_MAP: Record<string, Status> = {
-  "Not Started": "Not Started",
-  Assigned: "Assigned",
-  "In Progress": "In Progress",
-  "Pending QA": "Pending QA",
-  "QA Passed": "Completed", // ← Important
-  "QA Failed": "Rework", // ← Important
-  "Revision Required": "QA Returned", // ← Important
-  "QA Returned": "QA Returned",
-  Rework: "Rework",
-  Completed: "Completed",
-  "Audit Sample": "Audit Sample",
-  "Submission Ready": "Submission Ready",
-};
-
-function normalizeStage(backendStage: string): Status {
-  const normalized = STAGE_MAP[backendStage] || "Not Started";
-  return normalized;
-}
-
 type Priority = "Urgent" | "High" | "Medium" | "Low";
 type Plan = "Medicare" | "Medicaid" | "Commercial";
 
@@ -495,7 +474,7 @@ function RowAction({
   onOpenQAReview?: (
     patientId: string,
     chartId: string,
-    patientData?: any
+    patientData?: any,
   ) => void;
   onEvaluate?: (patientId: string, chartId: string) => Promise<void>;
   role?: "program-manager" | "abstractor" | "qa-analyst";
@@ -515,27 +494,10 @@ function RowAction({
         enabled: false, // Don't fetch automatically
         refetchOnWindowFocus: false,
       },
-    }
+    },
   );
 
   // ===================== PROGRAM MANAGER / ADMIN =====================
-  // if (role === "program-manager") {
-  //   return row.status === "Assigned" || row.assignedTo !== "—" ? (
-  //     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-blue-200 text-[10px] font-bold text-blue-600 bg-blue-50">
-  //       <CheckCircle2 className="w-3 h-3" />
-  //       Assigned
-  //     </span>
-  //   ) : (
-  //     <button
-  //       onClick={onOpen}
-  //       className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-bold text-blue-600 hover:bg-blue-50 border-blue-200 transition-colors"
-  //     >
-  //       <UserPlus className="w-3 h-3" />
-  //       Assign
-  //     </button>
-  //   );
-  // }
-
   if (role === "program-manager") {
     return (
       <button
@@ -549,8 +511,51 @@ function RowAction({
   }
 
   // ===================== QA ANALYST =====================
-  // ===================== QA ANALYST =====================
   if (role === "qa-analyst") {
+    // const handleBeginQAReview = async () => {
+    //   if (!onOpenQAReview || isQaLoading) return;
+
+    //   const patientId = row.patientId || row.id;
+    //   const chartId = row.chartId || row.id;
+
+    //   setIsQaLoading(true);
+    //   toast.info("Starting QA Evaluation...", {
+    //     description: `Loading evaluation for ${row.patientName}`,
+    //   });
+
+    //   try {
+    //     // Trigger the GET API (this starts extraction on backend)
+    //     const result = await qaEvaluationQuery.refetch();
+
+    //     if (result.data) {
+    //       toast.success("Evaluation Loaded Successfully", {
+    //         description: "Chart is now ready for QA Review.",
+    //       });
+
+    //       // Prepare patient data for the review screen
+    //       const patientData = {
+    //         patientName: row.patientName,
+    //         dob: row.dob,
+    //         mrn: row.mrn,
+    //         plan: row.plan,
+    //         riskScore: row.riskScore,
+    //         workflowType: "qa",
+    //       };
+
+    //       // Navigate to QA Review screen
+    //       onOpenQAReview(patientId, chartId, patientData);
+    //     } else {
+    //       throw new Error("No data returned");
+    //     }
+    //   } catch (err) {
+    //     console.error("QA Evaluation failed:", err);
+    //     toast.error("Failed to load QA Evaluation", {
+    //       description: "Please try again or contact support.",
+    //     });
+    //   } finally {
+    //     setIsQaLoading(false);
+    //   }
+    // };
     const handleBeginQAReview = async () => {
       if (!onOpenQAReview) return;
 
@@ -571,17 +576,14 @@ function RowAction({
         onOpenQAReview(
           row.patientId || row.id,
           row.chartId || row.id,
-          patientData
+          patientData,
         );
       } finally {
         setIsQaLoading(false);
       }
     };
 
-    // Show "Begin QA Review" for Pending QA, QA Returned, Rework
-    if (
-      ["Assigned", "Pending QA", "QA Returned", "Rework"].includes(row.status)
-    ) {
+    if ([2, 3, 4].includes(row.step)) {
       return (
         <button
           onClick={handleBeginQAReview}
@@ -621,7 +623,7 @@ function RowAction({
       );
     }
 
-    // For other stages (Completed, etc.) show View
+    // Fallback for QA
     return (
       <button
         onClick={onOpen}
@@ -956,7 +958,7 @@ function RowAction({
 
                     onOpenWorkspace?.(
                       row.patientId || row.id,
-                      row.chartId || row.id
+                      row.chartId || row.id,
                     );
                   }}
                   className="px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm hover:bg-cyan-700"
@@ -1238,7 +1240,7 @@ function AssignModal({
           };
         },
       },
-    }
+    },
   );
 
   const users = usersResponse?.results || [];
@@ -1246,16 +1248,16 @@ function AssignModal({
   const abstractors = useMemo(
     () =>
       users.filter((u: any) =>
-        ["Chart Abstractor", "Abstractor"].includes(u?.user_role?.name?.trim())
+        ["Chart Abstractor", "Abstractor"].includes(u?.user_role?.name?.trim()),
       ),
-    [users]
+    [users],
   );
   const qas = useMemo(
     () =>
       users.filter((u: any) =>
-        ["Quality Analyst", "QA"].includes(u?.user_role?.name?.trim())
+        ["Quality Analyst", "QA"].includes(u?.user_role?.name?.trim()),
       ),
-    [users]
+    [users],
   );
 
   return (
@@ -1319,7 +1321,7 @@ function AssignModal({
                       key={user?.id}
                       onClick={() =>
                         setSelectedAbstractor(
-                          selectedAbstractor?.id === user?.id ? null : user
+                          selectedAbstractor?.id === user?.id ? null : user,
                         )
                       }
                       className={`px-3 py-2 rounded-xl border text-[11px] font-semibold text-left transition-all ${
@@ -1744,12 +1746,12 @@ export function WorkQueue({
       gender?: string;
       plan?: string;
       riskScore?: number;
-    }
+    },
   ) => void;
   onOpenQAReview?: (
     patientId: string,
     chartId: string,
-    patientData?: any
+    patientData?: any,
   ) => void;
 }) {
   // Component state
@@ -1981,7 +1983,7 @@ export function WorkQueue({
         keepPreviousData: true,
         refetchOnWindowFocus: false,
       },
-    }
+    },
   );
 
   const apiPatients = workQueueResponse?.data ?? [];
@@ -2005,7 +2007,7 @@ export function WorkQueue({
           );
         },
       },
-    }
+    },
   );
 
   const ASSIGNEES = useMemo(() => {
@@ -2016,13 +2018,12 @@ export function WorkQueue({
 
   const workQueueData = useMemo(() => {
     return apiPatients.map((item: any) => {
-      const rawStage = item.stage || item.chart_status || "Not Started";
-      const normalizedStage = normalizeStage(rawStage);
-
-      const abstractorName = item.abstractor_name || "";
+      const abstractorName =
+        item.abstractor_name || item.assigned_to_name || "";
       const qaName = item.qa_name || "";
 
       let assignedTo = "—";
+
       if (abstractorName && qaName) {
         assignedTo = `${abstractorName} (A) + ${qaName} (QA)`;
       } else if (abstractorName) {
@@ -2034,38 +2035,39 @@ export function WorkQueue({
       }
 
       return {
-        id: item.patient_uuid || item.chart_uuid,
-        patientId: item.patient_uuid,
-        chartId: item.chart_id || item.chart_uuid,
-        mrn: item.mrn || "—",
+        id: item?.patient_uuid || item?.chart_uuid,
+        patientId: item?.patient_uuid,
+        chartId: item?.chart_id || item?.chart_uuid,
+        mrn: item?.mrn || "—",
         patientName:
-          item.patient_name ||
-          `${item.last_name || ""}, ${item.first_name || ""}`.trim() ||
+          item?.patient_name ||
+          `${item?.last_name || ""}, ${item?.first_name || ""}`.trim() ||
           "Unknown Patient",
-        dob: item.dob ? new Date(item.dob).toLocaleDateString() : "—",
-        measureCode: item.measure || "—",
-        measure: item.measure || "HEDIS Measure",
-        plan: item.plan || "—",
-        priority: item.patient_priority || item.chart_priority || "Medium",
-        status: normalizedStage, // ← Normalized
-        step: getPipeline(normalizedStage).step, // ← Correct step
+        dob: item?.dob ? new Date(item.dob).toLocaleDateString() : "—",
+        measureCode: item?.measure || "—",
+        measure: item?.measure || "HEDIS Measure",
+        plan: item?.plan || "—",
+        priority: item?.patient_priority || item?.chart_priority || "Medium",
+        status: item?.stage || "Not Started",
+        step: item?.step || getPipeline(item?.stage || "Not Started").step,
         assignedTo,
+        // Add these for better filtering
         abstractor_name: abstractorName,
         qa_name: qaName,
         dueDate:
-          item.patient_due_date || item.sla_deadline
+          item?.patient_due_date || item?.sla_deadline
             ? new Date(
-                item.patient_due_date || item.sla_deadline
+                item.patient_due_date || item.sla_deadline,
               ).toLocaleDateString()
             : "—",
-        slaHoursLeft: item.sla_hours_left || 0,
-        qaFlag: item.qa_flag || false,
-        qaNote: item.qa_note || "",
-        auditSample: item.audit_sample || false,
-        lastActivity: item.updated_at
+        slaHoursLeft: item?.sla_hours_left || 0,
+        qaFlag: item?.qa_flag || false,
+        qaNote: item?.qa_note || "",
+        auditSample: item?.audit_sample || false,
+        lastActivity: item?.updated_at
           ? new Date(item.updated_at).toLocaleString()
           : "—",
-        overdue: item.overdue || false,
+        overdue: item?.overdue || false,
         riskScore: 2.0,
       };
     });
@@ -2073,78 +2075,56 @@ export function WorkQueue({
   /* ── Pipeline counts ── */
   const counts = workQueueResponse?.counts;
 
-  /* ── Pipeline counts (normalized) ── */
-  /* ── Accurate Stage Counts (normalized) ── */
-  const stageCounts = useMemo(() => {
-    const countsMap: Record<Status, number> = {
-      "Not Started": 0,
-      Assigned: 0,
-      "In Progress": 0,
-      "Pending QA": 0,
-      "QA Returned": 0,
-      Rework: 0,
-      Completed: 0,
-      "Audit Sample": 0,
-      "Submission Ready": 0,
-    };
-
-    workQueueData.forEach((row) => {
-      if (countsMap[row.status as Status] !== undefined) {
-        countsMap[row.status as Status]++;
-      }
-    });
-
-    return [
-      {
-        status: "Not Started",
-        short: "Not Started",
-        count: countsMap["Not Started"],
-        dot: "bg-red-500",
-      },
-      {
-        status: "Assigned",
-        short: "Assigned",
-        count: countsMap["Assigned"],
-        dot: "bg-blue-500",
-      },
-      {
-        status: "In Progress",
-        short: "In Progress",
-        count: countsMap["In Progress"],
-        dot: "bg-cyan-500",
-      },
-      {
-        status: "Pending QA",
-        short: "Pending QA",
-        count: countsMap["Pending QA"],
-        dot: "bg-amber-500",
-      },
-      {
-        status: "QA Returned",
-        short: "QA Returned",
-        count: countsMap["QA Returned"],
-        dot: "bg-orange-500",
-      },
-      {
-        status: "Rework",
-        short: "Rework",
-        count: countsMap["Rework"],
-        dot: "bg-rose-500",
-      },
-      {
-        status: "Completed",
-        short: "Completed",
-        count: countsMap["Completed"],
-        dot: "bg-emerald-500",
-      },
-      {
-        status: "Submission Ready",
-        short: "Submission Ready",
-        count: countsMap["Submission Ready"],
-        dot: "bg-teal-500",
-      },
-    ];
-  }, [workQueueData]);
+  const stageCounts = [
+    {
+      status: "Not Started",
+      short: "Not Started",
+      count: counts?.notStarted || 0,
+      dot: "bg-red-500",
+    },
+    {
+      status: "Assigned",
+      short: "Assigned",
+      count: counts?.assigned || 0,
+      dot: "bg-blue-500",
+    },
+    {
+      status: "In Progress",
+      short: "In Progress",
+      count: counts?.inProgress || 0,
+      dot: "bg-yellow-500",
+    },
+    {
+      status: "Pending QA",
+      short: "Pending QA",
+      count: counts?.pendingQa || 0,
+      dot: "bg-orange-500",
+    },
+    {
+      status: "QA Returned",
+      short: "QA Returned",
+      count: counts?.qaReturned || 0,
+      dot: "bg-red-500",
+    },
+    {
+      status: "Rework",
+      short: "Rework",
+      count: counts?.rework || 0,
+      dot: "bg-purple-500",
+    },
+    {
+      status: "Completed",
+      short: "Completed",
+      count: counts?.completed || 0,
+      dot: "bg-green-500",
+    },
+    {
+      status: "Submission Ready",
+      short: "Submission Ready",
+      count: counts?.submissionReady || 0,
+      dot: "bg-emerald-500",
+    },
+  ];
 
   /* ── KPIs ── */
   const kpi = {
@@ -2162,20 +2142,23 @@ export function WorkQueue({
     const currentUserLower = currentUser.toLowerCase().trim();
 
     return workQueueData.filter((r) => {
-      // Role-based filtering (for Abstractor/QA)
+      // === ROLE-BASED FILTERING ===
       if (effectiveRole === "abstractor" || effectiveRole === "qa-analyst") {
         const assignedLower = r.assignedTo.toLowerCase();
+
         let isMyChart = false;
 
+        // Abstractor checks
         if (effectiveRole === "abstractor") {
           isMyChart =
             assignedLower.includes(currentUserLower) ||
-            assignedLower.includes("(a)") ||
+            assignedLower.includes("(a)") || // e.g. "John Doe (A) + ..."
             r.assignedTo === "Assigned" ||
             (r.abstractor_name &&
-              r.abstractor_name.toLowerCase().includes(currentUserLower));
+              r.abstractor_name.toLowerCase().includes(currentUserLower)); // fallback
         }
 
+        // QA Analyst checks
         if (effectiveRole === "qa-analyst") {
           isMyChart =
             assignedLower.includes(currentUserLower) ||
@@ -2186,7 +2169,7 @@ export function WorkQueue({
         if (!isMyChart) return false;
       }
 
-      // Search
+      // Search filter
       if (
         q &&
         !r.patientName.toLowerCase().includes(q) &&
@@ -2194,9 +2177,6 @@ export function WorkQueue({
         !r.mrn.toLowerCase().includes(q)
       )
         return false;
-
-      // Stage filter (this was the main bug)
-      if (filterStage !== "All" && r.status !== filterStage) return false;
 
       // Other filters
       if (filterPriority !== "All" && r.priority !== filterPriority)
@@ -2212,13 +2192,12 @@ export function WorkQueue({
   }, [
     workQueueData,
     search,
-    filterStage,
+    effectiveRole,
+    currentUser,
     filterPriority,
     filterAssignee,
     filterMeasure,
     filterPlan,
-    effectiveRole,
-    currentUser,
   ]);
 
   const sorted = useMemo(
@@ -2234,7 +2213,7 @@ export function WorkQueue({
         if (sortCol === "due") cmp = a.dueDate.localeCompare(b.dueDate);
         return sortDir === "asc" ? cmp : -cmp;
       }),
-    [filtered, sortCol, sortDir]
+    [filtered, sortCol, sortDir],
   );
 
   const totalRecords = workQueueResponse?.total || sorted.length;
@@ -2297,7 +2276,7 @@ export function WorkQueue({
       onOpenPatient360(
         row.patientId || row.id,
         row.chartId || row.id,
-        patientData
+        patientData,
       );
     }
   };
@@ -2354,7 +2333,7 @@ export function WorkQueue({
         },
         {
           responseType: "blob",
-        }
+        },
       );
 
       // Create downloadable link
@@ -2462,7 +2441,7 @@ export function WorkQueue({
                     key={client.id}
                     onClick={() =>
                       setSelectedClient(
-                        client.id === selectedClient ? null : client.id
+                        client.id === selectedClient ? null : client.id,
                       )
                     }
                     className={`w-full text-left px-3 py-2.5 border-b border-border hover:bg-muted/50 transition-colors ${selectedClient === client.id ? "bg-primary/5" : ""}`}
@@ -2678,10 +2657,10 @@ export function WorkQueue({
       ════════════════════════════════════════════════════ */}
         <div className="flex-shrink-0 border-b border-border bg-card">
           <div className="flex items-end overflow-x-auto px-4 gap-0">
-            {/* ==================== ABSTRACTOR ROLE ==================== */}
+            {/* For Chart Abstractor: Only show My Work Queue and Rework tabs */}
             {effectiveRole === "abstractor" ? (
               <>
-                {/* My Work Queue */}
+                {/* My Work Queue tab */}
                 <button
                   onClick={() => {
                     setMyWorkQueue(true);
@@ -2714,7 +2693,7 @@ export function WorkQueue({
                   )}
                 </button>
 
-                {/* Rework */}
+                {/* Rework tab - shows only user's assigned rework items */}
                 <button
                   onClick={() => {
                     setFilterStage("Rework");
@@ -2727,9 +2706,23 @@ export function WorkQueue({
                       : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
                   }`}
                 >
+                  {workQueueData.filter(
+                    (r) =>
+                      r.status === "Rework" && r.assignedTo === currentUser,
+                  ).length > 0 && (
+                    <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
+                      <span
+                        className={`animate-ping absolute inline-flex h-full w-full rounded-full ${getPipeline("Rework").dot} opacity-60`}
+                      />
+                      <span
+                        className={`relative inline-flex rounded-full h-1.5 w-1.5 ${getPipeline("Rework").dot}`}
+                      />
+                    </span>
+                  )}
                   Rework
                   {workQueueData.filter(
-                    (r) => r.status === "Rework" && r.assignedTo === currentUser
+                    (r) =>
+                      r.status === "Rework" && r.assignedTo === currentUser,
                   ).length > 0 && (
                     <span
                       className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
@@ -2742,108 +2735,16 @@ export function WorkQueue({
                         workQueueData.filter(
                           (r) =>
                             r.status === "Rework" &&
-                            r.assignedTo === currentUser
+                            r.assignedTo === currentUser,
                         ).length
                       }
                     </span>
                   )}
                 </button>
               </>
-            ) : effectiveRole === "qa-analyst" ? (
-              <>
-                {/* All Charts */}
-                <button
-                  onClick={() => {
-                    setFilterStage("All");
-                    setMyWorkQueue(false);
-                    setPage(1);
-                  }}
-                  className={`flex items-center gap-1.5 px-4 py-3 text-xs font-semibold border-b-2 whitespace-nowrap transition-colors flex-shrink-0 ${
-                    filterStage === "All" && !myWorkQueue
-                      ? "border-primary text-primary"
-                      : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-                  }`}
-                >
-                  All Charts
-                  <span
-                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                      filterStage === "All" && !myWorkQueue
-                        ? "bg-primary/10 text-primary"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {kpi.total}
-                  </span>
-                </button>
-
-                {/* My Work Queue */}
-                <button
-                  onClick={() => {
-                    setMyWorkQueue(true);
-                    setFilterStage("All");
-                    setPage(1);
-                  }}
-                  className={`flex items-center gap-1.5 px-4 py-3 text-xs font-semibold border-b-2 whitespace-nowrap transition-colors flex-shrink-0 ${
-                    myWorkQueue
-                      ? "border-primary text-primary"
-                      : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-                  }`}
-                >
-                  <Users className="w-3.5 h-3.5" />
-                  My Work Queue
-                  {kpi.myQueue > 0 && (
-                    <span
-                      className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        myWorkQueue
-                          ? "bg-primary/10 text-primary"
-                          : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {kpi.myQueue}
-                    </span>
-                  )}
-                </button>
-
-                {/* QA Specific Stages - Only 5 total (All + My Work + 3 stages) */}
-                {["Pending QA", "QA Returned", "Rework"].map((stageStatus) => {
-                  const stage = stageCounts.find(
-                    (s) => s.status === stageStatus
-                  );
-                  if (!stage) return null;
-                  return (
-                    <button
-                      key={stage.status}
-                      onClick={() => {
-                        setFilterStage(stage.status as Status);
-                        setMyWorkQueue(false);
-                        setPage(1);
-                      }}
-                      className={`flex items-center gap-1.5 px-4 py-3 text-xs font-semibold border-b-2 whitespace-nowrap transition-colors flex-shrink-0 ${
-                        filterStage === stage.status && !myWorkQueue
-                          ? "border-primary text-primary"
-                          : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-                      }`}
-                    >
-                      {stage.short}
-                      {stage.count > 0 && (
-                        <span
-                          className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            filterStage === stage.status && !myWorkQueue
-                              ? "bg-primary/10 text-primary"
-                              : "bg-muted text-muted-foreground"
-                          }`}
-                        >
-                          {stage.count}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </>
             ) : (
-              /* ==================== PROGRAM MANAGER - Full Pipeline ==================== */
               <>
-                {/* All Charts */}
+                {/* All tab - for other roles */}
                 <button
                   onClick={() => {
                     setFilterStage("All");
@@ -2868,7 +2769,7 @@ export function WorkQueue({
                   </span>
                 </button>
 
-                {/* My Work Queue */}
+                {/* My Work Queue tab - for other roles */}
                 <button
                   onClick={() => {
                     setMyWorkQueue(true);
@@ -2896,12 +2797,12 @@ export function WorkQueue({
                   )}
                 </button>
 
-                {/* All Pipeline Stages */}
+                {/* Stage tabs - for other roles */}
                 {stageCounts.map((stage) => (
                   <button
                     key={stage.status}
                     onClick={() => {
-                      setFilterStage(stage.status as Status);
+                      setFilterStage(stage.status);
                       setMyWorkQueue(false);
                       setPage(1);
                     }}
@@ -2911,6 +2812,19 @@ export function WorkQueue({
                         : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
                     }`}
                   >
+                    {(stage.status === "Not Started" ||
+                      stage.status === "QA Returned" ||
+                      stage.status === "Rework") &&
+                      stage.count > 0 && (
+                        <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
+                          <span
+                            className={`animate-ping absolute inline-flex h-full w-full rounded-full ${stage.dot} opacity-60`}
+                          />
+                          <span
+                            className={`relative inline-flex rounded-full h-1.5 w-1.5 ${stage.dot}`}
+                          />
+                        </span>
+                      )}
                     {stage.short}
                     {stage.count > 0 && (
                       <span
@@ -3263,7 +3177,7 @@ export function WorkQueue({
                             <button
                               onClick={() =>
                                 setShowQaNote(
-                                  showQaNote === row.id ? null : row.id
+                                  showQaNote === row.id ? null : row.id,
                                 )
                               }
                               title={row.qaNote}
@@ -3306,7 +3220,7 @@ export function WorkQueue({
                           currentUserName={currentUser}
                         />
                       </td>
-                    </tr>
+                    </tr>,
                   );
 
                   if (showQaNote === row.id && row.qaNote) {
@@ -3333,7 +3247,7 @@ export function WorkQueue({
                             </button>
                           </div>
                         </td>
-                      </tr>
+                      </tr>,
                     );
                   }
 
@@ -3482,7 +3396,7 @@ export function WorkQueue({
                   });
 
                   toast.success(
-                    `${assignModal.length} charts assigned successfully`
+                    `${assignModal.length} charts assigned successfully`,
                   );
                 }
 
@@ -3503,7 +3417,7 @@ export function WorkQueue({
             onClose={() => setShowAddClient(false)}
             onAdd={(clientData) => {
               console.log("Adding new client:", clientData);
-              // In a real app, this would call an API
+              // In a real app, this would call an API xxz
               setShowAddClient(false);
             }}
           />

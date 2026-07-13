@@ -93,9 +93,6 @@ export default function App() {
     setActiveView(view);
     setMobileSidebarOpen(false);
   };
-  const handleBackToQueue = () => {
-    navigate("/work-queue");
-  };
 
   const renderContent = () => {
     switch (activeView) {
@@ -112,9 +109,9 @@ export default function App() {
         return (
           <WorkQueue
             role={role}
-            onStartAbstraction={(patientId, chartUuid, patientData) => {
+            onStartAbstraction={(patientId, chartId, patientData) => {
               setSelectedPatientId(patientId || null);
-              setSelectedChartId(chartUuid || null);
+              setSelectedChartId(chartId || null);
               setSelectedPatientData(patientData || null);
               navigate("abstraction");
             }}
@@ -174,7 +171,7 @@ export default function App() {
         return (
           <AbstractionWorkspace
             patientId={selectedPatientId || ""}
-            chartUuid={selectedPatientData?.chart_uuid || ""}
+            chartId={selectedChartId || ""}
             patientData={selectedPatientData}
             onBack={() => navigate("work-queue")}
           />

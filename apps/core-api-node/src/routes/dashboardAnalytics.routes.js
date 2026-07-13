@@ -432,5 +432,78 @@ router.get("/queue-by-measure", controller.getQueueByMeasure);
  */
 router.get("/stats", controller.getDashboardStats);
 
+/**
+ * @swagger
+ * /api/dashboard/summary:
+ *   get:
+ *     summary: Get top-level dashboard statistics
+ *     tags: [Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Dashboard summary retrieved successfully
+ */
+router.get("/summary", controller.getSummary);
+
+/**
+ * @swagger
+ * /api/dashboard/deadlines:
+ *   get:
+ *     summary: Get upcoming abstraction SLAs grouped by HEDIS measures
+ *     tags: [Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Upcoming abstraction deadlines retrieved successfully
+ */
+router.get("/deadlines", controller.getUpcomingDeadlines);
+
+/**
+ * @swagger
+ * /api/dashboard/my-queue:
+ *   get:
+ *     summary: Get assigned patients and charts for the logged-in user
+ *     tags: [Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by name, MRN, or measure code
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: Filter by workflow stage
+ *       - in: query
+ *         name: sort_by
+ *         schema:
+ *           type: string
+ *         description: Sort field (e.g. due_date, priority)
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of items per page
+ *     responses:
+ *       200:
+ *         description: My queue retrieved successfully
+ */
+router.get("/my-queue", controller.getMyQueue);
+console.log("getSummary", controller.getSummary);
+console.log("getUpcomingDeadlines", controller.getUpcomingDeadlines);
+console.log("getMyQueue", controller.getMyQueue);
+
 module.exports = router;
 

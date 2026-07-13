@@ -52,9 +52,9 @@ import {
   useGetApiDashboardAbstractionVelocity,
   useGetApiDashboardQueueByDomain,
   useGetApiDashboardStats,
+  useGetApiDashboardDeadlines,
 } from "@/api";
 import { Pagination } from "./Pagination";
-import { useGetApiDashboardDeadlines } from "@/api";
 
 /* ─── Colours ──────────────────────────────────────────── */
 const C = {
@@ -990,6 +990,41 @@ export function Dashboard() {
       (m.currentRate ?? 0) >= (m.targetRate ?? 80),
   ).length;
 
+  const {
+    data: deadlinesData,
+    isLoading: deadlinesLoading,
+    isError: deadlinesError,
+    refetch,
+  } = useGetApiDashboardDeadlines();
+  console.log(deadlinesData);
+  const deadlines =
+    deadlinesData?.data?.map((item: any) => ({
+      measure: item.measure,
+      label: item.measure_name,
+      due: item.due_date
+        ? new Date(item.due_date).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })
+        : "-",
+      remaining: item.remaining_days,
+      total: item.total,
+      completed: item.completed,
+      open: item.open,
+      urgency: item.urgency,
+    })) ?? [];
+  console.log(deadlinesData);
+  const formatDate = (date?: string | null) => {
+    if (!date) return "-";
+
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
   // For full modal pagination
   const { data: fullRatesResponse, isLoading: fullRatesLoading } =
     useGetApiDashboardMeasureRates(
@@ -1063,10 +1098,6 @@ export function Dashboard() {
               <RefreshCw className="w-3.5 h-3.5" />
               Refresh
             </button>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-primary/10 border border-primary/20 rounded-lg text-primary font-semibold">
-              <CircleDot className="w-3 h-3 fill-primary" />
-              Live
-            </span>
           </div>
         </div>
 
@@ -1396,7 +1427,10 @@ export function Dashboard() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border">
               {deadlines.map((d) => {
-                const pct = Math.round(((d.total - d.open) / d.total) * 100);
+                const pct =
+                  d.total > 0
+                    ? Math.round(((d.total - d.open) / d.total) * 100)
+                    : 0;
 
                 const urgencyColor =
                   d.urgency === "high"
@@ -1446,7 +1480,10 @@ export function Dashboard() {
 
                     <div className="flex items-center justify-between mt-1.5 text-[10px] text-muted-foreground">
                       <span>
-                        Due <strong className="text-foreground">{d.due}</strong>
+                        Due{" "}
+                        <strong className="text-foreground">
+                          {d.due_date}
+                        </strong>
                       </span>
 
                       <span>
