@@ -101,6 +101,14 @@ exports.markAsReviewed = async (req, res) => {
   try {
     const { patientId, measureCode, notes } = req.body;
 
+    console.log(`[markAsReviewed] Incoming request body:`, req.body);
+
+    if (!patientId || !measureCode) {
+      return res.status(400).json({ error: "Missing required fields: patientId and measureCode are required." });
+    }
+
+    console.log(`[markAsReviewed] Looking for Pending QA record for patientId: ${patientId}, measureCode: ${measureCode}`);
+
     // Find the most recent record that is not already reviewed/in-review
     const findQuery = `
       SELECT id FROM hedis_qa_queue 
@@ -111,25 +119,12 @@ exports.markAsReviewed = async (req, res) => {
     const findResult = await req.db.query(findQuery, [patientId, measureCode]);
 
     if (findResult.rows.length === 0) {
-      // If no pending record, create a new one as In Review
-      const insertQuery = `
-        INSERT INTO hedis_qa_queue (
-          id, patient_id, measure_code, status, notes, reviewed_by, reviewed_at
-        ) VALUES ($1, $2, $3, 'In Review', $4, $5, NOW())
-        RETURNING *
-      `;
-      const insertResult = await req.db.query(insertQuery, [
-        uuidv4(),
-        patientId,
-        measureCode,
-        notes || null,
-        req.user?.id || null,
-      ]);
-      return res.json({
-        message: "Measure marked as in review",
-        data: insertResult.rows[0],
-      });
+      console.log(`[markAsReviewed] No Pending QA record found for patientId: ${patientId}, measureCode: ${measureCode}`);
+      return res.status(404).json({ error: "No Pending QA record found for this patient and measure." });
     }
+
+    const recordId = findResult.rows[0].id;
+    console.log(`[markAsReviewed] Found Pending QA record with id: ${recordId}. Proceeding to update.`);
 
     const updateQuery = `
       UPDATE hedis_qa_queue 
@@ -144,17 +139,20 @@ exports.markAsReviewed = async (req, res) => {
     const updateResult = await req.db.query(updateQuery, [
       req.user?.id || null,
       notes || null,
-      findResult.rows[0].id,
+      recordId,
     ]);
+    
+    console.log(`[markAsReviewed] Successfully updated record:`, updateResult.rows[0]);
 
     res.json({
       message: "Measure marked as in review",
       data: updateResult.rows[0],
     });
   } catch (err) {
-    console.error("Mark as Reviewed Error (Setting to In Review):", err);
+    console.error("Mark as Reviewed Error (Setting to In Review):", err.stack || err);
     res.status(500).json({
-      error: err.message,
+      error: "Internal Server Error",
+      details: err.message
     });
   }
 };

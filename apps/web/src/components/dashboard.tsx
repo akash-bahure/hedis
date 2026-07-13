@@ -996,17 +996,17 @@ export function Dashboard() {
     isError: deadlinesError,
     refetch,
   } = useGetApiDashboardDeadlines();
-  const deadlines =
-    deadlinesData?.map((item: any) => ({
-      measure: item.measure,
-      label: item.measure_name,
-      due: item.due_date,
-      remaining: item.remaining_days,
-      total: item.total,
-      completed: item.completed,
-      open: item.open,
-      urgency: item.urgency,
-    })) ?? [];
+  // const deadlines =
+  //   deadlinesData?.map((item: any) => ({
+  //     measure: item.measure,
+  //     label: item.measure_name,
+  //     due: item.due_date,
+  //     remaining: item.remaining_days,
+  //     total: item.total,
+  //     completed: item.completed,
+  //     open: item.open,
+  //     urgency: item.urgency,
+  //   })) ?? [];
 
   // For full modal pagination
   const { data: fullRatesResponse, isLoading: fullRatesLoading } =

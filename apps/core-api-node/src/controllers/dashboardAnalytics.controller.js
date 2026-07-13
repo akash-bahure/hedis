@@ -1,5 +1,12 @@
 const service = require("../services/dashboardAnalytics.service");
 
+console.log("SERVICE =", Object.keys(service));
+
+console.log("getSummary:", typeof service.getSummary);
+console.log("getDeadlines:", typeof service.getDeadlines);
+console.log("getMyQueue:", typeof service.getMyQueue);
+console.log("getDashboardStats:", typeof service.getDashboardStats);
+
 /**
  * GET /api/dashboard/abstraction-velocity
  * Retrieves velocity data showing charts abstracted vs AI assisted.
@@ -165,4 +172,80 @@ exports.getDashboardStats = async (req, res) => {
   }
 };
 
+
+/**
+ * GET /api/dashboard/summary
+ * Returns dashboard summary counts.
+ */
+exports.getSummary = async (req, res) => {
+  try {
+    const data = await service.getSummary(req.db, req.tenant.schema_name);
+
+    return res.status(200).json({
+      success: true,
+      message: "Dashboard summary retrieved successfully",
+      data,
+    });
+  } catch (err) {
+    console.error("Get Dashboard Summary Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve dashboard summary",
+      error: err.message,
+    });
+  }
+};
+
+/**
+ * GET /api/dashboard/upcoming-deadlines
+ * Returns abstraction deadlines grouped by measure.
+ */
+exports.getUpcomingDeadlines = async (req, res) => {
+  try {
+    const data = await service.getDeadlines(req.db, req.tenant.schema_name);
+
+    return res.status(200).json({
+      success: true,
+      message: "Upcoming abstraction deadlines retrieved successfully",
+      data,
+    });
+  } catch (err) {
+    console.error("Get Dashboard Deadlines Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve abstraction deadlines",
+      error: err.message,
+    });
+  }
+};
+
+/**
+ * GET /api/dashboard/my-queue
+ * Returns logged-in user's assigned queue.
+ */
+exports.getMyQueue = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const result = await service.getMyQueue(
+      req.db,
+      req.tenant.schema_name,
+      userId,
+      req.query
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "My queue retrieved successfully",
+      ...result,
+    });
+  } catch (err) {
+    console.error("Get My Queue Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve my queue",
+      error: err.message,
+    });
+  }
+};
 

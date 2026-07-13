@@ -59,6 +59,8 @@ import {
   usePostApiHedisSendToQa,
   usePostApiHedisAddMissingEvidence,
   getApiHedisEvidenceTimelineIdQueryKey,
+  getApiHedisAbstractorDraftPatientidQueryKey,
+  useGetApiWorkQueue,
 } from "@/api";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -67,7 +69,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url
+  import.meta.url,
 ).toString();
 
 /* ══════════════════════════════════════════════════════════════
@@ -718,7 +720,7 @@ function DocumentViewer({
             max={numPages}
             onChange={(e) =>
               setPage(
-                Math.min(numPages, Math.max(1, parseInt(e.target.value) || 1))
+                Math.min(numPages, Math.max(1, parseInt(e.target.value) || 1)),
               )
             }
             className="w-8 text-center bg-white/10 border border-white/20 rounded text-white text-[10px] px-1 py-0.5 focus:outline-none focus:border-white/40"
@@ -1042,8 +1044,8 @@ function EvidenceTimeline({
         hedisRelevant: true,
 
         ...event,
-      }))
-    )
+      })),
+    ),
   );
 
   type FilterKey = EventType | "all" | "hedis";
@@ -1113,7 +1115,7 @@ function EvidenceTimeline({
   });
 
   const satisfiesCount = events.filter(
-    (e) => e.hedisMatch === "satisfies"
+    (e) => e.hedisMatch === "satisfies",
   ).length;
   const failsCount = events.filter((e) => e.hedisMatch === "fails").length;
 
@@ -1358,7 +1360,7 @@ function EvidenceTimeline({
                                       <span className="text-[9px] text-muted-foreground truncate">
                                         {
                                           (ev.provider ?? "Unknown").split(
-                                            ","
+                                            ",",
                                           )[0]
                                         }
                                       </span>
@@ -1402,7 +1404,7 @@ function EvidenceTimeline({
                                           onClick={() =>
                                             onSelectEvent(
                                               ev.docPage!,
-                                              ev.code || ev.title
+                                              ev.code || ev.title,
                                             )
                                           }
                                           className="inline-flex items-center gap-1 text-[9px] font-black px-2 py-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
@@ -1465,6 +1467,9 @@ function AbstractionForm({
   const [dragOver, setDragOver] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    console.log("Selected Measure:", measure);
+  }, [measure]);
 
   /* Prefill when an evidence event is selected */
   useEffect(() => {
@@ -1482,31 +1487,35 @@ function AbstractionForm({
 
   const evidenceTypes = measure?.documentation?.acceptedEvidenceTypes ?? [];
 
+  const icdCodes = measure?.denominator?.requiredDiagnoses ?? [];
+  const fileRequirements = measure?.documentation?.fileRequirements ?? [];
+  const fields = Object.values(form);
+  const filledCount = fields.filter((v) => {
+    if (typeof v === "string") {
+      return v.trim() !== "";
+    }
+
+    return v !== null && v !== undefined;
+  }).length;
+
+  const completePct = Math.round((filledCount / fields.length) * 100);
+  const complianceThreshold =
+    measure?.numerator?.complianceThresholds ??
+    "No Compliance Threshold Available";
   const cptCodes =
     measure?.numerator?.codes?.filter(
-      (code: any) => code.codeSystem === "CPT"
+      (code: any) => code.codeSystem === "CPT" || code.codeSystem === "HCPCS",
     ) ?? [];
-
-  const icdCodes = measure?.denominator?.requiredDiagnoses ?? [];
-  const numeratorThreshold = measure?.numerator?.complianceThresholds ?? "";
-  const requiredServices = measure?.numerator?.requiredServices ?? [];
+  const exclusionCodes = measure?.eligibility?.exclusions ?? [];
+  const evidenceSources = measure?.numerator?.requiredServices ?? [];
   const abstractionNotes = measure?.numerator?.abstractionNotes ?? [];
-  const commonErrors = measure?.documentation?.commonErrorsToAvoid ?? [];
-  const fileRequirements = measure?.documentation?.fileRequirements ?? [];
-  const highlightRequirements =
-    measure?.documentation?.highlightRequirements ?? [];
-  const evidenceSources = measure?.documentation?.fileRequirements ?? [];
-  const fields = [
-    form.serviceDate,
-    form.screeningType,
-    form.evidenceType,
-    form.numerator,
-    form.cptCode,
-    form.evidenceSource,
-  ];
-  const filledCount = fields.filter(Boolean).length;
-  const completePct = Math.round((filledCount / fields.length) * 100);
-  const requiredFilled = fields.every(Boolean);
+  const formHasData = Object.values(form).some((value) => {
+    if (typeof value === "string") {
+      return value.trim() !== "";
+    }
+
+    return value !== null && value !== undefined;
+  });
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -1585,7 +1594,7 @@ function AbstractionForm({
         <section>
           <SectionHeader icon={Calendar} label="Service Information" />
           <div className="grid grid-cols-2 gap-3">
-            <FormField label="Service Date" required>
+            <FormField label="Service Date">
               <input
                 type="date"
                 value={form.serviceDate}
@@ -1593,7 +1602,7 @@ function AbstractionForm({
                 className="form-input"
               />
             </FormField>
-            <FormField label="Screening Type" required>
+            <FormField label="Screening Type">
               <select
                 value={form.screeningType}
                 onChange={(e) => set("screeningType", e.target.value)}
@@ -1609,43 +1618,47 @@ function AbstractionForm({
               </select>
             </FormField>
             <div className="col-span-2">
-              <FormField label="Evidence Type" required>
+              <FormField label="Evidence Type">
                 <select
                   value={form.evidenceType}
                   onChange={(e) => set("evidenceType", e.target.value)}
                   className="form-input"
                 >
-                  <option value="">Select Evidence Type</option>
+                  <option value="">
+                    {evidenceTypes.length
+                      ? "Select Evidence Type"
+                      : "No Evidence Types Available"}
+                  </option>
 
                   {evidenceTypes.map((item: any) => (
                     <option key={item.type} value={item.type}>
-                      {item.type}
+                      {item.type} - {item.notes ?? "No Notes"}
                     </option>
                   ))}
                 </select>
-                {form.evidenceType && (
-                  <div className="mt-2 p-3 rounded bg-slate-50 border">
-                    {evidenceTypes
+                {/* {form.evidenceType && (
+                  <div className="mt-2 rounded border bg-slate-50 p-3">
+                    {evidenceTypes.some(
+                      (e: any) => e.type === form.evidenceType,
+                    ) ? (
+                      evidenceTypes
+                        .filter((e: any) => e.type === form.evidenceType)
+                        .map((e: any) => (
+                          <div key={e.type} className="space-y-1">
+                            <p>
+                              <b>Priority:</b> {e.priority ?? "N/A"}
+                            </p>
 
-                      .filter((e: any) => e.type === form.evidenceType)
-
-                      .map((e: any) => (
-                        <div key={e.type}>
-                          <p>
-                            <b>Priority:</b>
-
-                            {e.priority}
-                          </p>
-
-                          <p>
-                            <b>Notes:</b>
-
-                            {e.notes}
-                          </p>
-                        </div>
-                      ))}
+                            <p>
+                              <b>Notes:</b> {e.notes ?? "No Notes Available"}
+                            </p>
+                          </div>
+                        ))
+                    ) : (
+                      <p>No details available for this Evidence Type.</p>
+                    )}
                   </div>
-                )}
+                )} */}
               </FormField>
             </div>
           </div>
@@ -1722,18 +1735,17 @@ function AbstractionForm({
         <section>
           <SectionHeader icon={Heart} label="Numerator Evidence" />
 
-          <FormField label="Compliance Threshold" required>
+          <FormField label="Compliance Threshold">
             <input
-              className="form-input"
               value={form.numerator}
               onChange={(e) => set("numerator", e.target.value)}
-              placeholder={numeratorThreshold}
+              placeholder={complianceThreshold}
+              className="form-input"
             />
           </FormField>
 
           <p className="text-xs text-muted-foreground mt-2">
-            Expected:
-            <strong>{numeratorThreshold}</strong>
+            <strong>{complianceThreshold}</strong>
           </p>
         </section>
 
@@ -1741,17 +1753,21 @@ function AbstractionForm({
         <section>
           <SectionHeader icon={ClipboardList} label="Code Documentation" />
           <div className="space-y-3">
-            <FormField label="CPT Code Used" required>
+            <FormField label="CPT Code Used">
               <select
                 value={form.cptCode}
                 onChange={(e) => set("cptCode", e.target.value)}
                 className="form-input"
               >
-                <option value="">Select CPT</option>
+                <option value="">
+                  {cptCodes.length
+                    ? "Select CPT Code"
+                    : "No CPT Codes Available"}
+                </option>
 
                 {cptCodes.map((code: any) => (
                   <option key={code.code} value={code.code}>
-                    {code.code}-{code.description}
+                    {`${code.code} - ${code.codeSystem}`}
                   </option>
                 ))}
               </select>
@@ -1762,26 +1778,34 @@ function AbstractionForm({
                 onChange={(e) => set("icdCode", e.target.value)}
                 className="form-input"
               >
-                <option value="">Select ICD-10</option>
+                <option value="">
+                  {icdCodes.length
+                    ? "Select ICD-10 Code"
+                    : "No ICD Codes Available"}
+                </option>
 
                 {icdCodes.map((code: any) => (
                   <option key={code.code} value={code.code}>
-                    {code.code}-{code.description}
+                    {`${code.code} - ${code.codeSystem}`}
                   </option>
                 ))}
               </select>
             </FormField>
-            <FormField label="Evidence Source" required>
+            <FormField label="Evidence Source">
               <select
                 value={form.evidenceSource}
                 onChange={(e) => set("evidenceSource", e.target.value)}
                 className="form-input"
               >
-                <option value="">Select Source</option>
+                <option value="">
+                  {evidenceSources.length
+                    ? "Select Evidence Source"
+                    : "No Evidence Sources Available"}
+                </option>
 
-                {evidenceSources.map((source: string) => (
-                  <option key={source} value={source}>
-                    {source}
+                {evidenceSources.map((item: string) => (
+                  <option key={item} value={item}>
+                    {item}
                   </option>
                 ))}
               </select>
@@ -1794,25 +1818,43 @@ function AbstractionForm({
           <SectionHeader icon={Upload} label="Supporting Documentation" />
           <div
             onDragOver={(e) => {
+              if (!fileRequirements.length) return;
               e.preventDefault();
               setDragOver(true);
             }}
             onDragLeave={() => setDragOver(false)}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed rounded-xl px-4 py-5 text-center cursor-pointer transition-all ${
-              dragOver
-                ? "border-primary bg-primary/5 scale-[1.01]"
-                : "border-border hover:border-primary/50 hover:bg-muted/20"
+            onDrop={(e) => {
+              if (!fileRequirements.length) return;
+              handleDrop(e);
+            }}
+            onClick={() => {
+              if (fileRequirements.length) {
+                fileInputRef.current?.click();
+              }
+            }}
+            className={`border-2 border-dashed rounded-xl px-4 py-5 text-center transition-all ${
+              !fileRequirements.length
+                ? "border-gray-200 bg-gray-50 cursor-not-allowed opacity-70"
+                : dragOver
+                  ? "border-primary bg-primary/5 scale-[1.01] cursor-pointer"
+                  : "border-border hover:border-primary/50 hover:bg-muted/20 cursor-pointer"
             }`}
           >
             <Upload className="w-5 h-5 text-muted-foreground mx-auto mb-2" />
             <p className="text-[11px] font-semibold text-foreground">
-              Drop files or click to upload
+              {fileRequirements.length
+                ? "Drop files or click to upload"
+                : "No supporting documents required for this measure"}
             </p>
-            <p className="text-[9px] text-muted-foreground mt-0.5">
-              Accepted Files
-              {fileRequirements.join(" • ")}
+            <p className="text-[9px] text-muted-foreground mt-1">
+              {fileRequirements.length > 0 ? (
+                <>
+                  <span className="font-semibold">Accepted Files:</span>{" "}
+                  {fileRequirements.join(" • ")}
+                </>
+              ) : (
+                <span>No file requirements available for this measure.</span>
+              )}
             </p>
           </div>
           <input
@@ -1852,11 +1894,39 @@ function AbstractionForm({
         {/* ─── SECTION 5: Abstractor Notes ─── */}
         <section>
           <SectionHeader icon={ClipboardList} label="Abstractor Notes" />
+
+          {abstractionNotes.length > 0 ? (
+            <div className="mb-3 rounded-xl border border-blue-200 bg-blue-50 p-3">
+              <p className="text-xs font-bold text-blue-800 mb-2">
+                Measure Library Notes
+              </p>
+
+              <div className="space-y-2">
+                {abstractionNotes.map((item: any, index: number) => (
+                  <div key={index}>
+                    <p className="text-xs font-semibold text-slate-800">
+                      {item.title} -{" "}
+                      <span className="font-normal text-slate-600">
+                        {item.note}
+                      </span>
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <p className="text-xs text-muted-foreground">
+                No abstraction guidance available for this measure.
+              </p>
+            </div>
+          )}
+
           <textarea
             value={form.notes}
             onChange={(e) => set("notes", e.target.value)}
-            rows={3}
-            placeholder="Add abstraction rationale, data discrepancies, or clinical context for QA reviewer…"
+            rows={4}
+            placeholder="Add abstraction rationale, discrepancies, or notes for QA..."
             className="form-input resize-none w-full"
           />
         </section>
@@ -1876,17 +1946,17 @@ function AbstractionForm({
               Form completion
             </span>
             <span
-              className={`text-[9px] font-black ${requiredFilled ? "text-emerald-600" : completePct > 50 ? "text-amber-600" : "text-muted-foreground"}`}
+              className={`text-[9px] font-black ${formHasData ? "text-emerald-600" : completePct > 50 ? "text-amber-600" : "text-muted-foreground"}`}
             >
               {completePct}% ·{" "}
-              {requiredFilled
+              {formHasData
                 ? "Ready to submit"
                 : `${fields.length - filledCount} field${fields.length - filledCount !== 1 ? "s" : ""} remaining`}
             </span>
           </div>
           <div className="h-1.5 rounded-full bg-muted overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all duration-500 ${requiredFilled ? "bg-emerald-500" : completePct > 50 ? "bg-amber-400" : "bg-slate-300"}`}
+              className={`h-full rounded-full transition-all duration-500 ${formHasData ? "bg-emerald-500" : completePct > 50 ? "bg-amber-400" : "bg-slate-300"}`}
               style={{ width: `${completePct}%` }}
             />
           </div>
@@ -1922,13 +1992,13 @@ function AbstractionForm({
         {/* Primary submit */}
         <button
           onClick={onSubmitQA}
-          disabled={!requiredFilled}
+          disabled={!formHasData}
           className="w-full inline-flex items-center justify-center gap-2 py-2.5 text-[12px] font-black rounded-xl text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm whitespace-nowrap"
           style={{
-            background: requiredFilled
+            background: formHasData
               ? "linear-gradient(135deg, #0891b2, #0e7490)"
               : undefined,
-            backgroundColor: !requiredFilled ? "#94a3b8" : undefined,
+            backgroundColor: !formHasData ? "#94a3b8" : undefined,
           }}
         >
           <Send className="w-3.5 h-3.5" />
@@ -1996,18 +2066,24 @@ const ENGINE_STEPS = [
 
 function SubmitModal({
   mode,
+  onClose,
   onSubmitQA,
   onMarkNotFound,
   patientName,
-  chartUuid,
+  chartId,
   submittedBy,
+  measureCode,
+  measureName,
 }: {
   mode: SubmitMode;
+  onClose: () => void;
   onSubmitQA: () => Promise<void>;
   onMarkNotFound: () => Promise<void>;
   patientName: string;
-  chartUuid: string;
+  chartId: string;
   submittedBy: string;
+  measureCode?: string;
+  measureName?: string;
 }) {
   const [phase, setPhase] = useState<"confirm" | "running" | "done">("confirm");
   const [step, setStep] = useState(0);
@@ -2081,7 +2157,7 @@ function SubmitModal({
                   {cfg.title}
                 </h3>
                 <p className="text-[10px] text-muted-foreground">
-                  {chartUuid} · {patientName}
+                  {chartId} · {patientName}
                 </p>
               </div>
               <button
@@ -2094,7 +2170,9 @@ function SubmitModal({
 
             <div className="px-5 py-5">
               <p className="text-[11px] text-muted-foreground mb-4 leading-relaxed">
-                {cfg.desc}
+                {isQA
+                  ? `This chart will be submitted to the QA Review queue. The HEDIS Engine will re-run the ${measureCode ?? ""} (${measureName ?? ""}) measure to validate compliance before QA review.`
+                  : `The selected measure will be marked as "Evidence Not Found" and routed to QA for manual verification.`}
               </p>
 
               {isQA && (
@@ -2105,8 +2183,16 @@ function SubmitModal({
                       HEDIS Engine v2026.1
                     </p>
                     <p className="text-[10px] text-blue-700">
-                      Will re-calculate CBP measure compliance and update the
-                      gap status. This may take a few seconds.
+                      Re-running the{" "}
+                      <span className="font-bold">{measureCode}</span> measure
+                      {measureName && (
+                        <>
+                          {" "}
+                          (<span className="font-semibold">{measureName}</span>)
+                        </>
+                      )}{" "}
+                      to validate compliance and refresh the patient's gap
+                      status.
                     </p>
                   </div>
                 </div>
@@ -2117,7 +2203,7 @@ function SubmitModal({
                 <span className="text-[10px] text-muted-foreground">
                   Submitting as{" "}
                   <span className="font-bold text-foreground">
-                    {submittedBy}
+                    {submittedBy || "Current User"}
                   </span>
                 </span>
                 <span className="ml-auto text-[9px] font-mono text-muted-foreground">
@@ -2160,7 +2246,9 @@ function SubmitModal({
                 HEDIS Engine Running…
               </p>
               <p className="text-[11px] text-muted-foreground mt-0.5">
-                Re-calculating CBP measure compliance
+                Re-calculating{" "}
+                <span className="font-bold text-primary">{measureCode}</span>{" "}
+                measure compliance
               </p>
             </div>
 
@@ -2227,7 +2315,7 @@ function SubmitModal({
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-[10px] text-emerald-700 font-semibold w-full justify-center">
               <BadgeCheck className="w-3.5 h-3.5" />
-              Chart ID {chartUuid} · Audit trail recorded
+              Chart ID {chartId} · Audit trail recorded
             </div>
           </div>
         )}
@@ -2373,12 +2461,12 @@ function AddEvidenceModal({
 export function AbstractionWorkspace({
   onBack,
   patientId,
-  chartUuid,
+  chartId,
   patientData,
 }: {
   onBack?: () => void;
   patientId?: string;
-  chartUuid?: string;
+  chartId?: string;
   patientData?: any;
 }) {
   const queryClient = useQueryClient();
@@ -2388,17 +2476,17 @@ export function AbstractionWorkspace({
   const [flashActive, setFlashActive] = useState(false);
   const [submitMode, setSubmitMode] = useState<SubmitMode>(null);
   const [savedStatus, setSavedStatus] = useState<"idle" | "saving" | "saved">(
-    "idle"
+    "idle",
   );
   const [mobileTab, setMobileTab] = useState<"doc" | "timeline" | "form">(
-    "timeline"
+    "timeline",
   );
   const [viewerFull, setViewerFull] = useState(false);
   const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
   const [prefill, setPrefill] = useState<Partial<FormData> | undefined>(
-    undefined
+    undefined,
   );
-  const [selectedMeasureCode, setSelectedMeasureCode] = useState<string>("");
+  const [selectedMeasureId, setSelectedMeasureId] = useState<string>("");
   const [timelineFilter, setTimelineFilter] = useState("all");
   const [timelineSearch, setTimelineSearch] = useState("");
 
@@ -2411,38 +2499,76 @@ export function AbstractionWorkspace({
     hour: "2-digit",
     minute: "2-digit",
   });
-  const { data: patientsResponse } = useGetApiPatients();
+  // const { data: patientsResponse } = useGetApiPatients();
   const { data: profile } = useGetApiProfileMe();
 
-  const patients = Array.isArray(patientsResponse)
-    ? patientsResponse
-    : (patientsResponse?.patients ?? patientsResponse?.data ?? []);
+  // const patients = Array.isArray(patientsResponse)
+  //   ? patientsResponse
+  //   : (patientsResponse?.patients ?? patientsResponse?.data ?? []);
 
-  const patient = patients.find(
-    (p: any) => p.patientId === patientId || p.id === patientId
-  );
-  console.log("Selected Patient:", patient);
+  // const patient = patients.find(
+  //   (p: any) => p.patientId === patientId || p.id === patientId,
+  // );
+  // console.log("Selected Patient:", patient);
+  // const selectedPatient = patient
+  //   ? {
+  //       first_name: patient.first_name,
+  //       last_name: patient.last_name,
+  //       patientName: `${patient.first_name} ${patient.last_name}`,
+  //       chart_id: patient.chart_id,
+  //       mrn: patient.patient_id,
+  //       dob: patient.dob,
+  //       gender: patient.gender,
+  //       plan: patient.plan,
+  //       age: patient.dob
+  //         ? new Date().getFullYear() - new Date(patient.dob).getFullYear()
+  //         : "",
+  //     }
+  //   : null;
+  const { data: workQueueResponse } = useGetApiWorkQueue({
+    page_no: 1,
+    page_size: 10,
+  });
+  const patients = workQueueResponse?.data ?? [];
+  const patient = patients.find((p: any) => p.patient_uuid === patientId);
   const selectedPatient = patient
     ? {
         first_name: patient.first_name,
         last_name: patient.last_name,
         patientName: `${patient.first_name} ${patient.last_name}`,
+
+        // Display ID
         chart_id: patient.chart_id,
-        mrn: patient.patient_id,
+
+        // UUID for APIs
+        chart_uuid: patient.chart_uuid,
+
+        mrn: patient.mrn,
         dob: patient.dob,
         gender: patient.gender,
         plan: patient.plan,
+
         age: patient.dob
           ? new Date().getFullYear() - new Date(patient.dob).getFullYear()
           : "",
       }
     : null;
+  const currentPatientId =
+    selectedPatient?.patient_uuid ??
+    patientData?.patient_uuid ??
+    patientId ??
+    "";
+
+  const currentChartUuid =
+    selectedPatient?.chart_uuid ?? patientData?.chart_uuid ?? chartId ?? "";
+
+  const displayChartId =
+    selectedPatient?.chart_id ?? patientData?.chart_id ?? "";
   const formatDOB = (dob?: string) => {
     if (!dob) return "—";
 
     return new Date(dob).toLocaleDateString("en-GB");
   };
-  const currentChartUuid = patientData?.chart_uuid ?? chartUuid ?? "";
 
   const handleSelectEvent = (docPage: number, code: string) => {
     setViewerPage(docPage);
@@ -2471,28 +2597,29 @@ export function AbstractionWorkspace({
 
       await saveDraftMutation.mutateAsync({
         data: {
-          patientId,
-
-          chartUuid: currentChartUuid,
-
-          measurecode: selectedMeasure?.measure_code,
+          patientId: currentPatientId,
+          chartId: currentChartUuid,
+          measureId: selectedMeasure.measure_id,
 
           serviceDate: formData.serviceDate,
-
           screeningType: formData.screeningType,
-
           evidenceType: formData.evidenceType,
-
           reading: formData.numerator,
-
           cptCode: formData.cptCode,
-
           icd10Code: formData.icdCode,
-
           evidenceSource: formData.evidenceSource,
-
           notes: formData.notes,
         },
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: getApiHedisAbstractorDraftPatientidQueryKey(
+          currentPatientId,
+          {
+            chartId: currentChartUuid,
+            measureId: selectedMeasure!.measure_id,
+          },
+        ),
       });
 
       await refetchDraft();
@@ -2513,38 +2640,74 @@ export function AbstractionWorkspace({
   const markNotFoundMutation = usePostApiHedisAbstractorMarkNotFound();
   const saveDraftMutation = usePostApiHedisAbstractorSaveDraft();
 
-  const { data } = useGetApiHedisAbstractorMeasuresPatientid(patientId);
+  const { data } = useGetApiHedisAbstractorMeasuresPatientid(currentPatientId);
+  console.log("Measure Data", data?.measures);
 
   const measureList = data?.measures ?? [];
-
+  console.log("selectedMeasureCode:", selectedMeasureId);
+  console.log(
+    "Available Measure Codes:",
+    measureList.map((m) => m.measure_code),
+  );
+  console.log("selectedMeasureCode VALUE:", selectedMeasureId);
+  console.log(
+    "MATCH CHECK:",
+    measureList.map((m) => ({
+      code: m.measure_code,
+      match: m.measure_code === selectedMeasureId,
+    })),
+  );
   useEffect(() => {
-    if (measureList.length > 0 && !selectedMeasureCode) {
-      setSelectedMeasureCode(measureList[0].measure_code);
+    if (measureList.length > 0 && !selectedMeasureId) {
+      setSelectedMeasureId(measureList[0].id);
     }
-  }, [measureList, selectedMeasureCode]);
+  }, [measureList, selectedMeasureId]);
+
+  console.log("Current Chart ID:", currentChartUuid);
+  console.log("Measure Response:", measureList);
 
   const selectedMeasure = measureList.find(
-    (m: any) => m.measure_code === selectedMeasureCode
+    (m: any) => m.id === selectedMeasureId,
   );
 
-  const { data: draftData, refetch: refetchDraft } =
-    useGetApiHedisAbstractorDraftPatientid(
-      patientId,
-      {
-        chartUuid: currentChartUuid,
-        measureCode: selectedMeasure?.measure_code,
+  console.log("Selected Measure ID State:", selectedMeasureId);
+
+  console.log(
+    "All Measure IDs:",
+    measureList.map((m) => ({
+      id: m.id,
+      code: m.measure_code,
+    })),
+  );
+  console.log({
+    patientId: currentPatientId,
+    chartUuid: currentChartUuid,
+    displayChartId,
+    measureId: selectedMeasure?.id,
+  });
+
+  const {
+    data: draftData,
+    isLoading: draftLoading,
+    refetch: refetchDraft,
+  } = useGetApiHedisAbstractorDraftPatientid(
+    currentPatientId,
+    {
+      chartId: currentChartUuid,
+      measureId: selectedMeasure?.measure_id ?? "",
+    },
+    {
+      query: {
+        enabled:
+          !!currentPatientId && !!currentChartUuid && !!selectedMeasure?.id,
       },
-      {
-        query: {
-          enabled:
-            !!patientId &&
-            !!currentChartUuid &&
-            !!selectedMeasure?.measure_code,
-        },
-      }
-    );
+    },
+  );
+  console.log("Draft Response", draftData);
 
   useEffect(() => {
+    if (draftLoading) return;
+
     const draft = draftData?.draft;
 
     if (!draft) {
@@ -2554,20 +2717,24 @@ export function AbstractionWorkspace({
 
     setFormData({
       ...EMPTY_FORM,
-
       serviceDate: draft.service_date ?? "",
       screeningType: draft.screening_type ?? "",
       evidenceType: draft.evidence_type ?? "",
       numerator: draft.reading ?? "",
       cptCode: draft.cpt_code ?? "",
       icdCode: draft.icd10_code ?? "",
-      evidenceSource: "",
+      evidenceSource: draft.evidence_source ?? "",
       notes: draft.notes ?? "",
     });
-  }, [draftData]);
+  }, [draftData, draftLoading]);
+  useEffect(() => {
+    if (currentPatientId && currentChartUuid && selectedMeasure?.measure_id) {
+      refetchDraft();
+    }
+  }, [currentPatientId, currentChartUuid, selectedMeasure?.measure_id]);
 
   const { data: timelineData, isLoading: timelineLoading } =
-    useGetApiHedisEvidenceTimelineId(patientId, {
+    useGetApiHedisEvidenceTimelineId(currentPatientId, {
       filter: timelineFilter,
       search: timelineSearch,
     });
@@ -2578,17 +2745,20 @@ export function AbstractionWorkspace({
       query: {
         enabled: !!selectedMeasure?.measure_code,
       },
-    }
+    },
   );
   const sendToQaMutation = usePostApiHedisSendToQa();
   const handleMarkNotFound = async () => {
     try {
       await markNotFoundMutation.mutateAsync({
         data: {
-          patientId: patientId!,
-          chartUuid: currentChartUuid,
-          measureId: selectedMeasure,
-          comment: formData.notes || "Evidence not found by Abstractor.",
+          patientId: currentPatientId,
+
+          chartId: currentChartUuid,
+
+          measureId: selectedMeasure?.measure_id,
+
+          comment: formData.notes ?? "Evidence not found by Abstractor.",
         },
       });
 
@@ -2598,7 +2768,7 @@ export function AbstractionWorkspace({
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ??
-          "Unable to mark evidence as Not Found."
+          "Unable to mark evidence as Not Found.",
       );
     }
   };
@@ -2606,25 +2776,22 @@ export function AbstractionWorkspace({
     try {
       await sendToQaMutation.mutateAsync({
         data: {
-          patientId,
+          patientId: currentPatientId,
           patientName: selectedPatient?.patientName,
-          chartUuid: currentChartUuid,
+          chartId: currentChartUuid,
           measureCode: selectedMeasure?.measure_code,
           measureName: selectedMeasure?.measure_name,
-          qaAssigneeId: selectedMeasure?.qa_assignee_id,
+          qaAssigneeId: selectedMeasure?.assigned_,
           notes: formData.notes,
         },
       });
 
-      toast.success(
-        "Patient successfully submitted to QA. Evidence has been saved and is ready for QA review."
-      );
+      toast.success("Patient successfully submitted to QA.");
 
       setSubmitMode("qa");
     } catch (error: any) {
       toast.error(
-        error?.response?.data?.message ??
-          "Unable to submit patient to QA. Please try again."
+        error?.response?.data?.message ?? "Unable to submit patient to QA.",
       );
     }
   };
@@ -2648,7 +2815,7 @@ export function AbstractionWorkspace({
     try {
       await addMissingEvidenceMutation.mutateAsync({
         data: {
-          patientId: patientId!,
+          patientId: currentPatientId,
           chartId: currentChartUuid,
           eventTitle: addEvidenceForm.eventTitle,
           summary: addEvidenceForm.summary,
@@ -2659,7 +2826,7 @@ export function AbstractionWorkspace({
 
       toast.success("Missing evidence added successfully to timeline!");
       queryClient?.invalidateQueries({
-        queryKey: getApiHedisEvidenceTimelineIdQueryKey(patientId, {
+        queryKey: getApiHedisEvidenceTimelineIdQueryKey(currentPatientId, {
           filter: timelineFilter,
           search: timelineSearch,
         }),
@@ -2680,7 +2847,7 @@ export function AbstractionWorkspace({
       // timeline refetch would be good if you extract it
     } catch (error: any) {
       toast.error(
-        error?.response?.data?.message ?? "Failed to add missing evidence"
+        error?.response?.data?.message ?? "Failed to add missing evidence",
       );
     }
   };
@@ -2742,10 +2909,16 @@ export function AbstractionWorkspace({
             <div className="hidden lg:flex items-center gap-1.5 text-[10px] text-muted-foreground whitespace-nowrap">
               <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center">
                 <span className="text-[8px] font-black text-slate-600">
-                  {CHART.assignedAvatar}
+                  {(profile?.data?.full_name ?? "U")
+                    .split(" ")
+                    .map((name) => name[0])
+                    .join("")
+                    .substring(0, 2)
+                    .toUpperCase()}
                 </span>
               </div>
-              {CHART.assignedTo}
+
+              {profile?.data?.full_name ?? "Current User"}
             </div>
             <div
               className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[9px] font-black whitespace-nowrap ${
@@ -2785,17 +2958,17 @@ export function AbstractionWorkspace({
 
           {/* Measure Dropdown */}
           <select
-            value={selectedMeasureCode}
-            onChange={(e) => setSelectedMeasureCode(e.target.value)}
+            value={selectedMeasureId ?? ""}
+            onChange={(e) => setSelectedMeasureId(e.target.value)}
             disabled={measureList.length === 0}
             className="h-8 rounded border px-2 text-sm"
           >
             {measureList.length === 0 ? (
-              <option>No Measures Assigned</option>
+              <option value="">No Measures Assigned</option>
             ) : (
               measureList.map((measure: any) => (
-                <option key={measure.measure_code} value={measure.measure_code}>
-                  {measure.measure_name}
+                <option key={measure.id} value={measure.id}>
+                  {measure.measure_code} - {measure.measure_name}
                 </option>
               ))
             )}
@@ -2917,7 +3090,7 @@ export function AbstractionWorkspace({
             onSearchChange={setTimelineSearch}
             onSelectEvent={handleSelectEvent}
             onAutoFillEvidence={handleAutoFill}
-            chartUuid={currentChartUuid}
+            chartId={currentChartUuid}
           />
         </div>
 
@@ -2934,7 +3107,7 @@ export function AbstractionWorkspace({
             onSaveDraft={handleSaveDraft}
             onMarkNotFound={handleMarkNotFound}
             prefillData={prefill}
-            measure={measureLibrary}
+            measure={measureLibrary?.data}
           />
         </div>
       </div>
@@ -2960,7 +3133,7 @@ export function AbstractionWorkspace({
           <div className="w-px h-3 bg-border" />
           <span>
             Chart:{" "}
-            <span className="font-mono font-semibold">{CHART.chartId}</span>
+            <span className="font-mono font-semibold">{currentChartUuid}</span>
           </span>
         </div>
         <div className="flex items-center gap-2 text-[9px] text-muted-foreground">
@@ -2976,11 +3149,14 @@ export function AbstractionWorkspace({
       {/* ══ SUBMIT MODAL ══ */}
       <SubmitModal
         mode={submitMode}
+        onClose={() => setSubmitMode(null)}
         onSubmitQA={handleSubmitQA}
         onMarkNotFound={handleMarkNotFound}
         patientName={selectedPatient?.patientName ?? ""}
-        chartUuid={currentChartUuid}
+        chartId={currentChartUuid}
         submittedBy={profile?.data?.full_name ?? ""}
+        measureCode={selectedMeasure?.measure_code}
+        measureName={selectedMeasure?.measure_name}
       />
 
       {/* ══ ADD EVIDENCE MODAL ══ */}
