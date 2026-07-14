@@ -518,6 +518,12 @@ exports.submitAbstractorQA = async (req, res) => {
   const client = req.db;
   const schema = req.tenant.schema_name;
 
+  console.log("===== SUBMIT QA =====");
+  console.log("Body:", req.body);
+  console.log("File:", req.file);
+  console.log("Files:", req.files);
+  console.log("Headers:", req.headers["content-type"]);
+
   try {
     const {
       patientId,
@@ -537,6 +543,14 @@ exports.submitAbstractorQA = async (req, res) => {
       return res
         .status(400)
         .json({ error: "Missing required fields: patientId, chartId" });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        error: "Supporting document is required.",
+        message: "Supporting document is required."
+      });
     }
 
     // Start a transaction

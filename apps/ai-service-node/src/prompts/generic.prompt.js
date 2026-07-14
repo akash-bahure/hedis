@@ -74,4 +74,4 @@ ${text}
 
 module.exports = {
   buildExtractionPrompt,
-};
+};              

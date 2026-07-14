@@ -12,6 +12,9 @@ class PDFMergeService {
    */
   async mergePDFs(originalPath, evidencePath, outputPath) {
     try {
+      if (!originalPath || !evidencePath) {
+        throw new Error("Both originalPath and evidencePath are required for merging PDFs.");
+      }
       // Read files
       const originalBytes = await fs.readFile(originalPath);
       const evidenceBytes = await fs.readFile(evidencePath);
