@@ -6,7 +6,74 @@
 /**
  * @description Clients retrieved successfully
  */
-export type GetApiClientsV2200 = any;
+export type GetApiClientsV2200 = {
+  /**
+   * @type array | undefined
+   */
+  data?: {
+    /**
+     * @description Client Name
+     * @type string | undefined
+     */
+    org_name?: string;
+    /**
+     * @description Plan Type (e.g. Health Plan)
+     * @type string | undefined
+     */
+    contract_type?: string;
+    /**
+     * @description Active or Onboarding
+     * @type string | undefined
+     */
+    status?: string;
+    /**
+     * @description Contact Person
+     * @type string | undefined
+     */
+    primary_contact_name?: string;
+    /**
+     * @description Total Members Count
+     * @type integer | undefined
+     */
+    total_patients_enrolled?: number;
+    /**
+     * @description Total Charts Assigned
+     * @type integer | undefined
+     */
+    total_charts?: number;
+    /**
+     * @description Charts currently being worked on
+     * @type integer | undefined
+     */
+    active_charts?: number;
+    /**
+     * @description Charts marked as Done
+     * @type integer | undefined
+     */
+    completed_charts?: number;
+  }[];
+  /**
+   * @type object | undefined
+   */
+  pagination?: {
+    /**
+     * @type integer | undefined
+     */
+    total_count?: number;
+    /**
+     * @type integer | undefined
+     */
+    total_pages?: number;
+    /**
+     * @type integer | undefined
+     */
+    current_page?: number;
+    /**
+     * @type integer | undefined
+     */
+    limit?: number;
+  };
+};
 
 export type GetApiClientsV2QueryResponse = GetApiClientsV2200;
 

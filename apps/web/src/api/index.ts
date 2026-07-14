@@ -98,9 +98,6 @@ export type { GetApiHedisEvaluationsIdSuspenseInfiniteQueryKey } from "./hooks/H
 export type { GetApiHedisEvidenceTimelineIdQueryKey } from "./hooks/HEDISHooks/useGetApiHedisEvidenceTimelineId.ts";
 export type { GetApiHedisEvidenceTimelineIdSuspenseQueryKey } from "./hooks/HEDISHooks/useGetApiHedisEvidenceTimelineIdSuspense.ts";
 export type { GetApiHedisEvidenceTimelineIdSuspenseInfiniteQueryKey } from "./hooks/HEDISHooks/useGetApiHedisEvidenceTimelineIdSuspenseInfinite.ts";
-export type { GetApiHedisQaQueuePatientidQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaQueuePatientid.ts";
-export type { GetApiHedisQaQueuePatientidSuspenseQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaQueuePatientidSuspense.ts";
-export type { GetApiHedisQaQueuePatientidSuspenseInfiniteQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaQueuePatientidSuspenseInfinite.ts";
 export type { GetApiHedisQaReviewEvaluationidQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaReviewEvaluationid.ts";
 export type { GetApiHedisQaReviewEvaluationidSuspenseQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaReviewEvaluationidSuspense.ts";
 export type { GetApiHedisQaReviewEvaluationidSuspenseInfiniteQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaReviewEvaluationidSuspenseInfinite.ts";
@@ -110,10 +107,34 @@ export type { PostApiHedisAbstractorSubmitQaMutationKey } from "./hooks/HEDISHoo
 export type { PostApiHedisAddMeasureMutationKey } from "./hooks/HEDISHooks/usePostApiHedisAddMeasure.ts";
 export type { PostApiHedisAddMissingEvidenceMutationKey } from "./hooks/HEDISHooks/usePostApiHedisAddMissingEvidence.ts";
 export type { PostApiHedisAssignAbstractorMutationKey } from "./hooks/HEDISHooks/usePostApiHedisAssignAbstractor.ts";
-export type { PostApiHedisMarkAsReviewedMutationKey } from "./hooks/HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
 export type { PostApiHedisRecalculateQaMutationKey } from "./hooks/HEDISHooks/usePostApiHedisRecalculateQa.ts";
-export type { PostApiHedisSendToQaMutationKey } from "./hooks/HEDISHooks/usePostApiHedisSendToQa.ts";
-export type { PostApiHedisUpdateQaStatusMutationKey } from "./hooks/HEDISHooks/usePostApiHedisUpdateQaStatus.ts";
+export type { GetApiHedisReportsAbstractorProductivityQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsAbstractorProductivity.ts";
+export type { GetApiHedisReportsAbstractorProductivitySuspenseQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsAbstractorProductivitySuspense.ts";
+export type { GetApiHedisReportsAbstractorProductivitySuspenseInfiniteQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsAbstractorProductivitySuspenseInfinite.ts";
+export type { GetApiHedisReportsDashboardStatsQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsDashboardStats.ts";
+export type { GetApiHedisReportsDashboardStatsSuspenseQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsDashboardStatsSuspense.ts";
+export type { GetApiHedisReportsDashboardStatsSuspenseInfiniteQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsDashboardStatsSuspenseInfinite.ts";
+export type { GetApiHedisReportsExportQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsExport.ts";
+export type { GetApiHedisReportsExportSuspenseQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsExportSuspense.ts";
+export type { GetApiHedisReportsExportSuspenseInfiniteQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsExportSuspenseInfinite.ts";
+export type { GetApiHedisReportsGapClosureTrendQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsGapClosureTrend.ts";
+export type { GetApiHedisReportsGapClosureTrendSuspenseQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsGapClosureTrendSuspense.ts";
+export type { GetApiHedisReportsGapClosureTrendSuspenseInfiniteQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsGapClosureTrendSuspenseInfinite.ts";
+export type { GetApiHedisReportsMeasurePerformanceQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsMeasurePerformance.ts";
+export type { GetApiHedisReportsMeasurePerformanceSuspenseQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsMeasurePerformanceSuspense.ts";
+export type { GetApiHedisReportsMeasurePerformanceSuspenseInfiniteQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsMeasurePerformanceSuspenseInfinite.ts";
+export type { GetApiHedisReportsPlanLevelPerformanceQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsPlanLevelPerformance.ts";
+export type { GetApiHedisReportsPlanLevelPerformanceSuspenseQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsPlanLevelPerformanceSuspense.ts";
+export type { GetApiHedisReportsPlanLevelPerformanceSuspenseInfiniteQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsPlanLevelPerformanceSuspenseInfinite.ts";
+export type { GetApiHedisReportsQaOutcomesQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsQaOutcomes.ts";
+export type { GetApiHedisReportsQaOutcomesSuspenseQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsQaOutcomesSuspense.ts";
+export type { GetApiHedisReportsQaOutcomesSuspenseInfiniteQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsQaOutcomesSuspenseInfinite.ts";
+export type { GetApiHedisReportsSubmissionReadinessQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadiness.ts";
+export type { GetApiHedisReportsSubmissionReadinessExportQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadinessExport.ts";
+export type { GetApiHedisReportsSubmissionReadinessExportSuspenseQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadinessExportSuspense.ts";
+export type { GetApiHedisReportsSubmissionReadinessExportSuspenseInfiniteQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadinessExportSuspenseInfinite.ts";
+export type { GetApiHedisReportsSubmissionReadinessSuspenseQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadinessSuspense.ts";
+export type { GetApiHedisReportsSubmissionReadinessSuspenseInfiniteQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadinessSuspenseInfinite.ts";
 export type { GetApiMeasureLibraryQueryKey } from "./hooks/Measure LibraryHooks/useGetApiMeasureLibrary.ts";
 export type { GetApiMeasureLibraryIdQueryKey } from "./hooks/Measure LibraryHooks/useGetApiMeasureLibraryId.ts";
 export type { GetApiMeasureLibraryIdSuspenseQueryKey } from "./hooks/Measure LibraryHooks/useGetApiMeasureLibraryIdSuspense.ts";
@@ -179,8 +200,6 @@ export type { GetApiProjectsSuspenseInfiniteQueryKey } from "./hooks/ProjectsHoo
 export type { PatchApiProjectsIdMutationKey } from "./hooks/ProjectsHooks/usePatchApiProjectsId.ts";
 export type { PatchApiProjectsIdAccessMutationKey } from "./hooks/ProjectsHooks/usePatchApiProjectsIdAccess.ts";
 export type { PostApiProjectsMutationKey } from "./hooks/ProjectsHooks/usePostApiProjects.ts";
-export type { PostApiChartsChartidQaApproveMutationKey } from "./hooks/QA ReworkHooks/usePostApiChartsChartidQaApprove.ts";
-export type { PostApiQaEvidenceRequestsMutationKey } from "./hooks/QA ReworkHooks/usePostApiQaEvidenceRequests.ts";
 export type { GetApiChartsJobsJobidQueryKey } from "./hooks/QueueHooks/useGetApiChartsJobsJobid.ts";
 export type { GetApiChartsJobsJobidSuspenseQueryKey } from "./hooks/QueueHooks/useGetApiChartsJobsJobidSuspense.ts";
 export type { GetApiChartsJobsJobidSuspenseInfiniteQueryKey } from "./hooks/QueueHooks/useGetApiChartsJobsJobidSuspenseInfinite.ts";
@@ -543,18 +562,85 @@ export type {
   GetApiHedisEvidenceTimelineIdQueryResponse,
 } from "./types/GetApiHedisEvidenceTimelineId.ts";
 export type {
-  GetApiHedisQaQueuePatientid200,
-  GetApiHedisQaQueuePatientidPathParams,
-  GetApiHedisQaQueuePatientidQuery,
-  GetApiHedisQaQueuePatientidQueryParams,
-  GetApiHedisQaQueuePatientidQueryResponse,
-} from "./types/GetApiHedisQaQueuePatientid.ts";
-export type {
   GetApiHedisQaReviewEvaluationid200,
   GetApiHedisQaReviewEvaluationidPathParams,
   GetApiHedisQaReviewEvaluationidQuery,
   GetApiHedisQaReviewEvaluationidQueryResponse,
 } from "./types/GetApiHedisQaReviewEvaluationid.ts";
+export type {
+  GetApiHedisReportsAbstractorProductivity200,
+  GetApiHedisReportsAbstractorProductivity401,
+  GetApiHedisReportsAbstractorProductivity500,
+  GetApiHedisReportsAbstractorProductivityQuery,
+  GetApiHedisReportsAbstractorProductivityQueryParams,
+  GetApiHedisReportsAbstractorProductivityQueryResponse,
+} from "./types/GetApiHedisReportsAbstractorProductivity.ts";
+export type {
+  GetApiHedisReportsDashboardStats200,
+  GetApiHedisReportsDashboardStats401,
+  GetApiHedisReportsDashboardStats500,
+  GetApiHedisReportsDashboardStatsQuery,
+  GetApiHedisReportsDashboardStatsQueryParams,
+  GetApiHedisReportsDashboardStatsQueryResponse,
+} from "./types/GetApiHedisReportsDashboardStats.ts";
+export type {
+  GetApiHedisReportsExport200,
+  GetApiHedisReportsExport400,
+  GetApiHedisReportsExport401,
+  GetApiHedisReportsExport500,
+  GetApiHedisReportsExportQuery,
+  GetApiHedisReportsExportQueryParams,
+  GetApiHedisReportsExportQueryParamsFormatEnumKey,
+  GetApiHedisReportsExportQueryResponse,
+} from "./types/GetApiHedisReportsExport.ts";
+export type {
+  GetApiHedisReportsGapClosureTrend200,
+  GetApiHedisReportsGapClosureTrend400,
+  GetApiHedisReportsGapClosureTrend401,
+  GetApiHedisReportsGapClosureTrend500,
+  GetApiHedisReportsGapClosureTrendQuery,
+  GetApiHedisReportsGapClosureTrendQueryParams,
+  GetApiHedisReportsGapClosureTrendQueryParamsViewEnumKey,
+  GetApiHedisReportsGapClosureTrendQueryResponse,
+} from "./types/GetApiHedisReportsGapClosureTrend.ts";
+export type {
+  GetApiHedisReportsMeasurePerformance200,
+  GetApiHedisReportsMeasurePerformance400,
+  GetApiHedisReportsMeasurePerformance401,
+  GetApiHedisReportsMeasurePerformance500,
+  GetApiHedisReportsMeasurePerformanceQuery,
+  GetApiHedisReportsMeasurePerformanceQueryParams,
+  GetApiHedisReportsMeasurePerformanceQueryResponse,
+} from "./types/GetApiHedisReportsMeasurePerformance.ts";
+export type {
+  GetApiHedisReportsPlanLevelPerformance200,
+  GetApiHedisReportsPlanLevelPerformanceQuery,
+  GetApiHedisReportsPlanLevelPerformanceQueryParams,
+  GetApiHedisReportsPlanLevelPerformanceQueryResponse,
+} from "./types/GetApiHedisReportsPlanLevelPerformance.ts";
+export type {
+  GetApiHedisReportsQaOutcomes200,
+  GetApiHedisReportsQaOutcomesQuery,
+  GetApiHedisReportsQaOutcomesQueryParams,
+  GetApiHedisReportsQaOutcomesQueryResponse,
+} from "./types/GetApiHedisReportsQaOutcomes.ts";
+export type {
+  GetApiHedisReportsSubmissionReadiness200,
+  GetApiHedisReportsSubmissionReadiness400,
+  GetApiHedisReportsSubmissionReadiness401,
+  GetApiHedisReportsSubmissionReadiness500,
+  GetApiHedisReportsSubmissionReadinessQuery,
+  GetApiHedisReportsSubmissionReadinessQueryParams,
+  GetApiHedisReportsSubmissionReadinessQueryResponse,
+} from "./types/GetApiHedisReportsSubmissionReadiness.ts";
+export type {
+  GetApiHedisReportsSubmissionReadinessExport200,
+  GetApiHedisReportsSubmissionReadinessExport401,
+  GetApiHedisReportsSubmissionReadinessExport500,
+  GetApiHedisReportsSubmissionReadinessExportQuery,
+  GetApiHedisReportsSubmissionReadinessExportQueryParams,
+  GetApiHedisReportsSubmissionReadinessExportQueryResponse,
+} from "./types/GetApiHedisReportsSubmissionReadinessExport.ts";
 export type {
   GetApiMeasureLibrary200,
   GetApiMeasureLibraryQuery,
@@ -1061,12 +1147,6 @@ export type {
   PostApiChartsChartidMarkNotFoundMutationResponse,
 } from "./types/PostApiChartsChartidMarkNotFound.ts";
 export type {
-  PostApiChartsChartidQaApprove200,
-  PostApiChartsChartidQaApproveMutation,
-  PostApiChartsChartidQaApproveMutationResponse,
-  PostApiChartsChartidQaApprovePathParams,
-} from "./types/PostApiChartsChartidQaApprove.ts";
-export type {
   PostApiChartsChartidSaveDraft200,
   PostApiChartsChartidSaveDraftMutation,
   PostApiChartsChartidSaveDraftMutationRequest,
@@ -1177,12 +1257,6 @@ export type {
   PostApiHedisClinicalTimelineReviewMutationResponse,
 } from "./types/PostApiHedisClinicalTimelineReview.ts";
 export type {
-  PostApiHedisMarkAsReviewed200,
-  PostApiHedisMarkAsReviewedMutation,
-  PostApiHedisMarkAsReviewedMutationRequest,
-  PostApiHedisMarkAsReviewedMutationResponse,
-} from "./types/PostApiHedisMarkAsReviewed.ts";
-export type {
   PostApiHedisRecalculateQa200,
   PostApiHedisRecalculateQa400,
   PostApiHedisRecalculateQa404,
@@ -1191,21 +1265,6 @@ export type {
   PostApiHedisRecalculateQaMutationRequest,
   PostApiHedisRecalculateQaMutationResponse,
 } from "./types/PostApiHedisRecalculateQa.ts";
-export type {
-  PostApiHedisSendToQa201,
-  PostApiHedisSendToQaMutation,
-  PostApiHedisSendToQaMutationRequest,
-  PostApiHedisSendToQaMutationResponse,
-} from "./types/PostApiHedisSendToQa.ts";
-export type {
-  PostApiHedisUpdateQaStatus200,
-  PostApiHedisUpdateQaStatus400,
-  PostApiHedisUpdateQaStatus500,
-  PostApiHedisUpdateQaStatusMutation,
-  PostApiHedisUpdateQaStatusMutationRequest,
-  PostApiHedisUpdateQaStatusMutationRequestActionEnumKey,
-  PostApiHedisUpdateQaStatusMutationResponse,
-} from "./types/PostApiHedisUpdateQaStatus.ts";
 export type {
   PostApiPatientsIdAssign200,
   PostApiPatientsIdAssignMutation,
@@ -1240,12 +1299,6 @@ export type {
   PostApiProjectsMutationRequestStatusEnumKey,
   PostApiProjectsMutationResponse,
 } from "./types/PostApiProjects.ts";
-export type {
-  PostApiQaEvidenceRequests200,
-  PostApiQaEvidenceRequestsMutation,
-  PostApiQaEvidenceRequestsMutationRequest,
-  PostApiQaEvidenceRequestsMutationResponse,
-} from "./types/PostApiQaEvidenceRequests.ts";
 export type {
   PostApiSecurityAlertsBlockUser200,
   PostApiSecurityAlertsBlockUserMutation,
@@ -1401,8 +1454,16 @@ export { getApiHedisClinicalTimelineEventEventid } from "./clients/getApiHedisCl
 export { getApiHedisClinicalTimelinePatientid } from "./clients/getApiHedisClinicalTimelinePatientid.ts";
 export { getApiHedisEvaluationsId } from "./clients/getApiHedisEvaluationsId.ts";
 export { getApiHedisEvidenceTimelineId } from "./clients/getApiHedisEvidenceTimelineId.ts";
-export { getApiHedisQaQueuePatientid } from "./clients/getApiHedisQaQueuePatientid.ts";
 export { getApiHedisQaReviewEvaluationid } from "./clients/getApiHedisQaReviewEvaluationid.ts";
+export { getApiHedisReportsAbstractorProductivity } from "./clients/getApiHedisReportsAbstractorProductivity.ts";
+export { getApiHedisReportsDashboardStats } from "./clients/getApiHedisReportsDashboardStats.ts";
+export { getApiHedisReportsExport } from "./clients/getApiHedisReportsExport.ts";
+export { getApiHedisReportsGapClosureTrend } from "./clients/getApiHedisReportsGapClosureTrend.ts";
+export { getApiHedisReportsMeasurePerformance } from "./clients/getApiHedisReportsMeasurePerformance.ts";
+export { getApiHedisReportsPlanLevelPerformance } from "./clients/getApiHedisReportsPlanLevelPerformance.ts";
+export { getApiHedisReportsQaOutcomes } from "./clients/getApiHedisReportsQaOutcomes.ts";
+export { getApiHedisReportsSubmissionReadiness } from "./clients/getApiHedisReportsSubmissionReadiness.ts";
+export { getApiHedisReportsSubmissionReadinessExport } from "./clients/getApiHedisReportsSubmissionReadinessExport.ts";
 export { getApiMeasureLibrary } from "./clients/getApiMeasureLibrary.ts";
 export { getApiMeasureLibraryId } from "./clients/getApiMeasureLibraryId.ts";
 export { getApiMeasuresExportSpecs } from "./clients/getApiMeasuresExportSpecs.ts";
@@ -1467,7 +1528,6 @@ export { postApiAuthTwoFaSendOtp } from "./clients/postApiAuthTwoFaSendOtp.ts";
 export { postApiAuthTwoFaValidateOtp } from "./clients/postApiAuthTwoFaValidateOtp.ts";
 export { postApiChartAssignmentsBulkAssign } from "./clients/postApiChartAssignmentsBulkAssign.ts";
 export { postApiChartsChartidMarkNotFound } from "./clients/postApiChartsChartidMarkNotFound.ts";
-export { postApiChartsChartidQaApprove } from "./clients/postApiChartsChartidQaApprove.ts";
 export { postApiChartsChartidSaveDraft } from "./clients/postApiChartsChartidSaveDraft.ts";
 export { postApiChartsChartidSubmitQa } from "./clients/postApiChartsChartidSubmitQa.ts";
 export { postApiClients } from "./clients/postApiClients.ts";
@@ -1482,15 +1542,11 @@ export { postApiHedisAddMeasure } from "./clients/postApiHedisAddMeasure.ts";
 export { postApiHedisAddMissingEvidence } from "./clients/postApiHedisAddMissingEvidence.ts";
 export { postApiHedisAssignAbstractor } from "./clients/postApiHedisAssignAbstractor.ts";
 export { postApiHedisClinicalTimelineReview } from "./clients/postApiHedisClinicalTimelineReview.ts";
-export { postApiHedisMarkAsReviewed } from "./clients/postApiHedisMarkAsReviewed.ts";
 export { postApiHedisRecalculateQa } from "./clients/postApiHedisRecalculateQa.ts";
-export { postApiHedisSendToQa } from "./clients/postApiHedisSendToQa.ts";
-export { postApiHedisUpdateQaStatus } from "./clients/postApiHedisUpdateQaStatus.ts";
 export { postApiPatientsIdAssign } from "./clients/postApiPatientsIdAssign.ts";
 export { postApiPatientsPatientidChartsUpload } from "./clients/postApiPatientsPatientidChartsUpload.ts";
 export { postApiProfileActiveSessionsRevokeOthers } from "./clients/postApiProfileActiveSessionsRevokeOthers.ts";
 export { postApiProjects } from "./clients/postApiProjects.ts";
-export { postApiQaEvidenceRequests } from "./clients/postApiQaEvidenceRequests.ts";
 export { postApiSecurityAlertsBlockUser } from "./clients/postApiSecurityAlertsBlockUser.ts";
 export { postApiSecurityAllowedIps } from "./clients/postApiSecurityAllowedIps.ts";
 export { postApiUserRoles } from "./clients/postApiUserRoles.ts";
@@ -1804,15 +1860,6 @@ export { useGetApiHedisEvidenceTimelineIdSuspense } from "./hooks/HEDISHooks/use
 export { getApiHedisEvidenceTimelineIdSuspenseInfiniteQueryKey } from "./hooks/HEDISHooks/useGetApiHedisEvidenceTimelineIdSuspenseInfinite.ts";
 export { getApiHedisEvidenceTimelineIdSuspenseInfiniteQueryOptions } from "./hooks/HEDISHooks/useGetApiHedisEvidenceTimelineIdSuspenseInfinite.ts";
 export { useGetApiHedisEvidenceTimelineIdSuspenseInfinite } from "./hooks/HEDISHooks/useGetApiHedisEvidenceTimelineIdSuspenseInfinite.ts";
-export { getApiHedisQaQueuePatientidQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaQueuePatientid.ts";
-export { getApiHedisQaQueuePatientidQueryOptions } from "./hooks/HEDISHooks/useGetApiHedisQaQueuePatientid.ts";
-export { useGetApiHedisQaQueuePatientid } from "./hooks/HEDISHooks/useGetApiHedisQaQueuePatientid.ts";
-export { getApiHedisQaQueuePatientidSuspenseQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaQueuePatientidSuspense.ts";
-export { getApiHedisQaQueuePatientidSuspenseQueryOptions } from "./hooks/HEDISHooks/useGetApiHedisQaQueuePatientidSuspense.ts";
-export { useGetApiHedisQaQueuePatientidSuspense } from "./hooks/HEDISHooks/useGetApiHedisQaQueuePatientidSuspense.ts";
-export { getApiHedisQaQueuePatientidSuspenseInfiniteQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaQueuePatientidSuspenseInfinite.ts";
-export { getApiHedisQaQueuePatientidSuspenseInfiniteQueryOptions } from "./hooks/HEDISHooks/useGetApiHedisQaQueuePatientidSuspenseInfinite.ts";
-export { useGetApiHedisQaQueuePatientidSuspenseInfinite } from "./hooks/HEDISHooks/useGetApiHedisQaQueuePatientidSuspenseInfinite.ts";
 export { getApiHedisQaReviewEvaluationidQueryKey } from "./hooks/HEDISHooks/useGetApiHedisQaReviewEvaluationid.ts";
 export { getApiHedisQaReviewEvaluationidQueryOptions } from "./hooks/HEDISHooks/useGetApiHedisQaReviewEvaluationid.ts";
 export { useGetApiHedisQaReviewEvaluationid } from "./hooks/HEDISHooks/useGetApiHedisQaReviewEvaluationid.ts";
@@ -1840,18 +1887,90 @@ export { usePostApiHedisAddMissingEvidence } from "./hooks/HEDISHooks/usePostApi
 export { postApiHedisAssignAbstractorMutationKey } from "./hooks/HEDISHooks/usePostApiHedisAssignAbstractor.ts";
 export { postApiHedisAssignAbstractorMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisAssignAbstractor.ts";
 export { usePostApiHedisAssignAbstractor } from "./hooks/HEDISHooks/usePostApiHedisAssignAbstractor.ts";
-export { postApiHedisMarkAsReviewedMutationKey } from "./hooks/HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
-export { postApiHedisMarkAsReviewedMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
-export { usePostApiHedisMarkAsReviewed } from "./hooks/HEDISHooks/usePostApiHedisMarkAsReviewed.ts";
 export { postApiHedisRecalculateQaMutationKey } from "./hooks/HEDISHooks/usePostApiHedisRecalculateQa.ts";
 export { postApiHedisRecalculateQaMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisRecalculateQa.ts";
 export { usePostApiHedisRecalculateQa } from "./hooks/HEDISHooks/usePostApiHedisRecalculateQa.ts";
-export { postApiHedisSendToQaMutationKey } from "./hooks/HEDISHooks/usePostApiHedisSendToQa.ts";
-export { postApiHedisSendToQaMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisSendToQa.ts";
-export { usePostApiHedisSendToQa } from "./hooks/HEDISHooks/usePostApiHedisSendToQa.ts";
-export { postApiHedisUpdateQaStatusMutationKey } from "./hooks/HEDISHooks/usePostApiHedisUpdateQaStatus.ts";
-export { postApiHedisUpdateQaStatusMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisUpdateQaStatus.ts";
-export { usePostApiHedisUpdateQaStatus } from "./hooks/HEDISHooks/usePostApiHedisUpdateQaStatus.ts";
+export { getApiHedisReportsAbstractorProductivityQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsAbstractorProductivity.ts";
+export { getApiHedisReportsAbstractorProductivityQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsAbstractorProductivity.ts";
+export { useGetApiHedisReportsAbstractorProductivity } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsAbstractorProductivity.ts";
+export { getApiHedisReportsAbstractorProductivitySuspenseQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsAbstractorProductivitySuspense.ts";
+export { getApiHedisReportsAbstractorProductivitySuspenseQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsAbstractorProductivitySuspense.ts";
+export { useGetApiHedisReportsAbstractorProductivitySuspense } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsAbstractorProductivitySuspense.ts";
+export { getApiHedisReportsAbstractorProductivitySuspenseInfiniteQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsAbstractorProductivitySuspenseInfinite.ts";
+export { getApiHedisReportsAbstractorProductivitySuspenseInfiniteQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsAbstractorProductivitySuspenseInfinite.ts";
+export { useGetApiHedisReportsAbstractorProductivitySuspenseInfinite } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsAbstractorProductivitySuspenseInfinite.ts";
+export { getApiHedisReportsDashboardStatsQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsDashboardStats.ts";
+export { getApiHedisReportsDashboardStatsQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsDashboardStats.ts";
+export { useGetApiHedisReportsDashboardStats } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsDashboardStats.ts";
+export { getApiHedisReportsDashboardStatsSuspenseQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsDashboardStatsSuspense.ts";
+export { getApiHedisReportsDashboardStatsSuspenseQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsDashboardStatsSuspense.ts";
+export { useGetApiHedisReportsDashboardStatsSuspense } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsDashboardStatsSuspense.ts";
+export { getApiHedisReportsDashboardStatsSuspenseInfiniteQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsDashboardStatsSuspenseInfinite.ts";
+export { getApiHedisReportsDashboardStatsSuspenseInfiniteQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsDashboardStatsSuspenseInfinite.ts";
+export { useGetApiHedisReportsDashboardStatsSuspenseInfinite } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsDashboardStatsSuspenseInfinite.ts";
+export { getApiHedisReportsExportQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsExport.ts";
+export { getApiHedisReportsExportQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsExport.ts";
+export { useGetApiHedisReportsExport } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsExport.ts";
+export { getApiHedisReportsExportSuspenseQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsExportSuspense.ts";
+export { getApiHedisReportsExportSuspenseQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsExportSuspense.ts";
+export { useGetApiHedisReportsExportSuspense } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsExportSuspense.ts";
+export { getApiHedisReportsExportSuspenseInfiniteQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsExportSuspenseInfinite.ts";
+export { getApiHedisReportsExportSuspenseInfiniteQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsExportSuspenseInfinite.ts";
+export { useGetApiHedisReportsExportSuspenseInfinite } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsExportSuspenseInfinite.ts";
+export { getApiHedisReportsGapClosureTrendQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsGapClosureTrend.ts";
+export { getApiHedisReportsGapClosureTrendQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsGapClosureTrend.ts";
+export { useGetApiHedisReportsGapClosureTrend } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsGapClosureTrend.ts";
+export { getApiHedisReportsGapClosureTrendSuspenseQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsGapClosureTrendSuspense.ts";
+export { getApiHedisReportsGapClosureTrendSuspenseQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsGapClosureTrendSuspense.ts";
+export { useGetApiHedisReportsGapClosureTrendSuspense } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsGapClosureTrendSuspense.ts";
+export { getApiHedisReportsGapClosureTrendSuspenseInfiniteQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsGapClosureTrendSuspenseInfinite.ts";
+export { getApiHedisReportsGapClosureTrendSuspenseInfiniteQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsGapClosureTrendSuspenseInfinite.ts";
+export { useGetApiHedisReportsGapClosureTrendSuspenseInfinite } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsGapClosureTrendSuspenseInfinite.ts";
+export { getApiHedisReportsMeasurePerformanceQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsMeasurePerformance.ts";
+export { getApiHedisReportsMeasurePerformanceQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsMeasurePerformance.ts";
+export { useGetApiHedisReportsMeasurePerformance } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsMeasurePerformance.ts";
+export { getApiHedisReportsMeasurePerformanceSuspenseQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsMeasurePerformanceSuspense.ts";
+export { getApiHedisReportsMeasurePerformanceSuspenseQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsMeasurePerformanceSuspense.ts";
+export { useGetApiHedisReportsMeasurePerformanceSuspense } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsMeasurePerformanceSuspense.ts";
+export { getApiHedisReportsMeasurePerformanceSuspenseInfiniteQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsMeasurePerformanceSuspenseInfinite.ts";
+export { getApiHedisReportsMeasurePerformanceSuspenseInfiniteQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsMeasurePerformanceSuspenseInfinite.ts";
+export { useGetApiHedisReportsMeasurePerformanceSuspenseInfinite } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsMeasurePerformanceSuspenseInfinite.ts";
+export { getApiHedisReportsPlanLevelPerformanceQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsPlanLevelPerformance.ts";
+export { getApiHedisReportsPlanLevelPerformanceQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsPlanLevelPerformance.ts";
+export { useGetApiHedisReportsPlanLevelPerformance } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsPlanLevelPerformance.ts";
+export { getApiHedisReportsPlanLevelPerformanceSuspenseQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsPlanLevelPerformanceSuspense.ts";
+export { getApiHedisReportsPlanLevelPerformanceSuspenseQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsPlanLevelPerformanceSuspense.ts";
+export { useGetApiHedisReportsPlanLevelPerformanceSuspense } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsPlanLevelPerformanceSuspense.ts";
+export { getApiHedisReportsPlanLevelPerformanceSuspenseInfiniteQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsPlanLevelPerformanceSuspenseInfinite.ts";
+export { getApiHedisReportsPlanLevelPerformanceSuspenseInfiniteQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsPlanLevelPerformanceSuspenseInfinite.ts";
+export { useGetApiHedisReportsPlanLevelPerformanceSuspenseInfinite } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsPlanLevelPerformanceSuspenseInfinite.ts";
+export { getApiHedisReportsQaOutcomesQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsQaOutcomes.ts";
+export { getApiHedisReportsQaOutcomesQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsQaOutcomes.ts";
+export { useGetApiHedisReportsQaOutcomes } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsQaOutcomes.ts";
+export { getApiHedisReportsQaOutcomesSuspenseQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsQaOutcomesSuspense.ts";
+export { getApiHedisReportsQaOutcomesSuspenseQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsQaOutcomesSuspense.ts";
+export { useGetApiHedisReportsQaOutcomesSuspense } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsQaOutcomesSuspense.ts";
+export { getApiHedisReportsQaOutcomesSuspenseInfiniteQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsQaOutcomesSuspenseInfinite.ts";
+export { getApiHedisReportsQaOutcomesSuspenseInfiniteQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsQaOutcomesSuspenseInfinite.ts";
+export { useGetApiHedisReportsQaOutcomesSuspenseInfinite } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsQaOutcomesSuspenseInfinite.ts";
+export { getApiHedisReportsSubmissionReadinessQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadiness.ts";
+export { getApiHedisReportsSubmissionReadinessQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadiness.ts";
+export { useGetApiHedisReportsSubmissionReadiness } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadiness.ts";
+export { getApiHedisReportsSubmissionReadinessExportQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadinessExport.ts";
+export { getApiHedisReportsSubmissionReadinessExportQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadinessExport.ts";
+export { useGetApiHedisReportsSubmissionReadinessExport } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadinessExport.ts";
+export { getApiHedisReportsSubmissionReadinessExportSuspenseQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadinessExportSuspense.ts";
+export { getApiHedisReportsSubmissionReadinessExportSuspenseQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadinessExportSuspense.ts";
+export { useGetApiHedisReportsSubmissionReadinessExportSuspense } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadinessExportSuspense.ts";
+export { getApiHedisReportsSubmissionReadinessExportSuspenseInfiniteQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadinessExportSuspenseInfinite.ts";
+export { getApiHedisReportsSubmissionReadinessExportSuspenseInfiniteQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadinessExportSuspenseInfinite.ts";
+export { useGetApiHedisReportsSubmissionReadinessExportSuspenseInfinite } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadinessExportSuspenseInfinite.ts";
+export { getApiHedisReportsSubmissionReadinessSuspenseQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadinessSuspense.ts";
+export { getApiHedisReportsSubmissionReadinessSuspenseQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadinessSuspense.ts";
+export { useGetApiHedisReportsSubmissionReadinessSuspense } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadinessSuspense.ts";
+export { getApiHedisReportsSubmissionReadinessSuspenseInfiniteQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadinessSuspenseInfinite.ts";
+export { getApiHedisReportsSubmissionReadinessSuspenseInfiniteQueryOptions } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadinessSuspenseInfinite.ts";
+export { useGetApiHedisReportsSubmissionReadinessSuspenseInfinite } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsSubmissionReadinessSuspenseInfinite.ts";
 export { getApiMeasureLibraryQueryKey } from "./hooks/Measure LibraryHooks/useGetApiMeasureLibrary.ts";
 export { getApiMeasureLibraryQueryOptions } from "./hooks/Measure LibraryHooks/useGetApiMeasureLibrary.ts";
 export { useGetApiMeasureLibrary } from "./hooks/Measure LibraryHooks/useGetApiMeasureLibrary.ts";
@@ -2047,12 +2166,6 @@ export { usePatchApiProjectsIdAccess } from "./hooks/ProjectsHooks/usePatchApiPr
 export { postApiProjectsMutationKey } from "./hooks/ProjectsHooks/usePostApiProjects.ts";
 export { postApiProjectsMutationOptions } from "./hooks/ProjectsHooks/usePostApiProjects.ts";
 export { usePostApiProjects } from "./hooks/ProjectsHooks/usePostApiProjects.ts";
-export { postApiChartsChartidQaApproveMutationKey } from "./hooks/QA ReworkHooks/usePostApiChartsChartidQaApprove.ts";
-export { postApiChartsChartidQaApproveMutationOptions } from "./hooks/QA ReworkHooks/usePostApiChartsChartidQaApprove.ts";
-export { usePostApiChartsChartidQaApprove } from "./hooks/QA ReworkHooks/usePostApiChartsChartidQaApprove.ts";
-export { postApiQaEvidenceRequestsMutationKey } from "./hooks/QA ReworkHooks/usePostApiQaEvidenceRequests.ts";
-export { postApiQaEvidenceRequestsMutationOptions } from "./hooks/QA ReworkHooks/usePostApiQaEvidenceRequests.ts";
-export { usePostApiQaEvidenceRequests } from "./hooks/QA ReworkHooks/usePostApiQaEvidenceRequests.ts";
 export { getApiChartsJobsJobidQueryKey } from "./hooks/QueueHooks/useGetApiChartsJobsJobid.ts";
 export { getApiChartsJobsJobidQueryOptions } from "./hooks/QueueHooks/useGetApiChartsJobsJobid.ts";
 export { useGetApiChartsJobsJobid } from "./hooks/QueueHooks/useGetApiChartsJobsJobid.ts";
@@ -2362,6 +2475,8 @@ export { completedTodayTrendTypeEnum } from "./types/GetApiDashboardStats.ts";
 export { openQueueTrendTypeEnum } from "./types/GetApiDashboardStats.ts";
 export { overallHedisRateTrendTypeEnum } from "./types/GetApiDashboardStats.ts";
 export { slaComplianceTrendTypeEnum } from "./types/GetApiDashboardStats.ts";
+export { getApiHedisReportsExportQueryParamsFormatEnum } from "./types/GetApiHedisReportsExport.ts";
+export { getApiHedisReportsGapClosureTrendQueryParamsViewEnum } from "./types/GetApiHedisReportsGapClosureTrend.ts";
 export { getApiMeasuresExportSpecsQueryParamsFormatEnum } from "./types/GetApiMeasuresExportSpecs.ts";
 export { getApiMeasuresExportSpecsQueryParamsStatusEnum } from "./types/GetApiMeasuresExportSpecs.ts";
 export { getApiMeasuresMeasureidExportQueryParamsFormatEnum } from "./types/GetApiMeasuresMeasureidExport.ts";
@@ -2406,7 +2521,6 @@ export { postApiClientsMutationRequestRegionEnum } from "./types/PostApiClients.
 export { postApiClientsMutationRequestStatusEnum } from "./types/PostApiClients.ts";
 export { decisionsQaStatusEnum } from "./types/PostApiHedisAssignAbstractor.ts";
 export { postApiHedisClinicalTimelineReviewMutationRequestStatusEnum } from "./types/PostApiHedisClinicalTimelineReview.ts";
-export { postApiHedisUpdateQaStatusMutationRequestActionEnum } from "./types/PostApiHedisUpdateQaStatus.ts";
 export { postApiPatientsIdAssignMutationRequestRoleEnum } from "./types/PostApiPatientsIdAssign.ts";
 export { postApiProjectsMutationRequestPriorityEnum } from "./types/PostApiProjects.ts";
 export { postApiProjectsMutationRequestProjectTypeEnum } from "./types/PostApiProjects.ts";
@@ -2709,12 +2823,6 @@ export {
   getApiHedisEvidenceTimelineIdQueryResponseSchema,
 } from "./zod/HEDISSchemas/getApiHedisEvidenceTimelineIdSchema.ts";
 export {
-  getApiHedisQaQueuePatientid200Schema,
-  getApiHedisQaQueuePatientidPathParamsSchema,
-  getApiHedisQaQueuePatientidQueryParamsSchema,
-  getApiHedisQaQueuePatientidQueryResponseSchema,
-} from "./zod/HEDISSchemas/getApiHedisQaQueuePatientidSchema.ts";
-export {
   getApiHedisQaReviewEvaluationid200Schema,
   getApiHedisQaReviewEvaluationidPathParamsSchema,
   getApiHedisQaReviewEvaluationidQueryResponseSchema,
@@ -2764,11 +2872,6 @@ export {
   postApiHedisAssignAbstractorMutationResponseSchema,
 } from "./zod/HEDISSchemas/postApiHedisAssignAbstractorSchema.ts";
 export {
-  postApiHedisMarkAsReviewed200Schema,
-  postApiHedisMarkAsReviewedMutationRequestSchema,
-  postApiHedisMarkAsReviewedMutationResponseSchema,
-} from "./zod/HEDISSchemas/postApiHedisMarkAsReviewedSchema.ts";
-export {
   postApiHedisRecalculateQa200Schema,
   postApiHedisRecalculateQa400Schema,
   postApiHedisRecalculateQa404Schema,
@@ -2777,17 +2880,68 @@ export {
   postApiHedisRecalculateQaMutationResponseSchema,
 } from "./zod/HEDISSchemas/postApiHedisRecalculateQaSchema.ts";
 export {
-  postApiHedisSendToQa201Schema,
-  postApiHedisSendToQaMutationRequestSchema,
-  postApiHedisSendToQaMutationResponseSchema,
-} from "./zod/HEDISSchemas/postApiHedisSendToQaSchema.ts";
+  getApiHedisReportsAbstractorProductivity200Schema,
+  getApiHedisReportsAbstractorProductivity401Schema,
+  getApiHedisReportsAbstractorProductivity500Schema,
+  getApiHedisReportsAbstractorProductivityQueryParamsSchema,
+  getApiHedisReportsAbstractorProductivityQueryResponseSchema,
+} from "./zod/Hedis Reports & AnalyticsSchemas/getApiHedisReportsAbstractorProductivitySchema.ts";
 export {
-  postApiHedisUpdateQaStatus200Schema,
-  postApiHedisUpdateQaStatus400Schema,
-  postApiHedisUpdateQaStatus500Schema,
-  postApiHedisUpdateQaStatusMutationRequestSchema,
-  postApiHedisUpdateQaStatusMutationResponseSchema,
-} from "./zod/HEDISSchemas/postApiHedisUpdateQaStatusSchema.ts";
+  getApiHedisReportsDashboardStats200Schema,
+  getApiHedisReportsDashboardStats401Schema,
+  getApiHedisReportsDashboardStats500Schema,
+  getApiHedisReportsDashboardStatsQueryParamsSchema,
+  getApiHedisReportsDashboardStatsQueryResponseSchema,
+} from "./zod/Hedis Reports & AnalyticsSchemas/getApiHedisReportsDashboardStatsSchema.ts";
+export {
+  getApiHedisReportsExport200Schema,
+  getApiHedisReportsExport400Schema,
+  getApiHedisReportsExport401Schema,
+  getApiHedisReportsExport500Schema,
+  getApiHedisReportsExportQueryParamsSchema,
+  getApiHedisReportsExportQueryResponseSchema,
+} from "./zod/Hedis Reports & AnalyticsSchemas/getApiHedisReportsExportSchema.ts";
+export {
+  getApiHedisReportsGapClosureTrend200Schema,
+  getApiHedisReportsGapClosureTrend400Schema,
+  getApiHedisReportsGapClosureTrend401Schema,
+  getApiHedisReportsGapClosureTrend500Schema,
+  getApiHedisReportsGapClosureTrendQueryParamsSchema,
+  getApiHedisReportsGapClosureTrendQueryResponseSchema,
+} from "./zod/Hedis Reports & AnalyticsSchemas/getApiHedisReportsGapClosureTrendSchema.ts";
+export {
+  getApiHedisReportsMeasurePerformance200Schema,
+  getApiHedisReportsMeasurePerformance400Schema,
+  getApiHedisReportsMeasurePerformance401Schema,
+  getApiHedisReportsMeasurePerformance500Schema,
+  getApiHedisReportsMeasurePerformanceQueryParamsSchema,
+  getApiHedisReportsMeasurePerformanceQueryResponseSchema,
+} from "./zod/Hedis Reports & AnalyticsSchemas/getApiHedisReportsMeasurePerformanceSchema.ts";
+export {
+  getApiHedisReportsPlanLevelPerformance200Schema,
+  getApiHedisReportsPlanLevelPerformanceQueryParamsSchema,
+  getApiHedisReportsPlanLevelPerformanceQueryResponseSchema,
+} from "./zod/Hedis Reports & AnalyticsSchemas/getApiHedisReportsPlanLevelPerformanceSchema.ts";
+export {
+  getApiHedisReportsQaOutcomes200Schema,
+  getApiHedisReportsQaOutcomesQueryParamsSchema,
+  getApiHedisReportsQaOutcomesQueryResponseSchema,
+} from "./zod/Hedis Reports & AnalyticsSchemas/getApiHedisReportsQaOutcomesSchema.ts";
+export {
+  getApiHedisReportsSubmissionReadinessExport200Schema,
+  getApiHedisReportsSubmissionReadinessExport401Schema,
+  getApiHedisReportsSubmissionReadinessExport500Schema,
+  getApiHedisReportsSubmissionReadinessExportQueryParamsSchema,
+  getApiHedisReportsSubmissionReadinessExportQueryResponseSchema,
+} from "./zod/Hedis Reports & AnalyticsSchemas/getApiHedisReportsSubmissionReadinessExportSchema.ts";
+export {
+  getApiHedisReportsSubmissionReadiness200Schema,
+  getApiHedisReportsSubmissionReadiness400Schema,
+  getApiHedisReportsSubmissionReadiness401Schema,
+  getApiHedisReportsSubmissionReadiness500Schema,
+  getApiHedisReportsSubmissionReadinessQueryParamsSchema,
+  getApiHedisReportsSubmissionReadinessQueryResponseSchema,
+} from "./zod/Hedis Reports & AnalyticsSchemas/getApiHedisReportsSubmissionReadinessSchema.ts";
 export {
   getApiMeasureLibraryId200Schema,
   getApiMeasureLibraryId404Schema,
@@ -3006,16 +3160,6 @@ export {
   postApiProjectsMutationRequestSchema,
   postApiProjectsMutationResponseSchema,
 } from "./zod/ProjectsSchemas/postApiProjectsSchema.ts";
-export {
-  postApiChartsChartidQaApprove200Schema,
-  postApiChartsChartidQaApproveMutationResponseSchema,
-  postApiChartsChartidQaApprovePathParamsSchema,
-} from "./zod/QA ReworkSchemas/postApiChartsChartidQaApproveSchema.ts";
-export {
-  postApiQaEvidenceRequests200Schema,
-  postApiQaEvidenceRequestsMutationRequestSchema,
-  postApiQaEvidenceRequestsMutationResponseSchema,
-} from "./zod/QA ReworkSchemas/postApiQaEvidenceRequestsSchema.ts";
 export {
   getApiChartsJobsJobid200Schema,
   getApiChartsJobsJobidPathParamsSchema,

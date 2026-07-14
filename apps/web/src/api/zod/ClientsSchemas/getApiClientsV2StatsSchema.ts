@@ -13,8 +13,25 @@ import type {
 /**
  * @description Client stats retrieved successfully
  */
-export const getApiClientsV2Stats200Schema =
-  z.unknown() as unknown as ToZod<GetApiClientsV2Stats200>;
+export const getApiClientsV2Stats200Schema = z.object({
+  message: z.optional(z.string()),
+  data: z.optional(
+    z.object({
+      total_active: z.optional(
+        z.number().int().describe("Total Active Clients"),
+      ),
+      total_onboarding: z.optional(
+        z.number().int().describe("Total Onboarding Clients"),
+      ),
+      total_cases: z.optional(
+        z
+          .number()
+          .int()
+          .describe("Total Active Charts/Cases across all clients"),
+      ),
+    }),
+  ),
+}) as unknown as ToZod<GetApiClientsV2Stats200>;
 
 export const getApiClientsV2StatsQueryResponseSchema = z.lazy(
   () => getApiClientsV2Stats200Schema,

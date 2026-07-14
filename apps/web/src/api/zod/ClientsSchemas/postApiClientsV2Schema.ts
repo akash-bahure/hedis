@@ -17,9 +17,14 @@ import type {
 export const postApiClientsV2201Schema =
   z.unknown() as unknown as ToZod<PostApiClientsV2201>;
 
-export const postApiClientsV2MutationRequestSchema = z.object(
-  {},
-) as unknown as ToZod<PostApiClientsV2MutationRequest>;
+export const postApiClientsV2MutationRequestSchema = z.object({
+  client_name: z.string(),
+  plan_type: z.optional(z.string()),
+  contract_id: z.optional(z.string()),
+  program_year: z.optional(z.string()),
+  contact_name: z.optional(z.string()),
+  contact_email: z.string(),
+}) as unknown as ToZod<PostApiClientsV2MutationRequest>;
 
 export const postApiClientsV2MutationResponseSchema = z.lazy(
   () => postApiClientsV2201Schema,

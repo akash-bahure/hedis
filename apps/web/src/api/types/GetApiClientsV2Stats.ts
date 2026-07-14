@@ -6,7 +6,32 @@
 /**
  * @description Client stats retrieved successfully
  */
-export type GetApiClientsV2Stats200 = any;
+export type GetApiClientsV2Stats200 = {
+  /**
+   * @type string | undefined
+   */
+  message?: string;
+  /**
+   * @type object | undefined
+   */
+  data?: {
+    /**
+     * @description Total Active Clients
+     * @type integer | undefined
+     */
+    total_active?: number;
+    /**
+     * @description Total Onboarding Clients
+     * @type integer | undefined
+     */
+    total_onboarding?: number;
+    /**
+     * @description Total Active Charts/Cases across all clients
+     * @type integer | undefined
+     */
+    total_cases?: number;
+  };
+};
 
 export type GetApiClientsV2StatsQueryResponse = GetApiClientsV2Stats200;
 
