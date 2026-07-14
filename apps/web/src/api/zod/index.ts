@@ -273,12 +273,6 @@ export {
   getApiHedisEvidenceTimelineIdQueryResponseSchema,
 } from "./HEDISSchemas/getApiHedisEvidenceTimelineIdSchema.ts";
 export {
-  getApiHedisQaQueuePatientid200Schema,
-  getApiHedisQaQueuePatientidPathParamsSchema,
-  getApiHedisQaQueuePatientidQueryParamsSchema,
-  getApiHedisQaQueuePatientidQueryResponseSchema,
-} from "./HEDISSchemas/getApiHedisQaQueuePatientidSchema.ts";
-export {
   getApiHedisQaReviewEvaluationid200Schema,
   getApiHedisQaReviewEvaluationidPathParamsSchema,
   getApiHedisQaReviewEvaluationidQueryResponseSchema,
@@ -328,11 +322,6 @@ export {
   postApiHedisAssignAbstractorMutationResponseSchema,
 } from "./HEDISSchemas/postApiHedisAssignAbstractorSchema.ts";
 export {
-  postApiHedisMarkAsReviewed200Schema,
-  postApiHedisMarkAsReviewedMutationRequestSchema,
-  postApiHedisMarkAsReviewedMutationResponseSchema,
-} from "./HEDISSchemas/postApiHedisMarkAsReviewedSchema.ts";
-export {
   postApiHedisRecalculateQa200Schema,
   postApiHedisRecalculateQa400Schema,
   postApiHedisRecalculateQa404Schema,
@@ -341,17 +330,68 @@ export {
   postApiHedisRecalculateQaMutationResponseSchema,
 } from "./HEDISSchemas/postApiHedisRecalculateQaSchema.ts";
 export {
-  postApiHedisSendToQa201Schema,
-  postApiHedisSendToQaMutationRequestSchema,
-  postApiHedisSendToQaMutationResponseSchema,
-} from "./HEDISSchemas/postApiHedisSendToQaSchema.ts";
+  getApiHedisReportsAbstractorProductivity200Schema,
+  getApiHedisReportsAbstractorProductivity401Schema,
+  getApiHedisReportsAbstractorProductivity500Schema,
+  getApiHedisReportsAbstractorProductivityQueryParamsSchema,
+  getApiHedisReportsAbstractorProductivityQueryResponseSchema,
+} from "./Hedis Reports & AnalyticsSchemas/getApiHedisReportsAbstractorProductivitySchema.ts";
 export {
-  postApiHedisUpdateQaStatus200Schema,
-  postApiHedisUpdateQaStatus400Schema,
-  postApiHedisUpdateQaStatus500Schema,
-  postApiHedisUpdateQaStatusMutationRequestSchema,
-  postApiHedisUpdateQaStatusMutationResponseSchema,
-} from "./HEDISSchemas/postApiHedisUpdateQaStatusSchema.ts";
+  getApiHedisReportsDashboardStats200Schema,
+  getApiHedisReportsDashboardStats401Schema,
+  getApiHedisReportsDashboardStats500Schema,
+  getApiHedisReportsDashboardStatsQueryParamsSchema,
+  getApiHedisReportsDashboardStatsQueryResponseSchema,
+} from "./Hedis Reports & AnalyticsSchemas/getApiHedisReportsDashboardStatsSchema.ts";
+export {
+  getApiHedisReportsExport200Schema,
+  getApiHedisReportsExport400Schema,
+  getApiHedisReportsExport401Schema,
+  getApiHedisReportsExport500Schema,
+  getApiHedisReportsExportQueryParamsSchema,
+  getApiHedisReportsExportQueryResponseSchema,
+} from "./Hedis Reports & AnalyticsSchemas/getApiHedisReportsExportSchema.ts";
+export {
+  getApiHedisReportsGapClosureTrend200Schema,
+  getApiHedisReportsGapClosureTrend400Schema,
+  getApiHedisReportsGapClosureTrend401Schema,
+  getApiHedisReportsGapClosureTrend500Schema,
+  getApiHedisReportsGapClosureTrendQueryParamsSchema,
+  getApiHedisReportsGapClosureTrendQueryResponseSchema,
+} from "./Hedis Reports & AnalyticsSchemas/getApiHedisReportsGapClosureTrendSchema.ts";
+export {
+  getApiHedisReportsMeasurePerformance200Schema,
+  getApiHedisReportsMeasurePerformance400Schema,
+  getApiHedisReportsMeasurePerformance401Schema,
+  getApiHedisReportsMeasurePerformance500Schema,
+  getApiHedisReportsMeasurePerformanceQueryParamsSchema,
+  getApiHedisReportsMeasurePerformanceQueryResponseSchema,
+} from "./Hedis Reports & AnalyticsSchemas/getApiHedisReportsMeasurePerformanceSchema.ts";
+export {
+  getApiHedisReportsPlanLevelPerformance200Schema,
+  getApiHedisReportsPlanLevelPerformanceQueryParamsSchema,
+  getApiHedisReportsPlanLevelPerformanceQueryResponseSchema,
+} from "./Hedis Reports & AnalyticsSchemas/getApiHedisReportsPlanLevelPerformanceSchema.ts";
+export {
+  getApiHedisReportsQaOutcomes200Schema,
+  getApiHedisReportsQaOutcomesQueryParamsSchema,
+  getApiHedisReportsQaOutcomesQueryResponseSchema,
+} from "./Hedis Reports & AnalyticsSchemas/getApiHedisReportsQaOutcomesSchema.ts";
+export {
+  getApiHedisReportsSubmissionReadinessExport200Schema,
+  getApiHedisReportsSubmissionReadinessExport401Schema,
+  getApiHedisReportsSubmissionReadinessExport500Schema,
+  getApiHedisReportsSubmissionReadinessExportQueryParamsSchema,
+  getApiHedisReportsSubmissionReadinessExportQueryResponseSchema,
+} from "./Hedis Reports & AnalyticsSchemas/getApiHedisReportsSubmissionReadinessExportSchema.ts";
+export {
+  getApiHedisReportsSubmissionReadiness200Schema,
+  getApiHedisReportsSubmissionReadiness400Schema,
+  getApiHedisReportsSubmissionReadiness401Schema,
+  getApiHedisReportsSubmissionReadiness500Schema,
+  getApiHedisReportsSubmissionReadinessQueryParamsSchema,
+  getApiHedisReportsSubmissionReadinessQueryResponseSchema,
+} from "./Hedis Reports & AnalyticsSchemas/getApiHedisReportsSubmissionReadinessSchema.ts";
 export {
   getApiMeasureLibraryId200Schema,
   getApiMeasureLibraryId404Schema,
@@ -570,16 +610,6 @@ export {
   postApiProjectsMutationRequestSchema,
   postApiProjectsMutationResponseSchema,
 } from "./ProjectsSchemas/postApiProjectsSchema.ts";
-export {
-  postApiChartsChartidQaApprove200Schema,
-  postApiChartsChartidQaApproveMutationResponseSchema,
-  postApiChartsChartidQaApprovePathParamsSchema,
-} from "./QA ReworkSchemas/postApiChartsChartidQaApproveSchema.ts";
-export {
-  postApiQaEvidenceRequests200Schema,
-  postApiQaEvidenceRequestsMutationRequestSchema,
-  postApiQaEvidenceRequestsMutationResponseSchema,
-} from "./QA ReworkSchemas/postApiQaEvidenceRequestsSchema.ts";
 export {
   getApiChartsJobsJobid200Schema,
   getApiChartsJobsJobidPathParamsSchema,

@@ -263,18 +263,85 @@ export type {
   GetApiHedisEvidenceTimelineIdQueryResponse,
 } from "./GetApiHedisEvidenceTimelineId.ts";
 export type {
-  GetApiHedisQaQueuePatientid200,
-  GetApiHedisQaQueuePatientidPathParams,
-  GetApiHedisQaQueuePatientidQuery,
-  GetApiHedisQaQueuePatientidQueryParams,
-  GetApiHedisQaQueuePatientidQueryResponse,
-} from "./GetApiHedisQaQueuePatientid.ts";
-export type {
   GetApiHedisQaReviewEvaluationid200,
   GetApiHedisQaReviewEvaluationidPathParams,
   GetApiHedisQaReviewEvaluationidQuery,
   GetApiHedisQaReviewEvaluationidQueryResponse,
 } from "./GetApiHedisQaReviewEvaluationid.ts";
+export type {
+  GetApiHedisReportsAbstractorProductivity200,
+  GetApiHedisReportsAbstractorProductivity401,
+  GetApiHedisReportsAbstractorProductivity500,
+  GetApiHedisReportsAbstractorProductivityQuery,
+  GetApiHedisReportsAbstractorProductivityQueryParams,
+  GetApiHedisReportsAbstractorProductivityQueryResponse,
+} from "./GetApiHedisReportsAbstractorProductivity.ts";
+export type {
+  GetApiHedisReportsDashboardStats200,
+  GetApiHedisReportsDashboardStats401,
+  GetApiHedisReportsDashboardStats500,
+  GetApiHedisReportsDashboardStatsQuery,
+  GetApiHedisReportsDashboardStatsQueryParams,
+  GetApiHedisReportsDashboardStatsQueryResponse,
+} from "./GetApiHedisReportsDashboardStats.ts";
+export type {
+  GetApiHedisReportsExport200,
+  GetApiHedisReportsExport400,
+  GetApiHedisReportsExport401,
+  GetApiHedisReportsExport500,
+  GetApiHedisReportsExportQuery,
+  GetApiHedisReportsExportQueryParams,
+  GetApiHedisReportsExportQueryParamsFormatEnumKey,
+  GetApiHedisReportsExportQueryResponse,
+} from "./GetApiHedisReportsExport.ts";
+export type {
+  GetApiHedisReportsGapClosureTrend200,
+  GetApiHedisReportsGapClosureTrend400,
+  GetApiHedisReportsGapClosureTrend401,
+  GetApiHedisReportsGapClosureTrend500,
+  GetApiHedisReportsGapClosureTrendQuery,
+  GetApiHedisReportsGapClosureTrendQueryParams,
+  GetApiHedisReportsGapClosureTrendQueryParamsViewEnumKey,
+  GetApiHedisReportsGapClosureTrendQueryResponse,
+} from "./GetApiHedisReportsGapClosureTrend.ts";
+export type {
+  GetApiHedisReportsMeasurePerformance200,
+  GetApiHedisReportsMeasurePerformance400,
+  GetApiHedisReportsMeasurePerformance401,
+  GetApiHedisReportsMeasurePerformance500,
+  GetApiHedisReportsMeasurePerformanceQuery,
+  GetApiHedisReportsMeasurePerformanceQueryParams,
+  GetApiHedisReportsMeasurePerformanceQueryResponse,
+} from "./GetApiHedisReportsMeasurePerformance.ts";
+export type {
+  GetApiHedisReportsPlanLevelPerformance200,
+  GetApiHedisReportsPlanLevelPerformanceQuery,
+  GetApiHedisReportsPlanLevelPerformanceQueryParams,
+  GetApiHedisReportsPlanLevelPerformanceQueryResponse,
+} from "./GetApiHedisReportsPlanLevelPerformance.ts";
+export type {
+  GetApiHedisReportsQaOutcomes200,
+  GetApiHedisReportsQaOutcomesQuery,
+  GetApiHedisReportsQaOutcomesQueryParams,
+  GetApiHedisReportsQaOutcomesQueryResponse,
+} from "./GetApiHedisReportsQaOutcomes.ts";
+export type {
+  GetApiHedisReportsSubmissionReadiness200,
+  GetApiHedisReportsSubmissionReadiness400,
+  GetApiHedisReportsSubmissionReadiness401,
+  GetApiHedisReportsSubmissionReadiness500,
+  GetApiHedisReportsSubmissionReadinessQuery,
+  GetApiHedisReportsSubmissionReadinessQueryParams,
+  GetApiHedisReportsSubmissionReadinessQueryResponse,
+} from "./GetApiHedisReportsSubmissionReadiness.ts";
+export type {
+  GetApiHedisReportsSubmissionReadinessExport200,
+  GetApiHedisReportsSubmissionReadinessExport401,
+  GetApiHedisReportsSubmissionReadinessExport500,
+  GetApiHedisReportsSubmissionReadinessExportQuery,
+  GetApiHedisReportsSubmissionReadinessExportQueryParams,
+  GetApiHedisReportsSubmissionReadinessExportQueryResponse,
+} from "./GetApiHedisReportsSubmissionReadinessExport.ts";
 export type {
   GetApiMeasureLibrary200,
   GetApiMeasureLibraryQuery,
@@ -781,12 +848,6 @@ export type {
   PostApiChartsChartidMarkNotFoundMutationResponse,
 } from "./PostApiChartsChartidMarkNotFound.ts";
 export type {
-  PostApiChartsChartidQaApprove200,
-  PostApiChartsChartidQaApproveMutation,
-  PostApiChartsChartidQaApproveMutationResponse,
-  PostApiChartsChartidQaApprovePathParams,
-} from "./PostApiChartsChartidQaApprove.ts";
-export type {
   PostApiChartsChartidSaveDraft200,
   PostApiChartsChartidSaveDraftMutation,
   PostApiChartsChartidSaveDraftMutationRequest,
@@ -897,12 +958,6 @@ export type {
   PostApiHedisClinicalTimelineReviewMutationResponse,
 } from "./PostApiHedisClinicalTimelineReview.ts";
 export type {
-  PostApiHedisMarkAsReviewed200,
-  PostApiHedisMarkAsReviewedMutation,
-  PostApiHedisMarkAsReviewedMutationRequest,
-  PostApiHedisMarkAsReviewedMutationResponse,
-} from "./PostApiHedisMarkAsReviewed.ts";
-export type {
   PostApiHedisRecalculateQa200,
   PostApiHedisRecalculateQa400,
   PostApiHedisRecalculateQa404,
@@ -911,21 +966,6 @@ export type {
   PostApiHedisRecalculateQaMutationRequest,
   PostApiHedisRecalculateQaMutationResponse,
 } from "./PostApiHedisRecalculateQa.ts";
-export type {
-  PostApiHedisSendToQa201,
-  PostApiHedisSendToQaMutation,
-  PostApiHedisSendToQaMutationRequest,
-  PostApiHedisSendToQaMutationResponse,
-} from "./PostApiHedisSendToQa.ts";
-export type {
-  PostApiHedisUpdateQaStatus200,
-  PostApiHedisUpdateQaStatus400,
-  PostApiHedisUpdateQaStatus500,
-  PostApiHedisUpdateQaStatusMutation,
-  PostApiHedisUpdateQaStatusMutationRequest,
-  PostApiHedisUpdateQaStatusMutationRequestActionEnumKey,
-  PostApiHedisUpdateQaStatusMutationResponse,
-} from "./PostApiHedisUpdateQaStatus.ts";
 export type {
   PostApiPatientsIdAssign200,
   PostApiPatientsIdAssignMutation,
@@ -960,12 +1000,6 @@ export type {
   PostApiProjectsMutationRequestStatusEnumKey,
   PostApiProjectsMutationResponse,
 } from "./PostApiProjects.ts";
-export type {
-  PostApiQaEvidenceRequests200,
-  PostApiQaEvidenceRequestsMutation,
-  PostApiQaEvidenceRequestsMutationRequest,
-  PostApiQaEvidenceRequestsMutationResponse,
-} from "./PostApiQaEvidenceRequests.ts";
 export type {
   PostApiSecurityAlertsBlockUser200,
   PostApiSecurityAlertsBlockUserMutation,
@@ -1103,6 +1137,8 @@ export { completedTodayTrendTypeEnum } from "./GetApiDashboardStats.ts";
 export { openQueueTrendTypeEnum } from "./GetApiDashboardStats.ts";
 export { overallHedisRateTrendTypeEnum } from "./GetApiDashboardStats.ts";
 export { slaComplianceTrendTypeEnum } from "./GetApiDashboardStats.ts";
+export { getApiHedisReportsExportQueryParamsFormatEnum } from "./GetApiHedisReportsExport.ts";
+export { getApiHedisReportsGapClosureTrendQueryParamsViewEnum } from "./GetApiHedisReportsGapClosureTrend.ts";
 export { getApiMeasuresExportSpecsQueryParamsFormatEnum } from "./GetApiMeasuresExportSpecs.ts";
 export { getApiMeasuresExportSpecsQueryParamsStatusEnum } from "./GetApiMeasuresExportSpecs.ts";
 export { getApiMeasuresMeasureidExportQueryParamsFormatEnum } from "./GetApiMeasuresMeasureidExport.ts";
@@ -1147,7 +1183,6 @@ export { postApiClientsMutationRequestRegionEnum } from "./PostApiClients.ts";
 export { postApiClientsMutationRequestStatusEnum } from "./PostApiClients.ts";
 export { decisionsQaStatusEnum } from "./PostApiHedisAssignAbstractor.ts";
 export { postApiHedisClinicalTimelineReviewMutationRequestStatusEnum } from "./PostApiHedisClinicalTimelineReview.ts";
-export { postApiHedisUpdateQaStatusMutationRequestActionEnum } from "./PostApiHedisUpdateQaStatus.ts";
 export { postApiPatientsIdAssignMutationRequestRoleEnum } from "./PostApiPatientsIdAssign.ts";
 export { postApiProjectsMutationRequestPriorityEnum } from "./PostApiProjects.ts";
 export { postApiProjectsMutationRequestProjectTypeEnum } from "./PostApiProjects.ts";

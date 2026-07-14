@@ -8,7 +8,32 @@
  */
 export type PostApiClientsV2201 = any;
 
-export type PostApiClientsV2MutationRequest = object;
+export type PostApiClientsV2MutationRequest = {
+  /**
+   * @type string
+   */
+  client_name: string;
+  /**
+   * @type string | undefined
+   */
+  plan_type?: string;
+  /**
+   * @type string | undefined
+   */
+  contract_id?: string;
+  /**
+   * @type string | undefined
+   */
+  program_year?: string;
+  /**
+   * @type string | undefined
+   */
+  contact_name?: string;
+  /**
+   * @type string
+   */
+  contact_email: string;
+};
 
 export type PostApiClientsV2MutationResponse = PostApiClientsV2201;
 

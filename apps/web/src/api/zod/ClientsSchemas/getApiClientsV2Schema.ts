@@ -13,8 +13,40 @@ import type {
 /**
  * @description Clients retrieved successfully
  */
-export const getApiClientsV2200Schema =
-  z.unknown() as unknown as ToZod<GetApiClientsV2200>;
+export const getApiClientsV2200Schema = z.object({
+  data: z.optional(
+    z.array(
+      z.object({
+        org_name: z.optional(z.string().describe("Client Name")),
+        contract_type: z.optional(
+          z.string().describe("Plan Type (e.g. Health Plan)"),
+        ),
+        status: z.optional(z.string().describe("Active or Onboarding")),
+        primary_contact_name: z.optional(z.string().describe("Contact Person")),
+        total_patients_enrolled: z.optional(
+          z.number().int().describe("Total Members Count"),
+        ),
+        total_charts: z.optional(
+          z.number().int().describe("Total Charts Assigned"),
+        ),
+        active_charts: z.optional(
+          z.number().int().describe("Charts currently being worked on"),
+        ),
+        completed_charts: z.optional(
+          z.number().int().describe("Charts marked as Done"),
+        ),
+      }),
+    ),
+  ),
+  pagination: z.optional(
+    z.object({
+      total_count: z.optional(z.number().int()),
+      total_pages: z.optional(z.number().int()),
+      current_page: z.optional(z.number().int()),
+      limit: z.optional(z.number().int()),
+    }),
+  ),
+}) as unknown as ToZod<GetApiClientsV2200>;
 
 export const getApiClientsV2QueryResponseSchema = z.lazy(
   () => getApiClientsV2200Schema,
