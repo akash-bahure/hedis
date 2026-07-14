@@ -7,7 +7,13 @@ const hedisReportService = require("../services/hedisReportr.service");
 exports.getMeasurePerformanceReport = async (req, res) => {
   try {
     const schema = req.tenant.schema_name;
-    const { page = 1, limit = 10, measureCode, measurementYear, plan } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      measureCode,
+      measurementYear,
+      plan,
+    } = req.query;
 
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
@@ -26,13 +32,19 @@ exports.getMeasurePerformanceReport = async (req, res) => {
       });
     }
 
-    const reportData = await hedisReportService.getMeasurePerformanceReport(req.db, schema, {
-      page: pageNum,
-      limit: limitNum,
-      measureCode: measureCode ? String(measureCode).trim() : undefined,
-      measurementYear: measurementYear ? String(measurementYear).trim() : undefined,
-      plan: plan ? String(plan).trim() : undefined,
-    });
+    const reportData = await hedisReportService.getMeasurePerformanceReport(
+      req.db,
+      schema,
+      {
+        page: pageNum,
+        limit: limitNum,
+        measureCode: measureCode ? String(measureCode).trim() : undefined,
+        measurementYear: measurementYear
+          ? String(measurementYear).trim()
+          : undefined,
+        plan: plan ? String(plan).trim() : undefined,
+      }
+    );
 
     return res.status(200).json({
       success: true,
@@ -51,7 +63,6 @@ exports.getMeasurePerformanceReport = async (req, res) => {
   }
 };
 
-
 /**
  * GET /api/hedis-reports/submission-readiness
  *
@@ -69,18 +80,19 @@ exports.getSubmissionReadinessReport = async (req, res) => {
       plan,
     } = req.query;
 
-    const report =
-      await hedisReportService.getSubmissionReadinessReport(
-        req.db,
-        schema,
-        {
-          page,
-          limit,
-          measureCode: measureCode ? String(measureCode).trim() : undefined,
-          measurementYear: measurementYear ? String(measurementYear).trim() : undefined,
-          plan: plan ? String(plan).trim() : undefined,
-        }
-      );
+    const report = await hedisReportService.getSubmissionReadinessReport(
+      req.db,
+      schema,
+      {
+        page,
+        limit,
+        measureCode: measureCode ? String(measureCode).trim() : undefined,
+        measurementYear: measurementYear
+          ? String(measurementYear).trim()
+          : undefined,
+        plan: plan ? String(plan).trim() : undefined,
+      }
+    );
 
     return res.status(200).json({
       success: true,
@@ -96,7 +108,6 @@ exports.getSubmissionReadinessReport = async (req, res) => {
   }
 };
 
-
 /**
  * GET /api/hedis-reports/submission-readiness/export
  *
@@ -107,16 +118,17 @@ exports.exportSubmissionReadinessReport = async (req, res) => {
     const schema = req.tenant.schema_name;
     const { measureCode, measurementYear, plan } = req.query;
 
-    const rows =
-      await hedisReportService.exportSubmissionReadinessReport(
-        req.db,
-        schema,
-        {
-          measureCode: measureCode ? String(measureCode).trim() : undefined,
-          measurementYear: measurementYear ? String(measurementYear).trim() : undefined,
-          plan: plan ? String(plan).trim() : undefined,
-        }
-      );
+    const rows = await hedisReportService.exportSubmissionReadinessReport(
+      req.db,
+      schema,
+      {
+        measureCode: measureCode ? String(measureCode).trim() : undefined,
+        measurementYear: measurementYear
+          ? String(measurementYear).trim()
+          : undefined,
+        plan: plan ? String(plan).trim() : undefined,
+      }
+    );
 
     const headers = [
       "Measure Code",
@@ -126,29 +138,25 @@ exports.exportSubmissionReadinessReport = async (req, res) => {
       "Readiness %",
       "Target %",
       "Difference %",
-      "Status"
+      "Status",
     ];
 
-    const csvRows = rows.map((item) => [
-      item.measureCode,
-      `"${item.measureName}"`,
-      item.totalEvaluations,
-      item.readyCount,
-      item.readiness,
-      item.target,
-      item.difference,
-      item.aboveTarget ? "Above Target" : "Below Target"
-    ].join(","));
-
-    const csv = [
-      headers.join(","),
-      ...csvRows
-    ].join("\n");
-
-    res.setHeader(
-      "Content-Type",
-      "text/csv"
+    const csvRows = rows.map((item) =>
+      [
+        item.measureCode,
+        `"${item.measureName}"`,
+        item.totalEvaluations,
+        item.readyCount,
+        item.readiness,
+        item.target,
+        item.difference,
+        item.aboveTarget ? "Above Target" : "Below Target",
+      ].join(",")
     );
+
+    const csv = [headers.join(","), ...csvRows].join("\n");
+
+    res.setHeader("Content-Type", "text/csv");
 
     res.setHeader(
       "Content-Disposition",
@@ -156,17 +164,15 @@ exports.exportSubmissionReadinessReport = async (req, res) => {
     );
 
     return res.status(200).send(csv);
-
   } catch (err) {
     console.error(err);
 
     return res.status(500).json({
       success: false,
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
   }
 };
-
 
 /**
  * GET /api/hedis-reports/gap-closure-trend
@@ -183,16 +189,23 @@ exports.getGapClosureTrend = async (req, res) => {
     if (!validViews.includes(String(view).toLowerCase())) {
       return res.status(400).json({
         success: false,
-        message: "Invalid query parameter 'view'. Must be 'monthly' or 'weekly'.",
+        message:
+          "Invalid query parameter 'view'. Must be 'monthly' or 'weekly'.",
       });
     }
 
-    const reportData = await hedisReportService.getGapClosureTrend(req.db, schema, {
-      view: String(view).toLowerCase(),
-      measureCode: measureCode ? String(measureCode).trim() : undefined,
-      measurementYear: measurementYear ? String(measurementYear).trim() : undefined,
-      plan: plan ? String(plan).trim() : undefined,
-    });
+    const reportData = await hedisReportService.getGapClosureTrend(
+      req.db,
+      schema,
+      {
+        view: String(view).toLowerCase(),
+        measureCode: measureCode ? String(measureCode).trim() : undefined,
+        measurementYear: measurementYear
+          ? String(measurementYear).trim()
+          : undefined,
+        plan: plan ? String(plan).trim() : undefined,
+      }
+    );
 
     return res.status(200).json({
       success: true,
@@ -208,7 +221,6 @@ exports.getGapClosureTrend = async (req, res) => {
   }
 };
 
-
 /**
  * GET /api/hedis-reports/dashboard-stats
  *
@@ -219,10 +231,16 @@ exports.getDashboardStatistics = async (req, res) => {
     const schema = req.tenant.schema_name;
     const { measurementYear, plan } = req.query;
 
-    const stats = await hedisReportService.getDashboardStatistics(req.db, schema, {
-      measurementYear: measurementYear ? String(measurementYear).trim() : undefined,
-      plan: plan ? String(plan).trim() : undefined,
-    });
+    const stats = await hedisReportService.getDashboardStatistics(
+      req.db,
+      schema,
+      {
+        measurementYear: measurementYear
+          ? String(measurementYear).trim()
+          : undefined,
+        plan: plan ? String(plan).trim() : undefined,
+      }
+    );
 
     return res.status(200).json({
       success: true,
@@ -238,7 +256,6 @@ exports.getDashboardStatistics = async (req, res) => {
   }
 };
 
-
 /**
  * GET /api/hedis-reports/abstractor-productivity
  *
@@ -249,10 +266,16 @@ exports.getAbstractorProductivity = async (req, res) => {
     const schema = req.tenant.schema_name;
     const { measurementYear, plan } = req.query;
 
-    const reportData = await hedisReportService.getAbstractorProductivity(req.db, schema, {
-      measurementYear: measurementYear ? String(measurementYear).trim() : undefined,
-      plan: plan ? String(plan).trim() : undefined,
-    });
+    const reportData = await hedisReportService.getAbstractorProductivity(
+      req.db,
+      schema,
+      {
+        measurementYear: measurementYear
+          ? String(measurementYear).trim()
+          : undefined,
+        plan: plan ? String(plan).trim() : undefined,
+      }
+    );
 
     return res.status(200).json({
       success: true,
@@ -268,11 +291,89 @@ exports.getAbstractorProductivity = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/hedis-reports/qa-outcomes
+ *
+ * Returns QA Outcomes summary (Total Reviewed, Pass Rate, Status Breakdown, Discrepancy Types)
+ */
+exports.getQAOutcomesReport = async (req, res) => {
+  try {
+    const schema = req.tenant.schema_name;
+    const { measurementYear, plan, measureCode } = req.query;
+
+    const reportData = await hedisReportService.getQAOutcomesReport(
+      req.db,
+      schema,
+      {
+        measurementYear: measurementYear
+          ? String(measurementYear).trim()
+          : undefined,
+        plan: plan ? String(plan).trim() : undefined,
+        measureCode: measureCode ? String(measureCode).trim() : undefined,
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: reportData,
+    });
+  } catch (err) {
+    console.error("Get QA Outcomes Report Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
+/**
+ * GET /api/hedis-reports/plan-level-performance
+ *
+ * Returns Plan-Level Performance (by Medicare, Medicaid, Commercial)
+ */
+exports.getPlanLevelPerformance = async (req, res) => {
+  try {
+    const schema = req.tenant.schema_name;
+    const { measurementYear, measureCode } = req.query;
+
+    const reportData = await hedisReportService.getPlanLevelPerformance(
+      req.db,
+      schema,
+      {
+        measurementYear: measurementYear
+          ? String(measurementYear).trim()
+          : undefined,
+        measureCode: measureCode ? String(measureCode).trim() : undefined,
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: reportData,
+    });
+  } catch (err) {
+    console.error("Get Plan Level Performance Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
 
 /**
  * GET /api/hedis-reports/export
  *
  * Exports the complete filtered HEDIS Reports dashboard in CSV, PDF, or XLSX format.
+ */
+/**
+ * GET /api/hedis-reports/export
+ *
+ * Exports the complete filtered HEDIS Reports dashboard (including new sections)
+ */
+/**
+ * GET /api/hedis-reports/export - FULLY UPDATED WITH COMPLETE PDF SUPPORT
  */
 exports.exportDashboardReport = async (req, res) => {
   try {
@@ -290,32 +391,43 @@ exports.exportDashboardReport = async (req, res) => {
     if (!["csv", "pdf", "xlsx"].includes(exportFormat)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid format. Supported formats are 'csv', 'pdf', and 'xlsx'.",
+        message:
+          "Invalid format. Supported formats are 'csv', 'pdf', and 'xlsx'.",
       });
     }
 
     const filters = {
-      measurementYear: measurementYear ? String(measurementYear).trim() : undefined,
+      measurementYear: measurementYear
+        ? String(measurementYear).trim()
+        : undefined,
       plan: plan ? String(plan).trim() : undefined,
       measureCode: measureCode ? String(measureCode).trim() : undefined,
     };
 
-    // Gather all dashboard sections data in parallel
-    const [stats, performance, readiness, trend, productivity] = await Promise.all([
+    // Gather ALL sections data
+    const [
+      stats,
+      performance,
+      readiness,
+      trend,
+      productivity,
+      qaOutcomes,
+      planLevel,
+    ] = await Promise.all([
       hedisReportService.getDashboardStatistics(req.db, schema, {
         measurementYear: filters.measurementYear,
         plan: filters.plan,
       }),
       hedisReportService.getMeasurePerformanceReport(req.db, schema, {
         page: 1,
-        limit: 999999, // retrieve all matches
+        limit: 999999,
         measureCode: filters.measureCode,
         measurementYear: filters.measurementYear,
         plan: filters.plan,
       }),
       hedisReportService.getSubmissionReadinessReport(req.db, schema, {
         page: 1,
-        limit: 999999, // retrieve all matches
+        limit: 999999,
         measureCode: filters.measureCode,
         measurementYear: filters.measurementYear,
         plan: filters.plan,
@@ -330,9 +442,18 @@ exports.exportDashboardReport = async (req, res) => {
         measurementYear: filters.measurementYear,
         plan: filters.plan,
       }),
+      hedisReportService.getQAOutcomesReport(req.db, schema, {
+        measurementYear: filters.measurementYear,
+        plan: filters.plan,
+        measureCode: filters.measureCode,
+      }),
+      hedisReportService.getPlanLevelPerformance(req.db, schema, {
+        measurementYear: filters.measurementYear,
+        measureCode: filters.measureCode,
+      }),
     ]);
 
-    // Handle formats
+    // ==================== CSV EXPORT ====================
     if (exportFormat === "csv") {
       let csv = "HEDIS REPORT DASHBOARD EXPORT\n";
       csv += `Filters: Year=${filters.measurementYear || "All"}, Plan=${filters.plan || "All"}, Measure=${filters.measureCode || "All"}\n`;
@@ -347,15 +468,35 @@ exports.exportDashboardReport = async (req, res) => {
       csv += `QA Disagreement Rate,${stats.qaDisagreementRate.rate}%,${stats.qaDisagreementRate.delta}%\n`;
       csv += `Submission Readiness,${stats.submissionReadiness.rate}%,${stats.submissionReadiness.delta}%\n\n`;
 
+      csv += "=== QA OUTCOMES ===\n";
+      csv += "Total Reviewed,Pass Rate (%),Passed,Pending,Failed,Returned\n";
+      csv += `${qaOutcomes.totalReviewed},${qaOutcomes.passRate},${qaOutcomes.passed},${qaOutcomes.pending},${qaOutcomes.failed},${qaOutcomes.returned}\n\n`;
+
+      csv += "=== QA DISCREPANCY BREAKDOWN ===\n";
+      csv += "Type,Count,Percentage\n";
+      qaOutcomes.discrepancyBreakdown.forEach((item) => {
+        csv += `"${item.type}",${item.count},${item.percentage}\n`;
+      });
+      csv += "\n";
+
+      csv += "=== PLAN LEVEL PERFORMANCE ===\n";
+      csv += "Plan,Completed,Open Gap,Pending QA,Gap Rate (%)\n";
+      planLevel.plans.forEach((item) => {
+        csv += `${item.plan},${item.completed},${item.openGap},${item.pendingQA},${item.gapRate}\n`;
+      });
+      csv += "\n";
+
       csv += "=== MEASURE PERFORMANCE ===\n";
-      csv += "Measure Code,Measure Name,Numerator Count,Denominator Count,Exclusion Count,Rate %,Benchmark %,Status\n";
+      csv +=
+        "Measure Code,Measure Name,Numerator Count,Denominator Count,Exclusion Count,Rate %,Benchmark %,Status\n";
       performance.items.forEach((item) => {
         csv += `${item.measureCode},"${item.measureName}",${item.numerator},${item.denominator},${item.exclusion},${item.measureRate},${item.benchmark},${item.belowBenchmark ? "Below Benchmark" : "At/Above Benchmark"}\n`;
       });
       csv += "\n";
 
       csv += "=== SUBMISSION READINESS ===\n";
-      csv += "Measure Code,Measure Name,Total Evaluations,Ready Count,Readiness %,Target %,Difference %,Status\n";
+      csv +=
+        "Measure Code,Measure Name,Total Evaluations,Ready Count,Readiness %,Target %,Difference %,Status\n";
       readiness.items.forEach((item) => {
         csv += `${item.measureCode},"${item.measureName}",${item.totalEvaluations},${item.readyCount},${item.readiness},${item.target},${item.difference},${item.aboveTarget ? "Above Target" : "Below Target"}\n`;
       });
@@ -369,129 +510,196 @@ exports.exportDashboardReport = async (req, res) => {
       csv += "\n";
 
       csv += "=== ABSTRACTOR PRODUCTIVITY ===\n";
-      csv += "Abstractor Name,Assigned,Completed,Completed %,Avg Time,QA Fail %,At Risk\n";
+      csv +=
+        "Abstractor Name,Assigned,Completed,Completed %,Avg Time,QA Fail %,At Risk\n";
       productivity.tableData.forEach((item) => {
         csv += `"${item.abstractorName}",${item.assigned},${item.completed},${item.completedPercentage},${item.avgTime},${item.qaFailPercentage},${item.atRisk ? "At Risk" : "Normal"}\n`;
       });
 
       res.setHeader("Content-Type", "text/csv");
-      res.setHeader("Content-Disposition", 'attachment; filename="hedis-reports-dashboard.csv"');
+      res.setHeader(
+        "Content-Disposition",
+        'attachment; filename="hedis-reports-dashboard.csv"'
+      );
       return res.status(200).send(csv);
     }
 
+    // ==================== PDF EXPORT - COMPLETE ====================
     if (exportFormat === "pdf") {
       const PDFDocument = require("pdfkit-table");
-      const doc = new PDFDocument({ margin: 30, size: "A4", layout: "landscape" });
+      const doc = new PDFDocument({
+        margin: 30,
+        size: "A4",
+        layout: "landscape",
+      });
       const buffers = [];
 
       doc.on("data", buffers.push.bind(buffers));
       doc.on("end", () => {
         const pdfBuffer = Buffer.concat(buffers);
         res.setHeader("Content-Type", "application/pdf");
-        res.setHeader("Content-Disposition", 'attachment; filename="hedis-reports-dashboard.pdf"');
+        res.setHeader(
+          "Content-Disposition",
+          'attachment; filename="hedis-reports-dashboard.pdf"'
+        );
         return res.status(200).send(pdfBuffer);
       });
 
-      // Title header
-      doc.fontSize(18).text("HEDIS Reports Dashboard Export", { align: "center" });
+      // Header
+      doc
+        .fontSize(18)
+        .text("HEDIS Reports Dashboard Export", { align: "center" });
       doc.moveDown(0.3);
-      doc.fontSize(10).text(`Filters: Year: ${filters.measurementYear || "All"} | Plan: ${filters.plan || "All"} | Measure: ${filters.measureCode || "All"}`, { align: "center" });
-      doc.fontSize(10).text(`Generated At: ${new Date().toLocaleString()}`, { align: "center" });
+      doc
+        .fontSize(10)
+        .text(
+          `Filters: Year: ${filters.measurementYear || "All"} | Plan: ${filters.plan || "All"} | Measure: ${filters.measureCode || "All"}`,
+          { align: "center" }
+        );
+      doc
+        .fontSize(10)
+        .text(`Generated At: ${new Date().toLocaleString()}`, {
+          align: "center",
+        });
       doc.moveDown(1.5);
 
-      // Section 1: Dashboard Statistics
-      doc.fontSize(13).text("1. Dashboard KPI Statistics", { underline: true });
+      // QA Outcomes
+      doc.fontSize(13).text("1. QA Outcomes", { underline: true });
       doc.moveDown(0.5);
-      const statsTable = {
-        headers: ["Metric", "Value", "Delta (%)"],
-        rows: [
-          ["Overall Gap Rate", `${stats.overallGapRate.rate}%`, `${stats.overallGapRate.delta}%`],
-          ["Numerator Compliance", `${stats.numeratorCompliance.rate}%`, `${stats.numeratorCompliance.delta}%`],
-          ["Charts Completed", `${stats.chartsCompleted.percentage}% (${stats.chartsCompleted.completed}/${stats.chartsCompleted.total})`, "N/A"],
-          ["QA Disagreement Rate", `${stats.qaDisagreementRate.rate}%`, `${stats.qaDisagreementRate.delta}%`],
-          ["Submission Readiness", `${stats.submissionReadiness.rate}%`, `${stats.submissionReadiness.delta}%`],
-        ],
-      };
-      doc.table(statsTable, { width: 750 });
+      doc.table(
+        {
+          headers: ["Metric", "Value"],
+          rows: [
+            ["Total Reviewed", qaOutcomes.totalReviewed],
+            ["Pass Rate", `${qaOutcomes.passRate}%`],
+            ["Passed", qaOutcomes.passed],
+            ["Pending", qaOutcomes.pending],
+            ["Failed", qaOutcomes.failed],
+            ["Returned", qaOutcomes.returned],
+          ],
+        },
+        { width: 500 }
+      );
       doc.moveDown(1.5);
 
-      // Section 2: Measure Performance
-      doc.fontSize(13).text("2. Measure Performance", { underline: true });
+      // Plan Level Performance
+      doc.fontSize(13).text("2. Plan Level Performance", { underline: true });
       doc.moveDown(0.5);
-      const perfTable = {
-        headers: ["Code", "Name", "Numerator", "Denominator", "Exclusion", "Rate %", "Benchmark %", "Status"],
-        rows: performance.items.map((item) => [
-          item.measureCode,
-          item.measureName,
-          item.numerator.toString(),
-          item.denominator.toString(),
-          item.exclusion.toString(),
-          `${item.measureRate}%`,
-          `${item.benchmark}%`,
-          item.belowBenchmark ? "Below" : "At/Above",
-        ]),
-      };
-      doc.table(perfTable, { width: 750 });
+      doc.table(
+        {
+          headers: [
+            "Plan",
+            "Completed",
+            "Open Gap",
+            "Pending QA",
+            "Gap Rate (%)",
+          ],
+          rows: planLevel.plans.map((p) => [
+            p.plan,
+            p.completed,
+            p.openGap,
+            p.pendingQA,
+            `${p.gapRate}%`,
+          ]),
+        },
+        { width: 750 }
+      );
       doc.moveDown(1.5);
 
-      // Section 3: Submission Readiness
-      doc.fontSize(13).text("3. Submission Readiness", { underline: true });
+      // Dashboard Statistics
+      doc.fontSize(13).text("3. Dashboard KPI Statistics", { underline: true });
       doc.moveDown(0.5);
-      const readinessTable = {
-        headers: ["Code", "Name", "Evs count", "Ready count", "Readiness %", "Target %", "Diff %", "Status"],
-        rows: readiness.items.map((item) => [
-          item.measureCode,
-          item.measureName,
-          item.totalEvaluations.toString(),
-          item.readyCount.toString(),
-          `${item.readiness}%`,
-          `${item.target}%`,
-          `${item.difference}%`,
-          item.aboveTarget ? "Ready" : "Below",
-        ]),
-      };
-      doc.table(readinessTable, { width: 750 });
+      doc.table(
+        {
+          headers: ["Metric", "Value", "Delta (%)"],
+          rows: [
+            [
+              "Overall Gap Rate",
+              `${stats.overallGapRate.rate}%`,
+              `${stats.overallGapRate.delta}%`,
+            ],
+            [
+              "Numerator Compliance",
+              `${stats.numeratorCompliance.rate}%`,
+              `${stats.numeratorCompliance.delta}%`,
+            ],
+            [
+              "Charts Completed",
+              `${stats.chartsCompleted.percentage}% (${stats.chartsCompleted.completed}/${stats.chartsCompleted.total})`,
+              "N/A",
+            ],
+            [
+              "QA Disagreement Rate",
+              `${stats.qaDisagreementRate.rate}%`,
+              `${stats.qaDisagreementRate.delta}%`,
+            ],
+            [
+              "Submission Readiness",
+              `${stats.submissionReadiness.rate}%`,
+              `${stats.submissionReadiness.delta}%`,
+            ],
+          ],
+        },
+        { width: 750 }
+      );
       doc.moveDown(1.5);
 
-      // Section 4: Gap Closure Trend
-      doc.fontSize(13).text("4. Gap Closure Trend (Monthly)", { underline: true });
+      // Measure Performance
+      doc.fontSize(13).text("4. Measure Performance", { underline: true });
       doc.moveDown(0.5);
-      const trendTable = {
-        headers: ["Period", "Open Gaps", "Closed Gaps"],
-        rows: trend.trend.map((item) => [
-          item.label,
-          item.openGaps.toString(),
-          item.closedGaps.toString(),
-        ]),
-      };
-      doc.table(trendTable, { width: 400 });
+      doc.table(
+        {
+          headers: [
+            "Code",
+            "Name",
+            "Numerator",
+            "Denominator",
+            "Exclusion",
+            "Rate %",
+            "Benchmark %",
+            "Status",
+          ],
+          rows: performance.items.map((item) => [
+            item.measureCode,
+            item.measureName,
+            item.numerator,
+            item.denominator,
+            item.exclusion,
+            `${item.measureRate}%`,
+            `${item.benchmark}%`,
+            item.belowBenchmark ? "Below" : "At/Above",
+          ]),
+        },
+        { width: 750 }
+      );
       doc.moveDown(1.5);
 
-      // Section 5: Abstractor Productivity
-      doc.fontSize(13).text("5. Abstractor Productivity", { underline: true });
-      doc.moveDown(0.5);
-      const prodTable = {
-        headers: ["Abstractor Name", "Assigned", "Completed", "Completed %", "Avg Time", "QA Fail %", "At Risk"],
-        rows: productivity.tableData.map((item) => [
-          item.abstractorName,
-          item.assigned.toString(),
-          item.completed.toString(),
-          `${item.completedPercentage}%`,
-          item.avgTime,
-          `${item.qaFailPercentage}%`,
-          item.atRisk ? "YES" : "No",
-        ]),
-      };
-      doc.table(prodTable, { width: 750 });
+      // You can add more sections here if needed
 
       doc.end();
       return;
     }
 
+    // ==================== XLSX ====================
     if (exportFormat === "xlsx") {
-      const xml = generateExcelXml(stats, performance, readiness, trend, productivity, filters);
-      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-      res.setHeader("Content-Disposition", 'attachment; filename="hedis-reports-dashboard.xlsx"');
+      const xml = generateExcelXml(
+        stats,
+        performance,
+        readiness,
+        trend,
+        productivity,
+        qaOutcomes,
+        planLevel,
+        filters
+      );
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        'attachment; filename="hedis-reports-dashboard.xlsx"'
+      );
       return res.status(200).send(Buffer.from(xml, "utf-8"));
     }
   } catch (err) {
@@ -503,13 +711,23 @@ exports.exportDashboardReport = async (req, res) => {
     });
   }
 };
-
-
 /**
  * Helper to generate spreadsheet XML.
  */
-function generateExcelXml(stats, performance, readiness, trend, productivity, filters) {
-  const { measurementYear, plan, measureCode } = filters;
+/**
+ * Helper to generate spreadsheet XML with ALL sections (including QA Outcomes & Plan Level Performance)
+ */
+function generateExcelXml(
+  stats,
+  performance,
+  readiness,
+  trend,
+  productivity,
+  qaOutcomes,
+  planLevel,
+  filters
+) {
+  const { measurementYear, plan, measureCode } = filters || {};
   const createdDate = new Date().toISOString();
 
   let xml = `<?xml version="1.0"?>
@@ -617,7 +835,99 @@ function generateExcelXml(stats, performance, readiness, trend, productivity, fi
   </Worksheet>
   `;
 
-  // Worksheet 2: Measure Performance
+  // Worksheet 2: QA Outcomes
+  xml += `
+  <Worksheet ss:Name="QA Outcomes">
+    <Table>
+      <Row ss:StyleID="SectionHeader">
+        <Cell><Data ss:Type="String">QA Outcomes Summary</Data></Cell>
+        <Cell ss:StyleID="SectionHeader"/>
+      </Row>
+      <Row ss:StyleID="TableHeader">
+        <Cell><Data ss:Type="String">Metric</Data></Cell>
+        <Cell><Data ss:Type="String">Value</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">Total Reviewed</Data></Cell>
+        <Cell><Data ss:Type="Number">${qaOutcomes.totalReviewed}</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">Pass Rate (%)</Data></Cell>
+        <Cell><Data ss:Type="Number">${qaOutcomes.passRate}</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">Passed</Data></Cell>
+        <Cell><Data ss:Type="Number">${qaOutcomes.passed}</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">Pending</Data></Cell>
+        <Cell><Data ss:Type="Number">${qaOutcomes.pending}</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">Failed</Data></Cell>
+        <Cell><Data ss:Type="Number">${qaOutcomes.failed}</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">Returned</Data></Cell>
+        <Cell><Data ss:Type="Number">${qaOutcomes.returned}</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+  `;
+
+  // Worksheet 3: QA Discrepancy Breakdown
+  xml += `
+  <Worksheet ss:Name="QA Discrepancy">
+    <Table>
+      <Row ss:StyleID="TableHeader">
+        <Cell><Data ss:Type="String">Discrepancy Type</Data></Cell>
+        <Cell><Data ss:Type="String">Count</Data></Cell>
+        <Cell><Data ss:Type="String">Percentage (%)</Data></Cell>
+      </Row>`;
+
+  qaOutcomes.discrepancyBreakdown.forEach((item) => {
+    xml += `
+      <Row>
+        <Cell><Data ss:Type="String">${escapeXml(item.type)}</Data></Cell>
+        <Cell><Data ss:Type="Number">${item.count}</Data></Cell>
+        <Cell><Data ss:Type="Number">${item.percentage}</Data></Cell>
+      </Row>`;
+  });
+
+  xml += `
+    </Table>
+  </Worksheet>
+  `;
+
+  // Worksheet 4: Plan Level Performance
+  xml += `
+  <Worksheet ss:Name="Plan Level Performance">
+    <Table>
+      <Row ss:StyleID="TableHeader">
+        <Cell><Data ss:Type="String">Plan</Data></Cell>
+        <Cell><Data ss:Type="String">Completed</Data></Cell>
+        <Cell><Data ss:Type="String">Open Gap</Data></Cell>
+        <Cell><Data ss:Type="String">Pending QA</Data></Cell>
+        <Cell><Data ss:Type="String">Gap Rate (%)</Data></Cell>
+      </Row>`;
+
+  planLevel.plans.forEach((item) => {
+    xml += `
+      <Row>
+        <Cell><Data ss:Type="String">${item.plan}</Data></Cell>
+        <Cell><Data ss:Type="Number">${item.completed}</Data></Cell>
+        <Cell><Data ss:Type="Number">${item.openGap}</Data></Cell>
+        <Cell><Data ss:Type="Number">${item.pendingQA}</Data></Cell>
+        <Cell><Data ss:Type="Number">${item.gapRate}</Data></Cell>
+      </Row>`;
+  });
+
+  xml += `
+    </Table>
+  </Worksheet>
+  `;
+
+  // Worksheet 5: Measure Performance
   xml += `
   <Worksheet ss:Name="Measure Performance">
     <Table>
@@ -649,7 +959,7 @@ function generateExcelXml(stats, performance, readiness, trend, productivity, fi
   </Worksheet>
   `;
 
-  // Worksheet 3: Submission Readiness
+  // Worksheet 6: Submission Readiness
   xml += `
   <Worksheet ss:Name="Submission Readiness">
     <Table>
@@ -681,7 +991,7 @@ function generateExcelXml(stats, performance, readiness, trend, productivity, fi
   </Worksheet>
   `;
 
-  // Worksheet 4: Gap Closure Trend
+  // Worksheet 7: Gap Closure Trend
   xml += `
   <Worksheet ss:Name="Gap Closure Trend">
     <Table>
@@ -703,7 +1013,7 @@ function generateExcelXml(stats, performance, readiness, trend, productivity, fi
   </Worksheet>
   `;
 
-  // Worksheet 5: Abstractor Productivity
+  // Worksheet 8: Abstractor Productivity
   xml += `
   <Worksheet ss:Name="Abstractor Productivity">
     <Table>
@@ -741,11 +1051,16 @@ function escapeXml(unsafe) {
   if (!unsafe) return "";
   return unsafe.replace(/[<>&'"]/g, (c) => {
     switch (c) {
-      case "<": return "&lt;";
-      case ">": return "&gt;";
-      case "&": return "&amp;";
-      case "'": return "&apos;";
-      case '"': return "&quot;";
+      case "<":
+        return "&lt;";
+      case ">":
+        return "&gt;";
+      case "&":
+        return "&amp;";
+      case "'":
+        return "&apos;";
+      case '"':
+        return "&quot;";
     }
   });
 }

@@ -24,7 +24,11 @@ const SUBMISSION_TARGETS = {
  * @param {object} params - Optional page, limit, and measureCode query parameters
  * @returns {Promise<object>} Map containing items and pagination details
  */
-async function getMeasurePerformanceReport(db, schema, { page = 1, limit = 10, measureCode, measurementYear, plan } = {}) {
+async function getMeasurePerformanceReport(
+  db,
+  schema,
+  { page = 1, limit = 10, measureCode, measurementYear, plan } = {}
+) {
   const pageNum = parseInt(page, 10) || 1;
   const limitNum = parseInt(limit, 10) || 10;
   const offset = (pageNum - 1) * limitNum;
@@ -45,8 +49,12 @@ async function getMeasurePerformanceReport(db, schema, { page = 1, limit = 10, m
     whereClauses.push(`p.plan ILIKE $${queryValues.length}`);
   }
 
-  const joinStr = (measurementYear || plan) ? `JOIN ${schema}.patients p ON he.patient_id = p.id` : "";
-  const whereClauseStr = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+  const joinStr =
+    measurementYear || plan
+      ? `JOIN ${schema}.patients p ON he.patient_id = p.id`
+      : "";
+  const whereClauseStr =
+    whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
 
   // Data Query
   const dataQuery = `
@@ -123,7 +131,6 @@ async function getMeasurePerformanceReport(db, schema, { page = 1, limit = 10, m
   };
 }
 
-
 /**
  * Get Submission Readiness Report.
  *
@@ -159,8 +166,12 @@ async function getSubmissionReadinessReport(
     whereClauses.push(`p.plan ILIKE $${values.length}`);
   }
 
-  const joinStr = (measurementYear || plan) ? `JOIN ${schema}.patients p ON he.patient_id = p.id` : "";
-  const whereClauseStr = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+  const joinStr =
+    measurementYear || plan
+      ? `JOIN ${schema}.patients p ON he.patient_id = p.id`
+      : "";
+  const whereClauseStr =
+    whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
 
   const dataQuery = `
     SELECT
@@ -200,8 +211,7 @@ async function getSubmissionReadinessReport(
         ? Number(((readyCount / totalEvaluations) * 100).toFixed(1))
         : 0;
 
-    const target =
-      SUBMISSION_TARGETS[row.measure_code.toUpperCase()] || 80;
+    const target = SUBMISSION_TARGETS[row.measure_code.toUpperCase()] || 80;
 
     const difference = Number((readiness - target).toFixed(1));
 
@@ -223,13 +233,10 @@ async function getSubmissionReadinessReport(
       page: pageNum,
       limit: limitNum,
       total: Number(countResult.rows[0].total),
-      totalPages: Math.ceil(
-        Number(countResult.rows[0].total) / limitNum
-      ),
+      totalPages: Math.ceil(Number(countResult.rows[0].total) / limitNum),
     },
   };
 }
-
 
 /**
  * Export Submission Readiness Report.
@@ -262,8 +269,12 @@ async function exportSubmissionReadinessReport(
     whereClauses.push(`p.plan ILIKE $${values.length}`);
   }
 
-  const joinStr = (measurementYear || plan) ? `JOIN ${schema}.patients p ON he.patient_id = p.id` : "";
-  const whereClauseStr = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+  const joinStr =
+    measurementYear || plan
+      ? `JOIN ${schema}.patients p ON he.patient_id = p.id`
+      : "";
+  const whereClauseStr =
+    whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
 
   const query = `
     SELECT
@@ -291,8 +302,7 @@ async function exportSubmissionReadinessReport(
         ? Number(((readyCount / totalEvaluations) * 100).toFixed(1))
         : 0;
 
-    const target =
-      SUBMISSION_TARGETS[row.measure_code.toUpperCase()] || 80;
+    const target = SUBMISSION_TARGETS[row.measure_code.toUpperCase()] || 80;
 
     const difference = Number((readiness - target).toFixed(1));
 
@@ -319,7 +329,11 @@ async function exportSubmissionReadinessReport(
  * - Closed: he.status ILIKE 'complete' OR he.status ILIKE 'compliant'
  * - Open: he.status IS NULL OR (he.status NOT ILIKE 'complete' AND he.status NOT ILIKE 'compliant')
  */
-async function getGapClosureTrend(db, schema, { view = "monthly", measureCode, measurementYear, plan } = {}) {
+async function getGapClosureTrend(
+  db,
+  schema,
+  { view = "monthly", measureCode, measurementYear, plan } = {}
+) {
   const isWeekly = String(view).toLowerCase() === "weekly";
 
   let queryValues = [];
@@ -338,8 +352,12 @@ async function getGapClosureTrend(db, schema, { view = "monthly", measureCode, m
     filterClauses.push(`p.plan ILIKE $${queryValues.length}`);
   }
 
-  const subqueryWhere = filterClauses.length > 0 ? `WHERE ${filterClauses.join(" AND ")}` : "";
-  const subqueryJoin = (measurementYear || plan) ? `JOIN ${schema}.patients p ON he_sub.patient_id = p.id` : "";
+  const subqueryWhere =
+    filterClauses.length > 0 ? `WHERE ${filterClauses.join(" AND ")}` : "";
+  const subqueryJoin =
+    measurementYear || plan
+      ? `JOIN ${schema}.patients p ON he_sub.patient_id = p.id`
+      : "";
 
   const filteredEvaluationsSubquery = `
     (
@@ -389,18 +407,27 @@ async function getGapClosureTrend(db, schema, { view = "monthly", measureCode, m
   }
 
   // Summary Query (Fetches open / closed counts from current and previous months)
-  let summaryWhereClauses = [`he.created_at >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 month'`];
+  let summaryWhereClauses = [
+    `he.created_at >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 month'`,
+  ];
   if (measureCode) {
-    summaryWhereClauses.push(`he.measure_code ILIKE $${queryValues.indexOf(measureCode) + 1}`);
+    summaryWhereClauses.push(
+      `he.measure_code ILIKE $${queryValues.indexOf(measureCode) + 1}`
+    );
   }
   if (measurementYear) {
-    summaryWhereClauses.push(`p.measure ILIKE $${queryValues.indexOf(measurementYear) + 1}`);
+    summaryWhereClauses.push(
+      `p.measure ILIKE $${queryValues.indexOf(measurementYear) + 1}`
+    );
   }
   if (plan) {
     summaryWhereClauses.push(`p.plan ILIKE $${queryValues.indexOf(plan) + 1}`);
   }
 
-  const joinStr = (measurementYear || plan) ? `JOIN ${schema}.patients p ON he.patient_id = p.id` : "";
+  const joinStr =
+    measurementYear || plan
+      ? `JOIN ${schema}.patients p ON he.patient_id = p.id`
+      : "";
   const summaryWhereClauseStr = `WHERE ${summaryWhereClauses.join(" AND ")}`;
 
   const summaryQuery = `
@@ -445,8 +472,12 @@ async function getGapClosureTrend(db, schema, { view = "monthly", measureCode, m
   const prevMonthKey = formatDateKey(prevMonthStart);
 
   // Match rows by month_start
-  const currentMonthRow = summaryRows.find((r) => r.month_start_str === currentMonthKey);
-  const prevMonthRow = summaryRows.find((r) => r.month_start_str === prevMonthKey);
+  const currentMonthRow = summaryRows.find(
+    (r) => r.month_start_str === currentMonthKey
+  );
+  const prevMonthRow = summaryRows.find(
+    (r) => r.month_start_str === prevMonthKey
+  );
 
   const currentOpen = parseInt(currentMonthRow?.open_gaps || 0, 10);
   const currentClosed = parseInt(currentMonthRow?.closed_gaps || 0, 10);
@@ -485,7 +516,11 @@ async function getGapClosureTrend(db, schema, { view = "monthly", measureCode, m
  * 5. Submission Readiness & Delta (vs this quarter)
  *    Readiness = (QA_PASS / Total Evaluations) * 100
  */
-async function getDashboardStatistics(db, schema, { measurementYear, plan } = {}) {
+async function getDashboardStatistics(
+  db,
+  schema,
+  { measurementYear, plan } = {}
+) {
   let queryValues = [];
   let filterClauses = [];
   if (measurementYear) {
@@ -497,10 +532,20 @@ async function getDashboardStatistics(db, schema, { measurementYear, plan } = {}
     filterClauses.push(`p.plan ILIKE $${queryValues.length}`);
   }
 
-  const joinStr = (measurementYear || plan) ? `JOIN ${schema}.patients p ON he.patient_id = p.id` : "";
-  const joinStrForCharts = (measurementYear || plan) ? `JOIN ${schema}.patients p ON pc.patient_id = p.id` : "";
-  const joinStrForQA = (measurementYear || plan) ? `JOIN ${schema}.patients p ON qmd.patient_id = p.id` : "";
-  const filterClauseStr = filterClauses.length > 0 ? `WHERE ${filterClauses.join(" AND ")}` : "";
+  const joinStr =
+    measurementYear || plan
+      ? `JOIN ${schema}.patients p ON he.patient_id = p.id`
+      : "";
+  const joinStrForCharts =
+    measurementYear || plan
+      ? `JOIN ${schema}.patients p ON pc.patient_id = p.id`
+      : "";
+  const joinStrForQA =
+    measurementYear || plan
+      ? `JOIN ${schema}.patients p ON qmd.patient_id = p.id`
+      : "";
+  const filterClauseStr =
+    filterClauses.length > 0 ? `WHERE ${filterClauses.join(" AND ")}` : "";
 
   // 1. Overall Gap Rate (this month and last month)
   const gapRateSql = `
@@ -565,13 +610,14 @@ async function getDashboardStatistics(db, schema, { measurementYear, plan } = {}
     GROUP BY DATE_TRUNC('quarter', he.created_at)::date
   `;
 
-  const [gapRes, complianceRes, chartsRes, qaRes, submissionRes] = await Promise.all([
-    db.query(gapRateSql, queryValues),
-    db.query(complianceSql, queryValues),
-    db.query(chartsSql, queryValues),
-    db.query(qaSql, queryValues),
-    db.query(submissionSql, queryValues)
-  ]);
+  const [gapRes, complianceRes, chartsRes, qaRes, submissionRes] =
+    await Promise.all([
+      db.query(gapRateSql, queryValues),
+      db.query(complianceSql, queryValues),
+      db.query(chartsSql, queryValues),
+      db.query(qaSql, queryValues),
+      db.query(submissionSql, queryValues),
+    ]);
 
   const today = new Date();
   const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -588,8 +634,12 @@ async function getDashboardStatistics(db, schema, { measurementYear, plan } = {}
   const prevMonthKey = formatDateKey(prevMonthStart);
 
   // Overall Gap Rate
-  const curMonthGapRow = gapRes.rows.find(r => r.month_start_str === curMonthKey);
-  const prevMonthGapRow = gapRes.rows.find(r => r.month_start_str === prevMonthKey);
+  const curMonthGapRow = gapRes.rows.find(
+    (r) => r.month_start_str === curMonthKey
+  );
+  const prevMonthGapRow = gapRes.rows.find(
+    (r) => r.month_start_str === prevMonthKey
+  );
 
   const curOpen = parseInt(curMonthGapRow?.open_gaps || 0, 10);
   const curEligible = parseInt(curMonthGapRow?.total_eligible || 0, 10);
@@ -602,8 +652,12 @@ async function getDashboardStatistics(db, schema, { measurementYear, plan } = {}
   const gapRateDelta = parseFloat((curGapRate - prevGapRate).toFixed(1));
 
   // Numerator Compliance
-  const curMonthCompRow = complianceRes.rows.find(r => r.month_start_str === curMonthKey);
-  const prevMonthCompRow = complianceRes.rows.find(r => r.month_start_str === prevMonthKey);
+  const curMonthCompRow = complianceRes.rows.find(
+    (r) => r.month_start_str === curMonthKey
+  );
+  const prevMonthCompRow = complianceRes.rows.find(
+    (r) => r.month_start_str === prevMonthKey
+  );
 
   const curNum = parseInt(curMonthCompRow?.numerator_count || 0, 10);
   const curDen = parseInt(curMonthCompRow?.denominator_count || 0, 10);
@@ -618,7 +672,10 @@ async function getDashboardStatistics(db, schema, { measurementYear, plan } = {}
   // Charts Completed
   const chartsCompleted = parseInt(chartsRes.rows[0]?.completed_count || 0, 10);
   const chartsTotal = parseInt(chartsRes.rows[0]?.total_count || 0, 10);
-  const chartsPercentage = chartsTotal > 0 ? parseFloat(((chartsCompleted / chartsTotal) * 100).toFixed(1)) : 0;
+  const chartsPercentage =
+    chartsTotal > 0
+      ? parseFloat(((chartsCompleted / chartsTotal) * 100).toFixed(1))
+      : 0;
 
   // QA Disagreement Rate
   const getMonday = (d) => {
@@ -636,8 +693,10 @@ async function getDashboardStatistics(db, schema, { measurementYear, plan } = {}
   const curWeekKey = formatDateKey(currentWeekStart);
   const prevWeekKey = formatDateKey(prevWeekStart);
 
-  const curWeekQARow = qaRes.rows.find(r => r.week_start_str === curWeekKey);
-  const prevWeekQARow = qaRes.rows.find(r => r.week_start_str === prevWeekKey);
+  const curWeekQARow = qaRes.rows.find((r) => r.week_start_str === curWeekKey);
+  const prevWeekQARow = qaRes.rows.find(
+    (r) => r.week_start_str === prevWeekKey
+  );
 
   const curQAFail = parseInt(curWeekQARow?.fail_count || 0, 10);
   const curQATotal = parseInt(curWeekQARow?.total_count || 0, 10);
@@ -661,8 +720,12 @@ async function getDashboardStatistics(db, schema, { measurementYear, plan } = {}
   const curQuarterKey = formatDateKey(currentQuarterStart);
   const prevQuarterKey = formatDateKey(prevQuarterStart);
 
-  const curQuarterSubRow = submissionRes.rows.find(r => r.quarter_start_str === curQuarterKey);
-  const prevQuarterSubRow = submissionRes.rows.find(r => r.quarter_start_str === prevQuarterKey);
+  const curQuarterSubRow = submissionRes.rows.find(
+    (r) => r.quarter_start_str === curQuarterKey
+  );
+  const prevQuarterSubRow = submissionRes.rows.find(
+    (r) => r.quarter_start_str === prevQuarterKey
+  );
 
   const curSubReady = parseInt(curQuarterSubRow?.ready_count || 0, 10);
   const curSubTotal = parseInt(curQuarterSubRow?.total_evaluations || 0, 10);
@@ -670,32 +733,35 @@ async function getDashboardStatistics(db, schema, { measurementYear, plan } = {}
 
   const prevSubReady = parseInt(prevQuarterSubRow?.ready_count || 0, 10);
   const prevSubTotal = parseInt(prevQuarterSubRow?.total_evaluations || 0, 10);
-  const prevSubRate = prevSubTotal > 0 ? (prevSubReady / prevSubTotal) * 100 : 0;
+  const prevSubRate =
+    prevSubTotal > 0 ? (prevSubReady / prevSubTotal) * 100 : 0;
 
-  const submissionReadinessDelta = parseFloat((curSubRate - prevSubRate).toFixed(1));
+  const submissionReadinessDelta = parseFloat(
+    (curSubRate - prevSubRate).toFixed(1)
+  );
 
   return {
     overallGapRate: {
       rate: parseFloat(curGapRate.toFixed(1)),
-      delta: gapRateDelta
+      delta: gapRateDelta,
     },
     numeratorCompliance: {
       rate: parseFloat(curCompRate.toFixed(1)),
-      delta: complianceDelta
+      delta: complianceDelta,
     },
     chartsCompleted: {
       completed: chartsCompleted,
       total: chartsTotal,
-      percentage: chartsPercentage
+      percentage: chartsPercentage,
     },
     qaDisagreementRate: {
       rate: parseFloat(curQARate.toFixed(1)),
-      delta: qaDisagreementDelta
+      delta: qaDisagreementDelta,
     },
     submissionReadiness: {
       rate: parseFloat(curSubRate.toFixed(1)),
-      delta: submissionReadinessDelta
-    }
+      delta: submissionReadinessDelta,
+    },
   };
 }
 
@@ -718,7 +784,11 @@ async function getDashboardStatistics(db, schema, { measurementYear, plan } = {}
  * @param {object} params - Optional measurementYear, plan filters
  * @returns {Promise<object>} chartData and tableData arrays, plus summary
  */
-async function getAbstractorProductivity(db, schema, { measurementYear, plan } = {}) {
+async function getAbstractorProductivity(
+  db,
+  schema,
+  { measurementYear, plan } = {}
+) {
   let queryValues = [];
   let filterClauses = [];
 
@@ -731,7 +801,8 @@ async function getAbstractorProductivity(db, schema, { measurementYear, plan } =
     filterClauses.push(`p.plan ILIKE $${queryValues.length}`);
   }
 
-  const patientFilterStr = filterClauses.length > 0 ? `AND ${filterClauses.join(" AND ")}` : "";
+  const patientFilterStr =
+    filterClauses.length > 0 ? `AND ${filterClauses.join(" AND ")}` : "";
 
   const query = `
     SELECT
@@ -772,9 +843,7 @@ async function getAbstractorProductivity(db, schema, { measurementYear, plan } =
     const completedPercentage =
       assigned > 0 ? Math.round((completed / assigned) * 100) : 0;
     const qaFailPercentage =
-      completed > 0
-        ? parseFloat(((qaFailed / completed) * 100).toFixed(1))
-        : 0;
+      completed > 0 ? parseFloat(((qaFailed / completed) * 100).toFixed(1)) : 0;
     const avgTime = row.avg_time_minutes
       ? `${parseFloat(row.avg_time_minutes).toFixed(1)} min`
       : "0.0 min";
@@ -797,8 +866,11 @@ async function getAbstractorProductivity(db, schema, { measurementYear, plan } =
   // Chart data: one entry per abstractor showing completed count
   const chartData = tableData.map((item) => {
     // Use last name or full name for chart label
-    const nameParts = item.abstractorName ? item.abstractorName.split(" ") : ["Unknown"];
-    const label = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0];
+    const nameParts = item.abstractorName
+      ? item.abstractorName.split(" ")
+      : ["Unknown"];
+    const label =
+      nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0];
 
     return {
       label,
@@ -817,6 +889,235 @@ async function getAbstractorProductivity(db, schema, { measurementYear, plan } =
     tableData,
   };
 }
+/**
+ * Get QA Outcomes Report - FINAL STABLE VERSION
+ */
+async function getQAOutcomesReport(
+  db,
+  schema,
+  { measurementYear, plan, measureCode } = {}
+) {
+  let queryValues = [];
+  let filterClauses = [];
+
+  if (measureCode) {
+    queryValues.push(`%${measureCode}%`);
+    filterClauses.push(`he.measure_code ILIKE $${queryValues.length}`);
+  }
+  if (measurementYear) {
+    queryValues.push(`%${measurementYear}%`);
+    filterClauses.push(`p.measure ILIKE $${queryValues.length}`);
+  }
+  if (plan) {
+    queryValues.push(`%${plan}%`);
+    filterClauses.push(`p.plan ILIKE $${queryValues.length}`);
+  }
+
+  const joinStr =
+    measurementYear || plan
+      ? `JOIN ${schema}.patients p ON he.patient_id = p.id`
+      : "";
+
+  const whereClause =
+    filterClauses.length > 0 ? `WHERE ${filterClauses.join(" AND ")}` : "";
+
+  // === MAIN QA OUTCOMES ===
+  const qaQuery = `
+    WITH qa_decisions AS (
+      SELECT measure_id, qa_status
+      FROM ${schema}.hedis_qa_measure_decisions
+    )
+    SELECT
+      COUNT(DISTINCT he.id) AS total_reviewed,
+      COUNT(CASE WHEN qd.qa_status = 'QA_PASS' THEN 1 END) AS passed,
+      COUNT(CASE WHEN qd.qa_status IS NULL THEN 1 END) AS pending,
+      COUNT(CASE WHEN qd.qa_status = 'QA_FAIL' THEN 1 END) AS failed,
+      COUNT(CASE WHEN qd.qa_status IN ('REQUEST_REVISION', 'QA_RETURNED', 'RETURNED', 'QA_REJECTED') THEN 1 END) AS returned
+    FROM ${schema}.hedis_evaluations he
+    LEFT JOIN qa_decisions qd ON he.id = qd.measure_id
+    ${joinStr}
+    ${whereClause}
+    AND he.eligible = true
+  `;
+
+  // === DISCREPANCY BREAKDOWN - SAFE VERSION ===
+  const discrepancyQuery = `
+    SELECT 
+      category,
+      COUNT(DISTINCT qmd.id) AS count
+    FROM ${schema}.hedis_qa_measure_decisions qmd
+    LEFT JOIN ${schema}.hedis_evaluations he ON qmd.measure_id = he.id
+    ${joinStr}
+    ${whereClause}
+    , jsonb_array_elements_text(COALESCE(qmd.reasons, '[]'::jsonb)) AS reason_text
+    , LATERAL (
+        SELECT CASE 
+          WHEN LOWER(reason_text) LIKE '%missing%' OR LOWER(reason_text) LIKE '%document%' THEN 'Missing Documentation'
+          WHEN LOWER(reason_text) LIKE '%date%' OR LOWER(reason_text) LIKE '%period%' 
+            OR LOWER(reason_text) LIKE '%lookback%' OR LOWER(reason_text) LIKE '%service%' 
+            THEN 'Incorrect Date / Period'
+          WHEN LOWER(reason_text) LIKE '%cpt%' OR LOWER(reason_text) LIKE '%icd%' 
+            OR LOWER(reason_text) LIKE '%code%' OR LOWER(reason_text) LIKE '%loinc%' 
+            THEN 'Coding Error (CPT/ICD)'
+          WHEN LOWER(reason_text) LIKE '%eligible%' OR LOWER(reason_text) LIKE '%eligibility%' 
+            OR LOWER(reason_text) LIKE '%member not%' 
+            THEN 'Eligibility Error'
+          ELSE NULL
+        END AS category
+      ) cat
+    WHERE qmd.qa_status IN ('QA_FAIL', 'REQUEST_REVISION', 'QA_RETURNED', 'RETURNED', 'QA_REJECTED')
+      AND cat.category IS NOT NULL
+    GROUP BY category
+  `;
+
+  const [qaResult, discrepancyResult] = await Promise.all([
+    db.query(qaQuery, queryValues),
+    db.query(discrepancyQuery, queryValues),
+  ]);
+
+  console.log("QA Failed Count:", qaResult.rows[0]?.failed || 0);
+  console.log("Discrepancy Breakdown:", discrepancyResult.rows);
+
+  const stats = qaResult.rows[0] || {
+    total_reviewed: 0,
+    passed: 0,
+    pending: 0,
+    failed: 0,
+    returned: 0,
+  };
+
+  const totalReviewed = Number(stats.total_reviewed) || 0;
+  const passed = Number(stats.passed) || 0;
+  const passRate =
+    totalReviewed > 0
+      ? parseFloat(((passed / totalReviewed) * 100).toFixed(1))
+      : 0;
+
+  let discrepancyBreakdown = discrepancyResult.rows.map((row) => ({
+    type: row.category,
+    count: Number(row.count),
+    percentage:
+      totalReviewed > 0
+        ? parseFloat(((Number(row.count) / totalReviewed) * 100).toFixed(1))
+        : 0,
+  }));
+
+  const expectedTypes = [
+    "Missing Documentation",
+    "Incorrect Date / Period",
+    "Coding Error (CPT/ICD)",
+    "Eligibility Error",
+  ];
+
+  expectedTypes.forEach((type) => {
+    if (!discrepancyBreakdown.some((d) => d.type === type)) {
+      discrepancyBreakdown.push({ type, count: 0, percentage: 0 });
+    }
+  });
+
+  discrepancyBreakdown.sort(
+    (a, b) => expectedTypes.indexOf(a.type) - expectedTypes.indexOf(b.type)
+  );
+
+  return {
+    totalReviewed,
+    passRate,
+    passed,
+    pending: Number(stats.pending) || 0,
+    failed: Number(stats.failed) || 0,
+    returned: Number(stats.returned) || 0,
+    discrepancyBreakdown,
+  };
+}
+/**
+ * Get Plan-Level Performance Report
+ *
+ * Returns chart data grouped by Plan (Medicare, Medicaid, Commercial)
+ * with Completed, Open Gap, Pending QA counts and Gap Percentage.
+ */
+async function getPlanLevelPerformance(
+  db,
+  schema,
+  { measurementYear, measureCode } = {}
+) {
+  let queryValues = [];
+  let filterClauses = [];
+
+  if (measurementYear) {
+    queryValues.push(`%${measurementYear}%`);
+    filterClauses.push(`p.measure ILIKE $${queryValues.length}`);
+  }
+  if (measureCode) {
+    queryValues.push(`%${measureCode}%`);
+    filterClauses.push(`he.measure_code ILIKE $${queryValues.length}`);
+  }
+
+  const whereClause =
+    filterClauses.length > 0 ? `WHERE ${filterClauses.join(" AND ")}` : "";
+
+  const query = `
+    SELECT 
+      p.plan,
+      COUNT(DISTINCT CASE WHEN p.stage IN ('Completed', 'QA Approved', 'QA Passed', 'Submission Ready') 
+                         THEN p.id END) AS completed,
+      COUNT(DISTINCT CASE WHEN p.stage IN ('Unassigned', 'Assigned', 'In Progress', 'Pending') 
+                         OR (p.stage IS NULL) THEN p.id END) AS open_gap,
+      COUNT(DISTINCT CASE WHEN p.stage IN ('QA Failed', 'Revision Required', 'Pending QA', 'QA Review') 
+                         THEN p.id END) AS pending_qa
+    FROM ${schema}.patients p
+    LEFT JOIN ${schema}.hedis_evaluations he ON p.id = he.patient_id
+    ${whereClause}
+    GROUP BY p.plan
+    ORDER BY p.plan
+  `;
+
+  const { rows } = await db.query(query, queryValues);
+
+  const plans = rows.map((row) => {
+    const completed = Number(row.completed) || 0;
+    const openGap = Number(row.open_gap) || 0;
+    const pendingQA = Number(row.pending_qa) || 0;
+    const total = completed + openGap + pendingQA;
+
+    const gapRate =
+      total > 0 ? parseFloat(((openGap / total) * 100).toFixed(1)) : 0;
+
+    return {
+      plan: row.plan || "Unknown",
+      completed,
+      openGap,
+      pendingQA,
+      gapRate,
+    };
+  });
+
+  // Ensure all major plans exist
+  const planOrder = ["Medicare", "Medicaid", "Commercial"];
+  const result = planOrder.map((planName) => {
+    const existing = plans.find(
+      (p) => p.plan.toLowerCase() === planName.toLowerCase()
+    );
+    return (
+      existing || {
+        plan: planName,
+        completed: 0,
+        openGap: 0,
+        pendingQA: 0,
+        gapRate: 0,
+      }
+    );
+  });
+
+  return {
+    plans: result,
+    // For AI Insight / Summary
+    summary: {
+      highestGapPlan: result.reduce((prev, curr) =>
+        prev.gapRate > curr.gapRate ? prev : curr
+      ),
+    },
+  };
+}
 
 module.exports = {
   getMeasurePerformanceReport,
@@ -825,4 +1126,6 @@ module.exports = {
   getGapClosureTrend,
   getDashboardStatistics,
   getAbstractorProductivity,
+  getQAOutcomesReport,
+  getPlanLevelPerformance,
 };

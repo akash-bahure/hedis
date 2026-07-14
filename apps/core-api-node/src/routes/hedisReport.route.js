@@ -94,8 +94,10 @@ const hedisReportController = require("../controllers/hedisReport.controller");
  *       500:
  *         description: Internal Server Error
  */
-router.get("/measure-performance", hedisReportController.getMeasurePerformanceReport);
-
+router.get(
+  "/measure-performance",
+  hedisReportController.getMeasurePerformanceReport
+);
 
 /**
  * @swagger
@@ -205,8 +207,8 @@ router.get("/measure-performance", hedisReportController.getMeasurePerformanceRe
  *         description: Internal Server Error.
  */
 router.get(
-    "/submission-readiness",
-    hedisReportController.getSubmissionReadinessReport
+  "/submission-readiness",
+  hedisReportController.getSubmissionReadinessReport
 );
 
 /**
@@ -249,8 +251,8 @@ router.get(
  *         description: Internal Server Error.
  */
 router.get(
-    "/submission-readiness/export",
-    hedisReportController.exportSubmissionReadinessReport
+  "/submission-readiness/export",
+  hedisReportController.exportSubmissionReadinessReport
 );
 
 /**
@@ -525,7 +527,10 @@ router.get("/dashboard-stats", hedisReportController.getDashboardStatistics);
  *       500:
  *         description: Internal Server Error.
  */
-router.get("/abstractor-productivity", hedisReportController.getAbstractorProductivity);
+router.get(
+  "/abstractor-productivity",
+  hedisReportController.getAbstractorProductivity
+);
 
 /**
  * @swagger
@@ -582,5 +587,55 @@ router.get("/abstractor-productivity", hedisReportController.getAbstractorProduc
  *         description: Internal Server Error.
  */
 router.get("/export", hedisReportController.exportDashboardReport);
+
+/**
+ * @swagger
+ * /api/hedis-reports/qa-outcomes:
+ *   get:
+ *     summary: Retrieve QA Outcomes Report
+ *     tags: [Hedis Reports & Analytics]
+ *     description: Returns QA pass rate, status breakdown, and discrepancy type analysis.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: measurementYear
+ *         schema: { type: string }
+ *       - in: query
+ *         name: plan
+ *         schema: { type: string }
+ *       - in: query
+ *         name: measureCode
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: QA Outcomes retrieved successfully
+ */
+router.get("/qa-outcomes", hedisReportController.getQAOutcomesReport);
+
+/**
+ * @swagger
+ * /api/hedis-reports/plan-level-performance:
+ *   get:
+ *     summary: Retrieve Plan-Level Performance
+ *     tags: [Hedis Reports & Analytics]
+ *     description: Returns performance metrics grouped by Plan (Medicare, Medicaid, Commercial)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: measurementYear
+ *         schema: { type: string }
+ *       - in: query
+ *         name: measureCode
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Plan level performance retrieved successfully
+ */
+router.get(
+  "/plan-level-performance",
+  hedisReportController.getPlanLevelPerformance
+);
 
 module.exports = router;
