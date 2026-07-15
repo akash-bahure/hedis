@@ -367,6 +367,10 @@ async function runMigrations(client, schema) {
   -- SLA
   due_date TIMESTAMP,
 
+  -- NEW FLAGS
+  qa_reviewed BOOLEAN DEFAULT FALSE,
+  audit_reviewed BOOLEAN DEFAULT FALSE,
+
   -- Relationships
   project_id UUID REFERENCES ${schema}.projects(id),
   client_id UUID REFERENCES ${schema}.clients(id),
@@ -1060,8 +1064,7 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
         ADD COLUMN IF NOT EXISTS stage TEXT,
         ADD COLUMN IF NOT EXISTS reason TEXT;
     `);
-  } catch (err) { }
-
+  } catch (err) {}
 
   await client.query(`
   CREATE TABLE IF NOT EXISTS ${schema}.timeline_events (
@@ -1156,7 +1159,7 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
         ADD COLUMN IF NOT EXISTS updated_by UUID REFERENCES ${schema}.users(id),
         ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
     `);
-  } catch (err) { }
+  } catch (err) {}
 
   try {
     await client.query(`
@@ -1183,7 +1186,7 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
         ADD COLUMN IF NOT EXISTS updated_by UUID REFERENCES ${schema}.users(id),
         ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
     `);
-  } catch (err) { }
+  } catch (err) {}
 
   // QA Review Analyses: stores AI-generated analysis results for each QA review
   await client.query(`
@@ -1211,7 +1214,7 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
         ADD COLUMN IF NOT EXISTS evaluation_id UUID REFERENCES ${schema}.hedis_evaluations(id) ON DELETE CASCADE,
         ADD COLUMN IF NOT EXISTS all_evidences JSONB;
     `);
-  } catch (err) { }
+  } catch (err) {}
 
   // QA Measure Decisions: stores granular QA results per measure
   await client.query(`
@@ -1230,6 +1233,23 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
       updated_at TIMESTAMP DEFAULT NOW()
     );
   `);
+
+  // Audit Measure Decisions: stores granular Audit results per measure
+  await client.query(`
+  CREATE TABLE IF NOT EXISTS ${schema}.hedis_audit_measure_decisions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    patient_id UUID REFERENCES ${schema}.patients(id) ON DELETE CASCADE,
+    chart_id UUID REFERENCES ${schema}.patient_charts(id) ON DELETE SET NULL,
+    measure_id UUID REFERENCES ${schema}.hedis_evaluations(id) ON DELETE SET NULL,
+    measure_code VARCHAR(50) NOT NULL,
+    measure_name TEXT,
+    audit_status VARCHAR(50), -- AUDIT_APPROVE, REQUEST_REWORK, AUDIT_FAIL
+    reasons JSONB,
+    decided_by UUID REFERENCES ${schema}.users(id),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+  );
+`);
 
   // New Clinical Timeline Supporting Tables
   await client.query(`

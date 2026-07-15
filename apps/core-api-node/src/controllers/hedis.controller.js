@@ -35,10 +35,6 @@ exports.getEvaluations = async (req, res) => {
   }
 };
 
-
-
-
-
 exports.getQAReviewDetails = async (req, res) => {
   try {
     const { evaluationId } = req.params;
@@ -92,8 +88,12 @@ exports.getQAReviewDetails = async (req, res) => {
       [evaluationId]
     );
 
-    const isNotFound = evidenceResult.rows.length > 0 && evidenceResult.rows[0].not_found === true;
-    const notFoundComment = isNotFound ? evidenceResult.rows[0].not_found_comment : null;
+    const isNotFound =
+      evidenceResult.rows.length > 0 &&
+      evidenceResult.rows[0].not_found === true;
+    const notFoundComment = isNotFound
+      ? evidenceResult.rows[0].not_found_comment
+      : null;
     const notFoundMessage = isNotFound
       ? "Measure marked as 'Evidence Not Found'. A QA reviewer will be notified to manually verify."
       : null;
@@ -204,13 +204,19 @@ exports.assignAbstractor = async (req, res) => {
     const { patientId, chartId, decisions } = req.body;
     const schema = req.tenant.schema_name;
 
-    if (!patientId || !decisions || !Array.isArray(decisions)) {
+    if (
+      !patientId ||
+      !decisions ||
+      !Array.isArray(decisions) ||
+      decisions.length === 0
+    ) {
       return res.status(400).json({
-        error: "Missing required fields: patientId, decisions",
+        error:
+          "Missing required fields: patientId and decisions (non-empty array)",
       });
     }
 
-    // Fetch abstractor
+    // Verify patient and get abstractor
     const patientResult = await client.query(
       `SELECT abstractor_id FROM ${schema}.patients WHERE id = $1`,
       [patientId]
@@ -224,15 +230,11 @@ exports.assignAbstractor = async (req, res) => {
 
     if (!assignedAbstractorId) {
       return res.status(400).json({
-        error: "No abstractor assigned to this patient in the system.",
+        error: "No abstractor assigned to this patient.",
       });
     }
 
     await client.query("BEGIN");
-
-    let finalStage = "QA Passed";
-    let hasRevision = false;
-    let hasFail = false;
 
     const processedMeasures = [];
 
@@ -240,24 +242,47 @@ exports.assignAbstractor = async (req, res) => {
       const { measureId, measureCode, measureName, qaStatus, reasons } =
         decision;
 
-      await client.query(
-        `INSERT INTO ${schema}.hedis_qa_measure_decisions
-         (patient_id, chart_id, measure_id, measure_code, measure_name, qa_status, reasons, assigned_abstractor_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      if (!measureCode) {
+        throw new Error("measureCode is required in each decision");
+      }
+
+      // UPDATE if record exists (most common case when re-sending same measure)
+      const updateResult = await client.query(
+        `UPDATE ${schema}.hedis_qa_measure_decisions
+         SET qa_status = $1,
+             reasons = $2,
+             chart_id = $3,
+             updated_at = NOW()
+         WHERE patient_id = $4 
+           AND measure_code = $5`,
         [
-          patientId,
-          chartId || null,
-          measureId || null,
-          measureCode,
-          measureName,
           qaStatus,
           JSON.stringify(reasons || []),
-          assignedAbstractorId,
+          chartId || null,
+          patientId,
+          measureCode,
         ]
       );
 
-      if (qaStatus === "REQUEST_REVISION") hasRevision = true;
-      if (qaStatus === "QA_FAIL") hasFail = true;
+      // If no record was updated, INSERT a new one
+      if (updateResult.rowCount === 0) {
+        await client.query(
+          `INSERT INTO ${schema}.hedis_qa_measure_decisions
+             (patient_id, chart_id, measure_id, measure_code, measure_name,
+              qa_status, reasons, assigned_abstractor_id, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())`,
+          [
+            patientId,
+            chartId || null,
+            measureId || null,
+            measureCode,
+            measureName || null,
+            qaStatus,
+            JSON.stringify(reasons || []),
+            assignedAbstractorId,
+          ]
+        );
+      }
 
       processedMeasures.push({
         measureId,
@@ -268,45 +293,76 @@ exports.assignAbstractor = async (req, res) => {
       });
     }
 
-    if (hasFail) finalStage = "QA Failed";
-    else if (hasRevision) finalStage = "Revision Required";
-
-    await client.query(
-      `UPDATE ${schema}.patients
-       SET assigned_to = $1, stage = $2, updated_at = NOW()
-       WHERE id = $3`,
-      [assignedAbstractorId, finalStage, patientId]
-    );
-
-    if (chartId) {
-      await client.query(
-        `INSERT INTO ${schema}.chart_assignments
-         (patient_chart_id, assigned_to, assigned_role, assignment_status, assigned_by)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [
-          chartId,
-          assignedAbstractorId,
-          "Chart Abstractor",
-          "Assigned",
-          req.user?.id || null,
-        ]
-      );
-    }
-
     await client.query("COMMIT");
 
     res.status(200).json({
-      message: "Patient assigned back to abstractor and decisions persisted",
+      message: "Measure QA decisions updated successfully",
       patientId,
-      chartId,
+      chartId: chartId || null,
       abstractorId: assignedAbstractorId,
-      finalStage,
       totalMeasures: processedMeasures.length,
       measures: processedMeasures,
     });
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Assign Abstractor Error:", err);
+    res.status(500).json({
+      error: err.message || "Failed to update measure decisions",
+    });
+  }
+};
+/**
+ * Update overall Patient QA Stage (QA Pass / Request Revision / QA Fail)
+ * Called from QA review buttons
+ */
+exports.updatePatientQAStage = async (req, res) => {
+  const client = req.db;
+  try {
+    const { patientId, action, reason, additionalNotes } = req.body;
+    const schema = req.tenant.schema_name;
+
+    if (!patientId || !action) {
+      return res.status(400).json({
+        error: "patientId and action are required",
+      });
+    }
+
+    const validActions = ["QA_PASS", "REQUEST_REVISION", "QA_FAIL"];
+    if (!validActions.includes(action)) {
+      return res.status(400).json({
+        error: `Invalid action. Allowed: ${validActions.join(", ")}`,
+      });
+    }
+
+    let finalStage = "QA Passed";
+    if (action === "REQUEST_REVISION") finalStage = "Revision Required";
+    else if (action === "QA_FAIL") finalStage = "QA Failed";
+
+    await client.query("BEGIN");
+
+    // Update only the patient stage
+    await client.query(
+      `UPDATE ${schema}.patients
+       SET stage = $1,
+           qa_reviewed = TRUE,
+           updated_at = NOW()
+       WHERE id = $2`,
+      [finalStage, patientId]
+    );
+
+    await client.query("COMMIT");
+
+    res.status(200).json({
+      message: `Patient QA stage updated successfully to "${finalStage}"`,
+      patientId,
+      action,
+      finalStage,
+      reason: reason || null,
+      additionalNotes: additionalNotes || null,
+    });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("Update Patient QA Stage Error:", err);
     res.status(500).json({
       error: err.message,
     });
@@ -549,7 +605,7 @@ exports.submitAbstractorQA = async (req, res) => {
       return res.status(400).json({
         success: false,
         error: "Supporting document is required.",
-        message: "Supporting document is required."
+        message: "Supporting document is required.",
       });
     }
 
@@ -1161,14 +1217,8 @@ exports.addMissingEvidence = async (req, res) => {
   const schema = req.tenant.schema_name;
 
   try {
-    const {
-      patientId,
-      chartId,
-      eventTitle,
-      summary,
-      eventDate,
-      documentType,
-    } = req.body;
+    const { patientId, chartId, eventTitle, summary, eventDate, documentType } =
+      req.body;
 
     // 1. Validate required fields
     if (!patientId || !eventTitle) {
@@ -1191,7 +1241,9 @@ exports.addMissingEvidence = async (req, res) => {
     // 3. Derive values from request / logged-in user
     const effectiveDate = eventDate ? new Date(eventDate) : new Date();
     const year = effectiveDate.getFullYear();
-    const month = new Intl.DateTimeFormat("en-US", { month: "long" }).format(effectiveDate);
+    const month = new Intl.DateTimeFormat("en-US", { month: "long" }).format(
+      effectiveDate
+    );
     const provider =
       req.user?.full_name || req.user?.name || req.user?.email || "Abstractor";
 
@@ -1247,8 +1299,9 @@ exports.addMissingEvidence = async (req, res) => {
   } catch (err) {
     console.error("Add Missing Evidence Error:", err);
     return res.status(500).json({
-      error: err.message || "An unexpected error occurred while adding missing evidence",
+      error:
+        err.message ||
+        "An unexpected error occurred while adding missing evidence",
     });
   }
 };
-
