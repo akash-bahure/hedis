@@ -10,6 +10,14 @@ export type { GetApiAuditLogsExportSuspenseQueryKey } from "./hooks/Audit LogsHo
 export type { GetApiAuditLogsExportSuspenseInfiniteQueryKey } from "./hooks/Audit LogsHooks/useGetApiAuditLogsExportSuspenseInfinite.ts";
 export type { GetApiAuditLogsSuspenseQueryKey } from "./hooks/Audit LogsHooks/useGetApiAuditLogsSuspense.ts";
 export type { GetApiAuditLogsSuspenseInfiniteQueryKey } from "./hooks/Audit LogsHooks/useGetApiAuditLogsSuspenseInfinite.ts";
+export type { GetApiAuditMeasuresPatientidQueryKey } from "./hooks/Audit SamplingHooks/useGetApiAuditMeasuresPatientid.ts";
+export type { GetApiAuditMeasuresPatientidSuspenseQueryKey } from "./hooks/Audit SamplingHooks/useGetApiAuditMeasuresPatientidSuspense.ts";
+export type { GetApiAuditMeasuresPatientidSuspenseInfiniteQueryKey } from "./hooks/Audit SamplingHooks/useGetApiAuditMeasuresPatientidSuspenseInfinite.ts";
+export type { GetApiAuditQueueQueryKey } from "./hooks/Audit SamplingHooks/useGetApiAuditQueue.ts";
+export type { GetApiAuditQueueSuspenseQueryKey } from "./hooks/Audit SamplingHooks/useGetApiAuditQueueSuspense.ts";
+export type { GetApiAuditQueueSuspenseInfiniteQueryKey } from "./hooks/Audit SamplingHooks/useGetApiAuditQueueSuspenseInfinite.ts";
+export type { PostApiAuditAuditStageMutationKey } from "./hooks/Audit SamplingHooks/usePostApiAuditAuditStage.ts";
+export type { PostApiAuditDecisionsMutationKey } from "./hooks/Audit SamplingHooks/usePostApiAuditDecisions.ts";
 export type { PostApiAuthForgotPasswordMutationKey } from "./hooks/AuthHooks/usePostApiAuthForgotPassword.ts";
 export type { PostApiAuthLoginMutationKey } from "./hooks/AuthHooks/usePostApiAuthLogin.ts";
 export type { PostApiAuthLogoutMutationKey } from "./hooks/AuthHooks/usePostApiAuthLogout.ts";
@@ -107,6 +115,7 @@ export type { PostApiHedisAbstractorSubmitQaMutationKey } from "./hooks/HEDISHoo
 export type { PostApiHedisAddMeasureMutationKey } from "./hooks/HEDISHooks/usePostApiHedisAddMeasure.ts";
 export type { PostApiHedisAddMissingEvidenceMutationKey } from "./hooks/HEDISHooks/usePostApiHedisAddMissingEvidence.ts";
 export type { PostApiHedisAssignAbstractorMutationKey } from "./hooks/HEDISHooks/usePostApiHedisAssignAbstractor.ts";
+export type { PostApiHedisPatientQaStageMutationKey } from "./hooks/HEDISHooks/usePostApiHedisPatientQaStage.ts";
 export type { PostApiHedisRecalculateQaMutationKey } from "./hooks/HEDISHooks/usePostApiHedisRecalculateQa.ts";
 export type { GetApiHedisReportsAbstractorProductivityQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsAbstractorProductivity.ts";
 export type { GetApiHedisReportsAbstractorProductivitySuspenseQueryKey } from "./hooks/Hedis Reports & AnalyticsHooks/useGetApiHedisReportsAbstractorProductivitySuspense.ts";
@@ -382,6 +391,20 @@ export type {
   GetApiAuditLogsExportQueryParamsStatusEnumKey,
   GetApiAuditLogsExportQueryResponse,
 } from "./types/GetApiAuditLogsExport.ts";
+export type {
+  GetApiAuditMeasuresPatientid200,
+  GetApiAuditMeasuresPatientid404,
+  GetApiAuditMeasuresPatientidPathParams,
+  GetApiAuditMeasuresPatientidQuery,
+  GetApiAuditMeasuresPatientidQueryResponse,
+} from "./types/GetApiAuditMeasuresPatientid.ts";
+export type {
+  GetApiAuditQueue200,
+  GetApiAuditQueue500,
+  GetApiAuditQueueQuery,
+  GetApiAuditQueueQueryParams,
+  GetApiAuditQueueQueryResponse,
+} from "./types/GetApiAuditQueue.ts";
 export type {
   GetApiChartsChartidAbstractionSummary200,
   GetApiChartsChartidAbstractionSummary404,
@@ -1071,6 +1094,22 @@ export type {
   PostAdminUsersMutationResponse,
 } from "./types/PostAdminUsers.ts";
 export type {
+  PostApiAuditAuditStageMutation,
+  PostApiAuditStage200,
+  PostApiAuditStage400,
+  PostApiAuditStage500,
+  PostApiAuditStageMutationRequest,
+  PostApiAuditStageMutationRequestActionEnumKey,
+  PostApiAuditStageMutationResponse,
+} from "./types/PostApiAuditAuditStage.ts";
+export type {
+  DecisionsAuditStatusEnumKey,
+  PostApiAuditDecisions200,
+  PostApiAuditDecisionsMutation,
+  PostApiAuditDecisionsMutationRequest,
+  PostApiAuditDecisionsMutationResponse,
+} from "./types/PostApiAuditDecisions.ts";
+export type {
   PostApiAuthForgotPassword200,
   PostApiAuthForgotPassword400,
   PostApiAuthForgotPassword500,
@@ -1257,6 +1296,13 @@ export type {
   PostApiHedisClinicalTimelineReviewMutationResponse,
 } from "./types/PostApiHedisClinicalTimelineReview.ts";
 export type {
+  PostApiHedisPatientQaStage200,
+  PostApiHedisPatientQaStageMutation,
+  PostApiHedisPatientQaStageMutationRequest,
+  PostApiHedisPatientQaStageMutationRequestActionEnumKey,
+  PostApiHedisPatientQaStageMutationResponse,
+} from "./types/PostApiHedisPatientQaStage.ts";
+export type {
   PostApiHedisRecalculateQa200,
   PostApiHedisRecalculateQa400,
   PostApiHedisRecalculateQa404,
@@ -1429,6 +1475,8 @@ export { getAdminUsers } from "./clients/getAdminUsers.ts";
 export { getApiAccessLogsAccessMonitor } from "./clients/getApiAccessLogsAccessMonitor.ts";
 export { getApiAuditLogs } from "./clients/getApiAuditLogs.ts";
 export { getApiAuditLogsExport } from "./clients/getApiAuditLogsExport.ts";
+export { getApiAuditMeasuresPatientid } from "./clients/getApiAuditMeasuresPatientid.ts";
+export { getApiAuditQueue } from "./clients/getApiAuditQueue.ts";
 export { getApiChartsChartidAbstractionSummary } from "./clients/getApiChartsChartidAbstractionSummary.ts";
 export { getApiChartsJobsJobid } from "./clients/getApiChartsJobsJobid.ts";
 export { getApiClients } from "./clients/getApiClients.ts";
@@ -1519,6 +1567,8 @@ export { postAdminOrgs } from "./clients/postAdminOrgs.ts";
 export { postAdminOrgsIdSyncMedicalCoding } from "./clients/postAdminOrgsIdSyncMedicalCoding.ts";
 export { postAdminOrgsOrgIdTenantAdmins } from "./clients/postAdminOrgsOrgIdTenantAdmins.ts";
 export { postAdminUsers } from "./clients/postAdminUsers.ts";
+export { postApiAuditAuditStage } from "./clients/postApiAuditAuditStage.ts";
+export { postApiAuditDecisions } from "./clients/postApiAuditDecisions.ts";
 export { postApiAuthForgotPassword } from "./clients/postApiAuthForgotPassword.ts";
 export { postApiAuthLogin } from "./clients/postApiAuthLogin.ts";
 export { postApiAuthLogout } from "./clients/postApiAuthLogout.ts";
@@ -1542,6 +1592,7 @@ export { postApiHedisAddMeasure } from "./clients/postApiHedisAddMeasure.ts";
 export { postApiHedisAddMissingEvidence } from "./clients/postApiHedisAddMissingEvidence.ts";
 export { postApiHedisAssignAbstractor } from "./clients/postApiHedisAssignAbstractor.ts";
 export { postApiHedisClinicalTimelineReview } from "./clients/postApiHedisClinicalTimelineReview.ts";
+export { postApiHedisPatientQaStage } from "./clients/postApiHedisPatientQaStage.ts";
 export { postApiHedisRecalculateQa } from "./clients/postApiHedisRecalculateQa.ts";
 export { postApiPatientsIdAssign } from "./clients/postApiPatientsIdAssign.ts";
 export { postApiPatientsPatientidChartsUpload } from "./clients/postApiPatientsPatientidChartsUpload.ts";
@@ -1596,6 +1647,30 @@ export { useGetApiAuditLogsSuspense } from "./hooks/Audit LogsHooks/useGetApiAud
 export { getApiAuditLogsSuspenseInfiniteQueryKey } from "./hooks/Audit LogsHooks/useGetApiAuditLogsSuspenseInfinite.ts";
 export { getApiAuditLogsSuspenseInfiniteQueryOptions } from "./hooks/Audit LogsHooks/useGetApiAuditLogsSuspenseInfinite.ts";
 export { useGetApiAuditLogsSuspenseInfinite } from "./hooks/Audit LogsHooks/useGetApiAuditLogsSuspenseInfinite.ts";
+export { getApiAuditMeasuresPatientidQueryKey } from "./hooks/Audit SamplingHooks/useGetApiAuditMeasuresPatientid.ts";
+export { getApiAuditMeasuresPatientidQueryOptions } from "./hooks/Audit SamplingHooks/useGetApiAuditMeasuresPatientid.ts";
+export { useGetApiAuditMeasuresPatientid } from "./hooks/Audit SamplingHooks/useGetApiAuditMeasuresPatientid.ts";
+export { getApiAuditMeasuresPatientidSuspenseQueryKey } from "./hooks/Audit SamplingHooks/useGetApiAuditMeasuresPatientidSuspense.ts";
+export { getApiAuditMeasuresPatientidSuspenseQueryOptions } from "./hooks/Audit SamplingHooks/useGetApiAuditMeasuresPatientidSuspense.ts";
+export { useGetApiAuditMeasuresPatientidSuspense } from "./hooks/Audit SamplingHooks/useGetApiAuditMeasuresPatientidSuspense.ts";
+export { getApiAuditMeasuresPatientidSuspenseInfiniteQueryKey } from "./hooks/Audit SamplingHooks/useGetApiAuditMeasuresPatientidSuspenseInfinite.ts";
+export { getApiAuditMeasuresPatientidSuspenseInfiniteQueryOptions } from "./hooks/Audit SamplingHooks/useGetApiAuditMeasuresPatientidSuspenseInfinite.ts";
+export { useGetApiAuditMeasuresPatientidSuspenseInfinite } from "./hooks/Audit SamplingHooks/useGetApiAuditMeasuresPatientidSuspenseInfinite.ts";
+export { getApiAuditQueueQueryKey } from "./hooks/Audit SamplingHooks/useGetApiAuditQueue.ts";
+export { getApiAuditQueueQueryOptions } from "./hooks/Audit SamplingHooks/useGetApiAuditQueue.ts";
+export { useGetApiAuditQueue } from "./hooks/Audit SamplingHooks/useGetApiAuditQueue.ts";
+export { getApiAuditQueueSuspenseQueryKey } from "./hooks/Audit SamplingHooks/useGetApiAuditQueueSuspense.ts";
+export { getApiAuditQueueSuspenseQueryOptions } from "./hooks/Audit SamplingHooks/useGetApiAuditQueueSuspense.ts";
+export { useGetApiAuditQueueSuspense } from "./hooks/Audit SamplingHooks/useGetApiAuditQueueSuspense.ts";
+export { getApiAuditQueueSuspenseInfiniteQueryKey } from "./hooks/Audit SamplingHooks/useGetApiAuditQueueSuspenseInfinite.ts";
+export { getApiAuditQueueSuspenseInfiniteQueryOptions } from "./hooks/Audit SamplingHooks/useGetApiAuditQueueSuspenseInfinite.ts";
+export { useGetApiAuditQueueSuspenseInfinite } from "./hooks/Audit SamplingHooks/useGetApiAuditQueueSuspenseInfinite.ts";
+export { postApiAuditAuditStageMutationKey } from "./hooks/Audit SamplingHooks/usePostApiAuditAuditStage.ts";
+export { postApiAuditAuditStageMutationOptions } from "./hooks/Audit SamplingHooks/usePostApiAuditAuditStage.ts";
+export { usePostApiAuditAuditStage } from "./hooks/Audit SamplingHooks/usePostApiAuditAuditStage.ts";
+export { postApiAuditDecisionsMutationKey } from "./hooks/Audit SamplingHooks/usePostApiAuditDecisions.ts";
+export { postApiAuditDecisionsMutationOptions } from "./hooks/Audit SamplingHooks/usePostApiAuditDecisions.ts";
+export { usePostApiAuditDecisions } from "./hooks/Audit SamplingHooks/usePostApiAuditDecisions.ts";
 export { postApiAuthForgotPasswordMutationKey } from "./hooks/AuthHooks/usePostApiAuthForgotPassword.ts";
 export { postApiAuthForgotPasswordMutationOptions } from "./hooks/AuthHooks/usePostApiAuthForgotPassword.ts";
 export { usePostApiAuthForgotPassword } from "./hooks/AuthHooks/usePostApiAuthForgotPassword.ts";
@@ -1887,6 +1962,9 @@ export { usePostApiHedisAddMissingEvidence } from "./hooks/HEDISHooks/usePostApi
 export { postApiHedisAssignAbstractorMutationKey } from "./hooks/HEDISHooks/usePostApiHedisAssignAbstractor.ts";
 export { postApiHedisAssignAbstractorMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisAssignAbstractor.ts";
 export { usePostApiHedisAssignAbstractor } from "./hooks/HEDISHooks/usePostApiHedisAssignAbstractor.ts";
+export { postApiHedisPatientQaStageMutationKey } from "./hooks/HEDISHooks/usePostApiHedisPatientQaStage.ts";
+export { postApiHedisPatientQaStageMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisPatientQaStage.ts";
+export { usePostApiHedisPatientQaStage } from "./hooks/HEDISHooks/usePostApiHedisPatientQaStage.ts";
 export { postApiHedisRecalculateQaMutationKey } from "./hooks/HEDISHooks/usePostApiHedisRecalculateQa.ts";
 export { postApiHedisRecalculateQaMutationOptions } from "./hooks/HEDISHooks/usePostApiHedisRecalculateQa.ts";
 export { usePostApiHedisRecalculateQa } from "./hooks/HEDISHooks/usePostApiHedisRecalculateQa.ts";
@@ -2512,6 +2590,8 @@ export { patchApiUsersIdMutationRequestShiftEnum } from "./types/PatchApiUsersId
 export { patchApiUsersIdMutationRequestUserStatusEnum } from "./types/PatchApiUsersId.ts";
 export { patchApiUsersIdMutationRequestUserTypeEnum } from "./types/PatchApiUsersId.ts";
 export { schedulesShiftEnum } from "./types/PatchApiUsersShifts.ts";
+export { postApiAuditStageMutationRequestActionEnum } from "./types/PostApiAuditAuditStage.ts";
+export { decisionsAuditStatusEnum } from "./types/PostApiAuditDecisions.ts";
 export { assignedUsersAssignedRoleEnum } from "./types/PostApiChartAssignmentsBulkAssign.ts";
 export { postApiChartAssignmentsBulkAssignMutationRequestPriorityEnum } from "./types/PostApiChartAssignmentsBulkAssign.ts";
 export { postApiClientsMutationRequestContractTypeEnum } from "./types/PostApiClients.ts";
@@ -2521,6 +2601,7 @@ export { postApiClientsMutationRequestRegionEnum } from "./types/PostApiClients.
 export { postApiClientsMutationRequestStatusEnum } from "./types/PostApiClients.ts";
 export { decisionsQaStatusEnum } from "./types/PostApiHedisAssignAbstractor.ts";
 export { postApiHedisClinicalTimelineReviewMutationRequestStatusEnum } from "./types/PostApiHedisClinicalTimelineReview.ts";
+export { postApiHedisPatientQaStageMutationRequestActionEnum } from "./types/PostApiHedisPatientQaStage.ts";
 export { postApiPatientsIdAssignMutationRequestRoleEnum } from "./types/PostApiPatientsIdAssign.ts";
 export { postApiProjectsMutationRequestPriorityEnum } from "./types/PostApiProjects.ts";
 export { postApiProjectsMutationRequestProjectTypeEnum } from "./types/PostApiProjects.ts";
@@ -2580,6 +2661,30 @@ export {
   getApiAuditLogsQueryParamsSchema,
   getApiAuditLogsQueryResponseSchema,
 } from "./zod/Audit LogsSchemas/getApiAuditLogsSchema.ts";
+export {
+  getApiAuditMeasuresPatientid200Schema,
+  getApiAuditMeasuresPatientid404Schema,
+  getApiAuditMeasuresPatientidPathParamsSchema,
+  getApiAuditMeasuresPatientidQueryResponseSchema,
+} from "./zod/Audit SamplingSchemas/getApiAuditMeasuresPatientidSchema.ts";
+export {
+  getApiAuditQueue200Schema,
+  getApiAuditQueue500Schema,
+  getApiAuditQueueQueryParamsSchema,
+  getApiAuditQueueQueryResponseSchema,
+} from "./zod/Audit SamplingSchemas/getApiAuditQueueSchema.ts";
+export {
+  postApiAuditStage200Schema,
+  postApiAuditStage400Schema,
+  postApiAuditStage500Schema,
+  postApiAuditStageMutationRequestSchema,
+  postApiAuditStageMutationResponseSchema,
+} from "./zod/Audit SamplingSchemas/postApiAuditAuditStageSchema.ts";
+export {
+  postApiAuditDecisions200Schema,
+  postApiAuditDecisionsMutationRequestSchema,
+  postApiAuditDecisionsMutationResponseSchema,
+} from "./zod/Audit SamplingSchemas/postApiAuditDecisionsSchema.ts";
 export {
   postApiAuthForgotPassword200Schema,
   postApiAuthForgotPassword400Schema,
@@ -2871,6 +2976,11 @@ export {
   postApiHedisAssignAbstractorMutationRequestSchema,
   postApiHedisAssignAbstractorMutationResponseSchema,
 } from "./zod/HEDISSchemas/postApiHedisAssignAbstractorSchema.ts";
+export {
+  postApiHedisPatientQaStage200Schema,
+  postApiHedisPatientQaStageMutationRequestSchema,
+  postApiHedisPatientQaStageMutationResponseSchema,
+} from "./zod/HEDISSchemas/postApiHedisPatientQaStageSchema.ts";
 export {
   postApiHedisRecalculateQa200Schema,
   postApiHedisRecalculateQa400Schema,
