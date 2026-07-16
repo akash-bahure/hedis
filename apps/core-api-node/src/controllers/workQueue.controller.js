@@ -159,6 +159,8 @@ exports.getWorkQueue = async (req, res) => {
         p.assigned_to,
         p.abstractor_id,
         p.qa_id,
+        p.qa_reviewed,
+        p.audit_reviewed,
         pc.id AS chart_uuid,
         pc.chart_id,
         pc.status AS chart_status,

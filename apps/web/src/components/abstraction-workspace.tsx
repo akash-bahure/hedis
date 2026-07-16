@@ -56,7 +56,7 @@ import {
   useGetApiProfileMe,
   usePostApiHedisAbstractorMarkNotFound,
   usePostApiHedisAbstractorSaveDraft,
-  usePostApiHedisSendToQa,
+  // usePostApiHedisSendToQa,
   usePostApiHedisAddMissingEvidence,
   getApiHedisEvidenceTimelineIdQueryKey,
   getApiHedisAbstractorDraftPatientidQueryKey,
