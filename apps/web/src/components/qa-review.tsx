@@ -46,6 +46,7 @@ import {
   useGetApiHedisEvaluationsId,
   usePostApiHedisAssignAbstractor,
   usePostApiHedisAddMissingEvidence,
+  usePostApiHedisPatientQaStage,
 } from "@/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -779,7 +780,7 @@ export function QAReview({
   onOpenPatient360: () => void;
   onBack: () => void;
 }) {
-  console.log("🔍 QAReview component mounted with patientId:", patientId);
+  console.log(" QAReview component mounted with patientId:", patientId);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [queueSearch, setQueueSearch] = useState("");
   const [queueFilter, setQueueFilter] = useState<
@@ -814,6 +815,14 @@ export function QAReview({
     >
   >({});
   const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
+
+  const [showHeaderModal, setShowHeaderModal] = useState<boolean>(false);
+  const [pendingAction, setPendingAction] = useState<
+    "qaPass" | "qaFail" | "requestRevision" | null
+  >(null);
+  const [headerReason, setHeaderReason] = useState<string>("");
+  const [headerNote, setHeaderNote] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // Array of individual word tokens from the highlight phrase.
   // PDF.js splits text into one span per word, so we must match token-by-token.
@@ -876,6 +885,10 @@ export function QAReview({
       );
     };
   }, [currentHighlightWords]);
+
+  // QA Stage Update Mutation (Header buttons)
+  const { mutateAsync: updateQaStage, isPending: isQaStageUpdating } =
+    usePostApiHedisPatientQaStage();
 
   // === FETCH EVALUATIONS ===
   const { data: evaluationsData, isLoading: evalLoading } =
@@ -1228,6 +1241,58 @@ export function QAReview({
     }
   };
 
+  // ========== HEADER QA STAGE ACTION HANDLER ==========
+const handleHeaderQaAction = async () => {
+  if (!patientId || !pendingAction) {
+    toast.error("No patient selected or action not specified");
+    return;
+  }
+
+  if ((pendingAction === "qaFail" || pendingAction === "requestRevision") && !headerReason) {
+    toast.error("Please select a reason");
+    return;
+  }
+
+  const actionMap: Record<"qaPass" | "qaFail" | "requestRevision", string> = {
+    qaPass: "QA_PASS",
+    qaFail: "QA_FAIL",
+    requestRevision: "REQUEST_REVISION",
+  };
+
+  setIsSubmitting(true);
+  try {
+    await updateQaStage({
+      data: {
+        patientId,
+        action: actionMap[pendingAction] as any,
+        reason: headerReason || undefined,
+        additionalNotes: headerNote || undefined,
+      },
+    });
+
+    toast.success(
+      pendingAction === "qaPass"
+        ? "QA Passed successfully!"
+        : pendingAction === "qaFail"
+          ? "QA Failed & returned"
+          : "Revision requested successfully!"
+    );
+
+    // Reset & close
+    setShowHeaderModal(false);
+    setPendingAction(null);
+    setHeaderReason("");
+    setHeaderNote("");
+
+    // Optional: refresh data
+    queryClient.invalidateQueries({ queryKey: ["qa-review", patientId] });
+  } catch (error: any) {
+    toast.error(error?.response?.data?.message || "Failed to update QA stage");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
   return (
     <div className="flex h-full overflow-hidden bg-background">
       {/* ══════════════════════════════════════════════════════
@@ -1363,42 +1428,53 @@ export function QAReview({
               </button>
 
               <div className="w-px h-5 bg-border" />
-
               <button
-                onClick={() => handleDecisionClick("requestRevision")}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${
-                  decision === "requestRevision"
-                    ? "bg-amber-500 text-white border-amber-500 shadow-sm"
-                    : "border-amber-300 text-amber-700 hover:bg-amber-50"
-                }`}
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                Request Revision
-              </button>
+    onClick={() => {
+      setPendingAction("requestRevision");
+      setHeaderReason("");
+      setHeaderNote("");
+      setShowHeaderModal(true);
+    }}
+    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${
+      decision === "requestRevision"
+        ? "bg-amber-500 text-white border-amber-500"
+        : "border-amber-300 text-amber-700 hover:bg-amber-50"
+    }`}
+  >
+    <RotateCcw className="w-3.5 h-3.5" /> Request Revision
+  </button>
 
-              <button
-                onClick={() => handleDecisionClick("qaFail")}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${
-                  decision === "qaFail"
-                    ? "bg-red-600 text-white border-red-600 shadow-sm"
-                    : "border-red-300 text-red-700 hover:bg-red-50"
-                }`}
-              >
-                <XCircle className="w-3.5 h-3.5" />
-                QA Fail
-              </button>
+  <button
+    onClick={() => {
+      setPendingAction("qaFail");
+      setHeaderReason("");
+      setHeaderNote("");
+      setShowHeaderModal(true);
+    }}
+    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${
+      decision === "qaFail"
+        ? "bg-red-600 text-white border-red-600"
+        : "border-red-300 text-red-700 hover:bg-red-50"
+    }`}
+  >
+    <XCircle className="w-3.5 h-3.5" /> QA Fail
+  </button>
 
-              <button
-                onClick={() => handleDecisionClick("qaPass")}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${
-                  decision === "qaPass"
-                    ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-                    : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"
-                }`}
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                QA Pass
-              </button>
+  <button
+    onClick={() => {
+      setPendingAction("qaPass");
+      setHeaderReason("");
+      setHeaderNote("");
+      setShowHeaderModal(true);
+    }}
+    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${
+      decision === "qaPass"
+        ? "bg-emerald-600 text-white border-emerald-600"
+        : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+    }`}
+  >
+    <CheckCircle2 className="w-3.5 h-3.5" /> QA Pass
+  </button>
             </div>
           </div>
 
@@ -2249,6 +2325,60 @@ export function QAReview({
         setFormData={setAddEvidenceForm}
         isSubmitting={addMissingEvidenceMutation.isPending}
       />
+
+      {/* HEADER QA ACTION MODAL */}
+{showHeaderModal && pendingAction && (
+  <>
+    <div className="fixed inset-0 bg-black/60 z-[70]" onClick={() => setShowHeaderModal(false)} />
+    <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-2 sm:p-4">
+      <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-lg mx-3 sm:mx-0 max-h-[90vh] flex flex-col overflow-hidden">
+        {/* Modal Header */}
+        <div className={`px-6 py-4 border-b border-border flex items-start gap-3 ${pendingAction === "qaPass" ? "bg-emerald-50" : pendingAction === "qaFail" ? "bg-red-50" : "bg-amber-50"}`}>
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${pendingAction === "qaPass" ? "bg-emerald-100" : pendingAction === "qaFail" ? "bg-red-100" : "bg-amber-100"}`}>
+            {pendingAction === "qaPass" && <CheckCircle2 className="w-5 h-5 text-emerald-600" />}
+            {pendingAction === "qaFail" && <XCircle className="w-5 h-5 text-red-600" />}
+            {pendingAction === "requestRevision" && <RotateCcw className="w-5 h-5 text-amber-600" />}
+          </div>
+          <div>
+            <p className={`font-bold ${pendingAction === "qaPass" ? "text-emerald-700" : pendingAction === "qaFail" ? "text-red-700" : "text-amber-700"}`}>
+              {pendingAction === "qaPass" ? "Confirm QA Pass" : pendingAction === "qaFail" ? "Confirm QA Fail" : "Confirm Revision Request"}
+            </p>
+            <p className="text-[11px] text-muted-foreground">This will update patient QA stage</p>
+          </div>
+          <button onClick={() => { setShowHeaderModal(false); setPendingAction(null); }} className="ml-auto">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-6 space-y-5">
+          {(pendingAction === "qaFail" || pendingAction === "requestRevision") && (
+            <div>
+              <label className="block text-xs font-bold mb-1.5">Reason <span className="text-red-500">*</span></label>
+              <select value={headerReason} onChange={(e) => setHeaderReason(e.target.value)} className="w-full px-3 py-2 border rounded-lg">
+                <option value="">— Select reason —</option>
+                {FAIL_REASONS.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-bold mb-1.5">Additional Notes</label>
+            <textarea value={headerNote} onChange={(e) => setHeaderNote(e.target.value)} rows={3} className="w-full px-3 py-2 border rounded-lg" placeholder="Optional comments..." />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t flex justify-end gap-3">
+          <button onClick={() => { setShowHeaderModal(false); setPendingAction(null); }} className="px-4 py-2 border rounded-lg">Cancel</button>
+          <button onClick={handleHeaderQaAction} disabled={isSubmitting} className="px-6 py-2 bg-primary text-white font-bold rounded-lg disabled:opacity-50">
+            {isSubmitting ? "Processing..." : "Confirm"}
+          </button>
+        </div>
+      </div>
+    </div>
+  </>
+)}
     </div>
   );
 }
