@@ -890,7 +890,7 @@ async function getAbstractorProductivity(
   };
 }
 /**
- * Get QA Outcomes Report - FINAL STABLE VERSION
+ * Get QA Outcomes Report - FIXED VERSION
  */
 async function getQAOutcomesReport(
   db,
@@ -940,18 +940,54 @@ async function getQAOutcomesReport(
     AND he.eligible = true
   `;
 
-  // === DISCREPANCY BREAKDOWN - SAFE VERSION ===
+  // === DISCREPANCY BREAKDOWN - FIXED VERSION ===
+  // Build WHERE clause for discrepancy query
+  let discFilterClauses = [];
+  let discQueryValues = [];
+
+  if (measureCode) {
+    discQueryValues.push(`%${measureCode}%`);
+    discFilterClauses.push(`he.measure_code ILIKE $${discQueryValues.length}`);
+  }
+  if (measurementYear) {
+    discQueryValues.push(`%${measurementYear}%`);
+    discFilterClauses.push(`p.measure ILIKE $${discQueryValues.length}`);
+  }
+  if (plan) {
+    discQueryValues.push(`%${plan}%`);
+    discFilterClauses.push(`p.plan ILIKE $${discQueryValues.length}`);
+  }
+
+  const discJoinStr =
+    measurementYear || plan
+      ? `LEFT JOIN ${schema}.patients p ON he.patient_id = p.id`
+      : "";
+  const discWhereClause =
+    discFilterClauses.length > 0
+      ? `AND ${discFilterClauses.join(" AND ")}`
+      : "";
+
   const discrepancyQuery = `
-    SELECT 
-      category,
-      COUNT(DISTINCT qmd.id) AS count
-    FROM ${schema}.hedis_qa_measure_decisions qmd
-    LEFT JOIN ${schema}.hedis_evaluations he ON qmd.measure_id = he.id
-    ${joinStr}
-    ${whereClause}
-    , jsonb_array_elements_text(COALESCE(qmd.reasons, '[]'::jsonb)) AS reason_text
-    , LATERAL (
-        SELECT CASE 
+    WITH qa_failures AS (
+      SELECT 
+        qmd.id,
+        qmd.measure_id,
+        qmd.qa_status,
+        qmd.reasons,
+        he.measure_code,
+        he.patient_id
+      FROM ${schema}.hedis_qa_measure_decisions qmd
+      LEFT JOIN ${schema}.hedis_evaluations he ON qmd.measure_id = he.id
+      ${discJoinStr}
+      WHERE qmd.qa_status IN ('QA_FAIL', 'REQUEST_REVISION', 'QA_RETURNED', 'RETURNED', 'QA_REJECTED')
+        ${discWhereClause}
+    ),
+    expanded_reasons AS (
+      SELECT 
+        id,
+        measure_id,
+        reason_text,
+        CASE 
           WHEN LOWER(reason_text) LIKE '%missing%' OR LOWER(reason_text) LIKE '%document%' THEN 'Missing Documentation'
           WHEN LOWER(reason_text) LIKE '%date%' OR LOWER(reason_text) LIKE '%period%' 
             OR LOWER(reason_text) LIKE '%lookback%' OR LOWER(reason_text) LIKE '%service%' 
@@ -964,15 +1000,20 @@ async function getQAOutcomesReport(
             THEN 'Eligibility Error'
           ELSE NULL
         END AS category
-      ) cat
-    WHERE qmd.qa_status IN ('QA_FAIL', 'REQUEST_REVISION', 'QA_RETURNED', 'RETURNED', 'QA_REJECTED')
-      AND cat.category IS NOT NULL
+      FROM qa_failures qf
+      CROSS JOIN LATERAL jsonb_array_elements_text(COALESCE(qf.reasons, '[]'::jsonb)) AS reason_text
+    )
+    SELECT 
+      category,
+      COUNT(DISTINCT id) AS count
+    FROM expanded_reasons
+    WHERE category IS NOT NULL
     GROUP BY category
   `;
 
   const [qaResult, discrepancyResult] = await Promise.all([
     db.query(qaQuery, queryValues),
-    db.query(discrepancyQuery, queryValues),
+    db.query(discrepancyQuery, discQueryValues),
   ]);
 
   console.log("QA Failed Count:", qaResult.rows[0]?.failed || 0);

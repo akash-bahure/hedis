@@ -139,5 +139,6 @@ app.use("/api/hedis", require("./routes/hedis.routes"));
 app.use("/api/recent-activity", require("./routes/recentActivity.routes"));
 app.use("/api/dashboard", require("./routes/dashboardAnalytics.routes"));
 app.use("/api/reports", require("./routes/reports.routes"));
-app.use("/api/hedis-reports", require("./routes/hedisReport.route"))
+app.use("/api/hedis-reports", require("./routes/hedisReport.route"));
+app.use("/api/audit", require("./routes/auditSampling.route"));
 module.exports = app;

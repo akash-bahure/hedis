@@ -52,7 +52,7 @@ import {
   usePostApiHedisClinicalTimelineReview,
   usePostApiHedisRecalculateQa,
   // usePostApiHedisEvaluateId,
-  usePostApiHedisSendToQa,
+  // usePostApiHedisSendToQa,
   useGetApiMeasureLibrary, // ← NEW
   usePostApiHedisAddMeasure, // ← NEW
 } from "@/api";
@@ -1883,7 +1883,7 @@ function MeasurePanel({
   detail,
   onRecalculate,
   isRecalculating,
-  onSendToQA, // ← Added
+  // onSendToQA, // ← Added
   isSendingToQA, // ← Added
 }: {
   patientId: string;
@@ -1895,7 +1895,7 @@ function MeasurePanel({
   detail: MeasureDetail | null;
   onRecalculate: (file?: File) => void;
   isRecalculating?: boolean;
-  onSendToQA?: () => void; // ← Added
+  // onSendToQA?: () => void; // ← Added
   isSendingToQA?: boolean; // ← Added
 }) {
   // Show processing message when no measures are available yet
@@ -2193,8 +2193,8 @@ function MeasurePanel({
               <Eye className="w-3.5 h-3.5" /> Mark Reviewed
             </button>
             <button
-              onClick={onSendToQA}
-              disabled={isSendingToQA}
+              // onClick={onSendToQA}
+              // disabled={isSendingToQA}
               className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-primary/30 text-primary text-[12px] font-semibold hover:bg-primary/5 transition-colors disabled:opacity-50"
             >
               <Send className="w-3.5 h-3.5" />{" "}
@@ -2788,7 +2788,7 @@ export function Patient360({
   //   }
   // };
 
-  const sendToQaMutation = usePostApiHedisSendToQa();
+  // const sendToQaMutation = usePostApiHedisSendToQa();
 
   const { mutate: triggerRecalculation, isPending: isRecalculating } =
     usePostApiHedisRecalculateQa({
@@ -2845,34 +2845,34 @@ export function Patient360({
   const selectedEval = evaluations.find(
     (ev: any) => ev.measure_code === selectedMeasure
   );
-  const handleSendToQa = async () => {
-    if (!selectedEval) return;
+  // const handleSendToQa = async () => {
+  //   if (!selectedEval) return;
 
-    try {
-      toast.loading("Sending to QA...", { id: "send-to-qa" });
+  //   try {
+  //     toast.loading("Sending to QA...", { id: "send-to-qa" });
 
-      await sendToQaMutation.mutateAsync({
-        data: {
-          patientId: patientId,
-          measureCode: selectedEval.measure_code,
-          measureName: selectedEval.measure_name,
-        },
-      });
+  //     // await sendToQaMutation.mutateAsync({
+  //     //   data: {
+  //     //     patientId: patientId,
+  //     //     measureCode: selectedEval.measure_code,
+  //     //     measureName: selectedEval.measure_name,
+  //     //   },
+  //     // });
 
-      toast.success("Successfully sent to QA ", { id: "send-to-qa" });
-      refetchEval(); // Refresh to show last action
-    } catch (err: any) {
-      console.error("Failed to send to QA:", err);
+  //     toast.success("Successfully sent to QA ", { id: "send-to-qa" });
+  //     refetchEval(); // Refresh to show last action
+  //   } catch (err: any) {
+  //     console.error("Failed to send to QA:", err);
 
-      const message =
-        err?.response?.data?.error ||
-        err?.response?.data?.message ||
-        err?.message ||
-        "Failed to send to QA. Please try again.";
+  //     const message =
+  //       err?.response?.data?.error ||
+  //       err?.response?.data?.message ||
+  //       err?.message ||
+  //       "Failed to send to QA. Please try again.";
 
-      toast.error(message, { id: "send-to-qa" });
-    }
-  };
+  //     toast.error(message, { id: "send-to-qa" });
+  //   }
+  // };
 
   // Map dynamic evaluation to MeasureDetail format
   // Improved dynamicDetail mapping
@@ -3189,8 +3189,8 @@ export function Patient360({
                 detail={dynamicDetail}
                 onRecalculate={handleTriggerRecalculation}
                 isRecalculating={isRecalculating}
-                onSendToQA={handleSendToQa}
-                isSendingToQA={sendToQaMutation.isLoading}
+                // onSendToQA={handleSendToQa}
+                // isSendingToQA={sendToQaMutation.isLoading}
               />
             )}
           </div>

@@ -1,13 +1,11 @@
-// controllers/workQueue.controller.js
-
 /**
- * GET WORK QUEUE LIST & COUNTS
- * Retrieves the detailed work queue list filtered by stages/assignments with real-time counts.
+ * GET Work Queue - Role & Stage Aware
  */
 exports.getWorkQueue = async (req, res) => {
   try {
     const schema = req.tenant.schema_name;
-    const userId = req.user.id;
+    const userId = req.user?.id;
+    const userRole = req.user?.role || "admin"; // 'admin', 'abstractor', 'qa'
 
     const {
       tab = "all",
@@ -23,152 +21,128 @@ exports.getWorkQueue = async (req, res) => {
     const limit = Number(page_size);
     const offset = (page - 1) * limit;
 
-    // 1. Build base WHERE clause (without tab/stage filter) for conditional aggregation counts
+    // ====================== BASE FILTERS ======================
     let baseWhere = "WHERE 1=1";
-    const values = [];
+    let values = [];
 
     if (search) {
       values.push(`%${search}%`);
-      const searchIndex = values.length;
       baseWhere += `
-        AND (
-          p.first_name ILIKE $${searchIndex}
-          OR p.last_name ILIKE $${searchIndex}
-          OR p.patient_id ILIKE $${searchIndex}
-          OR pc.chart_id ILIKE $${searchIndex}
-        )
-      `;
+        AND (p.first_name ILIKE $${values.length} 
+          OR p.last_name ILIKE $${values.length} 
+          OR p.patient_id ILIKE $${values.length}
+          OR pc.chart_id ILIKE $${values.length})`;
     }
 
     if (project_id) {
       values.push(project_id);
       baseWhere += ` AND p.project_id = $${values.length}`;
     }
-
     if (plan) {
       values.push(plan);
       baseWhere += ` AND p.plan ILIKE $${values.length}`;
     }
-
     if (priority) {
       values.push(priority);
       baseWhere += ` AND p.priority ILIKE $${values.length}`;
     }
 
-    // 2. Fetch total counts across all tabs simultaneously
-    const userParamIndex = values.length + 1;
-    const countsValues = [...values, userId];
+    // ====================== ROLE + TAB FILTER ======================
+    let tabWhere = baseWhere;
+    const tabValues = [...values];
 
+    switch (tab.toLowerCase()) {
+      case "my-work":
+      case "my_work":
+        tabValues.push(userId);
+        tabWhere += ` AND (p.assigned_to = $${tabValues.length} OR p.abstractor_id = $${tabValues.length} OR p.qa_id = $${tabValues.length})`;
+        break;
+
+      case "not-started":
+      case "not_started":
+        tabWhere += ` AND (p.stage IN ('Not Started', 'Unassigned') OR p.stage IS NULL)`;
+        break;
+
+      case "assigned":
+        tabWhere += ` AND p.stage = 'Assigned'`;
+        break;
+
+      case "in-progress":
+      case "in_progress":
+        tabWhere += ` AND p.stage = 'In Progress'`;
+        break;
+
+      case "pending-qa":
+      case "pending_qa":
+        tabWhere += ` AND p.stage IN ('Pending QA', 'Ready for QA Review')`;
+        break;
+
+      case "qa-returned":
+      case "qa_returned":
+        tabWhere += ` AND p.stage IN ('QA Returned', 'Revision Required')`;
+        break;
+
+      case "rework": // ← FIXED
+        tabWhere += ` AND p.stage IN ('Rework', 'QA Fail', 'QA Failed', 'QA_FAIL')`;
+        break;
+
+      case "completed":
+        tabWhere += ` AND p.stage IN ('Completed', 'QA Passed', 'QA Approved')`;
+        break;
+
+      case "audit-sample":
+      case "audit":
+        tabWhere += ` AND p.stage IN ('Audit Sample', 'Audit', 'Audit Approved', 'Audit Failed')`;
+        break;
+
+      case "submission-ready":
+      case "ready":
+        tabWhere += ` AND p.stage IN ('Submission Ready', 'Ready')`;
+        break;
+
+      case "all":
+      default:
+        // No additional filter
+        break;
+    }
+
+    // ====================== COUNTS ======================
     const countsQuery = `
       SELECT
         COUNT(*) AS total_all,
-        COUNT(CASE WHEN p.assigned_to = $${userParamIndex} OR p.abstractor_id = $${userParamIndex} OR p.qa_id = $${userParamIndex} THEN 1 END) AS total_my_work,
-        COUNT(CASE WHEN p.stage IN ('Not Started', 'Unassigned') THEN 1 END) AS total_not_started,
-        COUNT(CASE WHEN p.stage = 'Assigned' THEN 1 END) AS total_assigned,
-        COUNT(CASE WHEN p.stage = 'In Progress' THEN 1 END) AS total_in_progress,
-        COUNT(CASE WHEN p.stage IN ('Pending QA', 'Ready for QA Review', 'READY_FOR_QA_REVIEW') OR pc.status IN ('Pending QA', 'Ready for QA Review', 'READY_FOR_QA_REVIEW') THEN 1 END) AS total_pending_qa,
-        COUNT(CASE WHEN p.stage IN ('QA Returned', 'QA Return', 'QA_REJECTED') OR pc.status IN ('QA Returned', 'QA Return', 'QA_REJECTED') THEN 1 END) AS total_qa_returned,
-        COUNT(CASE WHEN p.stage IN ('Rework', 'QA Evidence Requested', 'QA_EVIDENCE_REQUESTED') OR pc.status IN ('Rework', 'QA Evidence Requested', 'QA_EVIDENCE_REQUESTED') THEN 1 END) AS total_rework,
-        COUNT(CASE WHEN p.stage IN ('Completed', 'QA Approved', 'QA_APPROVED') OR pc.status IN ('Completed', 'QA Approved', 'QA_APPROVED') THEN 1 END) AS total_completed,
-        COUNT(CASE WHEN p.stage IN ('Audit Sample', 'Audit') THEN 1 END) AS total_audit,
-        COUNT(CASE WHEN p.stage IN ('Submission Ready', 'Ready') THEN 1 END) AS total_ready
+        COUNT(CASE WHEN p.assigned_to = $1 OR p.abstractor_id = $1 OR p.qa_id = $1 THEN 1 END) AS my_work,
+        COUNT(CASE WHEN p.stage IN ('Not Started', 'Unassigned') OR p.stage IS NULL THEN 1 END) AS not_started,
+        COUNT(CASE WHEN p.stage = 'Assigned' THEN 1 END) AS assigned,
+        COUNT(CASE WHEN p.stage = 'In Progress' THEN 1 END) AS in_progress,
+        COUNT(CASE WHEN p.stage IN ('Pending QA', 'Ready for QA Review') THEN 1 END) AS pending_qa,
+        COUNT(CASE WHEN p.stage IN ('QA Returned', 'Revision Required') THEN 1 END) AS qa_returned,
+        COUNT(CASE WHEN p.stage IN ('Rework', 'QA Fail', 'QA Failed', 'QA_FAIL') THEN 1 END) AS rework,
+        COUNT(CASE WHEN p.stage IN ('Completed', 'QA Passed', 'QA Approved') THEN 1 END) AS completed,
+        COUNT(CASE WHEN p.stage IN ('Audit Sample', 'Audit', 'Audit Approved', 'Audit Failed') THEN 1 END) AS audit_sample,
+        COUNT(CASE WHEN p.stage IN ('Submission Ready', 'Ready') THEN 1 END) AS submission_ready
       FROM ${schema}.patients p
       LEFT JOIN ${schema}.patient_charts pc ON pc.patient_id = p.id
       ${baseWhere}
     `;
 
-    const countsResult = await req.db.query(countsQuery, countsValues);
-    const countsRow = countsResult.rows[0] || {};
+    const countsResult = await req.db.query(countsQuery, [userId]);
+    const c = countsResult.rows[0] || {};
+
     const counts = {
-      all: Number(countsRow.total_all || 0),
-      myWork: Number(countsRow.total_my_work || 0),
-      notStarted: Number(countsRow.total_not_started || 0),
-      assigned: Number(countsRow.total_assigned || 0),
-      inProgress: Number(countsRow.total_in_progress || 0),
-      pendingQa: Number(countsRow.total_pending_qa || 0),
-      qaReturned: Number(countsRow.total_qa_returned || 0),
-      rework: Number(countsRow.total_rework || 0),
-      completed: Number(countsRow.total_completed || 0),
-      auditSample: Number(countsRow.total_audit || 0),
-      submissionReady: Number(countsRow.total_ready || 0)
+      all: Number(c.total_all || 0),
+      myWork: Number(c.my_work || 0),
+      notStarted: Number(c.not_started || 0),
+      assigned: Number(c.assigned || 0),
+      inProgress: Number(c.in_progress || 0),
+      pendingQa: Number(c.pending_qa || 0),
+      qaReturned: Number(c.qa_returned || 0),
+      rework: Number(c.rework || 0),
+      completed: Number(c.completed || 0),
+      auditSample: Number(c.audit_sample || 0),
+      submissionReady: Number(c.submission_ready || 0),
     };
 
-    // 3. Apply tab/stage specific filters for the list query
-    let tabWhere = baseWhere;
-    const finalValues = [...values];
-
-    switch (tab.toLowerCase()) {
-      case "my-work":
-      case "my_work":
-      case "mywork":
-        finalValues.push(userId);
-        tabWhere += ` AND (p.assigned_to = $${finalValues.length} OR p.abstractor_id = $${finalValues.length} OR p.qa_id = $${finalValues.length})`;
-        break;
-      case "not-started":
-      case "not_started":
-      case "notstarted":
-        tabWhere += ` AND p.stage IN ('Not Started', 'Unassigned')`;
-        break;
-      case "assigned":
-        tabWhere += ` AND p.stage = 'Assigned'`;
-        break;
-      case "in-progress":
-      case "in_progress":
-      case "inprogress":
-        tabWhere += ` AND p.stage = 'In Progress'`;
-        break;
-      case "pending-qa":
-      case "pending_qa":
-      case "pendingqa":
-        tabWhere += ` AND (p.stage IN ('Pending QA', 'Ready for QA Review', 'READY_FOR_QA_REVIEW') OR pc.status IN ('Pending QA', 'Ready for QA Review', 'READY_FOR_QA_REVIEW'))`;
-        break;
-      case "qa-returned":
-      case "qa_returned":
-      case "qareturned":
-      case "qa-return":
-      case "qa_return":
-      case "qareturn":
-        tabWhere += ` AND (p.stage IN ('QA Returned', 'QA Return', 'QA_REJECTED') OR pc.status IN ('QA Returned', 'QA Return', 'QA_REJECTED'))`;
-        break;
-      case "rework":
-        tabWhere += ` AND (p.stage IN ('Rework', 'QA Evidence Requested', 'QA_EVIDENCE_REQUESTED') OR pc.status IN ('Rework', 'QA Evidence Requested', 'QA_EVIDENCE_REQUESTED'))`;
-        break;
-      case "completed":
-        tabWhere += ` AND (p.stage IN ('Completed', 'QA Approved', 'QA_APPROVED') OR pc.status IN ('Completed', 'QA Approved', 'QA_APPROVED'))`;
-        break;
-      case "audit-sample":
-      case "audit_sample":
-      case "auditsample":
-      case "audit":
-        tabWhere += ` AND p.stage IN ('Audit Sample', 'Audit')`;
-        break;
-      case "submission-ready":
-      case "submission_ready":
-      case "submissionready":
-      case "ready":
-        tabWhere += ` AND p.stage IN ('Submission Ready', 'Ready')`;
-        break;
-      case "all":
-      default:
-        // No stage filter
-        break;
-    }
-
-    // 4. Fetch the paginated matching dataset
-    const countQuery = `
-      SELECT COUNT(*) AS total
-      FROM ${schema}.patients p
-      LEFT JOIN ${schema}.patient_charts pc ON pc.patient_id = p.id
-      ${tabWhere}
-    `;
-    const countResult = await req.db.query(countQuery, finalValues);
-    const total = Number(countResult.rows[0].total);
-
-    finalValues.push(limit);
-    finalValues.push(offset);
-    const limitIndex = finalValues.length - 1;
-    const offsetIndex = finalValues.length;
-
+    // ====================== MAIN DATA QUERY ======================
     const dataQuery = `
       SELECT
         p.id AS patient_uuid,
@@ -180,11 +154,13 @@ exports.getWorkQueue = async (req, res) => {
         p.measure,
         p.plan,
         p.priority AS patient_priority,
-        p.stage AS stage,
+        p.stage,
         p.due_date AS patient_due_date,
         p.assigned_to,
         p.abstractor_id,
         p.qa_id,
+        p.qa_reviewed,
+        p.audit_reviewed,
         pc.id AS chart_uuid,
         pc.chart_id,
         pc.status AS chart_status,
@@ -202,40 +178,37 @@ exports.getWorkQueue = async (req, res) => {
         pr.project_id AS project_display_id,
         cl.org_name AS client_name,
         cl.client_id AS client_display_id,
-        u_abs.full_name AS abstractor_name,
-        u_qa.full_name AS qa_name
+        ua.full_name AS abstractor_name,
+        uq.full_name AS qa_name
       FROM ${schema}.patients p
-      LEFT JOIN ${schema}.patient_charts pc
-        ON pc.patient_id = p.id
-      LEFT JOIN ${schema}.projects pr
-        ON p.project_id = pr.id
-      LEFT JOIN ${schema}.clients cl
-        ON p.client_id = cl.id
-      LEFT JOIN ${schema}.users u_abs
-        ON p.abstractor_id = u_abs.id
-      LEFT JOIN ${schema}.users u_qa
-        ON p.qa_id = u_qa.id
+      LEFT JOIN ${schema}.patient_charts pc ON pc.patient_id = p.id
+      LEFT JOIN ${schema}.projects pr ON p.project_id = pr.id
+      LEFT JOIN ${schema}.clients cl ON p.client_id = cl.id
+      LEFT JOIN ${schema}.users ua ON p.abstractor_id = ua.id
+      LEFT JOIN ${schema}.users uq ON p.qa_id = uq.id
       ${tabWhere}
-      ORDER BY p.created_at DESC
-      LIMIT $${limitIndex}
-      OFFSET $${offsetIndex}
+      ORDER BY p.updated_at DESC
+      LIMIT $${tabValues.length + 1} 
+      OFFSET $${tabValues.length + 2}
     `;
 
-    const result = await req.db.query(dataQuery, finalValues);
+    tabValues.push(limit, offset);
 
-    return res.status(200).json({
+    const dataResult = await req.db.query(dataQuery, tabValues);
+
+    res.json({
       success: true,
       message: "Work Queue fetched successfully",
-      total,
+      total: dataResult.rowCount,
       page_no: page,
       page_size: limit,
-      total_pages: Math.ceil(total / limit),
+      total_pages: Math.ceil(Number(c.total_all || 0) / limit),
       counts,
-      data: result.rows,
+      data: dataResult.rows,
     });
   } catch (err) {
     console.error("Get Work Queue Error:", err);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: "Internal server error",
       error: err.message,

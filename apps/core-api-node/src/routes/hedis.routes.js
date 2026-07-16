@@ -24,12 +24,6 @@ const path = require("path");
  */
 router.get("/evaluations/:id", hedisController.getEvaluations);
 
-
-
-
-
-
-
 /**
  * @swagger
  * /api/hedis/qa-review/{evaluationId}:
@@ -48,8 +42,6 @@ router.get("/evaluations/:id", hedisController.getEvaluations);
  *         description: QA review details fetched successfully
  */
 router.get("/qa-review/:evaluationId", hedisController.getQAReviewDetails);
-
-
 
 /**
  * @swagger
@@ -97,6 +89,38 @@ router.get("/qa-review/:evaluationId", hedisController.getQAReviewDetails);
  *         description: Abstractor assigned successfully
  */
 router.post("/assign-abstractor", hedisController.assignAbstractor);
+
+/**
+ * @swagger
+ * /api/hedis/patient/qa-stage:
+ *   post:
+ *     summary: Update patient overall QA stage from QA buttons
+ *     tags: [HEDIS]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - patientId
+ *               - action
+ *             properties:
+ *               patientId:
+ *                 type: string
+ *                 format: uuid
+ *               action:
+ *                 type: string
+ *                 enum: [QA_PASS, REQUEST_REVISION, QA_FAIL]
+ *               reason:
+ *                 type: string
+ *               additionalNotes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Patient stage updated successfully
+ */
+router.post("/patient/qa-stage", hedisController.updatePatientQAStage);
 
 /**
  * @swagger
