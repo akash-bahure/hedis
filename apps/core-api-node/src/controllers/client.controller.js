@@ -16,7 +16,7 @@ exports.createClient = async (req, res) => {
       "primary_contact_name",
       "email",
       "phone",
-      "abstractors_assigned"
+      "abstractors_assigned",
     ];
 
     const missingFields = requiredFields.filter(
@@ -28,56 +28,173 @@ exports.createClient = async (req, res) => {
 
     if (missingFields.length > 0) {
       return res.status(400).json({
-        error: `Missing required fields: ${missingFields.join(", ")}`
+        error: `Missing required fields: ${missingFields.join(", ")}`,
       });
     }
 
-    const data = await clientService.createClient(
-      req.db,
-      req.body
-    );
+    const data = await clientService.createClient(req.db, req.body);
 
     res.status(201).json({
       message: "Client created successfully",
-      data
+      data,
     });
   } catch (err) {
     res.status(500).json({
-      error: err.message
+      error: err.message,
     });
   }
 };
 
-// GET ALL (with filters)
+//get clinets
 exports.getClients = async (req, res) => {
   try {
-    const data = await clientService.getClients(
-      req.db,
-      req.query
-    );
+    const {
+      search,
+      status,
+      region,
+      contract_type,
+      measure_year,
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+    } = req.query;
+
+    const result = await clientService.getClients(req.db, {
+      search,
+      status,
+      region,
+      contract_type,
+      measure_year,
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+    });
 
     res.json({
       message: "Clients fetched successfully",
-      ...data
+      ...result,
+    });
+  } catch (err) {
+    console.error("HEDIS Get Clients Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * GET /api/hedis-clients/:id
+ * Single client profile with all dynamic calculations
+ */
+exports.getClientById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const client = await clientService.getClientById(req.db, id);
+
+    if (!client) {
+      return res.status(404).json({ error: "Client not found" });
+    }
+
+    res.json({
+      message: "Client fetched successfully",
+      data: client,
+    });
+  } catch (err) {
+    console.error("HEDIS Get Client By ID Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * GET /api/hedis-clients/:clientId/measure-progress
+ * Return aggregated measure progress for the selected client.
+ */
+exports.getClientMeasureProgress = async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    const { page, limit } = req.query;
+
+    // Validate client existence in tenant schema
+    const clientCheck = await req.db.query(
+      `SELECT id FROM clients WHERE id = $1`,
+      [clientId]
+    );
+
+    if (clientCheck.rows.length === 0) {
+      return res.status(404).json({
+        error: `Client with ID ${clientId} not found.`,
+      });
+    }
+
+    const result = await clientService.getClientMeasureProgress(
+      req.db,
+      clientId,
+      {
+        page,
+        limit,
+      }
+    );
+
+    res.json({
+      message: "Client measure progress fetched successfully",
+      ...result,
+    });
+  } catch (err) {
+    console.error("HEDIS Get Client Measure Progress Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * GET /api/hedis-clients/stats
+ * Dashboard summary stats (Total Clients, Active, Charts Assigned, Completion Rate, At Risk)
+ */
+exports.getClientStats = async (req, res) => {
+  try {
+    const stats = await clientService.getClientStats(req.db);
+
+    res.json({
+      message: "Client stats fetched successfully",
+      data: stats,
+    });
+  } catch (err) {
+    console.error("HEDIS Get Client Stats Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// UPDATE
+exports.updateClient = async (req, res) => {
+  try {
+    const data = await clientService.updateClient(
+      req.db,
+      req.params.id,
+      req.body
+    );
+
+    res.json({
+      message: "Client updated successfully",
+      data,
     });
   } catch (err) {
     res.status(500).json({
-      error: err.message
+      error: err.message,
     });
   }
 };
 
-//GET Stats API
-exports.getClientStats = async (req, res) => {
+// DELETE
+exports.deleteClient = async (req, res) => {
   try {
-    const stats = await clientService.getClientStats(
-      req.db
-    );
+    await clientService.deleteClient(req.db, req.params.id);
 
-    res.json(stats);
+    res.json({
+      message: "Client deleted successfully",
+    });
   } catch (err) {
     res.status(500).json({
-      error: err.message
+      error: err.message,
     });
   }
 };
@@ -87,17 +204,10 @@ exports.exportClients = async (req, res) => {
   try {
     const format = req.query.format || "csv";
 
-    const exportData =
-      await clientService.exportClients(
-        req.db,
-        format
-      );
+    const exportData = await clientService.exportClients(req.db, format);
 
     if (format === "pdf") {
-      res.setHeader(
-        "Content-Type",
-        "application/pdf"
-      );
+      res.setHeader("Content-Type", "application/pdf");
 
       res.setHeader(
         "Content-Disposition",
@@ -106,10 +216,7 @@ exports.exportClients = async (req, res) => {
 
       res.send(exportData);
     } else {
-      res.setHeader(
-        "Content-Type",
-        "text/csv"
-      );
+      res.setHeader("Content-Type", "text/csv");
 
       res.setHeader(
         "Content-Disposition",
@@ -120,69 +227,75 @@ exports.exportClients = async (req, res) => {
     }
   } catch (err) {
     res.status(500).json({
-      error: err.message
+      error: err.message,
     });
   }
 };
 
-// GET ONE
-exports.getClientById = async (req, res) => {
+/**
+ * GET /api/hedis-clients/:clientId/recent-activity
+ * Return chronological activity timeline for the selected client.
+ */
+exports.getClientRecentActivity = async (req, res) => {
   try {
-    const data =
-      await clientService.getClientById(
-        req.db,
-        req.params.id
-      );
+    const { clientId } = req.params;
+    const { page, limit } = req.query;
 
-    if (!data) {
+    // Validate client existence
+    const clientCheck = await req.db.query(
+      `SELECT id FROM clients WHERE id = $1`,
+      [clientId]
+    );
+
+    if (clientCheck.rows.length === 0) {
       return res.status(404).json({
-        message: "Client not found"
+        error: `Client with ID ${clientId} not found.`,
       });
     }
 
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({
-      error: err.message
-    });
-  }
-};
-
-// UPDATE
-exports.updateClient = async (req, res) => {
-  try {
-    const data =
-      await clientService.updateClient(
-        req.db,
-        req.params.id,
-        req.body
-      );
-
-    res.json({
-      message: "Client updated successfully",
-      data
-    });
-  } catch (err) {
-    res.status(500).json({
-      error: err.message
-    });
-  }
-};
-
-// DELETE
-exports.deleteClient = async (req, res) => {
-  try {
-    await clientService.deleteClient(
+    const result = await clientService.getClientRecentActivity(
       req.db,
-      req.params.id
+      clientId,
+      {
+        page,
+        limit,
+      }
     );
 
     res.json({
-      message: "Client deleted successfully"
+      message: "Client recent activity fetched successfully",
+      ...result,
     });
   } catch (err) {
-    res.status(500).json({
-      error: err.message
-    });
+    console.error("HEDIS Get Client Recent Activity Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * GET /api/hedis-clients/export
+ * Export FULL profile report for a specific client
+ */
+exports.exportClientReport = async (req, res) => {
+  try {
+    const { clientId } = req.query;
+
+    if (!clientId) {
+      return res
+        .status(400)
+        .json({ error: "clientId query parameter is required" });
+    }
+
+    const csvData = await clientService.exportClientReport(req.db, clientId);
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=client-full-report-${clientId}.csv`
+    );
+    res.send(csvData);
+  } catch (err) {
+    console.error("HEDIS Export Client Report Error:", err);
+    res.status(500).json({ error: err.message });
   }
 };
