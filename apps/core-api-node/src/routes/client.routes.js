@@ -277,6 +277,132 @@ router.post("/", controller.createClient);
  */
 router.get("/", controller.getClients);
 
+/**
+ * @swagger
+ * /api/clients/export-reports:
+ *   get:
+ *     summary: Export full detailed profile report for a specific client as CSV
+ *     description: >
+ *       Exports comprehensive client profile including details, summary metrics,
+ *       measure progress breakdown, and recent activity.
+ *     tags: [Clients]
+ *     parameters:
+ *       - in: query
+ *         name: clientId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID of the client (REQUIRED for full report)
+ *     responses:
+ *       200:
+ *         description: CSV file downloaded successfully
+ *         content:
+ *           text/csv:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       400:
+ *         description: clientId query parameter is required
+ *       404:
+ *         description: Client not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/export-reports", controller.exportClientReport);
+
+/**
+ * @swagger
+ * /api/clients/{clientId}/recent-activity:
+ *   get:
+ *     summary: Get recent activity timeline for a selected client
+ *     description: Returns the latest workflow activities (chart upload, assignments, HEDIS evaluation, QA review, audit review, evidence updates, and stage changes) for all patient charts belonging to the selected client.
+ *     tags: [Clients]
+ *     parameters:
+ *       - in: path
+ *         name: clientId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Client UUID
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 15
+ *     responses:
+ *       200:
+ *         description: Client recent activity fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       activityType:
+ *                         type: string
+ *                         example: QA Approved
+ *                       title:
+ *                         type: string
+ *                         example: QA review completed
+ *                       description:
+ *                         type: string
+ *                       patientId:
+ *                         type: string
+ *                         format: uuid
+ *                       patientName:
+ *                         type: string
+ *                       chartId:
+ *                         type: string
+ *                         format: uuid
+ *                         nullable: true
+ *                       measureCode:
+ *                         type: string
+ *                         nullable: true
+ *                       performedBy:
+ *                         type: string
+ *                       timestamp:
+ *                         type: string
+ *                         format: date-time
+ *                       status:
+ *                         type: string
+ *                       iconType:
+ *                         type: string
+ *                         enum:
+ *                           - chart
+ *                           - assignment
+ *                           - measure
+ *                           - qa
+ *                           - audit
+ *                           - stage
+ *                 totalCount:
+ *                   type: integer
+ *                 currentPage:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ *                 pageSize:
+ *                   type: integer
+ *       404:
+ *         description: Client not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/:clientId/recent-activity", controller.getClientRecentActivity);
 
 /**
  * @swagger
@@ -364,6 +490,76 @@ router.get("/export", controller.exportClients);
  *         description: Client not found
  */
 router.get("/:id", controller.getClientById);
+
+/**
+ * @swagger
+ * /api/clients/{clientId}/measure-progress:
+ *   get:
+ *     summary: Get HEDIS measure progress summary for a selected client
+ *     description: Returns aggregated measure progress metrics grouped by measure code for the client
+ *     tags: [Clients]
+ *     parameters:
+ *       - in: path
+ *         name: clientId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID of the client
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Results per page
+ *     responses:
+ *       200:
+ *         description: Client measure progress fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       measure_code:
+ *                         type: string
+ *                       measure_name:
+ *                         type: string
+ *                       assigned:
+ *                         type: integer
+ *                       done:
+ *                         type: integer
+ *                       progress:
+ *                         type: integer
+ *                       status:
+ *                         type: string
+ *                         enum: [Completed, In Progress, Pending]
+ *                 totalCount:
+ *                   type: integer
+ *                 currentPage:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ *                 pageSize:
+ *                   type: integer
+ *       404:
+ *         description: Client not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/:clientId/measure-progress", controller.getClientMeasureProgress);
 
 /**
  * @swagger
