@@ -28,7 +28,16 @@ export type { PostApiAuthTwoFaValidateOtpMutationKey } from "./hooks/AuthHooks/u
 export type { PostApiChartAssignmentsBulkAssignMutationKey } from "./hooks/Chart AssignmentsHooks/usePostApiChartAssignmentsBulkAssign.ts";
 export type { DeleteApiClientsIdMutationKey } from "./hooks/ClientsHooks/useDeleteApiClientsId.ts";
 export type { GetApiClientsQueryKey } from "./hooks/ClientsHooks/useGetApiClients.ts";
+export type { GetApiClientsClientidMeasureProgressQueryKey } from "./hooks/ClientsHooks/useGetApiClientsClientidMeasureProgress.ts";
+export type { GetApiClientsClientidMeasureProgressSuspenseQueryKey } from "./hooks/ClientsHooks/useGetApiClientsClientidMeasureProgressSuspense.ts";
+export type { GetApiClientsClientidMeasureProgressSuspenseInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsClientidMeasureProgressSuspenseInfinite.ts";
+export type { GetApiClientsClientidRecentActivityQueryKey } from "./hooks/ClientsHooks/useGetApiClientsClientidRecentActivity.ts";
+export type { GetApiClientsClientidRecentActivitySuspenseQueryKey } from "./hooks/ClientsHooks/useGetApiClientsClientidRecentActivitySuspense.ts";
+export type { GetApiClientsClientidRecentActivitySuspenseInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsClientidRecentActivitySuspenseInfinite.ts";
 export type { GetApiClientsExportQueryKey } from "./hooks/ClientsHooks/useGetApiClientsExport.ts";
+export type { GetApiClientsExportReportsQueryKey } from "./hooks/ClientsHooks/useGetApiClientsExportReports.ts";
+export type { GetApiClientsExportReportsSuspenseQueryKey } from "./hooks/ClientsHooks/useGetApiClientsExportReportsSuspense.ts";
+export type { GetApiClientsExportReportsSuspenseInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsExportReportsSuspenseInfinite.ts";
 export type { GetApiClientsExportSuspenseQueryKey } from "./hooks/ClientsHooks/useGetApiClientsExportSuspense.ts";
 export type { GetApiClientsExportSuspenseInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsExportSuspenseInfinite.ts";
 export type { GetApiClientsIdQueryKey } from "./hooks/ClientsHooks/useGetApiClientsId.ts";
@@ -94,6 +103,24 @@ export type { GetApiDepartmentsQueryKey } from "./hooks/DepartmentsHooks/useGetA
 export type { GetApiDepartmentsSuspenseQueryKey } from "./hooks/DepartmentsHooks/useGetApiDepartmentsSuspense.ts";
 export type { GetApiDepartmentsSuspenseInfiniteQueryKey } from "./hooks/DepartmentsHooks/useGetApiDepartmentsSuspenseInfinite.ts";
 export type { PostApiDepartmentsMutationKey } from "./hooks/DepartmentsHooks/usePostApiDepartments.ts";
+export type { GetApiHedisClientsQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClients.ts";
+export type { GetApiHedisClientsClientidMeasureProgressQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidMeasureProgress.ts";
+export type { GetApiHedisClientsClientidMeasureProgressSuspenseQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidMeasureProgressSuspense.ts";
+export type { GetApiHedisClientsClientidMeasureProgressSuspenseInfiniteQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidMeasureProgressSuspenseInfinite.ts";
+export type { GetApiHedisClientsClientidRecentActivityQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidRecentActivity.ts";
+export type { GetApiHedisClientsClientidRecentActivitySuspenseQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidRecentActivitySuspense.ts";
+export type { GetApiHedisClientsClientidRecentActivitySuspenseInfiniteQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidRecentActivitySuspenseInfinite.ts";
+export type { GetApiHedisClientsExportQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsExport.ts";
+export type { GetApiHedisClientsExportSuspenseQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsExportSuspense.ts";
+export type { GetApiHedisClientsExportSuspenseInfiniteQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsExportSuspenseInfinite.ts";
+export type { GetApiHedisClientsIdQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsId.ts";
+export type { GetApiHedisClientsIdSuspenseQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsIdSuspense.ts";
+export type { GetApiHedisClientsIdSuspenseInfiniteQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsIdSuspenseInfinite.ts";
+export type { GetApiHedisClientsStatsQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsStats.ts";
+export type { GetApiHedisClientsStatsSuspenseQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsStatsSuspense.ts";
+export type { GetApiHedisClientsStatsSuspenseInfiniteQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsStatsSuspenseInfinite.ts";
+export type { GetApiHedisClientsSuspenseQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsSuspense.ts";
+export type { GetApiHedisClientsSuspenseInfiniteQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsSuspenseInfinite.ts";
 export type { GetApiHedisAbstractorDraftPatientidQueryKey } from "./hooks/HEDISHooks/useGetApiHedisAbstractorDraftPatientid.ts";
 export type { GetApiHedisAbstractorDraftPatientidSuspenseQueryKey } from "./hooks/HEDISHooks/useGetApiHedisAbstractorDraftPatientidSuspense.ts";
 export type { GetApiHedisAbstractorDraftPatientidSuspenseInfiniteQueryKey } from "./hooks/HEDISHooks/useGetApiHedisAbstractorDraftPatientidSuspenseInfinite.ts";
@@ -430,12 +457,41 @@ export type {
   GetApiClientsQueryResponse,
 } from "./types/GetApiClients.ts";
 export type {
+  DataStatusEnumKey,
+  GetApiClientsClientidMeasureProgress200,
+  GetApiClientsClientidMeasureProgress404,
+  GetApiClientsClientidMeasureProgress500,
+  GetApiClientsClientidMeasureProgressPathParams,
+  GetApiClientsClientidMeasureProgressQuery,
+  GetApiClientsClientidMeasureProgressQueryParams,
+  GetApiClientsClientidMeasureProgressQueryResponse,
+} from "./types/GetApiClientsClientidMeasureProgress.ts";
+export type {
+  DataIconTypeEnumKey,
+  GetApiClientsClientidRecentActivity200,
+  GetApiClientsClientidRecentActivity404,
+  GetApiClientsClientidRecentActivity500,
+  GetApiClientsClientidRecentActivityPathParams,
+  GetApiClientsClientidRecentActivityQuery,
+  GetApiClientsClientidRecentActivityQueryParams,
+  GetApiClientsClientidRecentActivityQueryResponse,
+} from "./types/GetApiClientsClientidRecentActivity.ts";
+export type {
   GetApiClientsExport200,
   GetApiClientsExportQuery,
   GetApiClientsExportQueryParams,
   GetApiClientsExportQueryParamsFormatEnumKey,
   GetApiClientsExportQueryResponse,
 } from "./types/GetApiClientsExport.ts";
+export type {
+  GetApiClientsExportReports200,
+  GetApiClientsExportReports400,
+  GetApiClientsExportReports404,
+  GetApiClientsExportReports500,
+  GetApiClientsExportReportsQuery,
+  GetApiClientsExportReportsQueryParams,
+  GetApiClientsExportReportsQueryResponse,
+} from "./types/GetApiClientsExportReports.ts";
 export type {
   GetApiClientsId200,
   GetApiClientsId404,
@@ -557,6 +613,61 @@ export type {
   GetApiHedisAbstractorMeasuresPatientidQuery,
   GetApiHedisAbstractorMeasuresPatientidQueryResponse,
 } from "./types/GetApiHedisAbstractorMeasuresPatientid.ts";
+export type {
+  GetApiHedisClients200,
+  GetApiHedisClients500,
+  GetApiHedisClientsQuery,
+  GetApiHedisClientsQueryParams,
+  GetApiHedisClientsQueryParamsContractTypeEnumKey,
+  GetApiHedisClientsQueryParamsMeasureYearEnumKey,
+  GetApiHedisClientsQueryParamsRegionEnumKey,
+  GetApiHedisClientsQueryParamsSortOrderEnumKey,
+  GetApiHedisClientsQueryParamsStatusEnumKey,
+  GetApiHedisClientsQueryResponse,
+} from "./types/GetApiHedisClients.ts";
+export type {
+  DataStatusEnum2Key,
+  GetApiHedisClientsClientidMeasureProgress200,
+  GetApiHedisClientsClientidMeasureProgress404,
+  GetApiHedisClientsClientidMeasureProgress500,
+  GetApiHedisClientsClientidMeasureProgressPathParams,
+  GetApiHedisClientsClientidMeasureProgressQuery,
+  GetApiHedisClientsClientidMeasureProgressQueryParams,
+  GetApiHedisClientsClientidMeasureProgressQueryResponse,
+} from "./types/GetApiHedisClientsClientidMeasureProgress.ts";
+export type {
+  DataIconTypeEnum2Key,
+  GetApiHedisClientsClientidRecentActivity200,
+  GetApiHedisClientsClientidRecentActivity404,
+  GetApiHedisClientsClientidRecentActivity500,
+  GetApiHedisClientsClientidRecentActivityPathParams,
+  GetApiHedisClientsClientidRecentActivityQuery,
+  GetApiHedisClientsClientidRecentActivityQueryParams,
+  GetApiHedisClientsClientidRecentActivityQueryResponse,
+} from "./types/GetApiHedisClientsClientidRecentActivity.ts";
+export type {
+  GetApiHedisClientsExport200,
+  GetApiHedisClientsExport400,
+  GetApiHedisClientsExport404,
+  GetApiHedisClientsExport500,
+  GetApiHedisClientsExportQuery,
+  GetApiHedisClientsExportQueryParams,
+  GetApiHedisClientsExportQueryResponse,
+} from "./types/GetApiHedisClientsExport.ts";
+export type {
+  GetApiHedisClientsId200,
+  GetApiHedisClientsId404,
+  GetApiHedisClientsId500,
+  GetApiHedisClientsIdPathParams,
+  GetApiHedisClientsIdQuery,
+  GetApiHedisClientsIdQueryResponse,
+} from "./types/GetApiHedisClientsId.ts";
+export type {
+  GetApiHedisClientsStats200,
+  GetApiHedisClientsStats500,
+  GetApiHedisClientsStatsQuery,
+  GetApiHedisClientsStatsQueryResponse,
+} from "./types/GetApiHedisClientsStats.ts";
 export type {
   GetApiHedisClinicalTimelineEventEventid200,
   GetApiHedisClinicalTimelineEventEventidPathParams,
@@ -1480,7 +1591,10 @@ export { getApiAuditQueue } from "./clients/getApiAuditQueue.ts";
 export { getApiChartsChartidAbstractionSummary } from "./clients/getApiChartsChartidAbstractionSummary.ts";
 export { getApiChartsJobsJobid } from "./clients/getApiChartsJobsJobid.ts";
 export { getApiClients } from "./clients/getApiClients.ts";
+export { getApiClientsClientidMeasureProgress } from "./clients/getApiClientsClientidMeasureProgress.ts";
+export { getApiClientsClientidRecentActivity } from "./clients/getApiClientsClientidRecentActivity.ts";
 export { getApiClientsExport } from "./clients/getApiClientsExport.ts";
+export { getApiClientsExportReports } from "./clients/getApiClientsExportReports.ts";
 export { getApiClientsId } from "./clients/getApiClientsId.ts";
 export { getApiClientsStats } from "./clients/getApiClientsStats.ts";
 export { getApiClientsV2 } from "./clients/getApiClientsV2.ts";
@@ -1498,6 +1612,12 @@ export { getApiDashboardSummary } from "./clients/getApiDashboardSummary.ts";
 export { getApiDepartments } from "./clients/getApiDepartments.ts";
 export { getApiHedisAbstractorDraftPatientid } from "./clients/getApiHedisAbstractorDraftPatientid.ts";
 export { getApiHedisAbstractorMeasuresPatientid } from "./clients/getApiHedisAbstractorMeasuresPatientid.ts";
+export { getApiHedisClients } from "./clients/getApiHedisClients.ts";
+export { getApiHedisClientsClientidMeasureProgress } from "./clients/getApiHedisClientsClientidMeasureProgress.ts";
+export { getApiHedisClientsClientidRecentActivity } from "./clients/getApiHedisClientsClientidRecentActivity.ts";
+export { getApiHedisClientsExport } from "./clients/getApiHedisClientsExport.ts";
+export { getApiHedisClientsId } from "./clients/getApiHedisClientsId.ts";
+export { getApiHedisClientsStats } from "./clients/getApiHedisClientsStats.ts";
 export { getApiHedisClinicalTimelineEventEventid } from "./clients/getApiHedisClinicalTimelineEventEventid.ts";
 export { getApiHedisClinicalTimelinePatientid } from "./clients/getApiHedisClinicalTimelinePatientid.ts";
 export { getApiHedisEvaluationsId } from "./clients/getApiHedisEvaluationsId.ts";
@@ -1701,9 +1821,36 @@ export { useDeleteApiClientsId } from "./hooks/ClientsHooks/useDeleteApiClientsI
 export { getApiClientsQueryKey } from "./hooks/ClientsHooks/useGetApiClients.ts";
 export { getApiClientsQueryOptions } from "./hooks/ClientsHooks/useGetApiClients.ts";
 export { useGetApiClients } from "./hooks/ClientsHooks/useGetApiClients.ts";
+export { getApiClientsClientidMeasureProgressQueryKey } from "./hooks/ClientsHooks/useGetApiClientsClientidMeasureProgress.ts";
+export { getApiClientsClientidMeasureProgressQueryOptions } from "./hooks/ClientsHooks/useGetApiClientsClientidMeasureProgress.ts";
+export { useGetApiClientsClientidMeasureProgress } from "./hooks/ClientsHooks/useGetApiClientsClientidMeasureProgress.ts";
+export { getApiClientsClientidMeasureProgressSuspenseQueryKey } from "./hooks/ClientsHooks/useGetApiClientsClientidMeasureProgressSuspense.ts";
+export { getApiClientsClientidMeasureProgressSuspenseQueryOptions } from "./hooks/ClientsHooks/useGetApiClientsClientidMeasureProgressSuspense.ts";
+export { useGetApiClientsClientidMeasureProgressSuspense } from "./hooks/ClientsHooks/useGetApiClientsClientidMeasureProgressSuspense.ts";
+export { getApiClientsClientidMeasureProgressSuspenseInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsClientidMeasureProgressSuspenseInfinite.ts";
+export { getApiClientsClientidMeasureProgressSuspenseInfiniteQueryOptions } from "./hooks/ClientsHooks/useGetApiClientsClientidMeasureProgressSuspenseInfinite.ts";
+export { useGetApiClientsClientidMeasureProgressSuspenseInfinite } from "./hooks/ClientsHooks/useGetApiClientsClientidMeasureProgressSuspenseInfinite.ts";
+export { getApiClientsClientidRecentActivityQueryKey } from "./hooks/ClientsHooks/useGetApiClientsClientidRecentActivity.ts";
+export { getApiClientsClientidRecentActivityQueryOptions } from "./hooks/ClientsHooks/useGetApiClientsClientidRecentActivity.ts";
+export { useGetApiClientsClientidRecentActivity } from "./hooks/ClientsHooks/useGetApiClientsClientidRecentActivity.ts";
+export { getApiClientsClientidRecentActivitySuspenseQueryKey } from "./hooks/ClientsHooks/useGetApiClientsClientidRecentActivitySuspense.ts";
+export { getApiClientsClientidRecentActivitySuspenseQueryOptions } from "./hooks/ClientsHooks/useGetApiClientsClientidRecentActivitySuspense.ts";
+export { useGetApiClientsClientidRecentActivitySuspense } from "./hooks/ClientsHooks/useGetApiClientsClientidRecentActivitySuspense.ts";
+export { getApiClientsClientidRecentActivitySuspenseInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsClientidRecentActivitySuspenseInfinite.ts";
+export { getApiClientsClientidRecentActivitySuspenseInfiniteQueryOptions } from "./hooks/ClientsHooks/useGetApiClientsClientidRecentActivitySuspenseInfinite.ts";
+export { useGetApiClientsClientidRecentActivitySuspenseInfinite } from "./hooks/ClientsHooks/useGetApiClientsClientidRecentActivitySuspenseInfinite.ts";
 export { getApiClientsExportQueryKey } from "./hooks/ClientsHooks/useGetApiClientsExport.ts";
 export { getApiClientsExportQueryOptions } from "./hooks/ClientsHooks/useGetApiClientsExport.ts";
 export { useGetApiClientsExport } from "./hooks/ClientsHooks/useGetApiClientsExport.ts";
+export { getApiClientsExportReportsQueryKey } from "./hooks/ClientsHooks/useGetApiClientsExportReports.ts";
+export { getApiClientsExportReportsQueryOptions } from "./hooks/ClientsHooks/useGetApiClientsExportReports.ts";
+export { useGetApiClientsExportReports } from "./hooks/ClientsHooks/useGetApiClientsExportReports.ts";
+export { getApiClientsExportReportsSuspenseQueryKey } from "./hooks/ClientsHooks/useGetApiClientsExportReportsSuspense.ts";
+export { getApiClientsExportReportsSuspenseQueryOptions } from "./hooks/ClientsHooks/useGetApiClientsExportReportsSuspense.ts";
+export { useGetApiClientsExportReportsSuspense } from "./hooks/ClientsHooks/useGetApiClientsExportReportsSuspense.ts";
+export { getApiClientsExportReportsSuspenseInfiniteQueryKey } from "./hooks/ClientsHooks/useGetApiClientsExportReportsSuspenseInfinite.ts";
+export { getApiClientsExportReportsSuspenseInfiniteQueryOptions } from "./hooks/ClientsHooks/useGetApiClientsExportReportsSuspenseInfinite.ts";
+export { useGetApiClientsExportReportsSuspenseInfinite } from "./hooks/ClientsHooks/useGetApiClientsExportReportsSuspenseInfinite.ts";
 export { getApiClientsExportSuspenseQueryKey } from "./hooks/ClientsHooks/useGetApiClientsExportSuspense.ts";
 export { getApiClientsExportSuspenseQueryOptions } from "./hooks/ClientsHooks/useGetApiClientsExportSuspense.ts";
 export { useGetApiClientsExportSuspense } from "./hooks/ClientsHooks/useGetApiClientsExportSuspense.ts";
@@ -1899,6 +2046,60 @@ export { useGetApiDepartmentsSuspenseInfinite } from "./hooks/DepartmentsHooks/u
 export { postApiDepartmentsMutationKey } from "./hooks/DepartmentsHooks/usePostApiDepartments.ts";
 export { postApiDepartmentsMutationOptions } from "./hooks/DepartmentsHooks/usePostApiDepartments.ts";
 export { usePostApiDepartments } from "./hooks/DepartmentsHooks/usePostApiDepartments.ts";
+export { getApiHedisClientsQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClients.ts";
+export { getApiHedisClientsQueryOptions } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClients.ts";
+export { useGetApiHedisClients } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClients.ts";
+export { getApiHedisClientsClientidMeasureProgressQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidMeasureProgress.ts";
+export { getApiHedisClientsClientidMeasureProgressQueryOptions } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidMeasureProgress.ts";
+export { useGetApiHedisClientsClientidMeasureProgress } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidMeasureProgress.ts";
+export { getApiHedisClientsClientidMeasureProgressSuspenseQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidMeasureProgressSuspense.ts";
+export { getApiHedisClientsClientidMeasureProgressSuspenseQueryOptions } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidMeasureProgressSuspense.ts";
+export { useGetApiHedisClientsClientidMeasureProgressSuspense } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidMeasureProgressSuspense.ts";
+export { getApiHedisClientsClientidMeasureProgressSuspenseInfiniteQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidMeasureProgressSuspenseInfinite.ts";
+export { getApiHedisClientsClientidMeasureProgressSuspenseInfiniteQueryOptions } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidMeasureProgressSuspenseInfinite.ts";
+export { useGetApiHedisClientsClientidMeasureProgressSuspenseInfinite } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidMeasureProgressSuspenseInfinite.ts";
+export { getApiHedisClientsClientidRecentActivityQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidRecentActivity.ts";
+export { getApiHedisClientsClientidRecentActivityQueryOptions } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidRecentActivity.ts";
+export { useGetApiHedisClientsClientidRecentActivity } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidRecentActivity.ts";
+export { getApiHedisClientsClientidRecentActivitySuspenseQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidRecentActivitySuspense.ts";
+export { getApiHedisClientsClientidRecentActivitySuspenseQueryOptions } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidRecentActivitySuspense.ts";
+export { useGetApiHedisClientsClientidRecentActivitySuspense } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidRecentActivitySuspense.ts";
+export { getApiHedisClientsClientidRecentActivitySuspenseInfiniteQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidRecentActivitySuspenseInfinite.ts";
+export { getApiHedisClientsClientidRecentActivitySuspenseInfiniteQueryOptions } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidRecentActivitySuspenseInfinite.ts";
+export { useGetApiHedisClientsClientidRecentActivitySuspenseInfinite } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsClientidRecentActivitySuspenseInfinite.ts";
+export { getApiHedisClientsExportQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsExport.ts";
+export { getApiHedisClientsExportQueryOptions } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsExport.ts";
+export { useGetApiHedisClientsExport } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsExport.ts";
+export { getApiHedisClientsExportSuspenseQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsExportSuspense.ts";
+export { getApiHedisClientsExportSuspenseQueryOptions } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsExportSuspense.ts";
+export { useGetApiHedisClientsExportSuspense } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsExportSuspense.ts";
+export { getApiHedisClientsExportSuspenseInfiniteQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsExportSuspenseInfinite.ts";
+export { getApiHedisClientsExportSuspenseInfiniteQueryOptions } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsExportSuspenseInfinite.ts";
+export { useGetApiHedisClientsExportSuspenseInfinite } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsExportSuspenseInfinite.ts";
+export { getApiHedisClientsIdQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsId.ts";
+export { getApiHedisClientsIdQueryOptions } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsId.ts";
+export { useGetApiHedisClientsId } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsId.ts";
+export { getApiHedisClientsIdSuspenseQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsIdSuspense.ts";
+export { getApiHedisClientsIdSuspenseQueryOptions } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsIdSuspense.ts";
+export { useGetApiHedisClientsIdSuspense } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsIdSuspense.ts";
+export { getApiHedisClientsIdSuspenseInfiniteQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsIdSuspenseInfinite.ts";
+export { getApiHedisClientsIdSuspenseInfiniteQueryOptions } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsIdSuspenseInfinite.ts";
+export { useGetApiHedisClientsIdSuspenseInfinite } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsIdSuspenseInfinite.ts";
+export { getApiHedisClientsStatsQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsStats.ts";
+export { getApiHedisClientsStatsQueryOptions } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsStats.ts";
+export { useGetApiHedisClientsStats } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsStats.ts";
+export { getApiHedisClientsStatsSuspenseQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsStatsSuspense.ts";
+export { getApiHedisClientsStatsSuspenseQueryOptions } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsStatsSuspense.ts";
+export { useGetApiHedisClientsStatsSuspense } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsStatsSuspense.ts";
+export { getApiHedisClientsStatsSuspenseInfiniteQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsStatsSuspenseInfinite.ts";
+export { getApiHedisClientsStatsSuspenseInfiniteQueryOptions } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsStatsSuspenseInfinite.ts";
+export { useGetApiHedisClientsStatsSuspenseInfinite } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsStatsSuspenseInfinite.ts";
+export { getApiHedisClientsSuspenseQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsSuspense.ts";
+export { getApiHedisClientsSuspenseQueryOptions } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsSuspense.ts";
+export { useGetApiHedisClientsSuspense } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsSuspense.ts";
+export { getApiHedisClientsSuspenseInfiniteQueryKey } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsSuspenseInfinite.ts";
+export { getApiHedisClientsSuspenseInfiniteQueryOptions } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsSuspenseInfinite.ts";
+export { useGetApiHedisClientsSuspenseInfinite } from "./hooks/HEDIS ClientsHooks/useGetApiHedisClientsSuspenseInfinite.ts";
 export { getApiHedisAbstractorDraftPatientidQueryKey } from "./hooks/HEDISHooks/useGetApiHedisAbstractorDraftPatientid.ts";
 export { getApiHedisAbstractorDraftPatientidQueryOptions } from "./hooks/HEDISHooks/useGetApiHedisAbstractorDraftPatientid.ts";
 export { useGetApiHedisAbstractorDraftPatientid } from "./hooks/HEDISHooks/useGetApiHedisAbstractorDraftPatientid.ts";
@@ -2545,6 +2746,8 @@ export { getApiAuditLogsExportQueryParamsStatusEnum } from "./types/GetApiAuditL
 export { getApiClientsQueryParamsContractTypeEnum } from "./types/GetApiClients.ts";
 export { getApiClientsQueryParamsRegionEnum } from "./types/GetApiClients.ts";
 export { getApiClientsQueryParamsStatusEnum } from "./types/GetApiClients.ts";
+export { dataStatusEnum } from "./types/GetApiClientsClientidMeasureProgress.ts";
+export { dataIconTypeEnum } from "./types/GetApiClientsClientidRecentActivity.ts";
 export { getApiClientsExportQueryParamsFormatEnum } from "./types/GetApiClientsExport.ts";
 export { getApiDashboardAbstractionVelocityQueryParamsDaysEnum } from "./types/GetApiDashboardAbstractionVelocity.ts";
 export { dataBenchmarkStatusEnum } from "./types/GetApiDashboardMeasureRates.ts";
@@ -2553,6 +2756,13 @@ export { completedTodayTrendTypeEnum } from "./types/GetApiDashboardStats.ts";
 export { openQueueTrendTypeEnum } from "./types/GetApiDashboardStats.ts";
 export { overallHedisRateTrendTypeEnum } from "./types/GetApiDashboardStats.ts";
 export { slaComplianceTrendTypeEnum } from "./types/GetApiDashboardStats.ts";
+export { getApiHedisClientsQueryParamsContractTypeEnum } from "./types/GetApiHedisClients.ts";
+export { getApiHedisClientsQueryParamsMeasureYearEnum } from "./types/GetApiHedisClients.ts";
+export { getApiHedisClientsQueryParamsRegionEnum } from "./types/GetApiHedisClients.ts";
+export { getApiHedisClientsQueryParamsSortOrderEnum } from "./types/GetApiHedisClients.ts";
+export { getApiHedisClientsQueryParamsStatusEnum } from "./types/GetApiHedisClients.ts";
+export { dataStatusEnum2 } from "./types/GetApiHedisClientsClientidMeasureProgress.ts";
+export { dataIconTypeEnum2 } from "./types/GetApiHedisClientsClientidRecentActivity.ts";
 export { getApiHedisReportsExportQueryParamsFormatEnum } from "./types/GetApiHedisReportsExport.ts";
 export { getApiHedisReportsGapClosureTrendQueryParamsViewEnum } from "./types/GetApiHedisReportsGapClosureTrend.ts";
 export { getApiMeasuresExportSpecsQueryParamsFormatEnum } from "./types/GetApiMeasuresExportSpecs.ts";
@@ -2751,6 +2961,30 @@ export {
   deleteApiClientsIdPathParamsSchema,
 } from "./zod/ClientsSchemas/deleteApiClientsIdSchema.ts";
 export {
+  getApiClientsClientidMeasureProgress200Schema,
+  getApiClientsClientidMeasureProgress404Schema,
+  getApiClientsClientidMeasureProgress500Schema,
+  getApiClientsClientidMeasureProgressPathParamsSchema,
+  getApiClientsClientidMeasureProgressQueryParamsSchema,
+  getApiClientsClientidMeasureProgressQueryResponseSchema,
+} from "./zod/ClientsSchemas/getApiClientsClientidMeasureProgressSchema.ts";
+export {
+  getApiClientsClientidRecentActivity200Schema,
+  getApiClientsClientidRecentActivity404Schema,
+  getApiClientsClientidRecentActivity500Schema,
+  getApiClientsClientidRecentActivityPathParamsSchema,
+  getApiClientsClientidRecentActivityQueryParamsSchema,
+  getApiClientsClientidRecentActivityQueryResponseSchema,
+} from "./zod/ClientsSchemas/getApiClientsClientidRecentActivitySchema.ts";
+export {
+  getApiClientsExportReports200Schema,
+  getApiClientsExportReports400Schema,
+  getApiClientsExportReports404Schema,
+  getApiClientsExportReports500Schema,
+  getApiClientsExportReportsQueryParamsSchema,
+  getApiClientsExportReportsQueryResponseSchema,
+} from "./zod/ClientsSchemas/getApiClientsExportReportsSchema.ts";
+export {
   getApiClientsExport200Schema,
   getApiClientsExportQueryParamsSchema,
   getApiClientsExportQueryResponseSchema,
@@ -2902,6 +3136,48 @@ export {
   postApiDepartmentsMutationRequestSchema,
   postApiDepartmentsMutationResponseSchema,
 } from "./zod/DepartmentsSchemas/postApiDepartmentsSchema.ts";
+export {
+  getApiHedisClientsClientidMeasureProgress200Schema,
+  getApiHedisClientsClientidMeasureProgress404Schema,
+  getApiHedisClientsClientidMeasureProgress500Schema,
+  getApiHedisClientsClientidMeasureProgressPathParamsSchema,
+  getApiHedisClientsClientidMeasureProgressQueryParamsSchema,
+  getApiHedisClientsClientidMeasureProgressQueryResponseSchema,
+} from "./zod/HEDIS ClientsSchemas/getApiHedisClientsClientidMeasureProgressSchema.ts";
+export {
+  getApiHedisClientsClientidRecentActivity200Schema,
+  getApiHedisClientsClientidRecentActivity404Schema,
+  getApiHedisClientsClientidRecentActivity500Schema,
+  getApiHedisClientsClientidRecentActivityPathParamsSchema,
+  getApiHedisClientsClientidRecentActivityQueryParamsSchema,
+  getApiHedisClientsClientidRecentActivityQueryResponseSchema,
+} from "./zod/HEDIS ClientsSchemas/getApiHedisClientsClientidRecentActivitySchema.ts";
+export {
+  getApiHedisClientsExport200Schema,
+  getApiHedisClientsExport400Schema,
+  getApiHedisClientsExport404Schema,
+  getApiHedisClientsExport500Schema,
+  getApiHedisClientsExportQueryParamsSchema,
+  getApiHedisClientsExportQueryResponseSchema,
+} from "./zod/HEDIS ClientsSchemas/getApiHedisClientsExportSchema.ts";
+export {
+  getApiHedisClientsId200Schema,
+  getApiHedisClientsId404Schema,
+  getApiHedisClientsId500Schema,
+  getApiHedisClientsIdPathParamsSchema,
+  getApiHedisClientsIdQueryResponseSchema,
+} from "./zod/HEDIS ClientsSchemas/getApiHedisClientsIdSchema.ts";
+export {
+  getApiHedisClients200Schema,
+  getApiHedisClients500Schema,
+  getApiHedisClientsQueryParamsSchema,
+  getApiHedisClientsQueryResponseSchema,
+} from "./zod/HEDIS ClientsSchemas/getApiHedisClientsSchema.ts";
+export {
+  getApiHedisClientsStats200Schema,
+  getApiHedisClientsStats500Schema,
+  getApiHedisClientsStatsQueryResponseSchema,
+} from "./zod/HEDIS ClientsSchemas/getApiHedisClientsStatsSchema.ts";
 export {
   getApiHedisAbstractorDraftPatientid200Schema,
   getApiHedisAbstractorDraftPatientid400Schema,
