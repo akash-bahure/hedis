@@ -120,6 +120,30 @@ export {
   deleteApiClientsIdPathParamsSchema,
 } from "./ClientsSchemas/deleteApiClientsIdSchema.ts";
 export {
+  getApiClientsClientidMeasureProgress200Schema,
+  getApiClientsClientidMeasureProgress404Schema,
+  getApiClientsClientidMeasureProgress500Schema,
+  getApiClientsClientidMeasureProgressPathParamsSchema,
+  getApiClientsClientidMeasureProgressQueryParamsSchema,
+  getApiClientsClientidMeasureProgressQueryResponseSchema,
+} from "./ClientsSchemas/getApiClientsClientidMeasureProgressSchema.ts";
+export {
+  getApiClientsClientidRecentActivity200Schema,
+  getApiClientsClientidRecentActivity404Schema,
+  getApiClientsClientidRecentActivity500Schema,
+  getApiClientsClientidRecentActivityPathParamsSchema,
+  getApiClientsClientidRecentActivityQueryParamsSchema,
+  getApiClientsClientidRecentActivityQueryResponseSchema,
+} from "./ClientsSchemas/getApiClientsClientidRecentActivitySchema.ts";
+export {
+  getApiClientsExportReports200Schema,
+  getApiClientsExportReports400Schema,
+  getApiClientsExportReports404Schema,
+  getApiClientsExportReports500Schema,
+  getApiClientsExportReportsQueryParamsSchema,
+  getApiClientsExportReportsQueryResponseSchema,
+} from "./ClientsSchemas/getApiClientsExportReportsSchema.ts";
+export {
   getApiClientsExport200Schema,
   getApiClientsExportQueryParamsSchema,
   getApiClientsExportQueryResponseSchema,
@@ -271,6 +295,48 @@ export {
   postApiDepartmentsMutationRequestSchema,
   postApiDepartmentsMutationResponseSchema,
 } from "./DepartmentsSchemas/postApiDepartmentsSchema.ts";
+export {
+  getApiHedisClientsClientidMeasureProgress200Schema,
+  getApiHedisClientsClientidMeasureProgress404Schema,
+  getApiHedisClientsClientidMeasureProgress500Schema,
+  getApiHedisClientsClientidMeasureProgressPathParamsSchema,
+  getApiHedisClientsClientidMeasureProgressQueryParamsSchema,
+  getApiHedisClientsClientidMeasureProgressQueryResponseSchema,
+} from "./HEDIS ClientsSchemas/getApiHedisClientsClientidMeasureProgressSchema.ts";
+export {
+  getApiHedisClientsClientidRecentActivity200Schema,
+  getApiHedisClientsClientidRecentActivity404Schema,
+  getApiHedisClientsClientidRecentActivity500Schema,
+  getApiHedisClientsClientidRecentActivityPathParamsSchema,
+  getApiHedisClientsClientidRecentActivityQueryParamsSchema,
+  getApiHedisClientsClientidRecentActivityQueryResponseSchema,
+} from "./HEDIS ClientsSchemas/getApiHedisClientsClientidRecentActivitySchema.ts";
+export {
+  getApiHedisClientsExport200Schema,
+  getApiHedisClientsExport400Schema,
+  getApiHedisClientsExport404Schema,
+  getApiHedisClientsExport500Schema,
+  getApiHedisClientsExportQueryParamsSchema,
+  getApiHedisClientsExportQueryResponseSchema,
+} from "./HEDIS ClientsSchemas/getApiHedisClientsExportSchema.ts";
+export {
+  getApiHedisClientsId200Schema,
+  getApiHedisClientsId404Schema,
+  getApiHedisClientsId500Schema,
+  getApiHedisClientsIdPathParamsSchema,
+  getApiHedisClientsIdQueryResponseSchema,
+} from "./HEDIS ClientsSchemas/getApiHedisClientsIdSchema.ts";
+export {
+  getApiHedisClients200Schema,
+  getApiHedisClients500Schema,
+  getApiHedisClientsQueryParamsSchema,
+  getApiHedisClientsQueryResponseSchema,
+} from "./HEDIS ClientsSchemas/getApiHedisClientsSchema.ts";
+export {
+  getApiHedisClientsStats200Schema,
+  getApiHedisClientsStats500Schema,
+  getApiHedisClientsStatsQueryResponseSchema,
+} from "./HEDIS ClientsSchemas/getApiHedisClientsStatsSchema.ts";
 export {
   getApiHedisAbstractorDraftPatientid200Schema,
   getApiHedisAbstractorDraftPatientid400Schema,

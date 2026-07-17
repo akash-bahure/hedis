@@ -122,12 +122,41 @@ export type {
   GetApiClientsQueryResponse,
 } from "./GetApiClients.ts";
 export type {
+  DataStatusEnumKey,
+  GetApiClientsClientidMeasureProgress200,
+  GetApiClientsClientidMeasureProgress404,
+  GetApiClientsClientidMeasureProgress500,
+  GetApiClientsClientidMeasureProgressPathParams,
+  GetApiClientsClientidMeasureProgressQuery,
+  GetApiClientsClientidMeasureProgressQueryParams,
+  GetApiClientsClientidMeasureProgressQueryResponse,
+} from "./GetApiClientsClientidMeasureProgress.ts";
+export type {
+  DataIconTypeEnumKey,
+  GetApiClientsClientidRecentActivity200,
+  GetApiClientsClientidRecentActivity404,
+  GetApiClientsClientidRecentActivity500,
+  GetApiClientsClientidRecentActivityPathParams,
+  GetApiClientsClientidRecentActivityQuery,
+  GetApiClientsClientidRecentActivityQueryParams,
+  GetApiClientsClientidRecentActivityQueryResponse,
+} from "./GetApiClientsClientidRecentActivity.ts";
+export type {
   GetApiClientsExport200,
   GetApiClientsExportQuery,
   GetApiClientsExportQueryParams,
   GetApiClientsExportQueryParamsFormatEnumKey,
   GetApiClientsExportQueryResponse,
 } from "./GetApiClientsExport.ts";
+export type {
+  GetApiClientsExportReports200,
+  GetApiClientsExportReports400,
+  GetApiClientsExportReports404,
+  GetApiClientsExportReports500,
+  GetApiClientsExportReportsQuery,
+  GetApiClientsExportReportsQueryParams,
+  GetApiClientsExportReportsQueryResponse,
+} from "./GetApiClientsExportReports.ts";
 export type {
   GetApiClientsId200,
   GetApiClientsId404,
@@ -249,6 +278,61 @@ export type {
   GetApiHedisAbstractorMeasuresPatientidQuery,
   GetApiHedisAbstractorMeasuresPatientidQueryResponse,
 } from "./GetApiHedisAbstractorMeasuresPatientid.ts";
+export type {
+  GetApiHedisClients200,
+  GetApiHedisClients500,
+  GetApiHedisClientsQuery,
+  GetApiHedisClientsQueryParams,
+  GetApiHedisClientsQueryParamsContractTypeEnumKey,
+  GetApiHedisClientsQueryParamsMeasureYearEnumKey,
+  GetApiHedisClientsQueryParamsRegionEnumKey,
+  GetApiHedisClientsQueryParamsSortOrderEnumKey,
+  GetApiHedisClientsQueryParamsStatusEnumKey,
+  GetApiHedisClientsQueryResponse,
+} from "./GetApiHedisClients.ts";
+export type {
+  DataStatusEnum2Key,
+  GetApiHedisClientsClientidMeasureProgress200,
+  GetApiHedisClientsClientidMeasureProgress404,
+  GetApiHedisClientsClientidMeasureProgress500,
+  GetApiHedisClientsClientidMeasureProgressPathParams,
+  GetApiHedisClientsClientidMeasureProgressQuery,
+  GetApiHedisClientsClientidMeasureProgressQueryParams,
+  GetApiHedisClientsClientidMeasureProgressQueryResponse,
+} from "./GetApiHedisClientsClientidMeasureProgress.ts";
+export type {
+  DataIconTypeEnum2Key,
+  GetApiHedisClientsClientidRecentActivity200,
+  GetApiHedisClientsClientidRecentActivity404,
+  GetApiHedisClientsClientidRecentActivity500,
+  GetApiHedisClientsClientidRecentActivityPathParams,
+  GetApiHedisClientsClientidRecentActivityQuery,
+  GetApiHedisClientsClientidRecentActivityQueryParams,
+  GetApiHedisClientsClientidRecentActivityQueryResponse,
+} from "./GetApiHedisClientsClientidRecentActivity.ts";
+export type {
+  GetApiHedisClientsExport200,
+  GetApiHedisClientsExport400,
+  GetApiHedisClientsExport404,
+  GetApiHedisClientsExport500,
+  GetApiHedisClientsExportQuery,
+  GetApiHedisClientsExportQueryParams,
+  GetApiHedisClientsExportQueryResponse,
+} from "./GetApiHedisClientsExport.ts";
+export type {
+  GetApiHedisClientsId200,
+  GetApiHedisClientsId404,
+  GetApiHedisClientsId500,
+  GetApiHedisClientsIdPathParams,
+  GetApiHedisClientsIdQuery,
+  GetApiHedisClientsIdQueryResponse,
+} from "./GetApiHedisClientsId.ts";
+export type {
+  GetApiHedisClientsStats200,
+  GetApiHedisClientsStats500,
+  GetApiHedisClientsStatsQuery,
+  GetApiHedisClientsStatsQueryResponse,
+} from "./GetApiHedisClientsStats.ts";
 export type {
   GetApiHedisClinicalTimelineEventEventid200,
   GetApiHedisClinicalTimelineEventEventidPathParams,
@@ -1166,6 +1250,8 @@ export { getApiAuditLogsExportQueryParamsStatusEnum } from "./GetApiAuditLogsExp
 export { getApiClientsQueryParamsContractTypeEnum } from "./GetApiClients.ts";
 export { getApiClientsQueryParamsRegionEnum } from "./GetApiClients.ts";
 export { getApiClientsQueryParamsStatusEnum } from "./GetApiClients.ts";
+export { dataStatusEnum } from "./GetApiClientsClientidMeasureProgress.ts";
+export { dataIconTypeEnum } from "./GetApiClientsClientidRecentActivity.ts";
 export { getApiClientsExportQueryParamsFormatEnum } from "./GetApiClientsExport.ts";
 export { getApiDashboardAbstractionVelocityQueryParamsDaysEnum } from "./GetApiDashboardAbstractionVelocity.ts";
 export { dataBenchmarkStatusEnum } from "./GetApiDashboardMeasureRates.ts";
@@ -1174,6 +1260,13 @@ export { completedTodayTrendTypeEnum } from "./GetApiDashboardStats.ts";
 export { openQueueTrendTypeEnum } from "./GetApiDashboardStats.ts";
 export { overallHedisRateTrendTypeEnum } from "./GetApiDashboardStats.ts";
 export { slaComplianceTrendTypeEnum } from "./GetApiDashboardStats.ts";
+export { getApiHedisClientsQueryParamsContractTypeEnum } from "./GetApiHedisClients.ts";
+export { getApiHedisClientsQueryParamsMeasureYearEnum } from "./GetApiHedisClients.ts";
+export { getApiHedisClientsQueryParamsRegionEnum } from "./GetApiHedisClients.ts";
+export { getApiHedisClientsQueryParamsSortOrderEnum } from "./GetApiHedisClients.ts";
+export { getApiHedisClientsQueryParamsStatusEnum } from "./GetApiHedisClients.ts";
+export { dataStatusEnum2 } from "./GetApiHedisClientsClientidMeasureProgress.ts";
+export { dataIconTypeEnum2 } from "./GetApiHedisClientsClientidRecentActivity.ts";
 export { getApiHedisReportsExportQueryParamsFormatEnum } from "./GetApiHedisReportsExport.ts";
 export { getApiHedisReportsGapClosureTrendQueryParamsViewEnum } from "./GetApiHedisReportsGapClosureTrend.ts";
 export { getApiMeasuresExportSpecsQueryParamsFormatEnum } from "./GetApiMeasuresExportSpecs.ts";
