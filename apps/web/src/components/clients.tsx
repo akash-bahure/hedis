@@ -46,10 +46,13 @@ import {
   useGetApiClients,
   useGetApiClientsStats,
   usePostApiClients,
+  useGetApiClientsClientidMeasureProgress,
+  useGetApiClientsClientidRecentActivity,
+  getApiClientsExportReports,
 } from "@/api";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-
+import { Pagination } from "./Pagination";
 /* ─── Types ─────────────────────────────────────────────── */
 type ClientStatus = "active" | "onboarding" | "at-risk" | "inactive";
 type ContractType =
@@ -77,6 +80,7 @@ interface Client {
   startDate: string;
   complianceScore: number;
   abstractors: number;
+  abstractorCount: number;
   plan: string;
   lastActivity: string;
 }
@@ -414,12 +418,85 @@ function FullProfileModal({
   onClose: () => void;
 }) {
   const [tab, setTab] = useState<ProfileTab>("overview");
+  const [measurePage, setMeasurePage] = useState(1);
   const completion = pct(client.chartsCompleted, client.chartsTotal);
   const abstraction = pct(client.chartsAbstracted, client.chartsTotal);
   const daysLeft = Math.max(
     0,
-    Math.ceil((new Date(client.dueDate).getTime() - Date.now()) / 86400000),
+    Math.ceil((new Date(client.dueDate).getTime() - Date.now()) / 86400000)
   );
+  const [activityPage, setActivityPage] = useState(1); // ← New
+
+  // Recent Activity Hook
+  const { data: activityData, isLoading: activityLoading } =
+    useGetApiClientsClientidRecentActivity(
+      client.id,
+      { page: activityPage, limit: 10 },
+      {
+        query: {
+          enabled: !!client.id && tab === "overview",
+        },
+      }
+    );
+
+  const activities = activityData?.data || [];
+  const activityTotalPages = activityData?.totalPages || 1;
+  const activityTotalCount = activityData?.totalCount || 0;
+
+  // Fetch Measure Progress
+  const { data: measureData, isLoading: measuresLoading } =
+    useGetApiClientsClientidMeasureProgress(
+      client.id,
+      { page: measurePage, limit: 10 },
+      {
+        query: {
+          enabled: !!client.id && (tab === "overview" || tab === "charts"),
+        },
+      }
+    );
+  const measures = measureData?.data || [];
+  const measureTotalPages = measureData?.totalPages || 1;
+  const measureTotalCount = measureData?.totalCount || 0;
+
+  const handleExportReport = async () => {
+    if (!client.id) {
+      toast.error("Client ID not available");
+      return;
+    }
+
+    const toastId = "export-toast";
+    try {
+      toast.loading("Preparing detailed client report...", { id: toastId });
+
+      const blob = await getApiClientsExportReports(
+        { clientId: client.id },
+        { responseType: "blob" } // Important for binary download
+      );
+
+      // Create downloadable link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = `${client.shortCode || "client"}_full_report_${new Date().toISOString().slice(0, 10)}.csv`;
+
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Report downloaded successfully", { id: toastId });
+    } catch (error: any) {
+      console.error("Export failed:", error);
+      toast.error(
+        error?.response?.data?.message ||
+          "Failed to download report. Please try again.",
+        { id: toastId }
+      );
+    }
+  };
 
   return (
     <div
@@ -624,7 +701,7 @@ function FullProfileModal({
                 <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3">
                   Measure Breakdown
                 </h3>
-                <div className="rounded-xl border border-border overflow-hidden">
+                <div className="rounded-xl border border-border ovFerflow-hidden">
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="bg-muted/40 border-b border-border">
@@ -650,91 +727,153 @@ function FullProfileModal({
                       </tr>
                     </thead>
                     <tbody>
-                      {mockMeasures.map((m, i) => (
-                        <tr
-                          key={m.code}
-                          className={`border-b border-border last:border-b-0 ${i % 2 !== 0 ? "bg-muted/20" : ""}`}
-                        >
-                          <td className="px-3 py-2.5">
-                            <span
-                              className="px-2 py-0.5 rounded bg-primary/10 text-primary font-bold"
-                              style={{ fontSize: 11 }}
-                            >
-                              {m.code}
-                            </span>
-                          </td>
-                          <td
-                            className="px-3 py-2.5 text-foreground"
-                            style={{ fontSize: 12 }}
+                      {measures.map((m: any, i: number) => {
+                        const pct = m.progress || 0;
+                        return (
+                          <tr
+                            key={m.measure_code || i}
+                            className={`border-b border-border last:border-b-0 ${i % 2 !== 0 ? "bg-muted/20" : ""}`}
                           >
-                            {m.label}
-                          </td>
-                          <td
-                            className="px-3 py-2.5 text-muted-foreground font-medium"
-                            style={{ fontSize: 12 }}
-                          >
-                            {m.total}
-                          </td>
-                          <td className="px-3 py-2.5">
-                            <span
-                              className={`font-semibold ${m.pct >= 90 ? "text-emerald-600" : m.pct >= 70 ? "text-foreground" : "text-amber-600"}`}
-                              style={{ fontSize: 12 }}
-                            >
-                              {m.done}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2.5 min-w-[120px]">
-                            <div className="flex items-center gap-2">
-                              <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-                                <div
-                                  className={`h-full rounded-full ${m.pct >= 90 ? "bg-emerald-500" : m.pct >= 70 ? "bg-primary" : "bg-amber-500"}`}
-                                  style={{ width: `${m.pct}%` }}
-                                />
-                              </div>
+                            <td className="px-3 py-2.5">
                               <span
-                                className="text-muted-foreground flex-shrink-0"
+                                className="px-2 py-0.5 rounded bg-primary/10 text-primary font-bold"
                                 style={{ fontSize: 11 }}
                               >
-                                {m.pct}%
+                                {m.measure_code}
                               </span>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                            <td
+                              className="px-3 py-2.5 text-foreground"
+                              style={{ fontSize: 12 }}
+                            >
+                              {m.measure_name}
+                            </td>
+                            <td
+                              className="px-3 py-2.5 text-muted-foreground font-medium"
+                              style={{ fontSize: 12 }}
+                            >
+                              {m.assigned}
+                            </td>
+                            <td className="px-3 py-2.5">
+                              <span
+                                className={`font-semibold ${pct >= 90 ? "text-emerald-600" : pct >= 70 ? "text-foreground" : "text-amber-600"}`}
+                                style={{ fontSize: 12 }}
+                              >
+                                {m.done}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2.5 min-w-[120px]">
+                              <div className="flex items-center gap-2">
+                                <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full ${pct >= 90 ? "bg-emerald-500" : pct >= 70 ? "bg-primary" : "bg-amber-500"}`}
+                                    style={{ width: `${pct}%` }}
+                                  />
+                                </div>
+                                <span
+                                  className="text-muted-foreground flex-shrink-0"
+                                  style={{ fontSize: 11 }}
+                                >
+                                  {pct}%
+                                </span>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
+
+                  {/* Pagination for Measures */}
+                  {measureTotalPages > 1 && (
+                    <Pagination
+                      page={measurePage}
+                      totalPages={measureTotalPages}
+                      totalRecords={measureTotalCount}
+                      pageSize={10}
+                      onPageChange={setMeasurePage}
+                      recordLabel="measures"
+                    />
+                  )}
                 </div>
               </section>
-
               <section>
                 <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3">
                   Recent Activity
                 </h3>
                 <div className="space-y-0">
-                  {mockTimeline.map((ev, i) => (
-                    <div key={i} className="flex gap-3">
-                      <div className="flex flex-col items-center">
-                        <div
-                          className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${ev.type === "success" ? "bg-emerald-500" : ev.type === "warning" ? "bg-amber-500" : "bg-blue-400"}`}
-                        />
-                        {i < mockTimeline.length - 1 && (
-                          <div className="w-px flex-1 bg-border mt-1" />
-                        )}
-                      </div>
-                      <div className="pb-4 min-w-0">
-                        <p className="text-foreground" style={{ fontSize: 13 }}>
-                          {ev.event}
-                        </p>
-                        <p
-                          className="text-muted-foreground mt-0.5"
-                          style={{ fontSize: 11 }}
-                        >
-                          {ev.date}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                  {activities.length > 0 ? (
+                    activities.map((ev: any, i: number) => {
+                      const isSuccess =
+                        ev.status?.toLowerCase() === "completed" ||
+                        ev.iconType === "chart";
+                      const isWarning =
+                        ev.status?.toLowerCase() === "pending" ||
+                        ev.iconType === "qa";
+
+                      return (
+                        <div key={ev.id || i} className="flex gap-3">
+                          <div className="flex flex-col items-center">
+                            <div
+                              className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                                isSuccess
+                                  ? "bg-emerald-500"
+                                  : isWarning
+                                    ? "bg-amber-500"
+                                    : "bg-blue-400"
+                              }`}
+                            />
+                            {i < activities.length - 1 && (
+                              <div className="w-px flex-1 bg-border mt-1" />
+                            )}
+                          </div>
+                          <div className="pb-4 min-w-0 flex-1">
+                            <p
+                              className="text-foreground"
+                              style={{ fontSize: 13 }}
+                            >
+                              {ev.title || ev.activityType}
+                            </p>
+                            {ev.description && (
+                              <p
+                                className="text-muted-foreground mt-0.5"
+                                style={{ fontSize: 12 }}
+                              >
+                                {ev.description}
+                              </p>
+                            )}
+                            <p
+                              className="text-muted-foreground mt-1"
+                              style={{ fontSize: 11 }}
+                            >
+                              {ev.timestamp
+                                ? new Date(ev.timestamp).toLocaleDateString()
+                                : ev.performedBy
+                                  ? `By ${ev.performedBy}`
+                                  : ""}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="text-muted-foreground text-center py-8">
+                      No recent activity found.
+                    </p>
+                  )}
                 </div>
+
+                {/* Pagination for Recent Activity */}
+                {activityTotalPages > 1 && (
+                  <Pagination
+                    page={activityPage}
+                    totalPages={activityTotalPages}
+                    totalRecords={activityTotalCount}
+                    pageSize={10}
+                    onPageChange={setActivityPage}
+                    recordLabel="activities"
+                  />
+                )}
               </section>
             </div>
           )}
@@ -770,7 +909,7 @@ function FullProfileModal({
                   },
                   {
                     label: "Abstractors",
-                    val: client.abstractors,
+                    val: client.abstractorCount,
                     icon: UserCheck,
                     cls: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300",
                   },
@@ -816,53 +955,53 @@ function FullProfileModal({
                   Measure Chart Volumes
                 </h3>
                 <div className="space-y-2.5">
-                  {mockMeasures.map((m) => (
-                    <div key={m.code} className="flex items-center gap-3">
-                      <span
-                        className="text-muted-foreground font-mono flex-shrink-0 w-10 text-right"
-                        style={{ fontSize: 11 }}
+                  {measures.map((m: any) => {
+                    const pct = m.progress || 0;
+                    return (
+                      <div
+                        key={m.measure_code}
+                        className="flex items-center gap-3"
                       >
-                        {m.code}
-                      </span>
-                      <div className="flex-1 h-7 bg-muted/40 rounded-lg overflow-hidden relative border border-border">
-                        <div
-                          className={`absolute inset-y-0 left-0 rounded-lg ${m.pct >= 90 ? "bg-emerald-500" : m.pct >= 70 ? "bg-primary" : "bg-amber-500"} opacity-80`}
-                          style={{ width: `${m.pct}%` }}
-                        />
                         <span
-                          className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground font-semibold z-10"
+                          className="text-muted-foreground font-mono flex-shrink-0 w-10 text-right"
                           style={{ fontSize: 11 }}
                         >
-                          {m.done}/{m.total}
+                          {m.measure_code}
+                        </span>
+                        <div className="flex-1 h-7 bg-muted/40 rounded-lg overflow-hidden relative border border-border">
+                          <div
+                            className={`absolute inset-y-0 left-0 rounded-lg ${pct >= 90 ? "bg-emerald-500" : pct >= 70 ? "bg-primary" : "bg-amber-500"} opacity-80`}
+                            style={{ width: `${pct}%` }}
+                          />
+                          <span
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground font-semibold z-10"
+                            style={{ fontSize: 11 }}
+                          >
+                            {m.done || 0}/{m.assigned || 0}
+                          </span>
+                        </div>
+                        <span
+                          className="text-muted-foreground flex-shrink-0 w-8 text-right"
+                          style={{ fontSize: 11 }}
+                        >
+                          {pct}%
                         </span>
                       </div>
-                      <span
-                        className="text-muted-foreground flex-shrink-0 w-8 text-right"
-                        style={{ fontSize: 11 }}
-                      >
-                        {m.pct}%
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
-                <div className="flex items-center gap-4 mt-3">
-                  {[
-                    { cls: "bg-emerald-500", label: "≥90%" },
-                    { cls: "bg-primary", label: "70–89%" },
-                    { cls: "bg-amber-500", label: "<70%" },
-                  ].map((l) => (
-                    <div
-                      key={l.label}
-                      className="flex items-center gap-1.5"
-                      style={{ fontSize: 11 }}
-                    >
-                      <div className={`w-2.5 h-2.5 rounded-sm ${l.cls}`} />
-                      <span className="text-muted-foreground">
-                        {l.label} complete
-                      </span>
-                    </div>
-                  ))}
-                </div>
+
+                {/* Pagination for Measure Chart Volumes */}
+                {measureTotalPages > 1 && (
+                  <Pagination
+                    page={measurePage}
+                    totalPages={measureTotalPages}
+                    totalRecords={measureTotalCount}
+                    pageSize={10}
+                    onPageChange={setMeasurePage}
+                    recordLabel="measures"
+                  />
+                )}
               </section>
 
               <section>
@@ -1193,40 +1332,74 @@ function FullProfileModal({
 
               <section>
                 <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3">
-                  Assigned Abstractor Team
+                  Assigned Team
                 </h3>
-                <div className="space-y-2">
-                  {Array.from(
-                    {
-                      length: Math.max(
-                        Math.min(client.abstractors, 5),
-                        client.abstractors > 0 ? 1 : 0,
-                      ),
-                    },
-                    (_, i) => {
-                      const names = [
-                        "Jordan Liu",
-                        "Priya Nair",
-                        "Carlos Mendez",
-                        "Aisha Brooks",
-                        "Tom Fielding",
-                      ];
-                      const counts = [48, 52, 41, 0, 38];
-                      const active = [true, true, true, false, true];
-                      return (
+                <div className="space-y-3">
+                  {/* Abstractors */}
+                  {client.abstractors && client.abstractors.length > 0 ? (
+                    client.abstractors.map((member: any, i: number) => (
+                      <div
+                        key={`abs-${i}`}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border bg-muted/20"
+                      >
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center flex-shrink-0">
+                          <span
+                            className="text-white font-bold"
+                            style={{ fontSize: 9 }}
+                          >
+                            {member.name
+                              ?.split(" ")
+                              .map((n: string) => n[0])
+                              .join("") || "A"}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p
+                            className="font-semibold text-foreground"
+                            style={{ fontSize: 12 }}
+                          >
+                            {member.name || "Unknown Abstractor"}
+                          </p>
+                          <p
+                            className="text-muted-foreground"
+                            style={{ fontSize: 11 }}
+                          >
+                            Chart Abstractor
+                          </p>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <span className="text-[10px] font-semibold text-emerald-600">
+                            Active
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-muted-foreground text-center py-4 text-sm">
+                      No abstractors assigned yet.
+                    </p>
+                  )}
+
+                  {/* QA Users */}
+                  {client.qa_users && client.qa_users.length > 0 && (
+                    <>
+                      <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mt-6 mb-2">
+                        Quality Assurance
+                      </div>
+                      {client.qa_users.map((member: any, i: number) => (
                         <div
-                          key={i}
+                          key={`qa-${i}`}
                           className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border bg-muted/20"
                         >
-                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center flex-shrink-0">
+                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center flex-shrink-0">
                             <span
                               className="text-white font-bold"
                               style={{ fontSize: 9 }}
                             >
-                              {names[i]
+                              {member.name
                                 ?.split(" ")
-                                .map((n) => n[0])
-                                .join("")}
+                                .map((n: string) => n[0])
+                                .join("") || "Q"}
                             </span>
                           </div>
                           <div className="flex-1 min-w-0">
@@ -1234,39 +1407,23 @@ function FullProfileModal({
                               className="font-semibold text-foreground"
                               style={{ fontSize: 12 }}
                             >
-                              {names[i]}
+                              {member.name || "Unknown QA"}
                             </p>
                             <p
                               className="text-muted-foreground"
                               style={{ fontSize: 11 }}
                             >
-                              Chart Abstractor
+                              Quality Analyst
                             </p>
                           </div>
                           <div className="text-right flex-shrink-0">
-                            <p
-                              className="font-semibold text-foreground"
-                              style={{ fontSize: 12 }}
-                            >
-                              {counts[i]} charts
-                            </p>
-                            <span
-                              className={`text-[10px] font-semibold ${active[i] ? "text-emerald-600" : "text-amber-600"}`}
-                            >
-                              {active[i] ? "active" : "on-leave"}
+                            <span className="text-[10px] font-semibold text-emerald-600">
+                              Active
                             </span>
                           </div>
                         </div>
-                      );
-                    },
-                  )}
-                  {client.abstractors === 0 && (
-                    <p
-                      className="text-muted-foreground text-center py-4"
-                      style={{ fontSize: 13 }}
-                    >
-                      No abstractors assigned yet.
-                    </p>
+                      ))}
+                    </>
                   )}
                 </div>
               </section>
@@ -1303,7 +1460,8 @@ function FullProfileModal({
             Last activity: {client.lastActivity}
           </p>
           <div className="flex items-center gap-2">
-            <button
+          <button
+              onClick={handleExportReport}
               className="inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 rounded-lg border border-border text-foreground hover:bg-accent transition-colors"
               style={{ fontSize: 13 }}
             >
@@ -1475,10 +1633,10 @@ function ClientPanel({
                 { label: "Measure Year", value: client.measureYear },
                 { label: "Start Date", value: client.startDate },
                 { label: "Due Date", value: client.dueDate },
-                { label: "Plan", value: client.plan_tier },
+                { label: "Plan", value: client.plan || "Professional" }, // ← Fixed
                 {
                   label: "Abstractors",
-                  value: `${client.abstractors_assigned} assigned`,
+                  value: `${client.abstractorCount || 0} assigned`, // ← Fixed
                 },
               ].map((row, i) => (
                 <div
@@ -1518,12 +1676,15 @@ function ClientPanel({
                   className="font-semibold text-foreground"
                   style={{ fontSize: 13 }}
                 >
-                  {client.contactName}
+                  {client.contactName || "—"}
                 </span>
               </div>
               {[
-                { icon: Mail, val: client.email },
-                { icon: Phone, val: client.phone },
+                { icon: Mail, val: client.contactEmail || client.email || "—" },
+                {
+                  icon: Phone,
+                  val: client.contactPhone || client.phone || "—",
+                },
               ].map((row) => (
                 <div
                   key={row.val}
@@ -2292,51 +2453,64 @@ export function Clients() {
           keepPreviousData: true,
           refetchOnWindowFocus: false,
         },
-      },
+      }
     );
 
   const clients: Client[] =
-    clientsData?.data?.map((client) => ({
-      id: client.id || "",
+    clientsData?.data?.map((client: any) => {
+      const dueDate = client.due_date
+        ? new Date(client.due_date).toISOString().split("T")[0]
+        : "";
 
-      clientId: client.client_id || "",
+      const startDate = client.start_date
+        ? new Date(client.start_date).toISOString().split("T")[0]
+        : "";
 
-      name: client.org_name || "",
+      const chartsTotal = client.total_charts || 0;
+      const chartsCompleted = client.completed_charts || 0;
 
-      shortCode: client.short_code || "",
+      return {
+        id: client.id || "",
+        clientId: client.client_id || "",
+        name: client.org_name || "",
+        shortCode: client.short_code || "",
+        region: client.region || "",
+        status: (client.status || "inactive")
+          .toLowerCase()
+          .replace("active", "active")
+          .replace("onboarding", "onboarding")
+          .replace("at risk", "at-risk") as ClientStatus,
 
-      region: client.region || "",
+        contractType: client.contract_type || "",
+        measureYear: client.measure_year || "",
+        chartsTotal,
+        chartsCompleted,
+        chartsAbstracted: chartsCompleted, // fallback if no separate field
+        chartsPending: client.pending_charts ?? chartsTotal - chartsCompleted,
 
-      status: (client.status || "inactive").toLowerCase() as ClientStatus,
+        dueDate,
+        startDate,
 
-      contractType: client.contract_type || "",
+        contactName: client.primary_contact || "",
+        contactEmail: client.email || "",
+        contactPhone: client.phone || "",
 
-      measureYear: client.measure_year || "",
+        abstractorCount: client.abstractors_assigned || 0,
+        abstractors: client.abstractors || [],
+        qa_users: client.qa_users || [],
+        plan: client.plan_tier || "Professional",
 
-      chartsTotal: client.total_charts || 0,
+        complianceScore:
+          client.completion_percentage ??
+          (chartsTotal > 0
+            ? Math.round((chartsCompleted / chartsTotal) * 100)
+            : 0),
 
-      chartsCompleted: client.completed_charts || 0,
-
-      chartsPending:
-        (client.total_charts || 0) - (client.completed_charts || 0),
-
-      dueDate: client.due_date || "",
-
-      startDate: client.start_date || "",
-
-      contactName: client.primary_contact_name || "",
-
-      email: client.email || "",
-
-      phone: client.phone || "",
-
-      abstractorsAssigned: client.abstractors_assigned || 0,
-
-      complianceScore:
-        client.total_charts && client.completed_charts
-          ? Math.round((client.completed_charts / client.total_charts) * 100)
-          : 0,
-    })) || [];
+        lastActivity: client.last_updated
+          ? new Date(client.last_updated).toLocaleDateString() + " ago" // simplistic
+          : "N/A",
+      };
+    }) || [];
 
   const { data: statsData, isLoading: statsLoading } = useGetApiClientsStats({
     query: {
@@ -2345,17 +2519,14 @@ export function Clients() {
   });
 
   const regions = ["all", ...Object.values(getApiClientsQueryParamsRegionEnum)];
-  const totalClients = statsData?.total_clients ?? 0;
+  const stats = statsData?.data || statsData || {};
 
-  const activeClients = statsData?.active_clients ?? 0;
-
-  const totalCharts = statsData?.charts_assigned ?? 0;
-
-  const doneCharts = statsData?.completed_charts ?? 0;
-
-  const completionRate = statsData?.completion_rate ?? 0;
-
-  const atRisk = statsData?.at_risk ?? 0;
+  const totalClients = stats.totalClients ?? 0;
+  const activeClients = stats.activeClients ?? 0;
+  const totalCharts = stats.chartsAssigned ?? 0;
+  const doneCharts = stats.completedCharts ?? 0;
+  const completionRate = stats.completionRate ?? 0;
+  const atRisk = stats.atRiskClients ?? 0;
 
   return (
     <div className="relative flex flex-col h-full overflow-hidden bg-background">
@@ -2549,7 +2720,7 @@ export function Clients() {
                   {clients.map((client, i) => {
                     const comp = pct(
                       client.chartsCompleted,
-                      client.chartsTotal,
+                      client.chartsTotal
                     );
                     return (
                       <tr
