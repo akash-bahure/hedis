@@ -15,34 +15,45 @@ import type {
   UseSuspenseInfiniteQueryOptions,
   UseSuspenseInfiniteQueryResult,
 } from "@tanstack/react-query";
-import type { GetApiDashboardDeadlinesQueryResponse } from "../../types/GetApiDashboardDeadlines.ts";
+import type {
+  GetApiDashboardDeadlinesQueryResponse,
+  GetApiDashboardDeadlinesQueryParams,
+} from "../../types/GetApiDashboardDeadlines.ts";
 import {
   infiniteQueryOptions,
   useSuspenseInfiniteQuery,
 } from "@tanstack/react-query";
 import { getApiDashboardDeadlines } from "../../clients/getApiDashboardDeadlines.ts";
 
-export const getApiDashboardDeadlinesSuspenseInfiniteQueryKey = () =>
-  [{ url: "/api/dashboard/deadlines" }] as const;
+export const getApiDashboardDeadlinesSuspenseInfiniteQueryKey = (
+  params?: GetApiDashboardDeadlinesQueryParams,
+) =>
+  [{ url: "/api/dashboard/deadlines" }, ...(params ? [params] : [])] as const;
 
 export type GetApiDashboardDeadlinesSuspenseInfiniteQueryKey = ReturnType<
   typeof getApiDashboardDeadlinesSuspenseInfiniteQueryKey
 >;
 
 export function getApiDashboardDeadlinesSuspenseInfiniteQueryOptions(
+  params?: GetApiDashboardDeadlinesQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
-  const queryKey = getApiDashboardDeadlinesSuspenseInfiniteQueryKey();
+  const queryKey = getApiDashboardDeadlinesSuspenseInfiniteQueryKey(params);
   return infiniteQueryOptions<
     GetApiDashboardDeadlinesQueryResponse,
     ResponseErrorConfig<Error>,
     InfiniteData<GetApiDashboardDeadlinesQueryResponse>,
     typeof queryKey,
-    number
+    NonNullable<GetApiDashboardDeadlinesQueryParams["page_no"]>
   >({
     queryKey,
-    queryFn: async ({ signal }) => {
-      return getApiDashboardDeadlines({
+    queryFn: async ({ signal, pageParam }) => {
+      params = {
+        ...(params ?? {}),
+        ["page_no"]:
+          pageParam as unknown as GetApiDashboardDeadlinesQueryParams["page_no"],
+      } as GetApiDashboardDeadlinesQueryParams;
+      return getApiDashboardDeadlines(params, {
         ...config,
         signal: config.signal ?? signal,
       });
@@ -66,8 +77,9 @@ export function useGetApiDashboardDeadlinesSuspenseInfinite<
   TError = ResponseErrorConfig<Error>,
   TData = InfiniteData<TQueryFnData>,
   TQueryKey extends QueryKey = GetApiDashboardDeadlinesSuspenseInfiniteQueryKey,
-  TPageParam = number,
+  TPageParam = NonNullable<GetApiDashboardDeadlinesQueryParams["page_no"]>,
 >(
+  params?: GetApiDashboardDeadlinesQueryParams,
   options: {
     query?: Partial<
       UseSuspenseInfiniteQueryOptions<
@@ -85,11 +97,11 @@ export function useGetApiDashboardDeadlinesSuspenseInfinite<
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
     resolvedOptions?.queryKey ??
-    getApiDashboardDeadlinesSuspenseInfiniteQueryKey();
+    getApiDashboardDeadlinesSuspenseInfiniteQueryKey(params);
 
   const query = useSuspenseInfiniteQuery(
     {
-      ...getApiDashboardDeadlinesSuspenseInfiniteQueryOptions(config),
+      ...getApiDashboardDeadlinesSuspenseInfiniteQueryOptions(params, config),
       ...resolvedOptions,
       queryKey,
     } as unknown as UseSuspenseInfiniteQueryOptions<

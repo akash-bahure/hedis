@@ -231,6 +231,9 @@ export type { GetApiProjectsIdQueryKey } from "./ProjectsHooks/useGetApiProjects
 export type { GetApiProjectsIdSuspenseQueryKey } from "./ProjectsHooks/useGetApiProjectsIdSuspense.ts";
 export type { GetApiProjectsIdSuspenseInfiniteQueryKey } from "./ProjectsHooks/useGetApiProjectsIdSuspenseInfinite.ts";
 export type { GetApiProjectsInfiniteQueryKey } from "./ProjectsHooks/useGetApiProjectsInfinite.ts";
+export type { GetApiProjectsStatsQueryKey } from "./ProjectsHooks/useGetApiProjectsStats.ts";
+export type { GetApiProjectsStatsSuspenseQueryKey } from "./ProjectsHooks/useGetApiProjectsStatsSuspense.ts";
+export type { GetApiProjectsStatsSuspenseInfiniteQueryKey } from "./ProjectsHooks/useGetApiProjectsStatsSuspenseInfinite.ts";
 export type { GetApiProjectsSuspenseQueryKey } from "./ProjectsHooks/useGetApiProjectsSuspense.ts";
 export type { GetApiProjectsSuspenseInfiniteQueryKey } from "./ProjectsHooks/useGetApiProjectsSuspenseInfinite.ts";
 export type { PatchApiProjectsIdMutationKey } from "./ProjectsHooks/usePatchApiProjectsId.ts";
@@ -1032,6 +1035,15 @@ export { useGetApiProjectsIdSuspenseInfinite } from "./ProjectsHooks/useGetApiPr
 export { getApiProjectsInfiniteQueryKey } from "./ProjectsHooks/useGetApiProjectsInfinite.ts";
 export { getApiProjectsInfiniteQueryOptions } from "./ProjectsHooks/useGetApiProjectsInfinite.ts";
 export { useGetApiProjectsInfinite } from "./ProjectsHooks/useGetApiProjectsInfinite.ts";
+export { getApiProjectsStatsQueryKey } from "./ProjectsHooks/useGetApiProjectsStats.ts";
+export { getApiProjectsStatsQueryOptions } from "./ProjectsHooks/useGetApiProjectsStats.ts";
+export { useGetApiProjectsStats } from "./ProjectsHooks/useGetApiProjectsStats.ts";
+export { getApiProjectsStatsSuspenseQueryKey } from "./ProjectsHooks/useGetApiProjectsStatsSuspense.ts";
+export { getApiProjectsStatsSuspenseQueryOptions } from "./ProjectsHooks/useGetApiProjectsStatsSuspense.ts";
+export { useGetApiProjectsStatsSuspense } from "./ProjectsHooks/useGetApiProjectsStatsSuspense.ts";
+export { getApiProjectsStatsSuspenseInfiniteQueryKey } from "./ProjectsHooks/useGetApiProjectsStatsSuspenseInfinite.ts";
+export { getApiProjectsStatsSuspenseInfiniteQueryOptions } from "./ProjectsHooks/useGetApiProjectsStatsSuspenseInfinite.ts";
+export { useGetApiProjectsStatsSuspenseInfinite } from "./ProjectsHooks/useGetApiProjectsStatsSuspenseInfinite.ts";
 export { getApiProjectsSuspenseQueryKey } from "./ProjectsHooks/useGetApiProjectsSuspense.ts";
 export { getApiProjectsSuspenseQueryOptions } from "./ProjectsHooks/useGetApiProjectsSuspense.ts";
 export { useGetApiProjectsSuspense } from "./ProjectsHooks/useGetApiProjectsSuspense.ts";

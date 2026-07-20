@@ -30,11 +30,18 @@ export const getApiWorkQueueQueryParamsSchema = z.object({
     ])
     .default("all")
     .describe("Filters dataset by specified work queue tab"),
+  measurementYear: z.optional(
+    z
+      .enum(["HEDIS MY2025", "HEDIS MY2026"])
+      .describe(
+        "Filter by HEDIS Measurement Year (matches patients.measure column)",
+      ),
+  ),
   search: z.optional(
     z
       .string()
       .describe(
-        "Search query matching patient first name, last name, MRN, or Chart ID",
+        "Search query matching patient first name, last name, MRN, Chart ID, or measure code (case-insensitive)",
       ),
   ),
   project_id: z.optional(

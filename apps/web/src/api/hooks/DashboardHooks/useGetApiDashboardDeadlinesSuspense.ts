@@ -14,21 +14,27 @@ import type {
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
-import type { GetApiDashboardDeadlinesQueryResponse } from "../../types/GetApiDashboardDeadlines.ts";
+import type {
+  GetApiDashboardDeadlinesQueryResponse,
+  GetApiDashboardDeadlinesQueryParams,
+} from "../../types/GetApiDashboardDeadlines.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { getApiDashboardDeadlines } from "../../clients/getApiDashboardDeadlines.ts";
 
-export const getApiDashboardDeadlinesSuspenseQueryKey = () =>
-  [{ url: "/api/dashboard/deadlines" }] as const;
+export const getApiDashboardDeadlinesSuspenseQueryKey = (
+  params?: GetApiDashboardDeadlinesQueryParams,
+) =>
+  [{ url: "/api/dashboard/deadlines" }, ...(params ? [params] : [])] as const;
 
 export type GetApiDashboardDeadlinesSuspenseQueryKey = ReturnType<
   typeof getApiDashboardDeadlinesSuspenseQueryKey
 >;
 
 export function getApiDashboardDeadlinesSuspenseQueryOptions(
+  params?: GetApiDashboardDeadlinesQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
-  const queryKey = getApiDashboardDeadlinesSuspenseQueryKey();
+  const queryKey = getApiDashboardDeadlinesSuspenseQueryKey(params);
   return queryOptions<
     GetApiDashboardDeadlinesQueryResponse,
     ResponseErrorConfig<Error>,
@@ -37,7 +43,7 @@ export function getApiDashboardDeadlinesSuspenseQueryOptions(
   >({
     queryKey,
     queryFn: async ({ signal }) => {
-      return getApiDashboardDeadlines({
+      return getApiDashboardDeadlines(params, {
         ...config,
         signal: config.signal ?? signal,
       });
@@ -53,6 +59,7 @@ export function useGetApiDashboardDeadlinesSuspense<
   TData = GetApiDashboardDeadlinesQueryResponse,
   TQueryKey extends QueryKey = GetApiDashboardDeadlinesSuspenseQueryKey,
 >(
+  params?: GetApiDashboardDeadlinesQueryParams,
   options: {
     query?: Partial<
       UseSuspenseQueryOptions<
@@ -68,11 +75,12 @@ export function useGetApiDashboardDeadlinesSuspense<
   const { query: queryConfig = {}, client: config = {} } = options ?? {};
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
-    resolvedOptions?.queryKey ?? getApiDashboardDeadlinesSuspenseQueryKey();
+    resolvedOptions?.queryKey ??
+    getApiDashboardDeadlinesSuspenseQueryKey(params);
 
   const query = useSuspenseQuery(
     {
-      ...getApiDashboardDeadlinesSuspenseQueryOptions(config),
+      ...getApiDashboardDeadlinesSuspenseQueryOptions(params, config),
       ...resolvedOptions,
       queryKey,
     } as unknown as UseSuspenseQueryOptions,

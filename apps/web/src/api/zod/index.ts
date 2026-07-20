@@ -253,6 +253,7 @@ export {
   getApiDashboardQueueByDomain200Schema,
   getApiDashboardQueueByDomain401Schema,
   getApiDashboardQueueByDomain500Schema,
+  getApiDashboardQueueByDomainQueryParamsSchema,
   getApiDashboardQueueByDomainQueryResponseSchema,
 } from "./Dashboard AnalyticsSchemas/getApiDashboardQueueByDomainSchema.ts";
 export {
@@ -267,10 +268,12 @@ export {
   getApiDashboardStats200Schema,
   getApiDashboardStats401Schema,
   getApiDashboardStats500Schema,
+  getApiDashboardStatsQueryParamsSchema,
   getApiDashboardStatsQueryResponseSchema,
 } from "./Dashboard AnalyticsSchemas/getApiDashboardStatsSchema.ts";
 export {
   getApiDashboardDeadlines200Schema,
+  getApiDashboardDeadlinesQueryParamsSchema,
   getApiDashboardDeadlinesQueryResponseSchema,
 } from "./DashboardSchemas/getApiDashboardDeadlinesSchema.ts";
 export {
@@ -685,6 +688,11 @@ export {
   getApiProjectsQueryParamsSchema,
   getApiProjectsQueryResponseSchema,
 } from "./ProjectsSchemas/getApiProjectsSchema.ts";
+export {
+  getApiProjectsStats200Schema,
+  getApiProjectsStats500Schema,
+  getApiProjectsStatsQueryResponseSchema,
+} from "./ProjectsSchemas/getApiProjectsStatsSchema.ts";
 export {
   patchApiProjectsIdAccess200Schema,
   patchApiProjectsIdAccess400Schema,

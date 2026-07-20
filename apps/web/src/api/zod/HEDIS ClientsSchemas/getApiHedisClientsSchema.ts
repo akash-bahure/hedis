@@ -16,7 +16,14 @@ export const getApiHedisClientsQueryParamsSchema = z.object({
   search: z.optional(
     z
       .string()
-      .describe("Search by organization name, client code, or short code"),
+      .describe(
+        "Search by organization name, client code, short code, or patient name/measure",
+      ),
+  ),
+  measurementYear: z.optional(
+    z
+      .enum(["HEDIS MY2025", "HEDIS MY2026"])
+      .describe("Filter by HEDIS Measurement Year"),
   ),
   status: z.optional(
     z

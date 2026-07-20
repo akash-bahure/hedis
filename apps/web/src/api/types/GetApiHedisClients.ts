@@ -3,6 +3,14 @@
  * Do not edit manually.
  */
 
+export const getApiHedisClientsQueryParamsMeasurementYearEnum = {
+  "HEDIS MY2025": "HEDIS MY2025",
+  "HEDIS MY2026": "HEDIS MY2026",
+} as const;
+
+export type GetApiHedisClientsQueryParamsMeasurementYearEnumKey =
+  (typeof getApiHedisClientsQueryParamsMeasurementYearEnum)[keyof typeof getApiHedisClientsQueryParamsMeasurementYearEnum];
+
 export const getApiHedisClientsQueryParamsStatusEnum = {
   Active: "Active",
   Onboarding: "Onboarding",
@@ -55,10 +63,15 @@ export type GetApiHedisClientsQueryParamsSortOrderEnumKey =
 
 export type GetApiHedisClientsQueryParams = {
   /**
-   * @description Search by organization name, client code, or short code
+   * @description Search by organization name, client code, short code, or patient name/measure
    * @type string | undefined
    */
   search?: string;
+  /**
+   * @description Filter by HEDIS Measurement Year
+   * @type string | undefined
+   */
+  measurementYear?: GetApiHedisClientsQueryParamsMeasurementYearEnumKey;
   /**
    * @description Filter by client status
    * @type string | undefined

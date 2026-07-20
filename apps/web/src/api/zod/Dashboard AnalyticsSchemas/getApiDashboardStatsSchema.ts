@@ -9,8 +9,28 @@ import type {
   GetApiDashboardStats200,
   GetApiDashboardStats401,
   GetApiDashboardStats500,
+  GetApiDashboardStatsQueryParams,
   GetApiDashboardStatsQueryResponse,
 } from "../../types/GetApiDashboardStats.ts";
+
+export const getApiDashboardStatsQueryParamsSchema = z
+  .object({
+    measurementYear: z.optional(
+      z
+        .enum(["HEDIS MY2025", "HEDIS MY2026"])
+        .describe(
+          "Filter by HEDIS Measurement Year (matches patients.measure)",
+        ),
+    ),
+    search: z.optional(
+      z
+        .string()
+        .describe(
+          "Case-insensitive search on patient first name, last name, or measure",
+        ),
+    ),
+  })
+  .optional() as unknown as ToZod<GetApiDashboardStatsQueryParams>;
 
 /**
  * @description Dashboard statistics retrieved successfully.

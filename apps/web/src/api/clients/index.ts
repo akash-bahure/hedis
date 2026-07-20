@@ -68,6 +68,7 @@ export { getApiProfileMe } from "./getApiProfileMe.ts";
 export { getApiProjects } from "./getApiProjects.ts";
 export { getApiProjectsAccessAll } from "./getApiProjectsAccessAll.ts";
 export { getApiProjectsId } from "./getApiProjectsId.ts";
+export { getApiProjectsStats } from "./getApiProjectsStats.ts";
 export { getApiRecentActivity } from "./getApiRecentActivity.ts";
 export { getApiReportsAnalyticsAbstractorProductivity } from "./getApiReportsAnalyticsAbstractorProductivity.ts";
 export { getApiSecurityAlerts } from "./getApiSecurityAlerts.ts";

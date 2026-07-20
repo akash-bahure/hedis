@@ -15,6 +15,18 @@ import type {
 } from "../../types/GetApiDashboardQueueByMeasure.ts";
 
 export const getApiDashboardQueueByMeasureQueryParamsSchema = z.object({
+  measurementYear: z.optional(
+    z
+      .enum(["HEDIS MY2025", "HEDIS MY2026"])
+      .describe("Filter by HEDIS Measurement Year (matches patients.measure)"),
+  ),
+  search: z.optional(
+    z
+      .string()
+      .describe(
+        "Case-insensitive search on patient first name, last name, or measure",
+      ),
+  ),
   page_no: z.coerce
     .number()
     .int()

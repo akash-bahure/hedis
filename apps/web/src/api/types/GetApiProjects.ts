@@ -12,6 +12,14 @@ export const getApiProjectsQueryParamsPriorityEnum = {
 export type GetApiProjectsQueryParamsPriorityEnumKey =
   (typeof getApiProjectsQueryParamsPriorityEnum)[keyof typeof getApiProjectsQueryParamsPriorityEnum];
 
+export const getApiProjectsQueryParamsMeasurementYearEnum = {
+  "HEDIS MY2025": "HEDIS MY2025",
+  "HEDIS MY2026": "HEDIS MY2026",
+} as const;
+
+export type GetApiProjectsQueryParamsMeasurementYearEnumKey =
+  (typeof getApiProjectsQueryParamsMeasurementYearEnum)[keyof typeof getApiProjectsQueryParamsMeasurementYearEnum];
+
 export const getApiProjectsQueryParamsStatusEnum = {
   Active: "Active",
   Completed: "Completed",
@@ -63,6 +71,11 @@ export type GetApiProjectsQueryParams = {
    * @type string | undefined
    */
   priority?: GetApiProjectsQueryParamsPriorityEnumKey;
+  /**
+   * @description Filter by HEDIS Measurement Year
+   * @type string | undefined
+   */
+  measurementYear?: GetApiProjectsQueryParamsMeasurementYearEnumKey;
   /**
    * @description Filter by project status
    * @type string | undefined

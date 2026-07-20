@@ -20,6 +20,14 @@ export const getApiWorkQueueQueryParamsTabEnum = {
 export type GetApiWorkQueueQueryParamsTabEnumKey =
   (typeof getApiWorkQueueQueryParamsTabEnum)[keyof typeof getApiWorkQueueQueryParamsTabEnum];
 
+export const getApiWorkQueueQueryParamsMeasurementYearEnum = {
+  "HEDIS MY2025": "HEDIS MY2025",
+  "HEDIS MY2026": "HEDIS MY2026",
+} as const;
+
+export type GetApiWorkQueueQueryParamsMeasurementYearEnumKey =
+  (typeof getApiWorkQueueQueryParamsMeasurementYearEnum)[keyof typeof getApiWorkQueueQueryParamsMeasurementYearEnum];
+
 export type GetApiWorkQueueQueryParams = {
   /**
    * @description Filters dataset by specified work queue tab
@@ -28,7 +36,12 @@ export type GetApiWorkQueueQueryParams = {
    */
   tab?: GetApiWorkQueueQueryParamsTabEnumKey;
   /**
-   * @description Search query matching patient first name, last name, MRN, or Chart ID
+   * @description Filter by HEDIS Measurement Year (matches patients.measure column)
+   * @type string | undefined
+   */
+  measurementYear?: GetApiWorkQueueQueryParamsMeasurementYearEnumKey;
+  /**
+   * @description Search query matching patient first name, last name, MRN, Chart ID, or measure code (case-insensitive)
    * @type string | undefined
    */
   search?: string;

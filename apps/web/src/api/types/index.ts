@@ -117,6 +117,7 @@ export type {
   GetApiClientsQuery,
   GetApiClientsQueryParams,
   GetApiClientsQueryParamsContractTypeEnumKey,
+  GetApiClientsQueryParamsMeasurementYearEnumKey,
   GetApiClientsQueryParamsRegionEnumKey,
   GetApiClientsQueryParamsStatusEnumKey,
   GetApiClientsQueryResponse,
@@ -204,6 +205,8 @@ export type {
 export type {
   GetApiDashboardDeadlines200,
   GetApiDashboardDeadlinesQuery,
+  GetApiDashboardDeadlinesQueryParams,
+  GetApiDashboardDeadlinesQueryParamsMeasurementYearEnumKey,
   GetApiDashboardDeadlinesQueryResponse,
 } from "./GetApiDashboardDeadlines.ts";
 export type {
@@ -214,12 +217,14 @@ export type {
   GetApiDashboardMeasureRates500,
   GetApiDashboardMeasureRatesQuery,
   GetApiDashboardMeasureRatesQueryParams,
+  GetApiDashboardMeasureRatesQueryParamsMeasurementYearEnumKey,
   GetApiDashboardMeasureRatesQueryResponse,
 } from "./GetApiDashboardMeasureRates.ts";
 export type {
   GetApiDashboardMyQueue200,
   GetApiDashboardMyQueueQuery,
   GetApiDashboardMyQueueQueryParams,
+  GetApiDashboardMyQueueQueryParamsMeasurementYearEnumKey,
   GetApiDashboardMyQueueQueryResponse,
 } from "./GetApiDashboardMyQueue.ts";
 export type {
@@ -227,6 +232,8 @@ export type {
   GetApiDashboardQueueByDomain401,
   GetApiDashboardQueueByDomain500,
   GetApiDashboardQueueByDomainQuery,
+  GetApiDashboardQueueByDomainQueryParams,
+  GetApiDashboardQueueByDomainQueryParamsMeasurementYearEnumKey,
   GetApiDashboardQueueByDomainQueryResponse,
 } from "./GetApiDashboardQueueByDomain.ts";
 export type {
@@ -236,6 +243,7 @@ export type {
   GetApiDashboardQueueByMeasure500,
   GetApiDashboardQueueByMeasureQuery,
   GetApiDashboardQueueByMeasureQueryParams,
+  GetApiDashboardQueueByMeasureQueryParamsMeasurementYearEnumKey,
   GetApiDashboardQueueByMeasureQueryResponse,
 } from "./GetApiDashboardQueueByMeasure.ts";
 export type {
@@ -245,6 +253,8 @@ export type {
   GetApiDashboardStats401,
   GetApiDashboardStats500,
   GetApiDashboardStatsQuery,
+  GetApiDashboardStatsQueryParams,
+  GetApiDashboardStatsQueryParamsMeasurementYearEnumKey,
   GetApiDashboardStatsQueryResponse,
   OpenQueueTrendTypeEnumKey,
   OverallHedisRateTrendTypeEnumKey,
@@ -285,6 +295,7 @@ export type {
   GetApiHedisClientsQueryParams,
   GetApiHedisClientsQueryParamsContractTypeEnumKey,
   GetApiHedisClientsQueryParamsMeasureYearEnumKey,
+  GetApiHedisClientsQueryParamsMeasurementYearEnumKey,
   GetApiHedisClientsQueryParamsRegionEnumKey,
   GetApiHedisClientsQueryParamsSortOrderEnumKey,
   GetApiHedisClientsQueryParamsStatusEnumKey,
@@ -519,6 +530,7 @@ export type {
   GetApiProjects500,
   GetApiProjectsQuery,
   GetApiProjectsQueryParams,
+  GetApiProjectsQueryParamsMeasurementYearEnumKey,
   GetApiProjectsQueryParamsPriorityEnumKey,
   GetApiProjectsQueryParamsProjectTypeEnumKey,
   GetApiProjectsQueryParamsSpecialtyEnumKey,
@@ -539,6 +551,12 @@ export type {
   GetApiProjectsIdQuery,
   GetApiProjectsIdQueryResponse,
 } from "./GetApiProjectsId.ts";
+export type {
+  GetApiProjectsStats200,
+  GetApiProjectsStats500,
+  GetApiProjectsStatsQuery,
+  GetApiProjectsStatsQueryResponse,
+} from "./GetApiProjectsStats.ts";
 export type {
   GetApiRecentActivity200,
   GetApiRecentActivity400,
@@ -698,6 +716,7 @@ export type {
   GetApiWorkQueue500,
   GetApiWorkQueueQuery,
   GetApiWorkQueueQueryParams,
+  GetApiWorkQueueQueryParamsMeasurementYearEnumKey,
   GetApiWorkQueueQueryParamsTabEnumKey,
   GetApiWorkQueueQueryResponse,
 } from "./GetApiWorkQueue.ts";
@@ -1248,20 +1267,28 @@ export { getApiAuditLogsQueryParamsStatusEnum } from "./GetApiAuditLogs.ts";
 export { getApiAuditLogsExportQueryParamsRiskLevelEnum } from "./GetApiAuditLogsExport.ts";
 export { getApiAuditLogsExportQueryParamsStatusEnum } from "./GetApiAuditLogsExport.ts";
 export { getApiClientsQueryParamsContractTypeEnum } from "./GetApiClients.ts";
+export { getApiClientsQueryParamsMeasurementYearEnum } from "./GetApiClients.ts";
 export { getApiClientsQueryParamsRegionEnum } from "./GetApiClients.ts";
 export { getApiClientsQueryParamsStatusEnum } from "./GetApiClients.ts";
 export { dataStatusEnum } from "./GetApiClientsClientidMeasureProgress.ts";
 export { dataIconTypeEnum } from "./GetApiClientsClientidRecentActivity.ts";
 export { getApiClientsExportQueryParamsFormatEnum } from "./GetApiClientsExport.ts";
 export { getApiDashboardAbstractionVelocityQueryParamsDaysEnum } from "./GetApiDashboardAbstractionVelocity.ts";
+export { getApiDashboardDeadlinesQueryParamsMeasurementYearEnum } from "./GetApiDashboardDeadlines.ts";
 export { dataBenchmarkStatusEnum } from "./GetApiDashboardMeasureRates.ts";
+export { getApiDashboardMeasureRatesQueryParamsMeasurementYearEnum } from "./GetApiDashboardMeasureRates.ts";
+export { getApiDashboardMyQueueQueryParamsMeasurementYearEnum } from "./GetApiDashboardMyQueue.ts";
+export { getApiDashboardQueueByDomainQueryParamsMeasurementYearEnum } from "./GetApiDashboardQueueByDomain.ts";
+export { getApiDashboardQueueByMeasureQueryParamsMeasurementYearEnum } from "./GetApiDashboardQueueByMeasure.ts";
 export { aiAssistRateTrendTypeEnum } from "./GetApiDashboardStats.ts";
 export { completedTodayTrendTypeEnum } from "./GetApiDashboardStats.ts";
+export { getApiDashboardStatsQueryParamsMeasurementYearEnum } from "./GetApiDashboardStats.ts";
 export { openQueueTrendTypeEnum } from "./GetApiDashboardStats.ts";
 export { overallHedisRateTrendTypeEnum } from "./GetApiDashboardStats.ts";
 export { slaComplianceTrendTypeEnum } from "./GetApiDashboardStats.ts";
 export { getApiHedisClientsQueryParamsContractTypeEnum } from "./GetApiHedisClients.ts";
 export { getApiHedisClientsQueryParamsMeasureYearEnum } from "./GetApiHedisClients.ts";
+export { getApiHedisClientsQueryParamsMeasurementYearEnum } from "./GetApiHedisClients.ts";
 export { getApiHedisClientsQueryParamsRegionEnum } from "./GetApiHedisClients.ts";
 export { getApiHedisClientsQueryParamsSortOrderEnum } from "./GetApiHedisClients.ts";
 export { getApiHedisClientsQueryParamsStatusEnum } from "./GetApiHedisClients.ts";
@@ -1274,6 +1301,7 @@ export { getApiMeasuresExportSpecsQueryParamsStatusEnum } from "./GetApiMeasures
 export { getApiMeasuresMeasureidExportQueryParamsFormatEnum } from "./GetApiMeasuresMeasureidExport.ts";
 export { getApiPatientsPatientidClinicalTimelineQueryParamsDocumentTypeEnum } from "./GetApiPatientsPatientidClinicalTimeline.ts";
 export { getApiPatientsPatientidClinicalTimelineQueryParamsEncounterTypeEnum } from "./GetApiPatientsPatientidClinicalTimeline.ts";
+export { getApiProjectsQueryParamsMeasurementYearEnum } from "./GetApiProjects.ts";
 export { getApiProjectsQueryParamsPriorityEnum } from "./GetApiProjects.ts";
 export { getApiProjectsQueryParamsProjectTypeEnum } from "./GetApiProjects.ts";
 export { getApiProjectsQueryParamsSpecialtyEnum } from "./GetApiProjects.ts";
@@ -1297,6 +1325,7 @@ export { getApiUsersQueryParamsUserStatusEnum } from "./GetApiUsers.ts";
 export { getApiUsersExportQueryParamsFormatEnum } from "./GetApiUsersExport.ts";
 export { getApiUsersShiftsQueryParamsShiftEnum } from "./GetApiUsersShifts.ts";
 export { getApiUsersShiftsQueryParamsUserStatusEnum } from "./GetApiUsersShifts.ts";
+export { getApiWorkQueueQueryParamsMeasurementYearEnum } from "./GetApiWorkQueue.ts";
 export { getApiWorkQueueQueryParamsTabEnum } from "./GetApiWorkQueue.ts";
 export { patchApiProjectsIdAccessMutationRequestAccessLevelEnum } from "./PatchApiProjectsIdAccess.ts";
 export { patchApiSecurityAlertsIdStatusMutationRequestStatusEnum } from "./PatchApiSecurityAlertsIdStatus.ts";
