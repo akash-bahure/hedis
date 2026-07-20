@@ -3,7 +3,20 @@
  * Do not edit manually.
  */
 
+export const getApiDashboardMyQueueQueryParamsMeasurementYearEnum = {
+  "HEDIS MY2025": "HEDIS MY2025",
+  "HEDIS MY2026": "HEDIS MY2026",
+} as const;
+
+export type GetApiDashboardMyQueueQueryParamsMeasurementYearEnumKey =
+  (typeof getApiDashboardMyQueueQueryParamsMeasurementYearEnum)[keyof typeof getApiDashboardMyQueueQueryParamsMeasurementYearEnum];
+
 export type GetApiDashboardMyQueueQueryParams = {
+  /**
+   * @description Filter by HEDIS Measurement Year
+   * @type string | undefined
+   */
+  measurementYear?: GetApiDashboardMyQueueQueryParamsMeasurementYearEnumKey;
   /**
    * @description Search by name, MRN, or measure code
    * @type string | undefined
@@ -16,6 +29,7 @@ export type GetApiDashboardMyQueueQueryParams = {
   status?: string;
   /**
    * @description Sort field (e.g. due_date, priority)
+   * @default 1
    * @type string | undefined
    */
   sort_by?: string;

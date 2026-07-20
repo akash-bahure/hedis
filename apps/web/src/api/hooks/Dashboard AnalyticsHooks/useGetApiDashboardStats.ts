@@ -16,23 +16,26 @@ import type {
 } from "@tanstack/react-query";
 import type {
   GetApiDashboardStatsQueryResponse,
+  GetApiDashboardStatsQueryParams,
   GetApiDashboardStats401,
   GetApiDashboardStats500,
 } from "../../types/GetApiDashboardStats.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { getApiDashboardStats } from "../../clients/getApiDashboardStats.ts";
 
-export const getApiDashboardStatsQueryKey = () =>
-  [{ url: "/api/dashboard/stats" }] as const;
+export const getApiDashboardStatsQueryKey = (
+  params?: GetApiDashboardStatsQueryParams,
+) => [{ url: "/api/dashboard/stats" }, ...(params ? [params] : [])] as const;
 
 export type GetApiDashboardStatsQueryKey = ReturnType<
   typeof getApiDashboardStatsQueryKey
 >;
 
 export function getApiDashboardStatsQueryOptions(
+  params?: GetApiDashboardStatsQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
-  const queryKey = getApiDashboardStatsQueryKey();
+  const queryKey = getApiDashboardStatsQueryKey(params);
   return queryOptions<
     GetApiDashboardStatsQueryResponse,
     ResponseErrorConfig<GetApiDashboardStats401 | GetApiDashboardStats500>,
@@ -41,7 +44,7 @@ export function getApiDashboardStatsQueryOptions(
   >({
     queryKey,
     queryFn: async ({ signal }) => {
-      return getApiDashboardStats({
+      return getApiDashboardStats(params, {
         ...config,
         signal: config.signal ?? signal,
       });
@@ -59,6 +62,7 @@ export function useGetApiDashboardStats<
   TQueryData = GetApiDashboardStatsQueryResponse,
   TQueryKey extends QueryKey = GetApiDashboardStatsQueryKey,
 >(
+  params?: GetApiDashboardStatsQueryParams,
   options: {
     query?: Partial<
       QueryObserverOptions<
@@ -74,11 +78,12 @@ export function useGetApiDashboardStats<
 ) {
   const { query: queryConfig = {}, client: config = {} } = options ?? {};
   const { client: queryClient, ...resolvedOptions } = queryConfig;
-  const queryKey = resolvedOptions?.queryKey ?? getApiDashboardStatsQueryKey();
+  const queryKey =
+    resolvedOptions?.queryKey ?? getApiDashboardStatsQueryKey(params);
 
   const query = useQuery(
     {
-      ...getApiDashboardStatsQueryOptions(config),
+      ...getApiDashboardStatsQueryOptions(params, config),
       ...resolvedOptions,
       queryKey,
     } as unknown as QueryObserverOptions,

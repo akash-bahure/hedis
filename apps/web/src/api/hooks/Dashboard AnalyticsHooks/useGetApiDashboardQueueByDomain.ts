@@ -16,23 +16,30 @@ import type {
 } from "@tanstack/react-query";
 import type {
   GetApiDashboardQueueByDomainQueryResponse,
+  GetApiDashboardQueueByDomainQueryParams,
   GetApiDashboardQueueByDomain401,
   GetApiDashboardQueueByDomain500,
 } from "../../types/GetApiDashboardQueueByDomain.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { getApiDashboardQueueByDomain } from "../../clients/getApiDashboardQueueByDomain.ts";
 
-export const getApiDashboardQueueByDomainQueryKey = () =>
-  [{ url: "/api/dashboard/queue-by-domain" }] as const;
+export const getApiDashboardQueueByDomainQueryKey = (
+  params?: GetApiDashboardQueueByDomainQueryParams,
+) =>
+  [
+    { url: "/api/dashboard/queue-by-domain" },
+    ...(params ? [params] : []),
+  ] as const;
 
 export type GetApiDashboardQueueByDomainQueryKey = ReturnType<
   typeof getApiDashboardQueueByDomainQueryKey
 >;
 
 export function getApiDashboardQueueByDomainQueryOptions(
+  params?: GetApiDashboardQueueByDomainQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
-  const queryKey = getApiDashboardQueueByDomainQueryKey();
+  const queryKey = getApiDashboardQueueByDomainQueryKey(params);
   return queryOptions<
     GetApiDashboardQueueByDomainQueryResponse,
     ResponseErrorConfig<
@@ -43,7 +50,7 @@ export function getApiDashboardQueueByDomainQueryOptions(
   >({
     queryKey,
     queryFn: async ({ signal }) => {
-      return getApiDashboardQueueByDomain({
+      return getApiDashboardQueueByDomain(params, {
         ...config,
         signal: config.signal ?? signal,
       });
@@ -61,6 +68,7 @@ export function useGetApiDashboardQueueByDomain<
   TQueryData = GetApiDashboardQueueByDomainQueryResponse,
   TQueryKey extends QueryKey = GetApiDashboardQueueByDomainQueryKey,
 >(
+  params?: GetApiDashboardQueueByDomainQueryParams,
   options: {
     query?: Partial<
       QueryObserverOptions<
@@ -79,11 +87,11 @@ export function useGetApiDashboardQueueByDomain<
   const { query: queryConfig = {}, client: config = {} } = options ?? {};
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
-    resolvedOptions?.queryKey ?? getApiDashboardQueueByDomainQueryKey();
+    resolvedOptions?.queryKey ?? getApiDashboardQueueByDomainQueryKey(params);
 
   const query = useQuery(
     {
-      ...getApiDashboardQueueByDomainQueryOptions(config),
+      ...getApiDashboardQueueByDomainQueryOptions(params, config),
       ...resolvedOptions,
       queryKey,
     } as unknown as QueryObserverOptions,

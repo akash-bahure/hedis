@@ -20,6 +20,11 @@ export const getApiProjectsQueryParamsSchema = z.object({
   priority: z.optional(
     z.enum(["High", "Medium", "Low"]).describe("Filter by project priority"),
   ),
+  measurementYear: z.optional(
+    z
+      .enum(["HEDIS MY2025", "HEDIS MY2026"])
+      .describe("Filter by HEDIS Measurement Year"),
+  ),
   status: z.optional(
     z
       .enum(["Active", "Completed", "At Risk", "On Hold", "Draft"])

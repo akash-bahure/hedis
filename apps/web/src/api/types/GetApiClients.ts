@@ -3,6 +3,14 @@
  * Do not edit manually.
  */
 
+export const getApiClientsQueryParamsMeasurementYearEnum = {
+  "HEDIS MY2025": "HEDIS MY2025",
+  "HEDIS MY2026": "HEDIS MY2026",
+} as const;
+
+export type GetApiClientsQueryParamsMeasurementYearEnumKey =
+  (typeof getApiClientsQueryParamsMeasurementYearEnum)[keyof typeof getApiClientsQueryParamsMeasurementYearEnum];
+
 export const getApiClientsQueryParamsRegionEnum = {
   South: "South",
   West: "West",
@@ -38,10 +46,15 @@ export type GetApiClientsQueryParamsContractTypeEnumKey =
 
 export type GetApiClientsQueryParams = {
   /**
-   * @description Search by org_name, email, short_code, or client_id
+   * @description Search by org_name, email, short_code, client_id, or corresponding patient name/measure
    * @type string | undefined
    */
   search?: string;
+  /**
+   * @description Filter by HEDIS Measurement Year
+   * @type string | undefined
+   */
+  measurementYear?: GetApiClientsQueryParamsMeasurementYearEnumKey;
   /**
    * @description Filter by region
    * @type string | undefined

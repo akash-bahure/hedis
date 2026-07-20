@@ -11,6 +11,7 @@ import type {
 } from "../../../utils/client.ts";
 import type {
   GetApiDashboardStatsQueryResponse,
+  GetApiDashboardStatsQueryParams,
   GetApiDashboardStats401,
   GetApiDashboardStats500,
 } from "../types/GetApiDashboardStats.ts";
@@ -26,6 +27,7 @@ function getGetApiDashboardStatsUrl() {
  * {@link /api/dashboard/stats}
  */
 export async function getApiDashboardStats(
+  params?: GetApiDashboardStatsQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
   const { client: request = fetch, ...requestConfig } = config;
@@ -37,6 +39,7 @@ export async function getApiDashboardStats(
   >({
     method: "GET",
     url: getGetApiDashboardStatsUrl().url.toString(),
+    params,
     ...requestConfig,
   });
   return res.data;

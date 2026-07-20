@@ -14,21 +14,27 @@ import type {
   QueryObserverOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
-import type { GetApiDashboardDeadlinesQueryResponse } from "../../types/GetApiDashboardDeadlines.ts";
+import type {
+  GetApiDashboardDeadlinesQueryResponse,
+  GetApiDashboardDeadlinesQueryParams,
+} from "../../types/GetApiDashboardDeadlines.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { getApiDashboardDeadlines } from "../../clients/getApiDashboardDeadlines.ts";
 
-export const getApiDashboardDeadlinesQueryKey = () =>
-  [{ url: "/api/dashboard/deadlines" }] as const;
+export const getApiDashboardDeadlinesQueryKey = (
+  params?: GetApiDashboardDeadlinesQueryParams,
+) =>
+  [{ url: "/api/dashboard/deadlines" }, ...(params ? [params] : [])] as const;
 
 export type GetApiDashboardDeadlinesQueryKey = ReturnType<
   typeof getApiDashboardDeadlinesQueryKey
 >;
 
 export function getApiDashboardDeadlinesQueryOptions(
+  params?: GetApiDashboardDeadlinesQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
-  const queryKey = getApiDashboardDeadlinesQueryKey();
+  const queryKey = getApiDashboardDeadlinesQueryKey(params);
   return queryOptions<
     GetApiDashboardDeadlinesQueryResponse,
     ResponseErrorConfig<Error>,
@@ -37,7 +43,7 @@ export function getApiDashboardDeadlinesQueryOptions(
   >({
     queryKey,
     queryFn: async ({ signal }) => {
-      return getApiDashboardDeadlines({
+      return getApiDashboardDeadlines(params, {
         ...config,
         signal: config.signal ?? signal,
       });
@@ -54,6 +60,7 @@ export function useGetApiDashboardDeadlines<
   TQueryData = GetApiDashboardDeadlinesQueryResponse,
   TQueryKey extends QueryKey = GetApiDashboardDeadlinesQueryKey,
 >(
+  params?: GetApiDashboardDeadlinesQueryParams,
   options: {
     query?: Partial<
       QueryObserverOptions<
@@ -70,11 +77,11 @@ export function useGetApiDashboardDeadlines<
   const { query: queryConfig = {}, client: config = {} } = options ?? {};
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
-    resolvedOptions?.queryKey ?? getApiDashboardDeadlinesQueryKey();
+    resolvedOptions?.queryKey ?? getApiDashboardDeadlinesQueryKey(params);
 
   const query = useQuery(
     {
-      ...getApiDashboardDeadlinesQueryOptions(config),
+      ...getApiDashboardDeadlinesQueryOptions(params, config),
       ...resolvedOptions,
       queryKey,
     } as unknown as QueryObserverOptions,

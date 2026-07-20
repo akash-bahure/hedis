@@ -17,6 +17,7 @@ import type {
 } from "@tanstack/react-query";
 import type {
   GetApiDashboardQueueByDomainQueryResponse,
+  GetApiDashboardQueueByDomainQueryParams,
   GetApiDashboardQueueByDomain401,
   GetApiDashboardQueueByDomain500,
 } from "../../types/GetApiDashboardQueueByDomain.ts";
@@ -26,17 +27,23 @@ import {
 } from "@tanstack/react-query";
 import { getApiDashboardQueueByDomain } from "../../clients/getApiDashboardQueueByDomain.ts";
 
-export const getApiDashboardQueueByDomainSuspenseInfiniteQueryKey = () =>
-  [{ url: "/api/dashboard/queue-by-domain" }] as const;
+export const getApiDashboardQueueByDomainSuspenseInfiniteQueryKey = (
+  params?: GetApiDashboardQueueByDomainQueryParams,
+) =>
+  [
+    { url: "/api/dashboard/queue-by-domain" },
+    ...(params ? [params] : []),
+  ] as const;
 
 export type GetApiDashboardQueueByDomainSuspenseInfiniteQueryKey = ReturnType<
   typeof getApiDashboardQueueByDomainSuspenseInfiniteQueryKey
 >;
 
 export function getApiDashboardQueueByDomainSuspenseInfiniteQueryOptions(
+  params?: GetApiDashboardQueueByDomainQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
-  const queryKey = getApiDashboardQueueByDomainSuspenseInfiniteQueryKey();
+  const queryKey = getApiDashboardQueueByDomainSuspenseInfiniteQueryKey(params);
   return infiniteQueryOptions<
     GetApiDashboardQueueByDomainQueryResponse,
     ResponseErrorConfig<
@@ -44,11 +51,16 @@ export function getApiDashboardQueueByDomainSuspenseInfiniteQueryOptions(
     >,
     InfiniteData<GetApiDashboardQueueByDomainQueryResponse>,
     typeof queryKey,
-    number
+    NonNullable<GetApiDashboardQueueByDomainQueryParams["page_no"]>
   >({
     queryKey,
-    queryFn: async ({ signal }) => {
-      return getApiDashboardQueueByDomain({
+    queryFn: async ({ signal, pageParam }) => {
+      params = {
+        ...(params ?? {}),
+        ["page_no"]:
+          pageParam as unknown as GetApiDashboardQueueByDomainQueryParams["page_no"],
+      } as GetApiDashboardQueueByDomainQueryParams;
+      return getApiDashboardQueueByDomain(params, {
         ...config,
         signal: config.signal ?? signal,
       });
@@ -76,8 +88,9 @@ export function useGetApiDashboardQueueByDomainSuspenseInfinite<
   TData = InfiniteData<TQueryFnData>,
   TQueryKey extends QueryKey =
     GetApiDashboardQueueByDomainSuspenseInfiniteQueryKey,
-  TPageParam = number,
+  TPageParam = NonNullable<GetApiDashboardQueueByDomainQueryParams["page_no"]>,
 >(
+  params?: GetApiDashboardQueueByDomainQueryParams,
   options: {
     query?: Partial<
       UseSuspenseInfiniteQueryOptions<
@@ -95,11 +108,14 @@ export function useGetApiDashboardQueueByDomainSuspenseInfinite<
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
     resolvedOptions?.queryKey ??
-    getApiDashboardQueueByDomainSuspenseInfiniteQueryKey();
+    getApiDashboardQueueByDomainSuspenseInfiniteQueryKey(params);
 
   const query = useSuspenseInfiniteQuery(
     {
-      ...getApiDashboardQueueByDomainSuspenseInfiniteQueryOptions(config),
+      ...getApiDashboardQueueByDomainSuspenseInfiniteQueryOptions(
+        params,
+        config,
+      ),
       ...resolvedOptions,
       queryKey,
     } as unknown as UseSuspenseInfiniteQueryOptions<

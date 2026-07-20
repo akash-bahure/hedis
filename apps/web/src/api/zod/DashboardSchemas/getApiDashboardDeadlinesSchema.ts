@@ -7,8 +7,26 @@ import * as z from "zod";
 import type { ToZod } from "../../.kubb/ToZod.ts";
 import type {
   GetApiDashboardDeadlines200,
+  GetApiDashboardDeadlinesQueryParams,
   GetApiDashboardDeadlinesQueryResponse,
 } from "../../types/GetApiDashboardDeadlines.ts";
+
+export const getApiDashboardDeadlinesQueryParamsSchema = z
+  .object({
+    measurementYear: z.optional(
+      z
+        .enum(["HEDIS MY2025", "HEDIS MY2026"])
+        .describe("Filter by HEDIS Measurement Year"),
+    ),
+    search: z.optional(
+      z
+        .string()
+        .describe(
+          "Case-insensitive search on patient first name, last name, or measure",
+        ),
+    ),
+  })
+  .optional() as unknown as ToZod<GetApiDashboardDeadlinesQueryParams>;
 
 /**
  * @description Upcoming abstraction deadlines retrieved successfully

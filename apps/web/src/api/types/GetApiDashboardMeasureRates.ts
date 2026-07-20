@@ -3,7 +3,25 @@
  * Do not edit manually.
  */
 
+export const getApiDashboardMeasureRatesQueryParamsMeasurementYearEnum = {
+  "HEDIS MY2025": "HEDIS MY2025",
+  "HEDIS MY2026": "HEDIS MY2026",
+} as const;
+
+export type GetApiDashboardMeasureRatesQueryParamsMeasurementYearEnumKey =
+  (typeof getApiDashboardMeasureRatesQueryParamsMeasurementYearEnum)[keyof typeof getApiDashboardMeasureRatesQueryParamsMeasurementYearEnum];
+
 export type GetApiDashboardMeasureRatesQueryParams = {
+  /**
+   * @description Filter by HEDIS Measurement Year (matches patients.measure)
+   * @type string | undefined
+   */
+  measurementYear?: GetApiDashboardMeasureRatesQueryParamsMeasurementYearEnumKey;
+  /**
+   * @description Case-insensitive search on patient first name, last name, or measure
+   * @type string | undefined
+   */
+  search?: string;
   /**
    * @description Page number (1-based)
    * @minLength 1

@@ -12,13 +12,19 @@ import type {
 } from "../../types/GetApiDashboardMyQueue.ts";
 
 export const getApiDashboardMyQueueQueryParamsSchema = z.object({
+  measurementYear: z.optional(
+    z
+      .enum(["HEDIS MY2025", "HEDIS MY2026"])
+      .describe("Filter by HEDIS Measurement Year"),
+  ),
   search: z.optional(
     z.string().describe("Search by name, MRN, or measure code"),
   ),
   status: z.optional(z.string().describe("Filter by workflow stage")),
-  sort_by: z.optional(
-    z.string().describe("Sort field (e.g. due_date, priority)"),
-  ),
+  sort_by: z
+    .string()
+    .default(1)
+    .describe("Sort field (e.g. due_date, priority)"),
   page: z.coerce.number().int().default(1).describe("Page number"),
   limit: z.coerce
     .number()

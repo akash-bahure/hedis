@@ -3,6 +3,27 @@
  * Do not edit manually.
  */
 
+export const getApiDashboardQueueByDomainQueryParamsMeasurementYearEnum = {
+  "HEDIS MY2025": "HEDIS MY2025",
+  "HEDIS MY2026": "HEDIS MY2026",
+} as const;
+
+export type GetApiDashboardQueueByDomainQueryParamsMeasurementYearEnumKey =
+  (typeof getApiDashboardQueueByDomainQueryParamsMeasurementYearEnum)[keyof typeof getApiDashboardQueueByDomainQueryParamsMeasurementYearEnum];
+
+export type GetApiDashboardQueueByDomainQueryParams = {
+  /**
+   * @description Filter by HEDIS Measurement Year (matches patients.measure)
+   * @type string | undefined
+   */
+  measurementYear?: GetApiDashboardQueueByDomainQueryParamsMeasurementYearEnumKey;
+  /**
+   * @description Case-insensitive search on patient first name, last name, or measure
+   * @type string | undefined
+   */
+  search?: string;
+};
+
 /**
  * @description Domain queue distribution retrieved successfully.
  */
@@ -49,5 +70,6 @@ export type GetApiDashboardQueueByDomainQueryResponse =
 
 export type GetApiDashboardQueueByDomainQuery = {
   Response: GetApiDashboardQueueByDomain200;
+  QueryParams: GetApiDashboardQueueByDomainQueryParams;
   Errors: GetApiDashboardQueueByDomain401 | GetApiDashboardQueueByDomain500;
 };

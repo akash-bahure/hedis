@@ -3,6 +3,27 @@
  * Do not edit manually.
  */
 
+export const getApiDashboardStatsQueryParamsMeasurementYearEnum = {
+  "HEDIS MY2025": "HEDIS MY2025",
+  "HEDIS MY2026": "HEDIS MY2026",
+} as const;
+
+export type GetApiDashboardStatsQueryParamsMeasurementYearEnumKey =
+  (typeof getApiDashboardStatsQueryParamsMeasurementYearEnum)[keyof typeof getApiDashboardStatsQueryParamsMeasurementYearEnum];
+
+export type GetApiDashboardStatsQueryParams = {
+  /**
+   * @description Filter by HEDIS Measurement Year (matches patients.measure)
+   * @type string | undefined
+   */
+  measurementYear?: GetApiDashboardStatsQueryParamsMeasurementYearEnumKey;
+  /**
+   * @description Case-insensitive search on patient first name, last name, or measure
+   * @type string | undefined
+   */
+  search?: string;
+};
+
 export const openQueueTrendTypeEnum = {
   up: "up",
   down: "down",
@@ -166,5 +187,6 @@ export type GetApiDashboardStatsQueryResponse = GetApiDashboardStats200;
 
 export type GetApiDashboardStatsQuery = {
   Response: GetApiDashboardStats200;
+  QueryParams: GetApiDashboardStatsQueryParams;
   Errors: GetApiDashboardStats401 | GetApiDashboardStats500;
 };

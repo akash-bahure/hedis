@@ -9,8 +9,28 @@ import type {
   GetApiDashboardQueueByDomain200,
   GetApiDashboardQueueByDomain401,
   GetApiDashboardQueueByDomain500,
+  GetApiDashboardQueueByDomainQueryParams,
   GetApiDashboardQueueByDomainQueryResponse,
 } from "../../types/GetApiDashboardQueueByDomain.ts";
+
+export const getApiDashboardQueueByDomainQueryParamsSchema = z
+  .object({
+    measurementYear: z.optional(
+      z
+        .enum(["HEDIS MY2025", "HEDIS MY2026"])
+        .describe(
+          "Filter by HEDIS Measurement Year (matches patients.measure)",
+        ),
+    ),
+    search: z.optional(
+      z
+        .string()
+        .describe(
+          "Case-insensitive search on patient first name, last name, or measure",
+        ),
+    ),
+  })
+  .optional() as unknown as ToZod<GetApiDashboardQueueByDomainQueryParams>;
 
 /**
  * @description Domain queue distribution retrieved successfully.

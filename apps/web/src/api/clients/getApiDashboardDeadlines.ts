@@ -9,7 +9,10 @@ import type {
   RequestConfig,
   ResponseErrorConfig,
 } from "../../../utils/client.ts";
-import type { GetApiDashboardDeadlinesQueryResponse } from "../types/GetApiDashboardDeadlines.ts";
+import type {
+  GetApiDashboardDeadlinesQueryResponse,
+  GetApiDashboardDeadlinesQueryParams,
+} from "../types/GetApiDashboardDeadlines.ts";
 
 function getGetApiDashboardDeadlinesUrl() {
   const res = { method: "GET", url: `/api/dashboard/deadlines` as const };
@@ -21,6 +24,7 @@ function getGetApiDashboardDeadlinesUrl() {
  * {@link /api/dashboard/deadlines}
  */
 export async function getApiDashboardDeadlines(
+  params?: GetApiDashboardDeadlinesQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
   const { client: request = fetch, ...requestConfig } = config;
@@ -32,6 +36,7 @@ export async function getApiDashboardDeadlines(
   >({
     method: "GET",
     url: getGetApiDashboardDeadlinesUrl().url.toString(),
+    params,
     ...requestConfig,
   });
   return res.data;

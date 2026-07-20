@@ -16,23 +16,30 @@ import type {
 } from "@tanstack/react-query";
 import type {
   GetApiDashboardQueueByDomainQueryResponse,
+  GetApiDashboardQueueByDomainQueryParams,
   GetApiDashboardQueueByDomain401,
   GetApiDashboardQueueByDomain500,
 } from "../../types/GetApiDashboardQueueByDomain.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { getApiDashboardQueueByDomain } from "../../clients/getApiDashboardQueueByDomain.ts";
 
-export const getApiDashboardQueueByDomainSuspenseQueryKey = () =>
-  [{ url: "/api/dashboard/queue-by-domain" }] as const;
+export const getApiDashboardQueueByDomainSuspenseQueryKey = (
+  params?: GetApiDashboardQueueByDomainQueryParams,
+) =>
+  [
+    { url: "/api/dashboard/queue-by-domain" },
+    ...(params ? [params] : []),
+  ] as const;
 
 export type GetApiDashboardQueueByDomainSuspenseQueryKey = ReturnType<
   typeof getApiDashboardQueueByDomainSuspenseQueryKey
 >;
 
 export function getApiDashboardQueueByDomainSuspenseQueryOptions(
+  params?: GetApiDashboardQueueByDomainQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
-  const queryKey = getApiDashboardQueueByDomainSuspenseQueryKey();
+  const queryKey = getApiDashboardQueueByDomainSuspenseQueryKey(params);
   return queryOptions<
     GetApiDashboardQueueByDomainQueryResponse,
     ResponseErrorConfig<
@@ -43,7 +50,7 @@ export function getApiDashboardQueueByDomainSuspenseQueryOptions(
   >({
     queryKey,
     queryFn: async ({ signal }) => {
-      return getApiDashboardQueueByDomain({
+      return getApiDashboardQueueByDomain(params, {
         ...config,
         signal: config.signal ?? signal,
       });
@@ -60,6 +67,7 @@ export function useGetApiDashboardQueueByDomainSuspense<
   TData = GetApiDashboardQueueByDomainQueryResponse,
   TQueryKey extends QueryKey = GetApiDashboardQueueByDomainSuspenseQueryKey,
 >(
+  params?: GetApiDashboardQueueByDomainQueryParams,
   options: {
     query?: Partial<
       UseSuspenseQueryOptions<
@@ -77,11 +85,12 @@ export function useGetApiDashboardQueueByDomainSuspense<
   const { query: queryConfig = {}, client: config = {} } = options ?? {};
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
-    resolvedOptions?.queryKey ?? getApiDashboardQueueByDomainSuspenseQueryKey();
+    resolvedOptions?.queryKey ??
+    getApiDashboardQueueByDomainSuspenseQueryKey(params);
 
   const query = useSuspenseQuery(
     {
-      ...getApiDashboardQueueByDomainSuspenseQueryOptions(config),
+      ...getApiDashboardQueueByDomainSuspenseQueryOptions(params, config),
       ...resolvedOptions,
       queryKey,
     } as unknown as UseSuspenseQueryOptions,

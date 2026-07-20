@@ -17,6 +17,7 @@ import type {
 } from "@tanstack/react-query";
 import type {
   GetApiDashboardStatsQueryResponse,
+  GetApiDashboardStatsQueryParams,
   GetApiDashboardStats401,
   GetApiDashboardStats500,
 } from "../../types/GetApiDashboardStats.ts";
@@ -26,27 +27,34 @@ import {
 } from "@tanstack/react-query";
 import { getApiDashboardStats } from "../../clients/getApiDashboardStats.ts";
 
-export const getApiDashboardStatsSuspenseInfiniteQueryKey = () =>
-  [{ url: "/api/dashboard/stats" }] as const;
+export const getApiDashboardStatsSuspenseInfiniteQueryKey = (
+  params?: GetApiDashboardStatsQueryParams,
+) => [{ url: "/api/dashboard/stats" }, ...(params ? [params] : [])] as const;
 
 export type GetApiDashboardStatsSuspenseInfiniteQueryKey = ReturnType<
   typeof getApiDashboardStatsSuspenseInfiniteQueryKey
 >;
 
 export function getApiDashboardStatsSuspenseInfiniteQueryOptions(
+  params?: GetApiDashboardStatsQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
-  const queryKey = getApiDashboardStatsSuspenseInfiniteQueryKey();
+  const queryKey = getApiDashboardStatsSuspenseInfiniteQueryKey(params);
   return infiniteQueryOptions<
     GetApiDashboardStatsQueryResponse,
     ResponseErrorConfig<GetApiDashboardStats401 | GetApiDashboardStats500>,
     InfiniteData<GetApiDashboardStatsQueryResponse>,
     typeof queryKey,
-    number
+    NonNullable<GetApiDashboardStatsQueryParams["page_no"]>
   >({
     queryKey,
-    queryFn: async ({ signal }) => {
-      return getApiDashboardStats({
+    queryFn: async ({ signal, pageParam }) => {
+      params = {
+        ...(params ?? {}),
+        ["page_no"]:
+          pageParam as unknown as GetApiDashboardStatsQueryParams["page_no"],
+      } as GetApiDashboardStatsQueryParams;
+      return getApiDashboardStats(params, {
         ...config,
         signal: config.signal ?? signal,
       });
@@ -73,8 +81,9 @@ export function useGetApiDashboardStatsSuspenseInfinite<
   >,
   TData = InfiniteData<TQueryFnData>,
   TQueryKey extends QueryKey = GetApiDashboardStatsSuspenseInfiniteQueryKey,
-  TPageParam = number,
+  TPageParam = NonNullable<GetApiDashboardStatsQueryParams["page_no"]>,
 >(
+  params?: GetApiDashboardStatsQueryParams,
   options: {
     query?: Partial<
       UseSuspenseInfiniteQueryOptions<
@@ -91,11 +100,12 @@ export function useGetApiDashboardStatsSuspenseInfinite<
   const { query: queryConfig = {}, client: config = {} } = options ?? {};
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
-    resolvedOptions?.queryKey ?? getApiDashboardStatsSuspenseInfiniteQueryKey();
+    resolvedOptions?.queryKey ??
+    getApiDashboardStatsSuspenseInfiniteQueryKey(params);
 
   const query = useSuspenseInfiniteQuery(
     {
-      ...getApiDashboardStatsSuspenseInfiniteQueryOptions(config),
+      ...getApiDashboardStatsSuspenseInfiniteQueryOptions(params, config),
       ...resolvedOptions,
       queryKey,
     } as unknown as UseSuspenseInfiniteQueryOptions<

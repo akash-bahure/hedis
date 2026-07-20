@@ -16,23 +16,26 @@ import type {
 } from "@tanstack/react-query";
 import type {
   GetApiDashboardStatsQueryResponse,
+  GetApiDashboardStatsQueryParams,
   GetApiDashboardStats401,
   GetApiDashboardStats500,
 } from "../../types/GetApiDashboardStats.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { getApiDashboardStats } from "../../clients/getApiDashboardStats.ts";
 
-export const getApiDashboardStatsSuspenseQueryKey = () =>
-  [{ url: "/api/dashboard/stats" }] as const;
+export const getApiDashboardStatsSuspenseQueryKey = (
+  params?: GetApiDashboardStatsQueryParams,
+) => [{ url: "/api/dashboard/stats" }, ...(params ? [params] : [])] as const;
 
 export type GetApiDashboardStatsSuspenseQueryKey = ReturnType<
   typeof getApiDashboardStatsSuspenseQueryKey
 >;
 
 export function getApiDashboardStatsSuspenseQueryOptions(
+  params?: GetApiDashboardStatsQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
-  const queryKey = getApiDashboardStatsSuspenseQueryKey();
+  const queryKey = getApiDashboardStatsSuspenseQueryKey(params);
   return queryOptions<
     GetApiDashboardStatsQueryResponse,
     ResponseErrorConfig<GetApiDashboardStats401 | GetApiDashboardStats500>,
@@ -41,7 +44,7 @@ export function getApiDashboardStatsSuspenseQueryOptions(
   >({
     queryKey,
     queryFn: async ({ signal }) => {
-      return getApiDashboardStats({
+      return getApiDashboardStats(params, {
         ...config,
         signal: config.signal ?? signal,
       });
@@ -58,6 +61,7 @@ export function useGetApiDashboardStatsSuspense<
   TData = GetApiDashboardStatsQueryResponse,
   TQueryKey extends QueryKey = GetApiDashboardStatsSuspenseQueryKey,
 >(
+  params?: GetApiDashboardStatsQueryParams,
   options: {
     query?: Partial<
       UseSuspenseQueryOptions<
@@ -73,11 +77,11 @@ export function useGetApiDashboardStatsSuspense<
   const { query: queryConfig = {}, client: config = {} } = options ?? {};
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
-    resolvedOptions?.queryKey ?? getApiDashboardStatsSuspenseQueryKey();
+    resolvedOptions?.queryKey ?? getApiDashboardStatsSuspenseQueryKey(params);
 
   const query = useSuspenseQuery(
     {
-      ...getApiDashboardStatsSuspenseQueryOptions(config),
+      ...getApiDashboardStatsSuspenseQueryOptions(params, config),
       ...resolvedOptions,
       queryKey,
     } as unknown as UseSuspenseQueryOptions,

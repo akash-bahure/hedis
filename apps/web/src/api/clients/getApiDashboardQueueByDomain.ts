@@ -11,6 +11,7 @@ import type {
 } from "../../../utils/client.ts";
 import type {
   GetApiDashboardQueueByDomainQueryResponse,
+  GetApiDashboardQueueByDomainQueryParams,
   GetApiDashboardQueueByDomain401,
   GetApiDashboardQueueByDomain500,
 } from "../types/GetApiDashboardQueueByDomain.ts";
@@ -26,6 +27,7 @@ function getGetApiDashboardQueueByDomainUrl() {
  * {@link /api/dashboard/queue-by-domain}
  */
 export async function getApiDashboardQueueByDomain(
+  params?: GetApiDashboardQueueByDomainQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
   const { client: request = fetch, ...requestConfig } = config;
@@ -39,6 +41,7 @@ export async function getApiDashboardQueueByDomain(
   >({
     method: "GET",
     url: getGetApiDashboardQueueByDomainUrl().url.toString(),
+    params,
     ...requestConfig,
   });
   return res.data;
