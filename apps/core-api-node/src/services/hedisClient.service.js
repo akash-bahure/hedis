@@ -10,6 +10,7 @@ exports.getClients = async (db, queryParams) => {
     status,
     contract_type,
     measure_year,
+    measurementYear,
     page = 1,
     limit = 10,
     sortBy = "created_at",
@@ -24,12 +25,21 @@ exports.getClients = async (db, queryParams) => {
   const queryValues = [];
   let valueIndex = 1;
 
-  // SEARCH FILTER (matches org_name, client_id/code, and short_code)
+  // SEARCH FILTER (matches org_name, client_id/code, and short_code OR patient level first_name, last_name, measure)
   if (search) {
     whereClauses.push(`(
       c.org_name ILIKE $${valueIndex}
       OR c.client_id ILIKE $${valueIndex}
       OR c.short_code ILIKE $${valueIndex}
+      OR EXISTS (
+        SELECT 1 FROM patients pat
+        WHERE pat.client_id = c.id
+          AND (
+            pat.first_name ILIKE $${valueIndex}
+            OR pat.last_name ILIKE $${valueIndex}
+            OR pat.measure ILIKE $${valueIndex}
+          )
+      )
     )`);
     queryValues.push(`%${search}%`);
     valueIndex++;
@@ -53,6 +63,17 @@ exports.getClients = async (db, queryParams) => {
   if (measure_year) {
     whereClauses.push(`c.measure_year = $${valueIndex}`);
     queryValues.push(measure_year);
+    valueIndex++;
+  }
+
+  // MEASUREMENT YEAR FILTER (patient-level measurementYear)
+  if (measurementYear) {
+    whereClauses.push(`EXISTS (
+      SELECT 1 FROM patients pat
+      WHERE pat.client_id = c.id
+        AND pat.measure ILIKE $${valueIndex}
+    )`);
+    queryValues.push(`%${measurementYear.trim()}%`);
     valueIndex++;
   }
 

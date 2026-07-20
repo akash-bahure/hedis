@@ -76,6 +76,18 @@ router.get("/abstraction-velocity", controller.getAbstractionVelocity);
  *     tags: [Dashboard Analytics]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: measurementYear
+ *         schema:
+ *           type: string
+ *           enum: [HEDIS MY2025, HEDIS MY2026]
+ *         description: Filter by HEDIS Measurement Year (matches patients.measure)
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Case-insensitive search on patient first name, last name, or measure
  *     responses:
  *       200:
  *         description: Domain queue distribution retrieved successfully.
@@ -128,6 +140,17 @@ router.get("/queue-by-domain", controller.getQueueByDomain);
  *     security:
  *       - bearerAuth: []
  *     parameters:
+ *       - in: query
+ *         name: measurementYear
+ *         schema:
+ *           type: string
+ *           enum: [HEDIS MY2025, HEDIS MY2026]
+ *         description: Filter by HEDIS Measurement Year (matches patients.measure)
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Case-insensitive search on patient first name, last name, or measure
  *       - in: query
  *         name: page_no
  *         schema:
@@ -233,6 +256,17 @@ router.get("/measure-rates", controller.getMeasureRates);
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
+ *         name: measurementYear
+ *         schema:
+ *           type: string
+ *           enum: [HEDIS MY2025, HEDIS MY2026]
+ *         description: Filter by HEDIS Measurement Year (matches patients.measure)
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Case-insensitive search on patient first name, last name, or measure
+ *       - in: query
  *         name: page_no
  *         schema:
  *           type: integer
@@ -332,6 +366,18 @@ router.get("/queue-by-measure", controller.getQueueByMeasure);
  *     tags: [Dashboard Analytics]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: measurementYear
+ *         schema:
+ *           type: string
+ *           enum: [HEDIS MY2025, HEDIS MY2026]
+ *         description: Filter by HEDIS Measurement Year (matches patients.measure)
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Case-insensitive search on patient first name, last name, or measure
  *     responses:
  *       200:
  *         description: Dashboard statistics retrieved successfully.
@@ -454,6 +500,18 @@ router.get("/summary", controller.getSummary);
  *     tags: [Dashboard]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: measurementYear
+ *         schema:
+ *           type: string
+ *           enum: [HEDIS MY2025, HEDIS MY2026]
+ *         description: Filter by HEDIS Measurement Year
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Case-insensitive search on patient first name, last name, or measure
  *     responses:
  *       200:
  *         description: Upcoming abstraction deadlines retrieved successfully
@@ -469,6 +527,12 @@ router.get("/deadlines", controller.getUpcomingDeadlines);
  *     security:
  *       - bearerAuth: []
  *     parameters:
+ *       - in: query
+ *         name: measurementYear
+ *         schema:
+ *           type: string
+ *           enum: [HEDIS MY2025, HEDIS MY2026]
+ *         description: Filter by HEDIS Measurement Year
  *       - in: query
  *         name: search
  *         schema:

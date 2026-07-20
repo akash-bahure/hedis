@@ -1,6 +1,8 @@
+const projectService = require("../services/project.service");
+
 exports.createProject = async (req, res) => {
   try {
-   const {
+    const {
       project_name,
       client_id,
       project_type,
@@ -16,51 +18,43 @@ exports.createProject = async (req, res) => {
     } = req.body;
 
     // Required Fields Validation
-   if (!project_name || !client_id || !start_date || !end_date) {
+    if (!project_name || !client_id || !start_date || !end_date) {
       return res.status(400).json({
         error:
           "Missing required fields: project_name, client_id, start_date, end_date",
       });
     }
 
-
     // Generate Sequential Project ID
     const projectCountResult = await req.db.query(`
       SELECT COUNT(*) FROM projects
     `);
-    
-    const projectCount =
-      Number(projectCountResult.rows[0].count) + 1;
-    
+
+    const projectCount = Number(projectCountResult.rows[0].count) + 1;
+
     const project_id = `PR-${String(projectCount).padStart(3, "0")}`;
     let validProjectManagerId = null;
 
-    if (
-    project_manager_id &&
-    project_manager_id.trim() !== ""
-    ){
-    const managerExists = await req.db.query(
-      `SELECT id FROM users WHERE id = $1`,
-      [project_manager_id]
-    );
-  
-    if (managerExists.rows.length === 0) {
-      return res.status(400).json({
-        error: "Invalid project_manager_id. User not found.",
-      });
+    if (project_manager_id && project_manager_id.trim() !== "") {
+      const managerExists = await req.db.query(
+        `SELECT id FROM users WHERE id = $1`,
+        [project_manager_id]
+      );
+
+      if (managerExists.rows.length === 0) {
+        return res.status(400).json({
+          error: "Invalid project_manager_id. User not found.",
+        });
+      }
     }
-  }
 
     // Charts Calculation
     const totalCharts = Number(total_charts || 0);
     const completedCharts = Number(completed_charts || 0);
 
-    const pending_charts = Math.max(
-      totalCharts - completedCharts,
-      0
-    );
+    const pending_charts = Math.max(totalCharts - completedCharts, 0);
 
-   const query = `
+    const query = `
     INSERT INTO projects (
       project_id,
       project_name,
@@ -84,23 +78,23 @@ exports.createProject = async (req, res) => {
   `;
 
     const values = [
-    project_id,
-    project_name,
-    client_id,
-    project_type || null,
-    specialty || null,
-    priority || "High",
-    status || "Draft",
-    totalCharts,
-    completedCharts,
-    pending_charts,
-    notes || null,
-    start_date,
-    end_date,
-    project_manager_id && project_manager_id.trim() !== ""
-    ? project_manager_id
-    : null,
-  ];
+      project_id,
+      project_name,
+      client_id,
+      project_type || null,
+      specialty || null,
+      priority || "High",
+      status || "Draft",
+      totalCharts,
+      completedCharts,
+      pending_charts,
+      notes || null,
+      start_date,
+      end_date,
+      project_manager_id && project_manager_id.trim() !== ""
+        ? project_manager_id
+        : null,
+    ];
 
     const result = await req.db.query(query, values);
 
@@ -126,154 +120,42 @@ exports.getProjects = async (req, res) => {
       status,
       project_type,
       specialty,
-      page_no = 1,
-      page_size = 10,
+      measurementYear,
+      page,
+      limit,
+      sortBy,
+      sortOrder,
     } = req.query;
 
-    const page = Number(page_no);
-    const limit = Number(page_size);
-    const offset = (page - 1) * limit;
+    const result = await projectService.getProjects(req.db, {
+      search,
+      client_id,
+      priority,
+      status,
+      project_type,
+      specialty,
+      measurementYear,
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+    });
 
-    let query = `
-    SELECT
-      p.id,
-      p.project_id,
-      p.project_name,
-      p.project_type,
-      p.specialty,
-      p.priority,
-      p.status,
-      p.notes,
-      p.start_date,
-      p.end_date,
-      p.total_charts,
-      p.completed_charts,
-      p.pending_charts,
-      p.created_at,
-      p.updated_at,
-    
-      CASE
-        WHEN p.total_charts = 0 THEN 0
-        ELSE ROUND(
-          (p.completed_charts::decimal / p.total_charts) * 100,
-          0
-        )
-      END AS completion_percentage,
-    
-      c.id AS client_uuid,
-      c.client_id,
-      c.org_name,
-      c.short_code,
-      c.region,
-      c.contract_type,
-      c.status AS client_status,
-    
-      u.id AS project_manager_uuid,
-      u.full_name AS project_manager_name
-
-      FROM projects p
-
-      LEFT JOIN clients c
-        ON p.client_id = c.id
-
-      LEFT JOIN users u
-        ON p.project_manager_id = u.id
-
-      WHERE 1=1
-    `;
-
-    const values = [];
-
-    // Search Project Name
-    if (search) {
-      values.push(`%${search}%`);
-
-      query += `
-        AND (
-          p.project_name ILIKE $${values.length}
-        )
-      `;
-    }
-
-    // Client Filter
-    if (client_id) {
-      values.push(client_id);
-
-      query += `
-        AND p.client_id = $${values.length}
-      `;
-    }
-
-    // Status Filter
-    if (status) {
-      values.push(status);
-
-      query += `
-        AND p.status = $${values.length}
-      `;
-    }
-
-    // Project Type Filter
-    if (project_type) {
-      values.push(project_type);
-
-      query += `
-        AND p.project_type = $${values.length}
-      `;
-    }
-
-    // Total Count
-    const countQuery = `
-      SELECT COUNT(*) FROM (
-        ${query}
-      ) AS total_projects
-    `;
-
-    const countResult = await req.db.query(countQuery, values);
-
-    const total = Number(countResult.rows[0].count);
-
-    // Pagination
-    values.push(limit);
-
-    query += `
-      ORDER BY p.created_at DESC
-      LIMIT $${values.length}
-    `;
-
-    values.push(offset);
-
-    query += `
-      OFFSET $${values.length}
-    `;
-
-    const result = await req.db.query(query, values);
-
-    return res.status(200).json({
+    res.json({
       message: "Projects fetched successfully",
-
-      total,
-
-      page_no: page,
-
-      page_size: limit,
-
-      total_pages: Math.ceil(total / limit),
-
-      data: result.rows,
+      ...result,
     });
   } catch (err) {
-    console.error(err);
-
-    res.status(500).json({
-      error: err.message,
-    });
+    console.error("Get Projects Error:", err);
+    res.status(500).json({ error: err.message });
   }
 };
 
 exports.getProjectById = async (req, res) => {
   try {
-    const result = await req.db.query("SELECT * FROM projects WHERE id = $1", [req.params.id]);
+    const result = await req.db.query("SELECT * FROM projects WHERE id = $1", [
+      req.params.id,
+    ]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Project not found" });
     }
@@ -319,7 +201,10 @@ exports.updateProject = async (req, res) => {
 
 exports.deleteProject = async (req, res) => {
   try {
-    const result = await req.db.query("DELETE FROM projects WHERE id = $1 RETURNING *", [req.params.id]);
+    const result = await req.db.query(
+      "DELETE FROM projects WHERE id = $1 RETURNING *",
+      [req.params.id]
+    );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Project not found" });
     }
@@ -377,7 +262,9 @@ exports.updateProjectAccess = async (req, res) => {
   const { user_id, access_level } = req.body;
 
   if (!user_id || !access_level) {
-    return res.status(400).json({ error: "Missing required fields: user_id and access_level are required." });
+    return res.status(400).json({
+      error: "Missing required fields: user_id and access_level are required.",
+    });
   }
 
   try {
@@ -394,7 +281,7 @@ exports.updateProjectAccess = async (req, res) => {
     await client.query(upsertQuery, [user_id, projectId, access_level]);
 
     // 2. Sync with users.project_access array
-    if (access_level === 'None') {
+    if (access_level === "None") {
       // Remove from array
       await client.query(
         "UPDATE users SET project_access = array_remove(project_access, $1) WHERE id = $2",
@@ -417,4 +304,20 @@ exports.updateProjectAccess = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/projects/stats
+ * Dashboard summary stats for Projects
+ */
+exports.getProjectStats = async (req, res) => {
+  try {
+    const stats = await projectService.getProjectStats(req.db);
 
+    res.json({
+      message: "Project stats fetched successfully",
+      data: stats,
+    });
+  } catch (err) {
+    console.error("Get Project Stats Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};

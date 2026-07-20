@@ -48,7 +48,13 @@ exports.getAbstractionVelocity = async (req, res) => {
  */
 exports.getQueueByDomain = async (req, res) => {
   try {
-    const data = await service.getQueueByDomain(req.db, req.tenant.schema_name);
+    const { measurementYear, search } = req.query;
+    const filters = {
+      measurementYear: measurementYear?.trim() || null,
+      search: search?.trim() || null,
+    };
+
+    const data = await service.getQueueByDomain(req.db, req.tenant.schema_name, filters);
 
     return res.status(200).json({
       success: true,
@@ -88,7 +94,13 @@ exports.getMeasureRates = async (req, res) => {
       });
     }
 
-    const result = await service.getMeasureRates(req.db, req.tenant.schema_name, { page, limit });
+    const { measurementYear, search } = req.query;
+    const filters = {
+      measurementYear: measurementYear?.trim() || null,
+      search: search?.trim() || null,
+    };
+
+    const result = await service.getMeasureRates(req.db, req.tenant.schema_name, { page, limit, filters });
 
     return res.status(200).json({
       success: true,
@@ -129,7 +141,13 @@ exports.getQueueByMeasure = async (req, res) => {
       });
     }
 
-    const result = await service.getQueueByMeasure(req.db, req.tenant.schema_name, { page, limit });
+    const { measurementYear, search } = req.query;
+    const filters = {
+      measurementYear: measurementYear?.trim() || null,
+      search: search?.trim() || null,
+    };
+
+    const result = await service.getQueueByMeasure(req.db, req.tenant.schema_name, { page, limit, filters });
 
     return res.status(200).json({
       success: true,
@@ -155,7 +173,13 @@ exports.getQueueByMeasure = async (req, res) => {
  */
 exports.getDashboardStats = async (req, res) => {
   try {
-    const data = await service.getDashboardStats(req.db, req.tenant.schema_name);
+    const { measurementYear, search } = req.query;
+    const filters = {
+      measurementYear: measurementYear?.trim() || null,
+      search: search?.trim() || null,
+    };
+
+    const data = await service.getDashboardStats(req.db, req.tenant.schema_name, filters);
 
     return res.status(200).json({
       success: true,
@@ -202,7 +226,13 @@ exports.getSummary = async (req, res) => {
  */
 exports.getUpcomingDeadlines = async (req, res) => {
   try {
-    const data = await service.getDeadlines(req.db, req.tenant.schema_name);
+    const { measurementYear, search } = req.query;
+    const filters = {
+      measurementYear: measurementYear?.trim() || null,
+      search: search?.trim() || null,
+    };
+
+    const data = await service.getDeadlines(req.db, req.tenant.schema_name, filters);
 
     return res.status(200).json({
       success: true,
