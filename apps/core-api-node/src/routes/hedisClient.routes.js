@@ -220,7 +220,14 @@ router.get("/:id", hedisClientController.getClientById);
  *         name: search
  *         schema:
  *           type: string
- *         description: Search by organization name, client code, or short code
+ *         description: Search by organization name, client code, short code, or patient name/measure
+ *       - in: query
+ *         name: measurementYear
+ *         schema:
+ *           type: string
+ *           enum: [HEDIS MY2025, HEDIS MY2026]
+ *         description: Filter by HEDIS Measurement Year
+ *         example: HEDIS MY2025
  *       - in: query
  *         name: status
  *         schema:

@@ -155,6 +155,60 @@ router.post("/", controller.createProject);
 
 /**
  * @swagger
+ * /api/projects/stats:
+ *   get:
+ *     summary: Get Project Statistics for Dashboard
+ *     tags: [Projects]
+ *     description: Returns aggregate statistics including total projects, status breakdown, chart metrics, and overall completion rate.
+ *     responses:
+ *       200:
+ *         description: Project stats fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Project stats fetched successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalProjects:
+ *                       type: integer
+ *                       example: 12
+ *                     activeProjects:
+ *                       type: integer
+ *                       example: 8
+ *                     atRiskProjects:
+ *                       type: integer
+ *                       example: 2
+ *                     completedProjects:
+ *                       type: integer
+ *                       example: 2
+ *                     totalCharts:
+ *                       type: integer
+ *                       example: 15420
+ *                     completedCharts:
+ *                       type: integer
+ *                       example: 8730
+ *                     inProgressCharts:
+ *                       type: integer
+ *                       example: 4520
+ *                     pendingCharts:
+ *                       type: integer
+ *                       example: 2170
+ *                     overallCompletionRate:
+ *                       type: number
+ *                       format: float
+ *                       example: 56.61
+ *       500:
+ *         description: Server error
+ */
+router.get("/stats", controller.getProjectStats);
+
+/**
+ * @swagger
  * /api/projects:
  *   get:
  *     summary: Get all projects
@@ -184,6 +238,14 @@ router.post("/", controller.createProject);
  *             - Medium
  *             - Low
  *         description: Filter by project priority
+ *
+ *       - in: query
+ *         name: measurementYear
+ *         schema:
+ *           type: string
+ *           enum: [HEDIS MY2025, HEDIS MY2026]
+ *         description: Filter by HEDIS Measurement Year
+ *         example: HEDIS MY2025
  *
  *       - in: query
  *         name: status
@@ -273,7 +335,7 @@ router.post("/", controller.createProject);
  *                       id:
  *                         type: string
  *                         format: uuid
- * 
+ *
  *                       project_id:
  *                         type: string
  *                         example: "PR-001"

@@ -10,6 +10,7 @@ exports.getWorkQueue = async (req, res) => {
     const {
       tab = "all",
       search,
+      measurementYear,
       project_id,
       plan,
       priority,
@@ -26,12 +27,19 @@ exports.getWorkQueue = async (req, res) => {
     let values = [];
 
     if (search) {
-      values.push(`%${search}%`);
+      const term = `%${search.trim()}%`;
+      values.push(term);
       baseWhere += `
-        AND (p.first_name ILIKE $${values.length} 
-          OR p.last_name ILIKE $${values.length} 
+        AND (p.first_name ILIKE $${values.length}
+          OR p.last_name ILIKE $${values.length}
           OR p.patient_id ILIKE $${values.length}
-          OR pc.chart_id ILIKE $${values.length})`;
+          OR pc.chart_id ILIKE $${values.length}
+          OR p.measure ILIKE $${values.length})`;
+    }
+
+    if (measurementYear) {
+      values.push(measurementYear.trim());
+      baseWhere += ` AND p.measure ILIKE $${values.length}`;
     }
 
     if (project_id) {
@@ -107,10 +115,11 @@ exports.getWorkQueue = async (req, res) => {
     }
 
     // ====================== COUNTS ======================
+    const userIdPlaceholder = `$${values.length + 1}`;
     const countsQuery = `
       SELECT
         COUNT(*) AS total_all,
-        COUNT(CASE WHEN p.assigned_to = $1 OR p.abstractor_id = $1 OR p.qa_id = $1 THEN 1 END) AS my_work,
+        COUNT(CASE WHEN p.assigned_to = ${userIdPlaceholder} OR p.abstractor_id = ${userIdPlaceholder} OR p.qa_id = ${userIdPlaceholder} THEN 1 END) AS my_work,
         COUNT(CASE WHEN p.stage IN ('Not Started', 'Unassigned') OR p.stage IS NULL THEN 1 END) AS not_started,
         COUNT(CASE WHEN p.stage = 'Assigned' THEN 1 END) AS assigned,
         COUNT(CASE WHEN p.stage = 'In Progress' THEN 1 END) AS in_progress,
@@ -125,7 +134,7 @@ exports.getWorkQueue = async (req, res) => {
       ${baseWhere}
     `;
 
-    const countsResult = await req.db.query(countsQuery, [userId]);
+    const countsResult = await req.db.query(countsQuery, [...values, userId]);
     const c = countsResult.rows[0] || {};
 
     const counts = {

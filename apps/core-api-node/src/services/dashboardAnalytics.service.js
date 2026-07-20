@@ -112,6 +112,38 @@ class DashboardAnalyticsService {
     return 80;
   }
   // ─────────────────────────────────────────────────────────────────────────────
+  // FILTER HELPER
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Build parameterized SQL fragments for the global top filters.
+   * Mutates the `values` array in-place and returns a SQL AND-clause string.
+   *
+   * @param {object}   filters          - { measurementYear?, search? }
+   * @param {Array}    values           - existing parameter values array (mutated)
+   * @param {string}   [alias='p']      - table alias for the patients table
+   * @returns {string} SQL string starting with " AND ..." (empty string if no filters)
+   */
+  _buildPatientFilters(filters = {}, values = [], alias = 'p') {
+    let sql = '';
+
+    if (filters.measurementYear) {
+      values.push(filters.measurementYear.trim());
+      sql += ` AND ${alias}.measure ILIKE $${values.length}`;
+    }
+
+    if (filters.search) {
+      const term = `%${filters.search.trim()}%`;
+      values.push(term);
+      sql += ` AND (${alias}.first_name ILIKE $${values.length}`
+        + ` OR ${alias}.last_name ILIKE $${values.length}`
+        + ` OR ${alias}.measure ILIKE $${values.length})`;
+    }
+
+    return sql;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
   // EXISTING APIS
   // ─────────────────────────────────────────────────────────────────────────────
 
@@ -123,8 +155,8 @@ class DashboardAnalyticsService {
   async getAbstractionVelocity(db, schema, { days = 14 } = {}) {
     const targetValue = parseInt(
       process.env.DASHBOARD_TARGET_CHARTS_PER_DAY ||
-        process.env.DASHBOARD_TARGET_CHARTS ||
-        "40",
+      process.env.DASHBOARD_TARGET_CHARTS ||
+      "40",
       10
     );
 
@@ -173,19 +205,23 @@ class DashboardAnalyticsService {
    * GET /dashboard/queue-by-domain
    * Returns counts and percentage distribution of active queue items grouped by domain.
    */
-  async getQueueByDomain(db, schema) {
-    // Option A: Join hedis_evaluations with active patients (stage not Completed or Submission Ready)
+  async getQueueByDomain(db, schema, filters = {}) {
+    // Join hedis_evaluations with active patients (stage not Completed or Submission Ready)
     // where evaluation status is active (e.g. not Compliant, Complete, or Not Eligible).
+    const values = [];
+    const filterSql = this._buildPatientFilters(filters, values);
+
     const query = `
       SELECT he.measure_code, COUNT(*) AS count
       FROM ${schema}.hedis_evaluations he
       INNER JOIN ${schema}.patients p ON he.patient_id = p.id
       WHERE p.stage NOT IN ('Completed', 'Submission Ready', 'QA Passed')
         AND he.status NOT IN ('Compliant', 'Complete', 'Not Eligible')
+        ${filterSql}
       GROUP BY he.measure_code;
     `;
 
-    const result = await db.query(query);
+    const result = await db.query(query, values);
     const rows = result.rows || [];
 
     // Map each measure_code to its domain and aggregate counts
@@ -238,10 +274,23 @@ class DashboardAnalyticsService {
    * YOY           = current-year rate minus prior-year rate (null if no prior data)
    * Benchmark     = "Above" | "At Target" | "Below" | null
    */
-  async getMeasureRates(db, schema, { page = 1, limit = 10 } = {}) {
+  async getMeasureRates(db, schema, { page = 1, limit = 10, filters = {} } = {}) {
     const offset = (page - 1) * limit;
     const currentYear = new Date().getFullYear();
     const priorYear = currentYear - 1;
+
+    // Use one array and pass to _buildPatientFilters so it starts pushing at index 3
+    const dataParams = [currentYear, priorYear];
+    const filterSql = this._buildPatientFilters(filters, dataParams);
+
+    const limitIdx = dataParams.length + 1;
+    const offsetIdx = dataParams.length + 2;
+    dataParams.push(limit, offset);
+
+    // Join patients only when a patient-level filter is active to preserve performance
+    const patientJoin = filterSql
+      ? `INNER JOIN ${schema}.patients p ON he.patient_id = p.id`
+      : '';
 
     // Single aggregation: all-time + current-year + prior-year counts per measure
     const dataQuery = `
@@ -262,19 +311,29 @@ class DashboardAnalyticsService {
         COUNT(*) FILTER (WHERE he.numerator   = TRUE
                            AND EXTRACT(YEAR FROM he.created_at) = $2)              AS numer_prior
       FROM ${schema}.hedis_evaluations he
+      ${patientJoin}
+      WHERE 1=1 ${filterSql}
       GROUP BY he.measure_code
       ORDER BY he.measure_code ASC
-      LIMIT $3 OFFSET $4
+      LIMIT $${limitIdx} OFFSET $${offsetIdx}
     `;
 
+    // Count query: apply same patient filter (starts empty index, so offset from 1 is fine here)
+    const countFilterValues = [];
+    const countFilterSql = this._buildPatientFilters(filters, countFilterValues);
+    const countPatientJoin = countFilterSql
+      ? `INNER JOIN ${schema}.patients p ON he.patient_id = p.id`
+      : '';
     const countQuery = `
-      SELECT COUNT(DISTINCT measure_code) AS total
-      FROM ${schema}.hedis_evaluations
+      SELECT COUNT(DISTINCT he.measure_code) AS total
+      FROM ${schema}.hedis_evaluations he
+      ${countPatientJoin}
+      WHERE 1=1 ${countFilterSql}
     `;
 
     const [dataResult, countResult] = await Promise.all([
-      db.query(dataQuery, [currentYear, priorYear, limit, offset]),
-      db.query(countQuery),
+      db.query(dataQuery, dataParams),
+      db.query(countQuery, countFilterValues),
     ]);
 
     const rows = dataResult.rows || [];
@@ -353,8 +412,18 @@ class DashboardAnalyticsService {
    * Completed   = patient stage: Completed / QA Approved / QA Passed / Submission Ready
    *               OR hedis_evaluations.status IN (Compliant, Complete)
    */
-  async getQueueByMeasure(db, schema, { page = 1, limit = 10 } = {}) {
+  async getQueueByMeasure(db, schema, { page = 1, limit = 10, filters = {} } = {}) {
     const offset = (page - 1) * limit;
+
+    // Build filter SQL (shared for data, summary, and count queries)
+    const dataFilterValues = [];
+    const dataFilterSql = this._buildPatientFilters(filters, dataFilterValues);
+    const patientJoin = `LEFT JOIN ${schema}.patients p ON he.patient_id = p.id`;
+    const dataWhere = dataFilterSql ? `WHERE 1=1 ${dataFilterSql}` : '';
+
+    const dataLimitIdx = dataFilterValues.length + 1;
+    const dataOffsetIdx = dataFilterValues.length + 2;
+    const dataParams = [...dataFilterValues, limit, offset];
 
     // Paginated per-measure breakdown
     const dataQuery = `
@@ -369,7 +438,7 @@ class DashboardAnalyticsService {
 
       -- In Progress: Under QA or Revision
       COUNT(*) FILTER (
-        WHERE he.status IN ('In Progress', 'QA Review', 'QA Requested', 
+        WHERE he.status IN ('In Progress', 'QA Review', 'QA Requested',
                            'Rework', 'Revision Needed', 'QA Returned')
           OR qm.qa_status IN ('REQUEST_REVISION', 'QA_FAIL')
       ) AS in_progress,
@@ -381,12 +450,19 @@ class DashboardAnalyticsService {
       ) AS completed
 
     FROM ${schema}.hedis_evaluations he
-    LEFT JOIN ${schema}.hedis_qa_measure_decisions qm 
+    LEFT JOIN ${schema}.hedis_qa_measure_decisions qm
       ON he.id = qm.measure_id
+    ${patientJoin}
+    ${dataWhere}
     GROUP BY he.measure_code
     ORDER BY he.measure_code ASC
-    LIMIT $1 OFFSET $2
+    LIMIT $${dataLimitIdx} OFFSET $${dataOffsetIdx}
   `;
+
+    // Summary totals (apply same filter)
+    const summaryFilterValues = [];
+    const summaryFilterSql = this._buildPatientFilters(filters, summaryFilterValues);
+    const summaryWhere = summaryFilterSql ? `WHERE 1=1 ${summaryFilterSql}` : '';
 
     const summaryQuery = `
     SELECT
@@ -398,19 +474,26 @@ class DashboardAnalyticsService {
       COUNT(*) AS total_all
     FROM ${schema}.hedis_evaluations he
     LEFT JOIN ${schema}.hedis_qa_measure_decisions qm ON he.id = qm.measure_id
+    ${patientJoin}
+    ${summaryWhere}
   `;
 
-    // Total distinct measures for pagination
+    // Total distinct measures for pagination (apply same filter)
+    const countFilterValues = [];
+    const countFilterSql = this._buildPatientFilters(filters, countFilterValues);
+    const countWhere = countFilterSql ? `WHERE 1=1 ${countFilterSql}` : '';
+
     const countQuery = `
       SELECT COUNT(DISTINCT he.measure_code) AS total
       FROM ${schema}.hedis_evaluations he
       INNER JOIN ${schema}.patients p ON he.patient_id = p.id
+      ${countWhere}
     `;
 
     const [dataResult, summaryResult, countResult] = await Promise.all([
-      db.query(dataQuery, [limit, offset]),
-      db.query(summaryQuery),
-      db.query(countQuery),
+      db.query(dataQuery, dataParams),
+      db.query(summaryQuery, summaryFilterValues),
+      db.query(countQuery, countFilterValues),
     ]);
 
     const rows = dataResult.rows || [];
@@ -467,16 +550,22 @@ class DashboardAnalyticsService {
    * 4. AI Assist Rate
    * 5. SLA Compliance
    */
-  async getDashboardStats(db, schema) {
+  async getDashboardStats(db, schema, filters = {}) {
     const currentYear = new Date().getFullYear();
     const priorYear = currentYear - 1;
+
+    // Build patient-level filter SQL (for queries on the patients table)
+    const openQueueFilterValues = [];
+    const openQueueFilterSql = this._buildPatientFilters(filters, openQueueFilterValues);
 
     // 1. Open Queue
     const openQueueQuery = `
       SELECT COUNT(*) AS total_open
       FROM ${schema}.patients
-      WHERE stage NOT IN ('Completed', 'QA Approved', 'QA Passed', 'Submission Ready');
+      WHERE stage NOT IN ('Completed', 'QA Approved', 'QA Passed', 'Submission Ready')
+        ${openQueueFilterSql}
     `;
+    // openToday: chart-level, filter not patient-specific — no patient filter here
     const openTodayQuery = `
       SELECT COUNT(*) AS today_count
       FROM ${schema}.patient_charts
@@ -484,12 +573,20 @@ class DashboardAnalyticsService {
     `;
 
     // 2. Completed Today & Daily completions history
+    const completedFilterValues = [];
+    const completedFilterSql = this._buildPatientFilters(filters, completedFilterValues);
+
     const completedTodayQuery = `
       SELECT COUNT(*) AS completed_today
       FROM ${schema}.patients
       WHERE stage IN ('Completed', 'QA Approved', 'QA Passed', 'Submission Ready')
-        AND updated_at >= CURRENT_DATE;
+        AND updated_at >= CURRENT_DATE
+        ${completedFilterSql}
     `;
+
+    const avgFilterValues = [];
+    const avgFilterSql = this._buildPatientFilters(filters, avgFilterValues);
+
     const avgCompletedQuery = `
       SELECT COALESCE(SUM(count), 0) / 14.0 AS avg_daily
       FROM (
@@ -498,33 +595,42 @@ class DashboardAnalyticsService {
         WHERE stage IN ('Completed', 'QA Approved', 'QA Passed', 'Submission Ready')
           AND updated_at >= CURRENT_DATE - INTERVAL '14 days'
           AND updated_at < CURRENT_DATE
+          ${avgFilterSql}
         GROUP BY (updated_at AT TIME ZONE 'UTC')::date
       ) sub;
     `;
 
-    // 3. Overall HEDIS Rate
+    // 3. Overall HEDIS Rate — join patients when filter active
+    const hedisFilterValues = [currentYear, priorYear];
+    const hedisFilterSql = this._buildPatientFilters(filters, hedisFilterValues);
+    const hedisPatientJoin = hedisFilterSql
+      ? `INNER JOIN ${schema}.patients p ON he.patient_id = p.id`
+      : '';
+    // Alias columns through he. when joining patients
     const hedisQuery = `
       SELECT
-        COUNT(*) FILTER (WHERE denominator = TRUE) AS denom_all,
-        COUNT(*) FILTER (WHERE numerator = TRUE) AS numer_all,
-        
-        COUNT(*) FILTER (WHERE denominator = TRUE AND EXTRACT(YEAR FROM created_at) = $1) AS denom_current,
-        COUNT(*) FILTER (WHERE numerator = TRUE AND EXTRACT(YEAR FROM created_at) = $1) AS numer_current,
-        
-        COUNT(*) FILTER (WHERE denominator = TRUE AND EXTRACT(YEAR FROM created_at) = $2) AS denom_prior,
-        COUNT(*) FILTER (WHERE numerator = TRUE AND EXTRACT(YEAR FROM created_at) = $2) AS numer_prior
-      FROM ${schema}.hedis_evaluations;
+        COUNT(*) FILTER (WHERE he.denominator = TRUE) AS denom_all,
+        COUNT(*) FILTER (WHERE he.numerator = TRUE) AS numer_all,
+
+        COUNT(*) FILTER (WHERE he.denominator = TRUE AND EXTRACT(YEAR FROM he.created_at) = $1) AS denom_current,
+        COUNT(*) FILTER (WHERE he.numerator = TRUE AND EXTRACT(YEAR FROM he.created_at) = $1) AS numer_current,
+
+        COUNT(*) FILTER (WHERE he.denominator = TRUE AND EXTRACT(YEAR FROM he.created_at) = $2) AS denom_prior,
+        COUNT(*) FILTER (WHERE he.numerator = TRUE AND EXTRACT(YEAR FROM he.created_at) = $2) AS numer_prior
+      FROM ${schema}.hedis_evaluations he
+      ${hedisPatientJoin}
+      WHERE 1=1 ${hedisFilterSql}
     `;
 
-    // 4. AI Assist Rate
+    // 4. AI Assist Rate — no patient-level column; skip filter
     const aiAssistQuery = `
       SELECT
         COUNT(*) FILTER (WHERE review_status = 'ACCEPTED') AS accepted_all,
         COUNT(*) FILTER (WHERE review_status = 'REJECTED') AS rejected_all,
-        
+
         COUNT(*) FILTER (WHERE review_status = 'ACCEPTED' AND reviewed_at >= CURRENT_DATE - INTERVAL '7 days') AS accepted_this_week,
         COUNT(*) FILTER (WHERE review_status = 'REJECTED' AND reviewed_at >= CURRENT_DATE - INTERVAL '7 days') AS rejected_this_week,
-        
+
         COUNT(*) FILTER (WHERE review_status = 'ACCEPTED' AND reviewed_at >= CURRENT_DATE - INTERVAL '14 days' AND reviewed_at < CURRENT_DATE - INTERVAL '7 days') AS accepted_last_week,
         COUNT(*) FILTER (WHERE review_status = 'REJECTED' AND reviewed_at >= CURRENT_DATE - INTERVAL '14 days' AND reviewed_at < CURRENT_DATE - INTERVAL '7 days') AS rejected_last_week
       FROM ${schema}.clinical_timeline_events
@@ -532,14 +638,17 @@ class DashboardAnalyticsService {
     `;
 
     // 5. SLA Compliance
+    const slaFilterValues = [];
+    const slaFilterSql = this._buildPatientFilters(filters, slaFilterValues);
+
     const slaQuery = `
       SELECT
         COUNT(*) AS total_charts,
-        COUNT(CASE WHEN 
+        COUNT(CASE WHEN
           (stage IN ('Completed', 'QA Approved', 'QA Passed', 'Submission Ready') AND (due_date IS NULL OR updated_at <= due_date))
           OR (stage NOT IN ('Completed', 'QA Approved', 'QA Passed', 'Submission Ready') AND (due_date IS NULL OR due_date >= CURRENT_DATE))
           THEN 1 END) AS on_time_charts,
-          
+
         COUNT(*) FILTER (WHERE due_date >= CURRENT_DATE - INTERVAL '7 days' AND due_date < CURRENT_DATE + INTERVAL '1 day') AS due_this_week,
         COUNT(*) FILTER (WHERE due_date >= CURRENT_DATE - INTERVAL '7 days' AND due_date < CURRENT_DATE + INTERVAL '1 day' AND (
           (stage IN ('Completed', 'QA Approved', 'QA Passed', 'Submission Ready') AND (due_date IS NULL OR updated_at <= due_date))
@@ -551,7 +660,8 @@ class DashboardAnalyticsService {
           (stage IN ('Completed', 'QA Approved', 'QA Passed', 'Submission Ready') AND (due_date IS NULL OR updated_at <= due_date))
           OR (stage NOT IN ('Completed', 'QA Approved', 'QA Passed', 'Submission Ready') AND (due_date IS NULL OR due_date >= CURRENT_DATE))
         )) AS on_time_last_week
-      FROM ${schema}.patients;
+      FROM ${schema}.patients p
+      WHERE 1=1 ${slaFilterSql}
     `;
 
     // Execute queries in parallel
@@ -564,13 +674,13 @@ class DashboardAnalyticsService {
       aiAssistRes,
       slaRes,
     ] = await Promise.all([
-      db.query(openQueueQuery),
+      db.query(openQueueQuery, openQueueFilterValues),
       db.query(openTodayQuery),
-      db.query(completedTodayQuery),
-      db.query(avgCompletedQuery),
-      db.query(hedisQuery, [currentYear, priorYear]),
+      db.query(completedTodayQuery, completedFilterValues),
+      db.query(avgCompletedQuery, avgFilterValues),
+      db.query(hedisQuery, hedisFilterValues),
       db.query(aiAssistQuery),
-      db.query(slaQuery),
+      db.query(slaQuery, slaFilterValues),
     ]);
 
     // Format outputs
@@ -603,10 +713,10 @@ class DashboardAnalyticsService {
     const denomPrior = parseInt(hedisRow.denom_prior || 0, 10);
     const numerPrior = parseInt(hedisRow.numer_prior || 0, 10);
 
-    const currentRate = denomCurrent > 0 
+    const currentRate = denomCurrent > 0
       ? parseFloat(((numerCurrent / denomCurrent) * 100).toFixed(1))
       : (denomAll > 0 ? parseFloat(((numerAll / denomAll) * 100).toFixed(1)) : 0.0);
-    const priorRate = denomPrior > 0 
+    const priorRate = denomPrior > 0
       ? parseFloat(((numerPrior / denomPrior) * 100).toFixed(1))
       : null;
 
@@ -632,15 +742,15 @@ class DashboardAnalyticsService {
     const rejectedLastWeek = parseInt(aiAssistRow.rejected_last_week || 0, 10);
     const totalLastWeek = acceptedLastWeek + rejectedLastWeek;
 
-    const aiAssistRate = totalAll > 0 
+    const aiAssistRate = totalAll > 0
       ? parseFloat(((acceptedAll / totalAll) * 100).toFixed(1))
       : null;
 
-    const rateThisWeek = totalThisWeek > 0 
-      ? (acceptedThisWeek / totalThisWeek) * 100 
+    const rateThisWeek = totalThisWeek > 0
+      ? (acceptedThisWeek / totalThisWeek) * 100
       : null;
-    const rateLastWeek = totalLastWeek > 0 
-      ? (acceptedLastWeek / totalLastWeek) * 100 
+    const rateLastWeek = totalLastWeek > 0
+      ? (acceptedLastWeek / totalLastWeek) * 100
       : null;
 
     let aiAssistTrend = null;
@@ -662,15 +772,15 @@ class DashboardAnalyticsService {
     const dueLastWeek = parseInt(slaRow.due_last_week || 0, 10);
     const onTimeLastWeek = parseInt(slaRow.on_time_last_week || 0, 10);
 
-    const slaCompliance = totalCharts > 0 
+    const slaCompliance = totalCharts > 0
       ? parseFloat(((onTimeCharts / totalCharts) * 100).toFixed(1))
       : 100.0;
 
-    const complianceThisWeek = dueThisWeek > 0 
-      ? (onTimeThisWeek / dueThisWeek) * 100 
+    const complianceThisWeek = dueThisWeek > 0
+      ? (onTimeThisWeek / dueThisWeek) * 100
       : null;
-    const complianceLastWeek = dueLastWeek > 0 
-      ? (onTimeLastWeek / dueLastWeek) * 100 
+    const complianceLastWeek = dueLastWeek > 0
+      ? (onTimeLastWeek / dueLastWeek) * 100
       : null;
 
     let slaTrend = null;
@@ -709,9 +819,9 @@ class DashboardAnalyticsService {
       },
     };
   }
-  
-async getSummary(db, schema) {
-  const query = `
+
+  async getSummary(db, schema) {
+    const query = `
     SELECT
       (SELECT COUNT(*) FROM ${schema}.patients) AS total_patients,
       (SELECT COUNT(*) FROM ${schema}.patients WHERE stage = 'Assigned' OR abstractor_id IS NOT NULL) AS assigned_patients,
@@ -769,35 +879,38 @@ async getSummary(db, schema) {
       (SELECT COUNT(*) FROM ${schema}.projects) AS total_projects
   `;
 
-  const result = await db.query(query);
-  const row = result.rows[0] || {};
+    const result = await db.query(query);
+    const row = result.rows[0] || {};
 
-  return {
-    total_patients: parseInt(row.total_patients || 0, 10),
-    assigned_patients: parseInt(row.assigned_patients || 0, 10),
-    completed_patients: parseInt(row.completed_patients || 0, 10),
-    pending_patients: parseInt(row.pending_patients || 0, 10),
+    return {
+      total_patients: parseInt(row.total_patients || 0, 10),
+      assigned_patients: parseInt(row.assigned_patients || 0, 10),
+      completed_patients: parseInt(row.completed_patients || 0, 10),
+      pending_patients: parseInt(row.pending_patients || 0, 10),
 
-    total_charts: parseInt(row.total_charts || 0, 10),
-    charts_in_progress: parseInt(row.charts_in_progress || 0, 10),
-    charts_completed: parseInt(row.charts_completed || 0, 10),
-    charts_pending: parseInt(row.charts_pending || 0, 10),
+      total_charts: parseInt(row.total_charts || 0, 10),
+      charts_in_progress: parseInt(row.charts_in_progress || 0, 10),
+      charts_completed: parseInt(row.charts_completed || 0, 10),
+      charts_pending: parseInt(row.charts_pending || 0, 10),
 
-    total_measures: parseInt(row.total_measures || 0, 10),
-    measures_in_progress: parseInt(row.measures_in_progress || 0, 10),
-    measures_completed: parseInt(row.measures_completed || 0, 10),
-    measures_pending: parseInt(row.measures_pending || 0, 10),
+      total_measures: parseInt(row.total_measures || 0, 10),
+      measures_in_progress: parseInt(row.measures_in_progress || 0, 10),
+      measures_completed: parseInt(row.measures_completed || 0, 10),
+      measures_pending: parseInt(row.measures_pending || 0, 10),
 
-    total_active_abstractors: parseInt(row.total_active_abstractors || 0, 10),
-    total_active_qa_users: parseInt(row.total_active_qa_users || 0, 10),
+      total_active_abstractors: parseInt(row.total_active_abstractors || 0, 10),
+      total_active_qa_users: parseInt(row.total_active_qa_users || 0, 10),
 
-    total_clients: parseInt(row.total_clients || 0, 10),
-    total_projects: parseInt(row.total_projects || 0, 10),
-  };
-}
+      total_clients: parseInt(row.total_clients || 0, 10),
+      total_projects: parseInt(row.total_projects || 0, 10),
+    };
+  }
 
-async getDeadlines(db, schema) {
-  const query = `
+  async getDeadlines(db, schema, filters = {}) {
+    const values = [];
+    const filterSql = this._buildPatientFilters(filters, values);
+
+    const query = `
     SELECT
       he.measure_code AS measure,
       MAX(he.measure_name) AS measure_name,
@@ -811,78 +924,79 @@ async getDeadlines(db, schema) {
       ON he.patient_id = p.id
     LEFT JOIN ${schema}.patient_charts pc
       ON pc.patient_id = p.id
+    WHERE 1=1 ${filterSql}
     GROUP BY he.measure_code
     ORDER BY due_date ASC NULLS LAST
   `;
 
-  const result = await db.query(query);
+    const result = await db.query(query, values);
 
-  return result.rows.map((row) => {
-    const total = parseInt(row.total_patients_eligible || 0, 10);
-    const completed = parseInt(row.patients_completed || 0, 10);
-    const pending = parseInt(row.patients_pending || 0, 10);
-    const inProgress = parseInt(row.patients_in_progress || 0, 10);
+    return result.rows.map((row) => {
+      const total = parseInt(row.total_patients_eligible || 0, 10);
+      const completed = parseInt(row.patients_completed || 0, 10);
+      const pending = parseInt(row.patients_pending || 0, 10);
+      const inProgress = parseInt(row.patients_in_progress || 0, 10);
 
-    const completionPercentage =
-      total > 0 ? Math.round((completed / total) * 100) : 0;
+      const completionPercentage =
+        total > 0 ? Math.round((completed / total) * 100) : 0;
 
-    let slaRemainingDays = null;
-    let slaStatus = "On Track";
-    let colorCode = "#10B981";
+      let slaRemainingDays = null;
+      let slaStatus = "On Track";
+      let colorCode = "#10B981";
 
-    if (row.due_date) {
-      const now = new Date();
-      const due = new Date(row.due_date);
+      if (row.due_date) {
+        const now = new Date();
+        const due = new Date(row.due_date);
 
-      slaRemainingDays = Math.ceil(
-        (due - now) / (1000 * 60 * 60 * 24)
-      );
+        slaRemainingDays = Math.ceil(
+          (due - now) / (1000 * 60 * 60 * 24)
+        );
 
-      if (slaRemainingDays < 0) {
-        slaStatus = "Overdue";
-        colorCode = "#EF4444";
-      } else if (slaRemainingDays <= 5) {
-        slaStatus = "At Risk";
-        colorCode = "#F59E0B";
+        if (slaRemainingDays < 0) {
+          slaStatus = "Overdue";
+          colorCode = "#EF4444";
+        } else if (slaRemainingDays <= 5) {
+          slaStatus = "At Risk";
+          colorCode = "#F59E0B";
+        }
       }
-    }
 
-    return {
-      measure: row.measure,
-      measure_name: row.measure_name || row.measure,
-      due_date: row.due_date,
-      sla_remaining_days: slaRemainingDays,
-      total_patients_eligible: total,
-      patients_completed: completed,
-      patients_pending: pending,
-      patients_in_progress: inProgress,
-      completion_percentage: completionPercentage,
-      sla_status: slaStatus,
-      priority:
-        slaStatus === "Overdue"
-          ? "High"
-          : slaStatus === "At Risk"
-          ? "Medium"
-          : "Low",
-      color_code: colorCode,
-    };
-  });
-}
+      return {
+        measure: row.measure,
+        measure_name: row.measure_name || row.measure,
+        due_date: row.due_date,
+        sla_remaining_days: slaRemainingDays,
+        total_patients_eligible: total,
+        patients_completed: completed,
+        patients_pending: pending,
+        patients_in_progress: inProgress,
+        completion_percentage: completionPercentage,
+        sla_status: slaStatus,
+        priority:
+          slaStatus === "Overdue"
+            ? "High"
+            : slaStatus === "At Risk"
+              ? "Medium"
+              : "Low",
+        color_code: colorCode,
+      };
+    });
+  }
 
-async getMyQueue(db, schema, userId, queryParams) {
-  const { search, status, sort_by, page = 1, limit = 10 } = queryParams;
+  async getMyQueue(db, schema, userId, queryParams) {
+    const { search, measurementYear, status, sort_by, page = 1, limit = 10 } = queryParams;
 
-  const offset = (Number(page) - 1) * Number(limit);
+    const offset = (Number(page) - 1) * Number(limit);
 
-  const whereClauses = [
-    `(p.abstractor_id = $1 OR p.qa_id = $1 OR p.assigned_to = $1)`,
-  ];
+    const whereClauses = [
+      `(p.abstractor_id = $1 OR p.qa_id = $1 OR p.assigned_to = $1)`,
+    ];
 
-  const values = [userId];
-  let valueIndex = 2;
+    const values = [userId];
+    let valueIndex = 2;
 
-  if (search) {
-    whereClauses.push(`
+    if (search) {
+      whereClauses.push(`
       (
         p.first_name ILIKE $${valueIndex}
         OR p.last_name ILIKE $${valueIndex}
@@ -891,27 +1005,33 @@ async getMyQueue(db, schema, userId, queryParams) {
       )
     `);
 
-    values.push(`%${search}%`);
-    valueIndex++;
-  }
+      values.push(`%${search}%`);
+      valueIndex++;
+    }
 
-  if (status) {
-    whereClauses.push(`p.stage = $${valueIndex}`);
-    values.push(status);
-    valueIndex++;
-  }
+    if (measurementYear) {
+      whereClauses.push(`p.measure ILIKE $${valueIndex}`);
+      values.push(measurementYear.trim());
+      valueIndex++;
+    }
 
-  const whereString = `WHERE ${whereClauses.join(" AND ")}`;
+    if (status) {
+      whereClauses.push(`p.stage = $${valueIndex}`);
+      values.push(status);
+      valueIndex++;
+    }
 
-  let orderBy = "p.created_at DESC";
+    const whereString = `WHERE ${whereClauses.join(" AND ")}`;
 
-  if (sort_by === "due_date") {
-    orderBy = "pc.sla_deadline ASC NULLS LAST";
-  } else if (sort_by === "priority") {
-    orderBy = "p.priority ASC";
-  }
+    let orderBy = "p.created_at DESC";
 
-  const countQuery = `
+    if (sort_by === "due_date") {
+      orderBy = "pc.sla_deadline ASC NULLS LAST";
+    } else if (sort_by === "priority") {
+      orderBy = "p.priority ASC";
+    }
+
+    const countQuery = `
     SELECT COUNT(DISTINCT p.id)
     FROM ${schema}.patients p
     LEFT JOIN ${schema}.patient_charts pc
@@ -919,11 +1039,11 @@ async getMyQueue(db, schema, userId, queryParams) {
     ${whereString}
   `;
 
-  const countResult = await db.query(countQuery, values);
+    const countResult = await db.query(countQuery, values);
 
-  const totalCount = parseInt(countResult.rows[0].count, 10);
+    const totalCount = parseInt(countResult.rows[0].count, 10);
 
-  const dataQuery = `
+    const dataQuery = `
     SELECT DISTINCT
       p.id AS patient_uuid,
       p.patient_id AS mrn,
@@ -955,20 +1075,20 @@ async getMyQueue(db, schema, userId, queryParams) {
     OFFSET $${valueIndex + 1}
   `;
 
-  const dataResult = await db.query(dataQuery, [
-    ...values,
-    Number(limit),
-    offset,
-  ]);
+    const dataResult = await db.query(dataQuery, [
+      ...values,
+      Number(limit),
+      offset,
+    ]);
 
-  return {
-    data: dataResult.rows,
-    totalCount,
-    currentPage: Number(page),
-    totalPages: Math.ceil(totalCount / Number(limit)),
-    pageSize: Number(limit),
-  };
-}
+    return {
+      data: dataResult.rows,
+      totalCount,
+      currentPage: Number(page),
+      totalPages: Math.ceil(totalCount / Number(limit)),
+      pageSize: Number(limit),
+    };
+  }
 
 
 

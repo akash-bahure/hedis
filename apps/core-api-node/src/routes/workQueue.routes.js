@@ -28,10 +28,16 @@ const authMiddleware = require("../middlewares/authMiddleware");
  *           default: all
  *         description: Filters dataset by specified work queue tab
  *       - in: query
+ *         name: measurementYear
+ *         schema:
+ *           type: string
+ *           enum: [HEDIS MY2025, HEDIS MY2026]
+ *         description: Filter by HEDIS Measurement Year (matches patients.measure column)
+ *       - in: query
  *         name: search
  *         schema:
  *           type: string
- *         description: Search query matching patient first name, last name, MRN, or Chart ID
+ *         description: Search query matching patient first name, last name, MRN, Chart ID, or measure code (case-insensitive)
  *       - in: query
  *         name: project_id
  *         schema:

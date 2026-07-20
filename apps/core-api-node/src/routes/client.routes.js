@@ -100,8 +100,16 @@ router.post("/", controller.createClient);
  *         name: search
  *         schema:
  *           type: string
- *         description: Search by org_name, email, short_code, or client_id
+ *         description: Search by org_name, email, short_code, client_id, or corresponding patient name/measure
  *         example: ABC
+ *
+ *       - in: query
+ *         name: measurementYear
+ *         schema:
+ *           type: string
+ *           enum: [HEDIS MY2025, HEDIS MY2026]
+ *         description: Filter by HEDIS Measurement Year
+ *         example: HEDIS MY2025
  *
  *       - in: query
  *         name: region
