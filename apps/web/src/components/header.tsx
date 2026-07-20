@@ -21,6 +21,7 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { usePostApiAuthLogout } from "@/api";
+import { useGlobalFilters } from "@/contexts/GlobalFiltersContext"; // ← NEW
 interface HeaderProps {
   darkMode: boolean;
   onToggleDarkMode: () => void;
@@ -111,10 +112,12 @@ export function Header({
   onMenuClick,
   onNavigate,
 }: HeaderProps) {
+  const { measurementYear, setMeasurementYear, globalSearch, setGlobalSearch } =
+    useGlobalFilters();
   const [showProgramMenu, setShowProgramMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [selectedProgram, setSelectedProgram] = useState("HEDIS MY2026");
+  // const [selectedProgram, setSelectedProgram] = useState("HEDIS MY2026");
 
   const unreadCount = notifications.filter((n) => n.unread).length;
   const crumbs = (breadcrumbMap[activeView] ?? breadcrumbMap["dashboard"]).path;
@@ -202,55 +205,76 @@ export function Header({
         </button>
 
         {/* Program Selector */}
-        <div className="relative hidden sm:block">
-          <button
-            onClick={() => setShowProgramMenu(!showProgramMenu)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors border border-primary/20"
-          >
-            <Calendar className="w-3.5 h-3.5 text-primary" />
-            <span className="text-xs font-semibold text-primary whitespace-nowrap">
-              {selectedProgram}
-            </span>
-            <ChevronDown className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-          </button>
-          {showProgramMenu && (
-            <>
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setShowProgramMenu(false)}
-              />
-              <div className="absolute top-full left-0 mt-2 w-52 bg-card border border-border rounded-xl shadow-xl z-20 py-1.5 overflow-hidden">
-                <div className="px-3 py-1.5 border-b border-border mb-1">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                    Measurement Year
-                  </p>
-                </div>
-                {programs.map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => {
-                      setSelectedProgram(p);
-                      setShowProgramMenu(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 text-xs hover:bg-accent transition-colors flex items-center gap-2 ${
-                      selectedProgram === p
-                        ? "text-primary font-semibold bg-primary/5"
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    {selectedProgram === p && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                    )}
-                    {selectedProgram !== p && (
-                      <span className="w-1.5 h-1.5 flex-shrink-0" />
-                    )}
-                    {p}
-                  </button>
-                ))}
-              </div>
-            </>
+      {/* Global Measurement Year Selector */}
+<div className="relative hidden sm:block">
+  <button
+    onClick={() => setShowProgramMenu(!showProgramMenu)}
+    className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors border border-primary/20"
+  >
+    <Calendar className="w-3.5 h-3.5 text-primary" />
+    <span className="text-xs font-semibold text-primary whitespace-nowrap">
+      {measurementYear ? measurementYear : "All Measurements"}
+    </span>
+    <ChevronDown className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+  </button>
+
+  {showProgramMenu && (
+    <>
+      <div className="fixed inset-0 z-10" onClick={() => setShowProgramMenu(false)} />
+      <div className="absolute top-full left-0 mt-2 w-64 bg-card border border-border rounded-xl shadow-xl z-20 py-1.5 overflow-hidden">
+        {/* All option */}
+        <button
+          onClick={() => {
+            setMeasurementYear(null);
+            setShowProgramMenu(false);
+          }}
+          className={`w-full text-left px-3 py-2 text-xs hover:bg-accent flex items-center gap-2 ${
+            measurementYear === null
+              ? "text-primary font-semibold bg-primary/5"
+              : "text-muted-foreground"
+          }`}
+        >
+          {measurementYear === null && (
+            <span className="w-1.5 h-1.5 rounded-full bg-primary" />
           )}
+          All Measurements
+        </button>
+
+        <div className="px-3 py-1 border-t border-border mt-1">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+            Specific Year
+          </p>
         </div>
+
+        {[
+          "HEDIS MY2026",
+          "HEDIS MY2025",
+          "QARR 2026",
+          "IPA 2026",
+          "Medicaid HEDIS",
+        ].map((p) => (
+          <button
+            key={p}
+            onClick={() => {
+              setMeasurementYear(p);
+              setShowProgramMenu(false);
+            }}
+            className={`w-full text-left px-3 py-2 text-xs hover:bg-accent flex items-center gap-2 ${
+              measurementYear === p
+                ? "text-primary font-semibold bg-primary/5"
+                : "text-muted-foreground"
+            }`}
+          >
+            {measurementYear === p && (
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+            )}
+            {p}
+          </button>
+        ))}
+      </div>
+    </>
+  )}
+</div>
 
         {/* Breadcrumbs */}
         <div className="hidden md:flex items-center gap-1.5 text-xs min-w-0">
@@ -269,15 +293,25 @@ export function Header({
         </div>
       </div>
 
-      {/* ── Center: Search ── */}
+      {/* Center: Global Search */}
       <div className="hidden md:flex items-center flex-1 max-w-sm mx-4">
         <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Search members, measures, MRN…"
+            value={globalSearch}
+            onChange={(e) => setGlobalSearch(e.target.value)}
+            placeholder="Search members, measures, MRN, charts..."
             className="w-full pl-9 pr-4 py-1.5 bg-input-background border border-border rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
           />
+          {globalSearch && (
+            <button
+              onClick={() => setGlobalSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              ✕
+            </button>
+          )}
         </div>
       </div>
 

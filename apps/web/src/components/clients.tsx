@@ -50,6 +50,8 @@ import {
   useGetApiClientsClientidRecentActivity,
   getApiClientsExportReports,
 } from "@/api";
+import { useGlobalFilters } from "@/contexts/GlobalFiltersContext";
+
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { Pagination } from "./Pagination";
@@ -1460,7 +1462,7 @@ function FullProfileModal({
             Last activity: {client.lastActivity}
           </p>
           <div className="flex items-center gap-2">
-          <button
+            <button
               onClick={handleExportReport}
               className="inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 rounded-lg border border-border text-foreground hover:bg-accent transition-colors"
               style={{ fontSize: 13 }}
@@ -2427,11 +2429,13 @@ export function Clients() {
   const [view, setView] = useState<"table" | "grid">("table");
   const [showAddModal, setShowAddModal] = useState(false);
   const [page, setPage] = useState(1);
+  const { measurementYear, globalSearch } = useGlobalFilters();
 
   const { data: clientsData, isLoading: isClientListLoading } =
     useGetApiClients(
       {
-        search: search.trim() || undefined,
+        measurementYear: measurementYear || undefined, // null → undefined = no filter
+        search: globalSearch || undefined,
         region:
           regionFilter !== "all"
             ? (regionFilter as GetApiClientsQueryParamsRegionEnumKey)
@@ -2512,11 +2516,17 @@ export function Clients() {
       };
     }) || [];
 
-  const { data: statsData, isLoading: statsLoading } = useGetApiClientsStats({
-    query: {
-      refetchOnWindowFocus: false,
+  const { data: statsData, isLoading: statsLoading } = useGetApiClientsStats(
+    {
+      measurementYear: measurementYear || undefined, // null → undefined = no filter
+      search: globalSearch || undefined,
     },
-  });
+    {
+      query: {
+        refetchOnWindowFocus: false,
+      },
+    }
+  );
 
   const regions = ["all", ...Object.values(getApiClientsQueryParamsRegionEnum)];
   const stats = statsData?.data || statsData || {};

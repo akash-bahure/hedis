@@ -1,4 +1,4 @@
-import { useState, useId } from "react";
+import { useState, useId, useEffect } from "react";
 import type React from "react";
 import {
   AreaChart,
@@ -57,7 +57,7 @@ import {
 } from "@/api";
 import { Pagination } from "./Pagination";
 import { useNavigate } from "@tanstack/react-router";
-
+import { useGlobalFilters } from "@/contexts/GlobalFiltersContext";
 /* ─── Colours ──────────────────────────────────────────── */
 const C = {
   primary: "#0891b2",
@@ -740,11 +740,16 @@ function AbstractionVelocityChart() {
 
 /* ─── Queue by Domain Chart Component ───────────────────────────── */
 function DomainBreakdownChart() {
+  const { measurementYear, globalSearch } = useGlobalFilters();
+
   const {
     data: domainResponse,
     isLoading,
     error,
-  } = useGetApiDashboardQueueByDomain();
+  } = useGetApiDashboardQueueByDomain({
+    measurementYear: measurementYear || undefined, // null → undefined = no filter
+    search: globalSearch || undefined,
+  });
 
   const apiDomainData = domainResponse?.data ?? [];
 
@@ -838,7 +843,16 @@ function DomainBreakdownChart() {
 /* ─── Dashboard KPI Cards Component ───────────────────────────── */
 /* ─── Dashboard KPI Cards Component ───────────────────────────── */
 function DashboardKpiCards() {
-  const { data: statsResponse, isLoading, error } = useGetApiDashboardStats();
+  const { measurementYear, globalSearch } = useGlobalFilters();
+
+  const {
+    data: statsResponse,
+    isLoading,
+    error,
+  } = useGetApiDashboardStats({
+    measurementYear: measurementYear || undefined, // null → undefined = no filter
+    search: globalSearch || undefined,
+  });
 
   const stats = statsResponse?.data ?? {};
 
@@ -964,6 +978,12 @@ export function Dashboard() {
   const totalDenominator = queueByMeasure.reduce((s, q) => s + q.total, 0);
   const completionPct = Math.round((totalCompleted / totalDenominator) * 100);
   const navigate = useNavigate();
+  const { measurementYear, globalSearch } = useGlobalFilters();
+
+  // Reset page when global filters change
+  useEffect(() => {
+    // If you have pagination state, reset it
+  }, [measurementYear, globalSearch]);
 
   // API Integration - HEDIS Measure Rates
   const {
@@ -971,6 +991,8 @@ export function Dashboard() {
     isLoading: ratesLoading,
     error: ratesError,
   } = useGetApiDashboardMeasureRates({
+    measurementYear: measurementYear || undefined, // null → undefined = no filter
+    search: globalSearch || undefined,
     page_no: 1,
     page_size: 9, // keep small for dashboard preview
   });
@@ -983,14 +1005,14 @@ export function Dashboard() {
     ? Math.round(
         (apiRates.reduce((sum, m) => sum + (m.currentRate ?? 0), 0) /
           apiRates.length) *
-          10,
+          10
       ) / 10
     : 72.8;
 
   const aboveBenchCt = apiRates.filter(
     (m) =>
       m.benchmarkStatus === "Above" ||
-      (m.currentRate ?? 0) >= (m.targetRate ?? 80),
+      (m.currentRate ?? 0) >= (m.targetRate ?? 80)
   ).length;
 
   const {
@@ -1038,7 +1060,7 @@ export function Dashboard() {
         page_no: modalPage,
         page_size: 10,
       },
-      { enabled: ratesModalOpen },
+      { enabled: ratesModalOpen }
     );
 
   const fullRates = fullRatesResponse?.data ?? [];
@@ -1049,7 +1071,12 @@ export function Dashboard() {
     data: queueResponse,
     isLoading: queueLoading,
     error: queueError,
-  } = useGetApiDashboardQueueByMeasure({ page_no: 1, page_size: 8 });
+  } = useGetApiDashboardQueueByMeasure({
+    page_no: 1,
+    page_size: 8,
+    measurementYear: measurementYear || undefined, // null → undefined = no filter
+    search: globalSearch || undefined,
+  });
 
   const apiQueue = queueResponse?.data ?? [];
   const summary = queueResponse?.summary ?? {
@@ -1062,8 +1089,13 @@ export function Dashboard() {
   // Full modal data for Queue
   const { data: fullQueueResponse, isLoading: fullQueueLoading } =
     useGetApiDashboardQueueByMeasure(
-      { page_no: queueModalPage, page_size: 10 },
-      { enabled: queueModalOpen },
+      {
+        page_no: queueModalPage,
+        page_size: 10,
+        measurementYear: measurementYear || undefined, // null → undefined = no filter
+        search: globalSearch || undefined,
+      },
+      { enabled: queueModalOpen }
     );
 
   const fullQueue = fullQueueResponse?.data ?? [];
@@ -1079,7 +1111,7 @@ export function Dashboard() {
   const { data: fullActivityResponse, isLoading: fullActivityLoading } =
     useGetApiRecentActivity(
       { page: activityPage, limit: 10 },
-      { enabled: activityModalOpen },
+      { enabled: activityModalOpen }
     );
 
   const fullActivities = fullActivityResponse?.data ?? [];

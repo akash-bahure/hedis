@@ -64,9 +64,12 @@ import {
   getApiProjectsQueryKey,
   useGetApiClients,
   useGetApiProjects,
+  useGetApiProjectsId,
+  useGetApiProjectsStats,
   usePostApiProjects,
 } from "@/api";
 import { useQueryClient } from "@tanstack/react-query";
+import { useGlobalFilters } from "@/contexts/GlobalFiltersContext";
 
 /* ─── Types ─────────────────────────────────────────────────── */
 type ProjectStatus = "Active" | "On Hold" | "Completed" | "Draft" | "At Risk";
@@ -512,28 +515,29 @@ function OverviewTab({ p }: { p: Project }) {
     p.totalCharts > 0
       ? Math.round((p.completedCharts / p.totalCharts) * 100)
       : 0;
+
   const stats = [
     {
       label: "Total Charts",
-      value: p.totalCharts?.toLocaleString(),
+      value: p.totalCharts?.toLocaleString() || "0",
       color: C.primary,
       icon: FileText,
     },
     {
       label: "Completed",
-      value: p.completedCharts?.toLocaleString(),
+      value: p.completedCharts?.toLocaleString() || "0",
       color: C.emerald,
       icon: CheckCircle2,
     },
     {
-      label: "In Progress (WIP)",
-      value: p.wipCharts?.toLocaleString(),
+      label: "In Progress",
+      value: p.wipCharts?.toLocaleString() || "0",
       color: C.cyan,
       icon: Activity,
     },
     {
       label: "Pending",
-      value: p.pendingCharts?.toLocaleString(),
+      value: p.pendingCharts?.toLocaleString() || "0",
       color: C.amber,
       icon: Clock,
     },
@@ -1350,10 +1354,10 @@ function SLATab() {
 function TeamTab({ p }: { p: Project }) {
   const [pm, setPm] = useState(p.pm);
   const [selectedCoders, setSelectedCoders] = useState(
-    TEAM_MEMBERS.coders.slice(0, p.coders),
+    TEAM_MEMBERS.coders.slice(0, p.coders)
   );
   const [selectedAuditors, setSelectedAuditors] = useState(
-    TEAM_MEMBERS.auditors.slice(0, p.auditors),
+    TEAM_MEMBERS.auditors.slice(0, p.auditors)
   );
 
   const initials = (name: string) =>
@@ -2319,7 +2323,7 @@ function ComplianceTab() {
 
 /* ─── PROJECT DETAIL VIEW ─────────────────────────────────────── */
 function ProjectDetail({
-  project,
+  project: initialProject,
   onBack,
 }: {
   project: Project;
@@ -2340,6 +2344,49 @@ function ProjectDetail({
     { id: "exceptions", label: "Exceptions" },
     { id: "compliance", label: "Compliance" },
   ];
+  // Fetch detailed project data
+  const { data: detailResponse, isLoading: detailLoading } =
+    useGetApiProjectsId(initialProject.id);
+
+  const project = useMemo(() => {
+    if (!detailResponse?.data) return initialProject;
+
+    const d = detailResponse.data;
+    return {
+      ...initialProject,
+      id: d.id,
+      project_id: d.project_id,
+      name: d.project_name,
+      client: d.org_name,
+      type: d.project_type,
+      speciality: d.specialty,
+      priority: d.priority,
+      status: d.status,
+      startDate: d.start_date,
+      endDate: d.end_date,
+      pm: d.project_manager_name || initialProject.pm,
+
+      // Rich metrics from backend
+      totalCharts: d.total_charts || 0,
+      completedCharts: d.completed_charts || 0,
+      pendingCharts: d.pending_charts || 0,
+      wipCharts: d.in_progress_charts || 0,
+      completionPercentage: d.completion_percentage || 0,
+      slaCompliance: d.sla_compliance || 92,
+      coders: d.coders || 0,
+      auditors: d.auditors || 0,
+      abstractors: d.abstractors || [],
+      qa_users: d.qa_users || [],
+    };
+  }, [detailResponse, initialProject]);
+
+  if (detailLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -2380,18 +2427,19 @@ function ProjectDetail({
             <RefreshCw className="w-3.5 h-3.5" />
             Refresh
           </button>
-          {permissions.hasPermission("Projects", "can_edit") && canEditProject(project.id) && (
-            <>
-              <button className="inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 text-xs border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors">
-                <Edit3 className="w-3.5 h-3.5" />
-                Edit
-              </button>
-              <button className="inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 text-xs bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
-                <Save className="w-3.5 h-3.5" />
-                Save Changes
-              </button>
-            </>
-          )}
+          {permissions.hasPermission("Projects", "can_edit") &&
+            canEditProject(project.id) && (
+              <>
+                <button className="inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 text-xs border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors">
+                  <Edit3 className="w-3.5 h-3.5" />
+                  Edit
+                </button>
+                <button className="inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 text-xs bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                  <Save className="w-3.5 h-3.5" />
+                  Save Changes
+                </button>
+              </>
+            )}
         </div>
       </div>
 
@@ -2933,6 +2981,7 @@ function ProjectList({ onSelect }: { onSelect: (p: Project) => void }) {
   const [filterType, setFilterType] = useState("All");
   const [filterSpec, setFilterSpec] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
+  const { measurementYear, globalSearch } = useGlobalFilters();
 
   const types = ["All", "Inpatient", "Outpatient", "HCC", "ED Visit"];
   const specs = [
@@ -2959,7 +3008,8 @@ function ProjectList({ onSelect }: { onSelect: (p: Project) => void }) {
     isLoading: projectsLoading,
     isError,
   } = useGetApiProjects({
-    search: search || undefined,
+    measurementYear: measurementYear || undefined, // null → undefined = no filter
+    search: globalSearch || undefined,
     status: filterStatus !== "All" ? (filterStatus as any) : undefined,
     project_type: filterType !== "All" ? (filterType as any) : undefined,
     specialty: filterSpec !== "All" ? (filterSpec as any) : undefined,
@@ -3010,28 +3060,41 @@ function ProjectList({ onSelect }: { onSelect: (p: Project) => void }) {
     return list.filter((p) => canAccessProject(p.id));
   }, [projectsResponse, canAccessProject]);
 
+  const {
+    data: statsResponse,
+    isLoading: statsLoading,
+    error: statsError,
+  } = useGetApiProjectsStats();
+  const statsData = statsResponse?.data || {};
+
   const stats = [
     {
       label: "Total Projects",
-      value: projects.length,
+      value: statsData.totalProjects ?? projects.length,
       color: C.primary,
       bg: "bg-sky-50",
     },
     {
       label: "Active",
-      value: projects.filter((p) => p.status === "Active").length,
+      value:
+        statsData.activeProjects ??
+        projects.filter((p) => p.status === "Active").length,
       color: C.emerald,
       bg: "bg-emerald-50",
     },
     {
       label: "At Risk",
-      value: projects.filter((p) => p.status === "At Risk").length,
+      value:
+        statsData.atRiskProjects ??
+        projects.filter((p) => p.status === "At Risk").length,
       color: C.red,
       bg: "bg-red-50",
     },
     {
       label: "Completed",
-      value: projects.filter((p) => p.status === "Completed").length,
+      value:
+        statsData.completedProjects ??
+        projects.filter((p) => p.status === "Completed").length,
       color: C.slate,
       bg: "bg-slate-50",
     },
