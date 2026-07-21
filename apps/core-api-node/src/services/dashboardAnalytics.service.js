@@ -124,8 +124,8 @@ class DashboardAnalyticsService {
    * @param {string}   [alias='p']      - table alias for the patients table
    * @returns {string} SQL string starting with " AND ..." (empty string if no filters)
    */
-  _buildPatientFilters(filters = {}, values = [], alias = 'p') {
-    let sql = '';
+  _buildPatientFilters(filters = {}, values = [], alias = "p") {
+    let sql = "";
 
     if (filters.measurementYear) {
       values.push(filters.measurementYear.trim());
@@ -135,9 +135,10 @@ class DashboardAnalyticsService {
     if (filters.search) {
       const term = `%${filters.search.trim()}%`;
       values.push(term);
-      sql += ` AND (${alias}.first_name ILIKE $${values.length}`
-        + ` OR ${alias}.last_name ILIKE $${values.length}`
-        + ` OR ${alias}.measure ILIKE $${values.length})`;
+      sql +=
+        ` AND (${alias}.first_name ILIKE $${values.length}` +
+        ` OR ${alias}.last_name ILIKE $${values.length}` +
+        ` OR ${alias}.measure ILIKE $${values.length})`;
     }
 
     return sql;
@@ -155,8 +156,8 @@ class DashboardAnalyticsService {
   async getAbstractionVelocity(db, schema, { days = 14 } = {}) {
     const targetValue = parseInt(
       process.env.DASHBOARD_TARGET_CHARTS_PER_DAY ||
-      process.env.DASHBOARD_TARGET_CHARTS ||
-      "40",
+        process.env.DASHBOARD_TARGET_CHARTS ||
+        "40",
       10
     );
 
@@ -274,7 +275,11 @@ class DashboardAnalyticsService {
    * YOY           = current-year rate minus prior-year rate (null if no prior data)
    * Benchmark     = "Above" | "At Target" | "Below" | null
    */
-  async getMeasureRates(db, schema, { page = 1, limit = 10, filters = {} } = {}) {
+  async getMeasureRates(
+    db,
+    schema,
+    { page = 1, limit = 10, filters = {} } = {}
+  ) {
     const offset = (page - 1) * limit;
     const currentYear = new Date().getFullYear();
     const priorYear = currentYear - 1;
@@ -290,7 +295,7 @@ class DashboardAnalyticsService {
     // Join patients only when a patient-level filter is active to preserve performance
     const patientJoin = filterSql
       ? `INNER JOIN ${schema}.patients p ON he.patient_id = p.id`
-      : '';
+      : "";
 
     // Single aggregation: all-time + current-year + prior-year counts per measure
     const dataQuery = `
@@ -320,10 +325,13 @@ class DashboardAnalyticsService {
 
     // Count query: apply same patient filter (starts empty index, so offset from 1 is fine here)
     const countFilterValues = [];
-    const countFilterSql = this._buildPatientFilters(filters, countFilterValues);
+    const countFilterSql = this._buildPatientFilters(
+      filters,
+      countFilterValues
+    );
     const countPatientJoin = countFilterSql
       ? `INNER JOIN ${schema}.patients p ON he.patient_id = p.id`
-      : '';
+      : "";
     const countQuery = `
       SELECT COUNT(DISTINCT he.measure_code) AS total
       FROM ${schema}.hedis_evaluations he
@@ -412,14 +420,18 @@ class DashboardAnalyticsService {
    * Completed   = patient stage: Completed / QA Approved / QA Passed / Submission Ready
    *               OR hedis_evaluations.status IN (Compliant, Complete)
    */
-  async getQueueByMeasure(db, schema, { page = 1, limit = 10, filters = {} } = {}) {
+  async getQueueByMeasure(
+    db,
+    schema,
+    { page = 1, limit = 10, filters = {} } = {}
+  ) {
     const offset = (page - 1) * limit;
 
     // Build filter SQL (shared for data, summary, and count queries)
     const dataFilterValues = [];
     const dataFilterSql = this._buildPatientFilters(filters, dataFilterValues);
     const patientJoin = `LEFT JOIN ${schema}.patients p ON he.patient_id = p.id`;
-    const dataWhere = dataFilterSql ? `WHERE 1=1 ${dataFilterSql}` : '';
+    const dataWhere = dataFilterSql ? `WHERE 1=1 ${dataFilterSql}` : "";
 
     const dataLimitIdx = dataFilterValues.length + 1;
     const dataOffsetIdx = dataFilterValues.length + 2;
@@ -461,8 +473,13 @@ class DashboardAnalyticsService {
 
     // Summary totals (apply same filter)
     const summaryFilterValues = [];
-    const summaryFilterSql = this._buildPatientFilters(filters, summaryFilterValues);
-    const summaryWhere = summaryFilterSql ? `WHERE 1=1 ${summaryFilterSql}` : '';
+    const summaryFilterSql = this._buildPatientFilters(
+      filters,
+      summaryFilterValues
+    );
+    const summaryWhere = summaryFilterSql
+      ? `WHERE 1=1 ${summaryFilterSql}`
+      : "";
 
     const summaryQuery = `
     SELECT
@@ -480,8 +497,11 @@ class DashboardAnalyticsService {
 
     // Total distinct measures for pagination (apply same filter)
     const countFilterValues = [];
-    const countFilterSql = this._buildPatientFilters(filters, countFilterValues);
-    const countWhere = countFilterSql ? `WHERE 1=1 ${countFilterSql}` : '';
+    const countFilterSql = this._buildPatientFilters(
+      filters,
+      countFilterValues
+    );
+    const countWhere = countFilterSql ? `WHERE 1=1 ${countFilterSql}` : "";
 
     const countQuery = `
       SELECT COUNT(DISTINCT he.measure_code) AS total
@@ -550,48 +570,57 @@ class DashboardAnalyticsService {
    * 4. AI Assist Rate
    * 5. SLA Compliance
    */
+  /**
+   * GET /dashboard/stats
+   */
   async getDashboardStats(db, schema, filters = {}) {
     const currentYear = new Date().getFullYear();
     const priorYear = currentYear - 1;
 
-    // Build patient-level filter SQL (for queries on the patients table)
+    // 1. Open Queue (patient table)
     const openQueueFilterValues = [];
-    const openQueueFilterSql = this._buildPatientFilters(filters, openQueueFilterValues);
+    const openQueueFilterSql = this._buildPatientFilters(
+      filters,
+      openQueueFilterValues,
+      "p"
+    );
 
-    // 1. Open Queue
     const openQueueQuery = `
       SELECT COUNT(*) AS total_open
-      FROM ${schema}.patients
+      FROM ${schema}.patients p
       WHERE stage NOT IN ('Completed', 'QA Approved', 'QA Passed', 'Submission Ready')
         ${openQueueFilterSql}
     `;
-    // openToday: chart-level, filter not patient-specific — no patient filter here
-    const openTodayQuery = `
-      SELECT COUNT(*) AS today_count
-      FROM ${schema}.patient_charts
-      WHERE created_at >= CURRENT_DATE;
-    `;
 
-    // 2. Completed Today & Daily completions history
+    // 2. Completed Today (patient table)
     const completedFilterValues = [];
-    const completedFilterSql = this._buildPatientFilters(filters, completedFilterValues);
+    const completedFilterSql = this._buildPatientFilters(
+      filters,
+      completedFilterValues,
+      "p"
+    );
 
     const completedTodayQuery = `
       SELECT COUNT(*) AS completed_today
-      FROM ${schema}.patients
+      FROM ${schema}.patients p
       WHERE stage IN ('Completed', 'QA Approved', 'QA Passed', 'Submission Ready')
         AND updated_at >= CURRENT_DATE
         ${completedFilterSql}
     `;
 
+    // 3. Avg Daily Completed (last 14 days)
     const avgFilterValues = [];
-    const avgFilterSql = this._buildPatientFilters(filters, avgFilterValues);
+    const avgFilterSql = this._buildPatientFilters(
+      filters,
+      avgFilterValues,
+      "p"
+    );
 
     const avgCompletedQuery = `
       SELECT COALESCE(SUM(count), 0) / 14.0 AS avg_daily
       FROM (
         SELECT COUNT(*) AS count
-        FROM ${schema}.patients
+        FROM ${schema}.patients p
         WHERE stage IN ('Completed', 'QA Approved', 'QA Passed', 'Submission Ready')
           AND updated_at >= CURRENT_DATE - INTERVAL '14 days'
           AND updated_at < CURRENT_DATE
@@ -600,13 +629,17 @@ class DashboardAnalyticsService {
       ) sub;
     `;
 
-    // 3. Overall HEDIS Rate — join patients when filter active
+    // 4. HEDIS Rate
     const hedisFilterValues = [currentYear, priorYear];
-    const hedisFilterSql = this._buildPatientFilters(filters, hedisFilterValues);
+    const hedisFilterSql = this._buildPatientFilters(
+      filters,
+      hedisFilterValues,
+      "p"
+    );
     const hedisPatientJoin = hedisFilterSql
       ? `INNER JOIN ${schema}.patients p ON he.patient_id = p.id`
-      : '';
-    // Alias columns through he. when joining patients
+      : "";
+
     const hedisQuery = `
       SELECT
         COUNT(*) FILTER (WHERE he.denominator = TRUE) AS denom_all,
@@ -622,7 +655,7 @@ class DashboardAnalyticsService {
       WHERE 1=1 ${hedisFilterSql}
     `;
 
-    // 4. AI Assist Rate — no patient-level column; skip filter
+    // 5. AI Assist Rate (no patient filter needed)
     const aiAssistQuery = `
       SELECT
         COUNT(*) FILTER (WHERE review_status = 'ACCEPTED') AS accepted_all,
@@ -637,9 +670,13 @@ class DashboardAnalyticsService {
       WHERE source_type IS NULL OR source_type = 'AI';
     `;
 
-    // 5. SLA Compliance
+    // 6. SLA Compliance (patient table)
     const slaFilterValues = [];
-    const slaFilterSql = this._buildPatientFilters(filters, slaFilterValues);
+    const slaFilterSql = this._buildPatientFilters(
+      filters,
+      slaFilterValues,
+      "p"
+    );
 
     const slaQuery = `
       SELECT
@@ -647,27 +684,14 @@ class DashboardAnalyticsService {
         COUNT(CASE WHEN
           (stage IN ('Completed', 'QA Approved', 'QA Passed', 'Submission Ready') AND (due_date IS NULL OR updated_at <= due_date))
           OR (stage NOT IN ('Completed', 'QA Approved', 'QA Passed', 'Submission Ready') AND (due_date IS NULL OR due_date >= CURRENT_DATE))
-          THEN 1 END) AS on_time_charts,
-
-        COUNT(*) FILTER (WHERE due_date >= CURRENT_DATE - INTERVAL '7 days' AND due_date < CURRENT_DATE + INTERVAL '1 day') AS due_this_week,
-        COUNT(*) FILTER (WHERE due_date >= CURRENT_DATE - INTERVAL '7 days' AND due_date < CURRENT_DATE + INTERVAL '1 day' AND (
-          (stage IN ('Completed', 'QA Approved', 'QA Passed', 'Submission Ready') AND (due_date IS NULL OR updated_at <= due_date))
-          OR (stage NOT IN ('Completed', 'QA Approved', 'QA Passed', 'Submission Ready') AND (due_date IS NULL OR due_date >= CURRENT_DATE))
-        )) AS on_time_this_week,
-
-        COUNT(*) FILTER (WHERE due_date >= CURRENT_DATE - INTERVAL '14 days' AND due_date < CURRENT_DATE - INTERVAL '7 days') AS due_last_week,
-        COUNT(*) FILTER (WHERE due_date >= CURRENT_DATE - INTERVAL '14 days' AND due_date < CURRENT_DATE - INTERVAL '7 days' AND (
-          (stage IN ('Completed', 'QA Approved', 'QA Passed', 'Submission Ready') AND (due_date IS NULL OR updated_at <= due_date))
-          OR (stage NOT IN ('Completed', 'QA Approved', 'QA Passed', 'Submission Ready') AND (due_date IS NULL OR due_date >= CURRENT_DATE))
-        )) AS on_time_last_week
+          THEN 1 END) AS on_time_charts
       FROM ${schema}.patients p
       WHERE 1=1 ${slaFilterSql}
     `;
 
-    // Execute queries in parallel
+    // Execute in parallel
     const [
       openQueueRes,
-      openTodayRes,
       completedTodayRes,
       avgCompletedRes,
       hedisRes,
@@ -675,7 +699,6 @@ class DashboardAnalyticsService {
       slaRes,
     ] = await Promise.all([
       db.query(openQueueQuery, openQueueFilterValues),
-      db.query(openTodayQuery),
       db.query(completedTodayQuery, completedFilterValues),
       db.query(avgCompletedQuery, avgFilterValues),
       db.query(hedisQuery, hedisFilterValues),
@@ -683,28 +706,30 @@ class DashboardAnalyticsService {
       db.query(slaQuery, slaFilterValues),
     ]);
 
-    // Format outputs
+    // === Format Results ===
 
-    // 1. Open Queue
+    // Open Queue
     const openValue = parseInt(openQueueRes.rows[0]?.total_open || 0, 10);
-    const openToday = parseInt(openTodayRes.rows[0]?.today_count || 0, 10);
-    const openTrend = `+${openToday} today`;
-    const openTrendType = openToday > 0 ? "up" : "neutral";
 
-    // 2. Completed Today
-    const completedValue = parseInt(completedTodayRes.rows[0]?.completed_today || 0, 10);
-    const avgCompleted = parseFloat(avgCompletedRes.rows[0]?.avg_daily || 0.0);
-    let completedTrend = null;
+    // Completed Today
+    const completedValue = parseInt(
+      completedTodayRes.rows[0]?.completed_today || 0,
+      10
+    );
+    const avgCompleted = parseFloat(avgCompletedRes.rows[0]?.avg_daily || 0);
+
+    let completedTrend = "+0% vs avg";
     let completedTrendType = "neutral";
     if (avgCompleted > 0) {
-      const changePct = Math.round(((completedValue - avgCompleted) / avgCompleted) * 100);
+      const changePct = Math.round(
+        ((completedValue - avgCompleted) / avgCompleted) * 100
+      );
       completedTrend = `${changePct >= 0 ? "+" : ""}${changePct}% vs avg`;
-      completedTrendType = changePct > 0 ? "up" : (changePct < 0 ? "down" : "neutral");
-    } else {
-      completedTrend = "+0% vs avg";
+      completedTrendType =
+        changePct > 0 ? "up" : changePct < 0 ? "down" : "neutral";
     }
 
-    // 3. Overall HEDIS Rate
+    // HEDIS Rate
     const hedisRow = hedisRes.rows[0] || {};
     const denomCurrent = parseInt(hedisRow.denom_current || 0, 10);
     const numerCurrent = parseInt(hedisRow.numer_current || 0, 10);
@@ -713,89 +738,51 @@ class DashboardAnalyticsService {
     const denomPrior = parseInt(hedisRow.denom_prior || 0, 10);
     const numerPrior = parseInt(hedisRow.numer_prior || 0, 10);
 
-    const currentRate = denomCurrent > 0
-      ? parseFloat(((numerCurrent / denomCurrent) * 100).toFixed(1))
-      : (denomAll > 0 ? parseFloat(((numerAll / denomAll) * 100).toFixed(1)) : 0.0);
-    const priorRate = denomPrior > 0
-      ? parseFloat(((numerPrior / denomPrior) * 100).toFixed(1))
-      : null;
+    const currentRate =
+      denomCurrent > 0
+        ? parseFloat(((numerCurrent / denomCurrent) * 100).toFixed(1))
+        : denomAll > 0
+          ? parseFloat(((numerAll / denomAll) * 100).toFixed(1))
+          : 0;
+
+    const priorRate =
+      denomPrior > 0
+        ? parseFloat(((numerPrior / denomPrior) * 100).toFixed(1))
+        : null;
 
     let hedisTrend = null;
     let hedisTrendType = "neutral";
     if (priorRate !== null) {
       const delta = parseFloat((currentRate - priorRate).toFixed(1));
       hedisTrend = `${delta >= 0 ? "+" : ""}${delta.toFixed(1)}% vs MY${priorYear}`;
-      hedisTrendType = delta > 0 ? "up" : (delta < 0 ? "down" : "neutral");
+      hedisTrendType = delta > 0 ? "up" : delta < 0 ? "down" : "neutral";
     }
 
-    // 4. AI Assist Rate
+    // AI Assist Rate
     const aiAssistRow = aiAssistRes.rows[0] || {};
     const acceptedAll = parseInt(aiAssistRow.accepted_all || 0, 10);
     const rejectedAll = parseInt(aiAssistRow.rejected_all || 0, 10);
     const totalAll = acceptedAll + rejectedAll;
 
-    const acceptedThisWeek = parseInt(aiAssistRow.accepted_this_week || 0, 10);
-    const rejectedThisWeek = parseInt(aiAssistRow.rejected_this_week || 0, 10);
-    const totalThisWeek = acceptedThisWeek + rejectedThisWeek;
+    const aiAssistRate =
+      totalAll > 0
+        ? parseFloat(((acceptedAll / totalAll) * 100).toFixed(1))
+        : 0;
 
-    const acceptedLastWeek = parseInt(aiAssistRow.accepted_last_week || 0, 10);
-    const rejectedLastWeek = parseInt(aiAssistRow.rejected_last_week || 0, 10);
-    const totalLastWeek = acceptedLastWeek + rejectedLastWeek;
-
-    const aiAssistRate = totalAll > 0
-      ? parseFloat(((acceptedAll / totalAll) * 100).toFixed(1))
-      : null;
-
-    const rateThisWeek = totalThisWeek > 0
-      ? (acceptedThisWeek / totalThisWeek) * 100
-      : null;
-    const rateLastWeek = totalLastWeek > 0
-      ? (acceptedLastWeek / totalLastWeek) * 100
-      : null;
-
-    let aiAssistTrend = null;
-    let aiAssistTrendType = "neutral";
-    if (rateThisWeek !== null && rateLastWeek !== null) {
-      const delta = parseFloat((rateThisWeek - rateLastWeek).toFixed(1));
-      aiAssistTrend = `${delta >= 0 ? "+" : ""}${delta.toFixed(1)}% this wk`;
-      aiAssistTrendType = delta > 0 ? "up" : (delta < 0 ? "down" : "neutral");
-    }
-
-    // 5. SLA Compliance
+    // SLA Compliance
     const slaRow = slaRes.rows[0] || {};
     const totalCharts = parseInt(slaRow.total_charts || 0, 10);
     const onTimeCharts = parseInt(slaRow.on_time_charts || 0, 10);
-
-    const dueThisWeek = parseInt(slaRow.due_this_week || 0, 10);
-    const onTimeThisWeek = parseInt(slaRow.on_time_this_week || 0, 10);
-
-    const dueLastWeek = parseInt(slaRow.due_last_week || 0, 10);
-    const onTimeLastWeek = parseInt(slaRow.on_time_last_week || 0, 10);
-
-    const slaCompliance = totalCharts > 0
-      ? parseFloat(((onTimeCharts / totalCharts) * 100).toFixed(1))
-      : 100.0;
-
-    const complianceThisWeek = dueThisWeek > 0
-      ? (onTimeThisWeek / dueThisWeek) * 100
-      : null;
-    const complianceLastWeek = dueLastWeek > 0
-      ? (onTimeLastWeek / dueLastWeek) * 100
-      : null;
-
-    let slaTrend = null;
-    let slaTrendType = "neutral";
-    if (complianceThisWeek !== null && complianceLastWeek !== null) {
-      const delta = parseFloat((complianceThisWeek - complianceLastWeek).toFixed(1));
-      slaTrend = `${delta >= 0 ? "+" : ""}${delta.toFixed(1)}% this wk`;
-      slaTrendType = delta > 0 ? "up" : (delta < 0 ? "down" : "neutral");
-    }
+    const slaCompliance =
+      totalCharts > 0
+        ? parseFloat(((onTimeCharts / totalCharts) * 100).toFixed(1))
+        : 100;
 
     return {
       openQueue: {
         value: openValue,
-        trend: openTrend,
-        trendType: openTrendType,
+        trend: `+${openValue} open`,
+        trendType: "neutral",
       },
       completedToday: {
         value: completedValue,
@@ -807,15 +794,11 @@ class DashboardAnalyticsService {
         trend: hedisTrend,
         trendType: hedisTrendType,
       },
-      aiAssistRate: {
-        value: aiAssistRate,
-        trend: aiAssistTrend,
-        trendType: aiAssistTrendType,
-      },
+      aiAssistRate: { value: aiAssistRate, trend: null, trendType: "neutral" },
       slaCompliance: {
         value: slaCompliance,
-        trend: slaTrend,
-        trendType: slaTrendType,
+        trend: null,
+        trendType: "neutral",
       },
     };
   }
@@ -948,9 +931,7 @@ class DashboardAnalyticsService {
         const now = new Date();
         const due = new Date(row.due_date);
 
-        slaRemainingDays = Math.ceil(
-          (due - now) / (1000 * 60 * 60 * 24)
-        );
+        slaRemainingDays = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
 
         if (slaRemainingDays < 0) {
           slaStatus = "Overdue";
@@ -984,7 +965,14 @@ class DashboardAnalyticsService {
   }
 
   async getMyQueue(db, schema, userId, queryParams) {
-    const { search, measurementYear, status, sort_by, page = 1, limit = 10 } = queryParams;
+    const {
+      search,
+      measurementYear,
+      status,
+      sort_by,
+      page = 1,
+      limit = 10,
+    } = queryParams;
 
     const offset = (Number(page) - 1) * Number(limit);
 
@@ -1089,9 +1077,6 @@ class DashboardAnalyticsService {
       pageSize: Number(limit),
     };
   }
-
-
-
 }
 
 module.exports = new DashboardAnalyticsService();

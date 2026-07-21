@@ -64,7 +64,7 @@ import {
   // usePostApiHedisEvaluateId,
 } from "@/api";
 import { toast } from "sonner";
-
+import { useGlobalFilters } from "@/contexts/GlobalFiltersContext";
 /* ─────────────────────────────────────────────────────────────
    TYPES
 ───────────────────────────────────────────────────────────── */
@@ -1791,7 +1791,6 @@ export function WorkQueue({
 }) {
   // Component state
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [search, setSearch] = useState("");
   const [filterStage, setFilterStage] = useState<Status | "All">("All");
   const [filterPriority, setFilterPriority] = useState("All");
   const [filterAssignee, setFilterAssignee] = useState("All");
@@ -1814,9 +1813,10 @@ export function WorkQueue({
   const [clientSidebarCollapsed, setClientSidebarCollapsed] = useState(false);
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [clientSearch, setClientSearch] = useState("");
-
+  const { measurementYear, globalSearch } = useGlobalFilters();
   const { userDetail } = usePermissions();
   const rawRole = userDetail?.user_role?.name?.toLowerCase();
+  const [search, setSearch] = useState(globalSearch);
 
   // ===============================
   // ASSIGN MUTATION
@@ -2009,7 +2009,8 @@ export function WorkQueue({
     {
       tab: selectedTab as any,
 
-      search: search || undefined,
+      measurementYear: measurementYear || undefined,   // null → undefined = no filter
+      search: globalSearch || undefined,
 
       plan: filterPlan !== "All Plans" ? filterPlan : undefined,
 
@@ -2026,6 +2027,16 @@ export function WorkQueue({
       },
     }
   );
+
+  useEffect(() => {
+    setSearch(globalSearch);
+    setPage(1);
+  }, [globalSearch]);
+
+  // Reset page when measurement year changes
+  useEffect(() => {
+    setPage(1);
+  }, [measurementYear]);
 
   const apiPatients = workQueueResponse?.data ?? [];
   const { data: usersResponse } = useGetApiUsers(
