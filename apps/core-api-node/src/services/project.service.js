@@ -451,3 +451,54 @@ exports.getProjectById = async (db, id) => {
     qa_users: row.qa_users || [],
   };
 };
+
+/**
+ * GET PROJECT TEAM ALLOCATION
+ * Returns Abstractors (Coders) and QA users assigned to a project
+ * with their assigned chart/patient counts.
+ */
+exports.getProjectTeamAllocation = async (db, projectId) => {
+  const query = `
+    WITH abstractors AS (
+      SELECT 
+        u.id AS user_id,
+        u.full_name AS user_name,
+        COUNT(pat.id) AS assigned_charts,
+        'Abstractor' AS role
+      FROM patients pat
+      JOIN users u ON u.id = pat.abstractor_id
+      WHERE pat.project_id = $1 
+        AND pat.abstractor_id IS NOT NULL
+      GROUP BY u.id, u.full_name
+    ),
+    qa_users AS (
+      SELECT 
+        u.id AS user_id,
+        u.full_name AS user_name,
+        COUNT(pat.id) AS assigned_charts,
+        'QA' AS role
+      FROM patients pat
+      JOIN users u ON u.id = pat.qa_id
+      WHERE pat.project_id = $1 
+        AND pat.qa_id IS NOT NULL
+      GROUP BY u.id, u.full_name
+    )
+    SELECT * FROM abstractors
+    UNION ALL
+    SELECT * FROM qa_users
+    ORDER BY role, assigned_charts DESC, user_name ASC;
+  `;
+
+  const result = await db.query(query, [projectId]);
+
+  // Separate into two arrays for easier frontend consumption
+  const abstractors = result.rows.filter((row) => row.role === "Abstractor");
+  const qa = result.rows.filter((row) => row.role === "QA");
+
+  return {
+    abstractors,
+    qa_users: qa,
+    total_abstractors: abstractors.length,
+    total_qa: qa.length,
+  };
+};

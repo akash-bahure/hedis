@@ -1,12 +1,5 @@
 const service = require("../services/dashboardAnalytics.service");
 
-console.log("SERVICE =", Object.keys(service));
-
-console.log("getSummary:", typeof service.getSummary);
-console.log("getDeadlines:", typeof service.getDeadlines);
-console.log("getMyQueue:", typeof service.getMyQueue);
-console.log("getDashboardStats:", typeof service.getDashboardStats);
-
 /**
  * GET /api/dashboard/abstraction-velocity
  * Retrieves velocity data showing charts abstracted vs AI assisted.
@@ -19,13 +12,18 @@ exports.getAbstractionVelocity = async (req, res) => {
     if (isNaN(daysParsed) || ![7, 14, 30].includes(daysParsed)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid query parameter 'days'. Allowed values are 7, 14, or 30.",
+        message:
+          "Invalid query parameter 'days'. Allowed values are 7, 14, or 30.",
       });
     }
 
-    const data = await service.getAbstractionVelocity(req.db, req.tenant.schema_name, {
-      days: daysParsed,
-    });
+    const data = await service.getAbstractionVelocity(
+      req.db,
+      req.tenant.schema_name,
+      {
+        days: daysParsed,
+      }
+    );
 
     return res.status(200).json({
       success: true,
@@ -54,7 +52,11 @@ exports.getQueueByDomain = async (req, res) => {
       search: search?.trim() || null,
     };
 
-    const data = await service.getQueueByDomain(req.db, req.tenant.schema_name, filters);
+    const data = await service.getQueueByDomain(
+      req.db,
+      req.tenant.schema_name,
+      filters
+    );
 
     return res.status(200).json({
       success: true,
@@ -84,13 +86,15 @@ exports.getMeasureRates = async (req, res) => {
     if (isNaN(page) || page < 1) {
       return res.status(400).json({
         success: false,
-        message: "Invalid query parameter 'page_no'. Must be a positive integer.",
+        message:
+          "Invalid query parameter 'page_no'. Must be a positive integer.",
       });
     }
     if (isNaN(limit) || limit < 1 || limit > 100) {
       return res.status(400).json({
         success: false,
-        message: "Invalid query parameter 'page_size'. Must be between 1 and 100.",
+        message:
+          "Invalid query parameter 'page_size'. Must be between 1 and 100.",
       });
     }
 
@@ -100,7 +104,11 @@ exports.getMeasureRates = async (req, res) => {
       search: search?.trim() || null,
     };
 
-    const result = await service.getMeasureRates(req.db, req.tenant.schema_name, { page, limit, filters });
+    const result = await service.getMeasureRates(
+      req.db,
+      req.tenant.schema_name,
+      { page, limit, filters }
+    );
 
     return res.status(200).json({
       success: true,
@@ -131,13 +139,15 @@ exports.getQueueByMeasure = async (req, res) => {
     if (isNaN(page) || page < 1) {
       return res.status(400).json({
         success: false,
-        message: "Invalid query parameter 'page_no'. Must be a positive integer.",
+        message:
+          "Invalid query parameter 'page_no'. Must be a positive integer.",
       });
     }
     if (isNaN(limit) || limit < 1 || limit > 100) {
       return res.status(400).json({
         success: false,
-        message: "Invalid query parameter 'page_size'. Must be between 1 and 100.",
+        message:
+          "Invalid query parameter 'page_size'. Must be between 1 and 100.",
       });
     }
 
@@ -147,7 +157,11 @@ exports.getQueueByMeasure = async (req, res) => {
       search: search?.trim() || null,
     };
 
-    const result = await service.getQueueByMeasure(req.db, req.tenant.schema_name, { page, limit, filters });
+    const result = await service.getQueueByMeasure(
+      req.db,
+      req.tenant.schema_name,
+      { page, limit, filters }
+    );
 
     return res.status(200).json({
       success: true,
@@ -179,7 +193,11 @@ exports.getDashboardStats = async (req, res) => {
       search: search?.trim() || null,
     };
 
-    const data = await service.getDashboardStats(req.db, req.tenant.schema_name, filters);
+    const data = await service.getDashboardStats(
+      req.db,
+      req.tenant.schema_name,
+      filters
+    );
 
     return res.status(200).json({
       success: true,
@@ -196,54 +214,53 @@ exports.getDashboardStats = async (req, res) => {
   }
 };
 
-
 /**
- * GET /api/dashboard/summary
- * Returns dashboard summary counts.
+ * GET /api/dashboard/abstraction-deadlines
+ * Returns open HEDIS measure gaps grouped by measure code with SLA deadline tracking.
+ * Each measure shows: open count, done count, nearest due date, remaining days, completion %.
  */
-exports.getSummary = async (req, res) => {
+exports.getAbstractionDeadlines = async (req, res) => {
   try {
-    const data = await service.getSummary(req.db, req.tenant.schema_name);
+    const { page_no = 1, page_size = 10 } = req.query;
+    const page = parseInt(page_no, 10);
+    const limit = parseInt(page_size, 10);
 
-    return res.status(200).json({
-      success: true,
-      message: "Dashboard summary retrieved successfully",
-      data,
-    });
-  } catch (err) {
-    console.error("Get Dashboard Summary Error:", err);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to retrieve dashboard summary",
-      error: err.message,
-    });
-  }
-};
+    if (isNaN(page) || page < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid query parameter 'page_no'. Must be a positive integer.",
+      });
+    }
+    if (isNaN(limit) || limit < 1 || limit > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid query parameter 'page_size'. Must be between 1 and 100.",
+      });
+    }
 
-/**
- * GET /api/dashboard/upcoming-deadlines
- * Returns abstraction deadlines grouped by measure.
- */
-exports.getUpcomingDeadlines = async (req, res) => {
-  try {
     const { measurementYear, search } = req.query;
     const filters = {
       measurementYear: measurementYear?.trim() || null,
       search: search?.trim() || null,
     };
 
-    const data = await service.getDeadlines(req.db, req.tenant.schema_name, filters);
+    const result = await service.getAbstractionDeadlines(
+      req.db,
+      req.tenant.schema_name,
+      { page, limit, filters }
+    );
 
     return res.status(200).json({
       success: true,
       message: "Upcoming abstraction deadlines retrieved successfully",
-      data,
+      data: result.data,
+      pagination: result.pagination,
     });
   } catch (err) {
-    console.error("Get Dashboard Deadlines Error:", err);
+    console.error("Get Abstraction Deadlines Error:", err);
     return res.status(500).json({
       success: false,
-      message: "Failed to retrieve abstraction deadlines",
+      message: "Internal server error",
       error: err.message,
     });
   }
@@ -251,31 +268,124 @@ exports.getUpcomingDeadlines = async (req, res) => {
 
 /**
  * GET /api/dashboard/my-queue
- * Returns logged-in user's assigned queue.
+ * Returns the currently authenticated user's assigned patient/chart queue.
+ * Derives chartStatus from patient stage and latest QA decision.
+ * Returns patients.measure (full HEDIS year string, e.g. "HEDIS MY2025") as the measure field.
  */
 exports.getMyQueue = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const { page_no = 1, page_size = 10 } = req.query;
+    const page = parseInt(page_no, 10);
+    const limit = parseInt(page_size, 10);
+
+    if (isNaN(page) || page < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid query parameter 'page_no'. Must be a positive integer.",
+      });
+    }
+    if (isNaN(limit) || limit < 1 || limit > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid query parameter 'page_size'. Must be between 1 and 100.",
+      });
+    }
+
+    // Extract authenticated user ID from JWT payload (set by auth middleware)
+    const userId = req.user?.id || req.user?.userId || null;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: user identity could not be resolved.",
+      });
+    }
+
+    const { measurementYear, search } = req.query;
+    const filters = {
+      measurementYear: measurementYear?.trim() || null,
+      search: search?.trim() || null,
+    };
 
     const result = await service.getMyQueue(
       req.db,
       req.tenant.schema_name,
-      userId,
-      req.query
+      { page, limit, filters, userId }
     );
 
     return res.status(200).json({
       success: true,
       message: "My queue retrieved successfully",
-      ...result,
+      data: result.data,
+      pagination: result.pagination,
     });
   } catch (err) {
     console.error("Get My Queue Error:", err);
     return res.status(500).json({
       success: false,
-      message: "Failed to retrieve my queue",
+      message: "Internal server error",
       error: err.message,
     });
   }
 };
 
+/**
+ * GET /api/dashboard/user-queue
+ * Flat patient queue for the authenticated user.
+ * One row per patient — no measure/evaluation expansion.
+ * "measure" field = patients.measure (HEDIS year string, e.g. "HEDIS MY2025").
+ * chartStatus derived from patients.stage + latest QA decision.
+ */
+exports.getUserQueue = async (req, res) => {
+  try {
+    const { page_no = 1, page_size = 10 } = req.query;
+    const page = parseInt(page_no, 10);
+    const limit = parseInt(page_size, 10);
+
+    if (isNaN(page) || page < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid query parameter 'page_no'. Must be a positive integer.",
+      });
+    }
+    if (isNaN(limit) || limit < 1 || limit > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid query parameter 'page_size'. Must be between 1 and 100.",
+      });
+    }
+
+    const userId = req.user?.id || req.user?.userId || null;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: user identity could not be resolved.",
+      });
+    }
+
+    const { measurementYear, search } = req.query;
+    const filters = {
+      measurementYear: measurementYear?.trim() || null,
+      search: search?.trim() || null,
+    };
+
+    const result = await service.getUserQueue(
+      req.db,
+      req.tenant.schema_name,
+      { page, limit, filters, userId }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "User queue retrieved successfully",
+      data: result.data,
+      pagination: result.pagination,
+    });
+  } catch (err) {
+    console.error("Get User Queue Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};

@@ -330,3 +330,33 @@ exports.getProjectStats = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+/**
+ * GET /api/projects/:id/team-allocation
+ * Get team allocation (Abstractors + QA) for a specific project
+ */
+exports.getProjectTeamAllocation = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Optional: verify project exists
+    const projectCheck = await req.db.query(
+      "SELECT id FROM projects WHERE id = $1",
+      [id]
+    );
+
+    if (projectCheck.rows.length === 0) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    const teamData = await projectService.getProjectTeamAllocation(req.db, id);
+
+    res.json({
+      message: "Project team allocation fetched successfully",
+      data: teamData,
+    });
+  } catch (err) {
+    console.error("Get Project Team Allocation Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};

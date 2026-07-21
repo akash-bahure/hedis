@@ -480,24 +480,18 @@ router.get("/stats", controller.getDashboardStats);
 
 /**
  * @swagger
- * /api/dashboard/summary:
+ * /api/dashboard/abstraction-deadlines:
  *   get:
- *     summary: Get top-level dashboard statistics
- *     tags: [Dashboard]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Dashboard summary retrieved successfully
- */
-router.get("/summary", controller.getSummary);
-
-/**
- * @swagger
- * /api/dashboard/deadlines:
- *   get:
- *     summary: Get upcoming abstraction SLAs grouped by HEDIS measures
- *     tags: [Dashboard]
+ *     summary: Retrieve upcoming abstraction deadlines grouped by HEDIS measure
+ *     description: >
+ *       Returns open (incomplete) HEDIS measure gaps grouped by measure code.
+ *       Only measures with at least one open patient-evaluation are included.
+ *       For each measure provides: total open charts, total completed charts,
+ *       nearest SLA due date among open patients, remaining calendar days to that
+ *       date (negative values indicate overdue), and overall completion percentage.
+ *       Ordered by nearest due date ascending so the most urgent measures appear first.
+ *       Supports pagination and the same global filters used by all dashboard APIs.
+ *     tags: [Dashboard Analytics]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -506,24 +500,119 @@ router.get("/summary", controller.getSummary);
  *         schema:
  *           type: string
  *           enum: [HEDIS MY2025, HEDIS MY2026]
- *         description: Filter by HEDIS Measurement Year
+ *         description: Filter by HEDIS Measurement Year (matches patients.measure column)
  *       - in: query
  *         name: search
  *         schema:
  *           type: string
  *         description: Case-insensitive search on patient first name, last name, or measure
+ *       - in: query
+ *         name: page_no
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number (1-based)
+ *       - in: query
+ *         name: page_size
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Number of measure rows per page
  *     responses:
  *       200:
- *         description: Upcoming abstraction deadlines retrieved successfully
+ *         description: Upcoming abstraction deadlines retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Upcoming abstraction deadlines retrieved successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       measureCode:
+ *                         type: string
+ *                         example: "COL"
+ *                       measureName:
+ *                         type: string
+ *                         example: "Colorectal Cancer Screening"
+ *                       totalOpen:
+ *                         type: integer
+ *                         description: Number of patient-evaluations where stage/status is still open
+ *                         example: 61
+ *                       totalDone:
+ *                         type: integer
+ *                         description: Number of patient-evaluations where stage/status is completed
+ *                         example: 42
+ *                       nearestDueDate:
+ *                         type: string
+ *                         format: date
+ *                         nullable: true
+ *                         description: ISO date of the earliest due_date among open patients for this measure
+ *                         example: "2026-02-28"
+ *                       remainingDays:
+ *                         type: integer
+ *                         nullable: true
+ *                         description: Calendar days from today to nearestDueDate (negative = overdue)
+ *                         example: 4
+ *                       completionPercentage:
+ *                         type: integer
+ *                         description: Percentage of charts completed out of total (open + done)
+ *                         example: 41
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       example: 8
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 1
+ *       400:
+ *         description: Bad request. Invalid pagination parameters.
+ *       401:
+ *         description: Unauthorized. Missing or invalid Bearer token.
+ *       500:
+ *         description: Internal server error.
  */
-router.get("/deadlines", controller.getUpcomingDeadlines);
+router.get("/abstraction-deadlines", controller.getAbstractionDeadlines);
 
 /**
  * @swagger
  * /api/dashboard/my-queue:
  *   get:
- *     summary: Get assigned patients and charts for the logged-in user
- *     tags: [Dashboard]
+ *     summary: Retrieve the authenticated user's assigned patient queue
+ *     description: >
+ *       Returns all patient-evaluation rows assigned to the currently authenticated
+ *       user (matched via patients.assigned_to or patients.abstractor_id).
+ *       The "measure" field returns the full HEDIS year string stored in the
+ *       patients.measure column (e.g. "HEDIS MY2025"), not the measure code.
+ *       The "measureCode" field returns the individual HEDIS measure code (e.g. "CDC").
+ *       chartStatus is derived from the patient stage and the latest QA decision:
+ *         Not Started → stage is Unassigned / Not Started / Assigned;
+ *         In Progress → stage is In Progress, Rework, Pending QA, QA Returned, etc.;
+ *         QA Pending  → stage is completed but latest qa_status is REQUEST_REVISION;
+ *         Completed   → stage is Completed / QA Approved / QA Passed / Submission Ready.
+ *       progress is 100 for completed eval status or QA_PASS, otherwise derived from stage.
+ *       Sorted by due_date ascending (most urgent first), then by priority and last name.
+ *       Supports pagination and the same global filters used by all dashboard APIs.
+ *     tags: [Dashboard Analytics]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -532,42 +621,252 @@ router.get("/deadlines", controller.getUpcomingDeadlines);
  *         schema:
  *           type: string
  *           enum: [HEDIS MY2025, HEDIS MY2026]
- *         description: Filter by HEDIS Measurement Year
+ *         description: Filter by HEDIS Measurement Year (matches patients.measure column)
  *       - in: query
  *         name: search
  *         schema:
  *           type: string
- *         description: Search by name, MRN, or measure code
+ *         description: Case-insensitive search on patient first name, last name, or measure
  *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *         description: Filter by workflow stage
- *       - in: query
- *         name: sort_by
- *         schema:
- *           type: string
- *         description: Sort field (e.g. due_date, priority)
- *       - in: query
- *         name: page
+ *         name: page_no
  *         schema:
  *           type: integer
+ *           minimum: 1
  *           default: 1
- *         description: Page number
+ *         description: Page number (1-based)
  *       - in: query
- *         name: limit
+ *         name: page_size
  *         schema:
  *           type: integer
+ *           minimum: 1
+ *           maximum: 100
  *           default: 10
- *         description: Number of items per page
+ *         description: Number of patient queue rows per page
  *     responses:
  *       200:
- *         description: My queue retrieved successfully
+ *         description: My queue retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: My queue retrieved successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       patientId:
+ *                         type: string
+ *                         format: uuid
+ *                         description: Internal patient UUID
+ *                         example: "d2f3e4a1-0001-4b2c-9a1f-abcdef123456"
+ *                       memberId:
+ *                         type: string
+ *                         description: External member/patient display ID (patients.patient_id)
+ *                         example: "MBR-789456"
+ *                       firstName:
+ *                         type: string
+ *                         example: "Jennifer"
+ *                       lastName:
+ *                         type: string
+ *                         example: "Anderson"
+ *                       measure:
+ *                         type: string
+ *                         nullable: true
+ *                         description: Full HEDIS year string stored in patients.measure (e.g. HEDIS MY2025)
+ *                         example: "HEDIS MY2025"
+ *                       measureCode:
+ *                         type: string
+ *                         description: HEDIS measure code from hedis_evaluations
+ *                         example: "CDC"
+ *                       measureName:
+ *                         type: string
+ *                         description: Full HEDIS measure name
+ *                         example: "Comprehensive Diabetes Care"
+ *                       chartStatus:
+ *                         type: string
+ *                         enum: ["Not Started", "In Progress", "QA Pending", "Completed"]
+ *                         description: Derived UI badge status from patient stage and QA decision
+ *                         example: "In Progress"
+ *                       stage:
+ *                         type: string
+ *                         description: Raw patient stage value from the patients table
+ *                         example: "In Progress"
+ *                       dueDate:
+ *                         type: string
+ *                         format: date
+ *                         nullable: true
+ *                         example: "2026-02-28"
+ *                       priority:
+ *                         type: string
+ *                         nullable: true
+ *                         example: "High"
+ *                       progress:
+ *                         type: integer
+ *                         description: Completion percentage (0–100) derived from stage or eval status
+ *                         example: 70
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       example: 5
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 1
+ *       400:
+ *         description: Bad request. Invalid pagination parameters.
+ *       401:
+ *         description: Unauthorized. Missing or invalid Bearer token.
+ *       500:
+ *         description: Internal server error.
  */
 router.get("/my-queue", controller.getMyQueue);
-console.log("getSummary", controller.getSummary);
-console.log("getUpcomingDeadlines", controller.getUpcomingDeadlines);
-console.log("getMyQueue", controller.getMyQueue);
+
+/**
+ * @swagger
+ * /api/dashboard/user-queue:
+ *   get:
+ *     summary: Retrieve the authenticated user's flat patient queue
+ *     description: >
+ *       Returns a flat list of patients assigned to the currently authenticated user.
+ *       One row per patient — NOT expanded per HEDIS measure or evaluation.
+ *       The "measure" field returns the full HEDIS year string from patients.measure
+ *       (e.g. "HEDIS MY2025"), directly from the patient record.
+ *       No measureCode or measureName fields are included.
+ *       chartStatus is derived from patients.stage and the most-recent QA decision:
+ *         Not Started  → stage is Unassigned / Not Started / Assigned;
+ *         In Progress  → stage is In Progress, Rework, Pending QA, QA Returned, etc.;
+ *         QA Pending   → completed stage but latest qa_status is REQUEST_REVISION;
+ *         Completed    → stage is Completed / QA Approved / QA Passed / Submission Ready.
+ *       progress (0–100) is derived from stage or 100 if QA_PASS.
+ *       Matches patients where assigned_to, abstractor_id, or qa_id = current user.
+ *       Sorted by due_date ascending (most urgent first), then priority, then last name.
+ *     tags: [Dashboard Analytics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: measurementYear
+ *         schema:
+ *           type: string
+ *           enum: [HEDIS MY2025, HEDIS MY2026]
+ *         description: Filter by HEDIS Measurement Year (matches patients.measure column)
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Case-insensitive search on patient first name, last name, or measure
+ *       - in: query
+ *         name: page_no
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number (1-based)
+ *       - in: query
+ *         name: page_size
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Number of patient rows per page
+ *     responses:
+ *       200:
+ *         description: User queue retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: User queue retrieved successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       patientId:
+ *                         type: string
+ *                         format: uuid
+ *                         description: Internal patient UUID
+ *                         example: "d2f3e4a1-0001-4b2c-9a1f-abcdef123456"
+ *                       memberId:
+ *                         type: string
+ *                         description: External member display ID (patients.patient_id)
+ *                         example: "MBR-789456"
+ *                       firstName:
+ *                         type: string
+ *                         example: "Jennifer"
+ *                       lastName:
+ *                         type: string
+ *                         example: "Anderson"
+ *                       measure:
+ *                         type: string
+ *                         nullable: true
+ *                         description: Full HEDIS year string from patients.measure (e.g. HEDIS MY2025)
+ *                         example: "HEDIS MY2025"
+ *                       stage:
+ *                         type: string
+ *                         description: Raw patient stage from the patients table
+ *                         example: "In Progress"
+ *                       chartStatus:
+ *                         type: string
+ *                         enum: ["Not Started", "In Progress", "QA Pending", "Completed"]
+ *                         description: Derived UI badge status
+ *                         example: "In Progress"
+ *                       dueDate:
+ *                         type: string
+ *                         format: date
+ *                         nullable: true
+ *                         example: "2026-02-28"
+ *                       priority:
+ *                         type: string
+ *                         nullable: true
+ *                         example: "High"
+ *                       progress:
+ *                         type: integer
+ *                         description: Completion percentage (0–100) from stage or QA status
+ *                         example: 40
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       example: 5
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 1
+ *       400:
+ *         description: Bad request. Invalid pagination parameters.
+ *       401:
+ *         description: Unauthorized. Missing or invalid Bearer token.
+ *       500:
+ *         description: Internal server error.
+ */
+router.get("/user-queue", controller.getUserQueue);
 
 module.exports = router;
-
