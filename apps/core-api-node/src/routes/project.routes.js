@@ -578,4 +578,74 @@ router.get("/access/all", controller.getProjectAccessAll);
  */
 router.patch("/:id/access", controller.updateProjectAccess);
 
+/**
+ * @swagger
+ * /api/projects/{id}/team-allocation:
+ *   get:
+ *     summary: Get team allocation for a project (Abstractors & QA)
+ *     tags: [Projects]
+ *     description: Returns Abstractors and QA users assigned to the project along with their assigned chart counts.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Project UUID
+ *     responses:
+ *       200:
+ *         description: Team allocation fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Project team allocation fetched successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     abstractors:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           user_id:
+ *                             type: string
+ *                             format: uuid
+ *                           user_name:
+ *                             type: string
+ *                           assigned_charts:
+ *                             type: integer
+ *                           role:
+ *                             type: string
+ *                             example: "Abstractor"
+ *                     qa_users:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           user_id:
+ *                             type: string
+ *                             format: uuid
+ *                           user_name:
+ *                             type: string
+ *                           assigned_charts:
+ *                             type: integer
+ *                           role:
+ *                             type: string
+ *                             example: "QA"
+ *                     total_abstractors:
+ *                       type: integer
+ *                     total_qa:
+ *                       type: integer
+ *       404:
+ *         description: Project not found
+ *       500:
+ *         description: Server error
+ */
+router.get("/:id/team-allocation", controller.getProjectTeamAllocation);
+
 module.exports = router;

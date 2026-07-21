@@ -156,8 +156,8 @@ class DashboardAnalyticsService {
   async getAbstractionVelocity(db, schema, { days = 14 } = {}) {
     const targetValue = parseInt(
       process.env.DASHBOARD_TARGET_CHARTS_PER_DAY ||
-        process.env.DASHBOARD_TARGET_CHARTS ||
-        "40",
+      process.env.DASHBOARD_TARGET_CHARTS ||
+      "40",
       10
     );
 
@@ -803,280 +803,565 @@ class DashboardAnalyticsService {
     };
   }
 
-  async getSummary(db, schema) {
-    const query = `
-    SELECT
-      (SELECT COUNT(*) FROM ${schema}.patients) AS total_patients,
-      (SELECT COUNT(*) FROM ${schema}.patients WHERE stage = 'Assigned' OR abstractor_id IS NOT NULL) AS assigned_patients,
-      (SELECT COUNT(*) FROM ${schema}.patients WHERE stage IN ('Completed', 'Done', 'QA Approved', 'QA_APPROVED')) AS completed_patients,
-      (SELECT COUNT(*) FROM ${schema}.patients WHERE stage IN ('Unassigned', 'Not Started')) AS pending_patients,
+  // ─────────────────────────────────────────────────────────────────────────────
+  // UPCOMING ABSTRACTION DEADLINES API
+  // ─────────────────────────────────────────────────────────────────────────────
 
-      (SELECT COUNT(*) FROM ${schema}.patient_charts) AS total_charts,
-      (SELECT COUNT(*)
-         FROM ${schema}.patient_charts pc
-         JOIN ${schema}.patients p ON pc.patient_id = p.id
-        WHERE p.stage IN ('In Progress', 'Pending QA', 'QA Returned', 'Rework')
-      ) AS charts_in_progress,
+  /**
+   * GET /dashboard/abstraction-deadlines
+   *
+   * Returns open HEDIS measure gaps grouped by measure code, providing SLA
+   * deadline tracking for the abstraction team dashboard card.
+   *
+   * For each measure returns:
+   *   - measureCode, measureName
+   *   - totalOpen    – patient-evals where stage is open / not yet completed
+   *   - totalDone    – patient-evals where stage or eval status is completed
+   *   - nearestDueDate – ISO date string of the earliest open due_date
+   *   - remainingDays  – calendar days from today to nearestDueDate (negative = overdue)
+   *   - completionPercentage – totalDone / (totalOpen + totalDone) * 100
+   *
+   * Only "open" gaps are included (stage NOT IN completed set).
+   * Supports global filters: measurementYear (patients.measure ILIKE) and search.
+   * Pagination is applied to the distinct measure_code groups.
+   *
+   * @param {object} db       - tenant db client
+   * @param {string} schema   - tenant schema name
+   * @param {object} options  - { page, limit, filters }
+   */
+  async getAbstractionDeadlines(
+    db,
+    schema,
+    { page = 1, limit = 10, filters = {} } = {}
+  ) {
+    const offset = (page - 1) * limit;
 
-      (SELECT COUNT(*)
-         FROM ${schema}.patient_charts pc
-         JOIN ${schema}.patients p ON pc.patient_id = p.id
-        WHERE p.stage IN ('Completed', 'Done', 'QA Approved', 'QA_APPROVED')
-      ) AS charts_completed,
+    // ── Completed stage set (same definition used across all dashboard APIs) ──
+    const COMPLETED_STAGES = [
+      "Completed",
+      "QA Approved",
+      "QA Passed",
+      "Submission Ready",
+    ];
+    const COMPLETED_EVAL_STATUSES = ["Compliant", "Complete", "Completed", "Approved", "QA Pass", "Pass"];
 
-      (SELECT COUNT(*)
-         FROM ${schema}.patient_charts pc
-         JOIN ${schema}.patients p ON pc.patient_id = p.id
-        WHERE p.stage IN ('Unassigned', 'Assigned', 'Not Started')
-      ) AS charts_pending,
+    // Build filter fragments — both queries share the same patient-level filters
+    const dataValues = [];
+    const filterSql = this._buildPatientFilters(filters, dataValues, "p");
 
-      (SELECT COUNT(*) FROM ${schema}.hedis_evaluations) AS total_measures,
+    const limitIdx = dataValues.length + 1;
+    const offsetIdx = dataValues.length + 2;
+    const dataParams = [...dataValues, limit, offset];
 
-      (SELECT COUNT(*)
-         FROM ${schema}.hedis_evaluations
-        WHERE stage IN ('In Progress', 'Pending QA', 'QA Returned', 'Rework')
-      ) AS measures_in_progress,
+    // ── Paginated data query ──────────────────────────────────────────────────
+    // We join patients → hedis_evaluations to get one row per (measure_code, patient).
+    // We restrict to "open" measures only (stage not in completed set) so the
+    // card only surfaces measures that still need work.
+    const dataQuery = `
+      SELECT
+        he.measure_code,
+        MAX(he.measure_name)                                  AS measure_name,
 
-      (SELECT COUNT(*)
-         FROM ${schema}.hedis_evaluations
-        WHERE status = 'Compliant'
-           OR stage IN ('Completed', 'QA Approved', 'QA_APPROVED')
-      ) AS measures_completed,
+        -- Open: patient stage is NOT completed and eval status is not done
+        COUNT(*) FILTER (
+          WHERE p.stage NOT IN (${COMPLETED_STAGES.map((s) => `'${s}'`).join(",")})
+            AND he.status NOT IN (${COMPLETED_EVAL_STATUSES.map((s) => `'${s}'`).join(",")})
+        )                                                     AS total_open,
 
-      (SELECT COUNT(*)
-         FROM ${schema}.hedis_evaluations
-        WHERE stage IN ('Unassigned', 'Assigned', 'Not Started')
-      ) AS measures_pending,
+        -- Done: stage or eval status indicates completion
+        COUNT(*) FILTER (
+          WHERE p.stage IN (${COMPLETED_STAGES.map((s) => `'${s}'`).join(",")})
+             OR he.status IN (${COMPLETED_EVAL_STATUSES.map((s) => `'${s}'`).join(",")})
+        )                                                     AS total_done,
 
-      (SELECT COUNT(DISTINCT assigned_to)
-         FROM ${schema}.chart_assignments
-        WHERE assigned_role = 'Chart Abstractor'
-      ) AS total_active_abstractors,
+        -- Nearest due date among open patients for this measure
+        MIN(p.due_date) FILTER (
+          WHERE p.stage NOT IN (${COMPLETED_STAGES.map((s) => `'${s}'`).join(",")})
+            AND he.status NOT IN (${COMPLETED_EVAL_STATUSES.map((s) => `'${s}'`).join(",")})
+        )                                                     AS nearest_due_date
 
-      (SELECT COUNT(DISTINCT assigned_to)
-         FROM ${schema}.chart_assignments
-        WHERE assigned_role = 'Quality Analyst'
-      ) AS total_active_qa_users,
+      FROM ${schema}.hedis_evaluations he
+      INNER JOIN ${schema}.patients p ON he.patient_id = p.id
+      WHERE p.stage NOT IN (${COMPLETED_STAGES.map((s) => `'${s}'`).join(",")})
+        ${filterSql}
+      GROUP BY he.measure_code
+      ORDER BY nearest_due_date ASC NULLS LAST, he.measure_code ASC
+      LIMIT $${limitIdx} OFFSET $${offsetIdx}
+    `;
 
-      (SELECT COUNT(*) FROM ${schema}.clients) AS total_clients,
-      (SELECT COUNT(*) FROM ${schema}.projects) AS total_projects
-  `;
+    // ── Total-count query for pagination ─────────────────────────────────────
+    const countValues = [];
+    const countFilterSql = this._buildPatientFilters(filters, countValues, "p");
 
-    const result = await db.query(query);
-    const row = result.rows[0] || {};
+    const countQuery = `
+      SELECT COUNT(DISTINCT he.measure_code) AS total
+      FROM ${schema}.hedis_evaluations he
+      INNER JOIN ${schema}.patients p ON he.patient_id = p.id
+      WHERE p.stage NOT IN (${COMPLETED_STAGES.map((s) => `'${s}'`).join(",")})
+        ${countFilterSql}
+    `;
 
-    return {
-      total_patients: parseInt(row.total_patients || 0, 10),
-      assigned_patients: parseInt(row.assigned_patients || 0, 10),
-      completed_patients: parseInt(row.completed_patients || 0, 10),
-      pending_patients: parseInt(row.pending_patients || 0, 10),
+    const [dataResult, countResult] = await Promise.all([
+      db.query(dataQuery, dataParams),
+      db.query(countQuery, countValues),
+    ]);
 
-      total_charts: parseInt(row.total_charts || 0, 10),
-      charts_in_progress: parseInt(row.charts_in_progress || 0, 10),
-      charts_completed: parseInt(row.charts_completed || 0, 10),
-      charts_pending: parseInt(row.charts_pending || 0, 10),
+    const rows = dataResult.rows || [];
+    const total = parseInt(countResult.rows[0]?.total || 0, 10);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-      total_measures: parseInt(row.total_measures || 0, 10),
-      measures_in_progress: parseInt(row.measures_in_progress || 0, 10),
-      measures_completed: parseInt(row.measures_completed || 0, 10),
-      measures_pending: parseInt(row.measures_pending || 0, 10),
+    const data = rows.map((row) => {
+      const measureCode = row.measure_code;
+      const measureName =
+        row.measure_name ||
+        this.getMeasureNameFromLibrary(measureCode) ||
+        measureCode;
 
-      total_active_abstractors: parseInt(row.total_active_abstractors || 0, 10),
-      total_active_qa_users: parseInt(row.total_active_qa_users || 0, 10),
-
-      total_clients: parseInt(row.total_clients || 0, 10),
-      total_projects: parseInt(row.total_projects || 0, 10),
-    };
-  }
-
-  async getDeadlines(db, schema, filters = {}) {
-    const values = [];
-    const filterSql = this._buildPatientFilters(filters, values);
-
-    const query = `
-    SELECT
-      he.measure_code AS measure,
-      MAX(he.measure_name) AS measure_name,
-      MIN(pc.sla_deadline) AS due_date,
-      COUNT(DISTINCT p.id) AS total_patients_eligible,
-      COUNT(DISTINCT CASE WHEN p.stage IN ('Completed', 'Done', 'QA Approved', 'QA_APPROVED') THEN p.id END) AS patients_completed,
-      COUNT(DISTINCT CASE WHEN p.stage IN ('Unassigned', 'Not Started', 'Assigned') THEN p.id END) AS patients_pending,
-      COUNT(DISTINCT CASE WHEN p.stage IN ('In Progress', 'Pending QA', 'QA Returned', 'Rework') THEN p.id END) AS patients_in_progress
-    FROM ${schema}.hedis_evaluations he
-    JOIN ${schema}.patients p
-      ON he.patient_id = p.id
-    LEFT JOIN ${schema}.patient_charts pc
-      ON pc.patient_id = p.id
-    WHERE 1=1 ${filterSql}
-    GROUP BY he.measure_code
-    ORDER BY due_date ASC NULLS LAST
-  `;
-
-    const result = await db.query(query, values);
-
-    return result.rows.map((row) => {
-      const total = parseInt(row.total_patients_eligible || 0, 10);
-      const completed = parseInt(row.patients_completed || 0, 10);
-      const pending = parseInt(row.patients_pending || 0, 10);
-      const inProgress = parseInt(row.patients_in_progress || 0, 10);
-
+      const totalOpen = parseInt(row.total_open, 10) || 0;
+      const totalDone = parseInt(row.total_done, 10) || 0;
+      const grandTotal = totalOpen + totalDone;
       const completionPercentage =
-        total > 0 ? Math.round((completed / total) * 100) : 0;
+        grandTotal > 0 ? Math.round((totalDone / grandTotal) * 100) : 0;
 
-      let slaRemainingDays = null;
-      let slaStatus = "On Track";
-      let colorCode = "#10B981";
-
-      if (row.due_date) {
-        const now = new Date();
-        const due = new Date(row.due_date);
-
-        slaRemainingDays = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
-
-        if (slaRemainingDays < 0) {
-          slaStatus = "Overdue";
-          colorCode = "#EF4444";
-        } else if (slaRemainingDays <= 5) {
-          slaStatus = "At Risk";
-          colorCode = "#F59E0B";
-        }
+      let nearestDueDate = null;
+      let remainingDays = null;
+      if (row.nearest_due_date) {
+        const due = new Date(row.nearest_due_date);
+        due.setHours(0, 0, 0, 0);
+        nearestDueDate = due.toISOString().split("T")[0];
+        remainingDays = Math.round((due - today) / (1000 * 60 * 60 * 24));
       }
 
       return {
-        measure: row.measure,
-        measure_name: row.measure_name || row.measure,
-        due_date: row.due_date,
-        sla_remaining_days: slaRemainingDays,
-        total_patients_eligible: total,
-        patients_completed: completed,
-        patients_pending: pending,
-        patients_in_progress: inProgress,
-        completion_percentage: completionPercentage,
-        sla_status: slaStatus,
-        priority:
-          slaStatus === "Overdue"
-            ? "High"
-            : slaStatus === "At Risk"
-              ? "Medium"
-              : "Low",
-        color_code: colorCode,
+        measureCode,
+        measureName,
+        totalOpen,
+        totalDone,
+        nearestDueDate,
+        remainingDays,
+        completionPercentage,
       };
     });
-  }
-
-  async getMyQueue(db, schema, userId, queryParams) {
-    const {
-      search,
-      measurementYear,
-      status,
-      sort_by,
-      page = 1,
-      limit = 10,
-    } = queryParams;
-
-    const offset = (Number(page) - 1) * Number(limit);
-
-    const whereClauses = [
-      `(p.abstractor_id = $1 OR p.qa_id = $1 OR p.assigned_to = $1)`,
-    ];
-
-    const values = [userId];
-    let valueIndex = 2;
-
-    if (search) {
-      whereClauses.push(`
-      (
-        p.first_name ILIKE $${valueIndex}
-        OR p.last_name ILIKE $${valueIndex}
-        OR p.patient_id ILIKE $${valueIndex}
-        OR p.measure ILIKE $${valueIndex}
-      )
-    `);
-
-      values.push(`%${search}%`);
-      valueIndex++;
-    }
-
-    if (measurementYear) {
-      whereClauses.push(`p.measure ILIKE $${valueIndex}`);
-      values.push(measurementYear.trim());
-      valueIndex++;
-    }
-
-    if (status) {
-      whereClauses.push(`p.stage = $${valueIndex}`);
-      values.push(status);
-      valueIndex++;
-    }
-
-    const whereString = `WHERE ${whereClauses.join(" AND ")}`;
-
-    let orderBy = "p.created_at DESC";
-
-    if (sort_by === "due_date") {
-      orderBy = "pc.sla_deadline ASC NULLS LAST";
-    } else if (sort_by === "priority") {
-      orderBy = "p.priority ASC";
-    }
-
-    const countQuery = `
-    SELECT COUNT(DISTINCT p.id)
-    FROM ${schema}.patients p
-    LEFT JOIN ${schema}.patient_charts pc
-      ON pc.patient_id = p.id
-    ${whereString}
-  `;
-
-    const countResult = await db.query(countQuery, values);
-
-    const totalCount = parseInt(countResult.rows[0].count, 10);
-
-    const dataQuery = `
-    SELECT DISTINCT
-      p.id AS patient_uuid,
-      p.patient_id AS mrn,
-      CONCAT(p.first_name,' ',p.last_name) AS patient_name,
-      p.measure AS measure_code,
-      p.priority,
-      p.stage AS current_workflow_stage,
-      p.stage AS status,
-      pc.sla_deadline AS due_date,
-      pc.status AS chart_status,
-      pc.abstraction_status AS review_status,
-      p.created_at AS assigned_date,
-      p.updated_at AS last_updated,
-
-      CASE
-        WHEN p.stage IN ('Completed','Done','QA Approved','QA_APPROVED') THEN 100
-        WHEN p.stage IN ('Pending QA','Ready for QA Review','QA Pending') THEN 75
-        WHEN p.stage IN ('In Progress','QA Returned','Rework') THEN 50
-        WHEN p.stage IN ('Assigned','Timeline Generated') THEN 25
-        ELSE 0
-      END AS progress_percentage
-
-    FROM ${schema}.patients p
-    LEFT JOIN ${schema}.patient_charts pc
-      ON pc.patient_id = p.id
-    ${whereString}
-    ORDER BY ${orderBy}
-    LIMIT $${valueIndex}
-    OFFSET $${valueIndex + 1}
-  `;
-
-    const dataResult = await db.query(dataQuery, [
-      ...values,
-      Number(limit),
-      offset,
-    ]);
 
     return {
-      data: dataResult.rows,
-      totalCount,
-      currentPage: Number(page),
-      totalPages: Math.ceil(totalCount / Number(limit)),
-      pageSize: Number(limit),
+      data,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // MY QUEUE API
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  /**
+   * GET /dashboard/my-queue
+   *
+   * Returns the authenticated user's assigned patient/chart queue.
+   *
+   * "measure" field: returns patients.measure (the full HEDIS year string stored
+   * in the patients table, e.g. "HEDIS MY2025") as requested.
+   *
+   * chartStatus derivation (matches UI badge labels):
+   *   - stage IN ('Completed','QA Approved','QA Passed','Submission Ready')
+   *       AND latest qa_status = 'REQUEST_REVISION'  →  "QA Pending"
+   *   - stage IN completed set                        →  "Completed"
+   *   - stage IN ('In Progress','Rework','Pending QA',
+   *               'Ready for QA Review','QA Evidence Requested','QA Returned') → "In Progress"
+   *   - otherwise                                     →  "Not Started"
+   *
+   * progress derivation:
+   *   - eval status IN completed set  →  100
+   *   - qa_status = 'QA_PASS'         →  100
+   *   - stage-based approximation otherwise (see STAGE_PROGRESS_MAP)
+   *
+   * Supports global filters: measurementYear (patients.measure ILIKE) and search.
+   * Pagination across patient rows (one row per patient-evaluation pair).
+   *
+   * @param {object} db       - tenant db client
+   * @param {string} schema   - tenant schema name
+   * @param {object} options  - { page, limit, filters, userId }
+   */
+  async getMyQueue(
+    db,
+    schema,
+    { page = 1, limit = 10, filters = {}, userId } = {}
+  ) {
+    if (!userId) {
+      return {
+        data: [],
+        pagination: { total: 0, page, limit, totalPages: 0 },
+      };
+    }
+
+    const offset = (page - 1) * limit;
+
+    // ── Stage → progress approximation map ───────────────────────────────────
+    const STAGE_PROGRESS_MAP = {
+      Unassigned: 0,
+      "Not Started": 0,
+      Assigned: 10,
+      "In Progress": 40,
+      Rework: 30,
+      "Pending QA": 60,
+      "QA Evidence Requested": 65,
+      "Ready for QA Review": 70,
+      "QA Returned": 50,
+      Completed: 100,
+      "QA Approved": 100,
+      "QA Passed": 100,
+      "Submission Ready": 100,
+    };
+
+    const COMPLETED_EVAL_STATUSES = [
+      "Compliant",
+      "Complete",
+      "Completed",
+      "Approved",
+      "QA Pass",
+      "Pass",
+    ];
+
+    // Build patient-level filter SQL — userId is the first param, so filters
+    // start pushing at index 2.
+    const filterValues = [userId];
+    const filterSql = this._buildPatientFilters(filters, filterValues, "p");
+
+    const limitIdx = filterValues.length + 1;
+    const offsetIdx = filterValues.length + 2;
+    const dataParams = [...filterValues, limit, offset];
+
+    // ── Data query ────────────────────────────────────────────────────────────
+    // One row per (patient, hedis_evaluation). The LATERAL subquery fetches the
+    // most-recent QA decision for each evaluation without a correlated-subquery
+    // performance penalty on large datasets.
+    const dataQuery = `
+      SELECT
+        p.id               AS patient_uuid,
+        p.patient_id       AS member_id,
+        p.first_name,
+        p.last_name,
+        p.measure          AS measure,
+        p.stage,
+        p.due_date,
+        p.priority,
+        he.id              AS eval_id,
+        he.measure_code,
+        he.measure_name    AS eval_measure_name,
+        he.status          AS eval_status,
+        qm.qa_status
+      FROM ${schema}.patients p
+      INNER JOIN ${schema}.hedis_evaluations he ON he.patient_id = p.id
+      LEFT JOIN LATERAL (
+        SELECT qa_status
+        FROM ${schema}.hedis_qa_measure_decisions
+        WHERE measure_id = he.id
+        ORDER BY updated_at DESC
+        LIMIT 1
+      ) qm ON TRUE
+      WHERE (p.assigned_to = $1 OR p.abstractor_id = $1 OR p.qa_id = $1)
+        ${filterSql}
+      ORDER BY
+        p.due_date ASC NULLS LAST,
+        p.priority DESC,
+        p.last_name ASC
+      LIMIT $${limitIdx} OFFSET $${offsetIdx}
+    `;
+
+    // ── Count query for pagination ─────────────────────────────────────────────
+    const countValues = [userId];
+    const countFilterSql = this._buildPatientFilters(filters, countValues, "p");
+
+    const countQuery = `
+      SELECT COUNT(*) AS total
+      FROM ${schema}.patients p
+      INNER JOIN ${schema}.hedis_evaluations he ON he.patient_id = p.id
+      WHERE (p.assigned_to = $1 OR p.abstractor_id = $1 OR p.qa_id = $1)
+        ${countFilterSql}
+    `;
+
+    const [dataResult, countResult] = await Promise.all([
+      db.query(dataQuery, dataParams),
+      db.query(countQuery, countValues),
+    ]);
+
+    const rows = dataResult.rows || [];
+    const total = parseInt(countResult.rows[0]?.total || 0, 10);
+
+    const data = rows.map((row) => {
+      const stage = row.stage || "Not Started";
+      const evalStatus = row.eval_status || "";
+      const qaStatus = row.qa_status || null;
+      const measureCode = row.measure_code;
+
+      // ── chartStatus badge logic ───────────────────────────────────────────
+      const isCompletedStage = [
+        "Completed",
+        "QA Approved",
+        "QA Passed",
+        "Submission Ready",
+      ].includes(stage);
+
+      let chartStatus;
+      if (isCompletedStage && qaStatus === "REQUEST_REVISION") {
+        chartStatus = "QA Pending";
+      } else if (isCompletedStage) {
+        chartStatus = "Completed";
+      } else if (
+        [
+          "In Progress",
+          "Rework",
+          "Pending QA",
+          "Ready for QA Review",
+          "QA Evidence Requested",
+          "QA Returned",
+        ].includes(stage)
+      ) {
+        chartStatus = "In Progress";
+      } else if (stage === "Assigned") {
+        chartStatus = "Not Started";
+      } else {
+        chartStatus = "Not Started";
+      }
+
+      // ── Progress calculation ────────────────────────────────────────────────
+      let progress;
+      if (
+        COMPLETED_EVAL_STATUSES.includes(evalStatus) ||
+        qaStatus === "QA_PASS"
+      ) {
+        progress = 100;
+      } else {
+        progress = STAGE_PROGRESS_MAP[stage] ?? 0;
+      }
+
+      // ── Due date (ISO date string or null) ─────────────────────────────────
+      let dueDate = null;
+      if (row.due_date) {
+        dueDate = new Date(row.due_date).toISOString().split("T")[0];
+      }
+
+      const measureName =
+        row.eval_measure_name ||
+        this.getMeasureNameFromLibrary(measureCode) ||
+        measureCode;
+
+      return {
+        patientId: row.patient_uuid,
+        memberId: row.member_id,
+        firstName: row.first_name || "",
+        lastName: row.last_name || "",
+        // patients.measure holds the full HEDIS year string (e.g. "HEDIS MY2025")
+        measure: row.measure || null,
+        measureCode,
+        measureName,
+        chartStatus,
+        stage,
+        dueDate,
+        priority: row.priority || null,
+        progress,
+      };
+    });
+
+    return {
+      data,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // USER QUEUE (FLAT PATIENT LIST) API
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  /**
+   * GET /dashboard/user-queue
+   *
+   * Flat patient queue for the authenticated user.
+   * One row per patient — NOT expanded by measure/evaluation.
+   *
+   * Key differences from getMyQueue:
+   *   - No join to hedis_evaluations → no measure_code, no measure_name
+   *   - "measure" field = patients.measure (HEDIS year string, e.g. "HEDIS MY2025")
+   *   - chartStatus derived purely from patients.stage + latest QA decision
+   *   - Progress approximated from stage (same STAGE_PROGRESS_MAP)
+   *
+   * Columns returned per row:
+   *   patientId, memberId, firstName, lastName,
+   *   measure (patients.measure — HEDIS year string),
+   *   stage, chartStatus, dueDate, priority, progress
+   *
+   * Sorted: due_date ASC NULLS LAST → priority DESC → last_name ASC
+   *
+   * @param {object} db       - tenant db client
+   * @param {string} schema   - tenant schema name
+   * @param {object} options  - { page, limit, filters, userId }
+   */
+  async getUserQueue(
+    db,
+    schema,
+    { page = 1, limit = 10, filters = {}, userId } = {}
+  ) {
+    if (!userId) {
+      return {
+        data: [],
+        pagination: { total: 0, page, limit, totalPages: 0 },
+      };
+    }
+
+    const offset = (page - 1) * limit;
+
+    const STAGE_PROGRESS_MAP = {
+      Unassigned: 0,
+      "Not Started": 0,
+      Assigned: 10,
+      "In Progress": 40,
+      Rework: 30,
+      "Pending QA": 60,
+      "QA Evidence Requested": 65,
+      "Ready for QA Review": 70,
+      "QA Returned": 50,
+      Completed: 100,
+      "QA Approved": 100,
+      "QA Passed": 100,
+      "Submission Ready": 100,
+    };
+
+    // userId is $1; filters start at $2
+    const filterValues = [userId];
+    const filterSql = this._buildPatientFilters(filters, filterValues, "p");
+
+    const limitIdx = filterValues.length + 1;
+    const offsetIdx = filterValues.length + 2;
+    const dataParams = [...filterValues, limit, offset];
+
+    // ── Data query ────────────────────────────────────────────────────────────
+    // Pure patients query — no hedis_evaluations join.
+    // LATERAL fetches the most-recent QA decision for this patient across all
+    // their evaluations, used only for "QA Pending" badge derivation.
+    const dataQuery = `
+      SELECT
+        p.id          AS patient_uuid,
+        p.patient_id  AS member_id,
+        p.first_name,
+        p.last_name,
+        p.measure,
+        p.stage,
+        p.due_date,
+        p.priority,
+        qm.qa_status
+      FROM ${schema}.patients p
+      LEFT JOIN LATERAL (
+        SELECT qd.qa_status
+        FROM ${schema}.hedis_qa_measure_decisions qd
+        WHERE qd.patient_id = p.id
+        ORDER BY qd.updated_at DESC
+        LIMIT 1
+      ) qm ON TRUE
+      WHERE (p.assigned_to = $1 OR p.abstractor_id = $1 OR p.qa_id = $1)
+        ${filterSql}
+      ORDER BY
+        p.due_date ASC NULLS LAST,
+        p.priority DESC,
+        p.last_name ASC
+      LIMIT $${limitIdx} OFFSET $${offsetIdx}
+    `;
+
+    // ── Count query ───────────────────────────────────────────────────────────
+    const countValues = [userId];
+    const countFilterSql = this._buildPatientFilters(filters, countValues, "p");
+
+    const countQuery = `
+      SELECT COUNT(*) AS total
+      FROM ${schema}.patients p
+      WHERE (p.assigned_to = $1 OR p.abstractor_id = $1 OR p.qa_id = $1)
+        ${countFilterSql}
+    `;
+
+    const [dataResult, countResult] = await Promise.all([
+      db.query(dataQuery, dataParams),
+      db.query(countQuery, countValues),
+    ]);
+
+    const rows = dataResult.rows || [];
+    const total = parseInt(countResult.rows[0]?.total || 0, 10);
+
+    const data = rows.map((row) => {
+      const stage = row.stage || "Not Started";
+      const qaStatus = row.qa_status || null;
+
+      // ── chartStatus badge ─────────────────────────────────────────────────
+      const isCompletedStage = [
+        "Completed",
+        "QA Approved",
+        "QA Passed",
+        "Submission Ready",
+      ].includes(stage);
+
+      let chartStatus;
+      if (isCompletedStage && qaStatus === "REQUEST_REVISION") {
+        chartStatus = "QA Pending";
+      } else if (isCompletedStage) {
+        chartStatus = "Completed";
+      } else if (
+        [
+          "In Progress",
+          "Rework",
+          "Pending QA",
+          "Ready for QA Review",
+          "QA Evidence Requested",
+          "QA Returned",
+        ].includes(stage)
+      ) {
+        chartStatus = "In Progress";
+      } else {
+        chartStatus = "Not Started";
+      }
+
+      // ── Progress ──────────────────────────────────────────────────────────
+      const progress =
+        qaStatus === "QA_PASS" ? 100 : (STAGE_PROGRESS_MAP[stage] ?? 0);
+
+      // ── Due date (ISO string or null) ─────────────────────────────────────
+      const dueDate = row.due_date
+        ? new Date(row.due_date).toISOString().split("T")[0]
+        : null;
+
+      return {
+        patientId: row.patient_uuid,
+        memberId: row.member_id,
+        firstName: row.first_name || "",
+        lastName: row.last_name || "",
+        // patients.measure = full HEDIS year string, e.g. "HEDIS MY2025"
+        measure: row.measure || null,
+        stage,
+        chartStatus,
+        dueDate,
+        priority: row.priority || null,
+        progress,
+      };
+    });
+
+    return {
+      data,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
     };
   }
 }
 
 module.exports = new DashboardAnalyticsService();
+
