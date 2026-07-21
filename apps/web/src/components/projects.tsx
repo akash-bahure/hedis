@@ -63,6 +63,7 @@ import { useProjectAccess } from "@/hooks/useProjectAccess";
 import {
   getApiProjectsQueryKey,
   useGetApiClients,
+  useGetApiProjectsIdTeamAllocation,
   useGetApiProjects,
   useGetApiProjectsId,
   useGetApiProjectsStats,
@@ -1350,382 +1351,332 @@ function SLATab() {
   );
 }
 
-/* Team Allocation */
-function TeamTab({ p }: { p: Project }) {
-  const [pm, setPm] = useState(p.pm);
-  const [selectedCoders, setSelectedCoders] = useState(
-    TEAM_MEMBERS.coders.slice(0, p.coders)
-  );
-  const [selectedAuditors, setSelectedAuditors] = useState(
-    TEAM_MEMBERS.auditors.slice(0, p.auditors)
-  );
+/* ─── TEAM TAB ───────────────────────────────────────────────── */
+function TeamTab({ projectId }: { projectId: string }) {
+  const {
+    data: allocationResponse,
+    isLoading,
+    error,
+  } = useGetApiProjectsIdTeamAllocation(projectId);
 
-  const initials = (name: string) =>
-    name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .slice(0, 2);
+  const allocation = allocationResponse?.data || {};
 
-  const Avatar = ({
-    name,
-    role,
-    onRemove,
-  }: {
-    name: string;
-    role?: string;
-    onRemove?: () => void;
-  }) => (
-    <div className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/20 border border-border group hover:border-primary/30 transition-colors">
-      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">
-        {initials(name)}
+  const abstractors = allocation.abstractors || [];
+  const qaUsers = allocation.qa_users || [];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-[11px] font-semibold text-foreground truncate">
-          {name}
-        </div>
-        {role && (
-          <div className="text-[10px] text-muted-foreground">{role}</div>
-        )}
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-10 text-center text-red-500 border border-red-200 rounded-xl">
+        Failed to load team allocation. Please try again.
       </div>
-      {onRemove && (
-        <button
-          onClick={onRemove}
-          className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded flex items-center justify-center text-muted-foreground hover:text-red-500 transition-all"
-        >
-          <XCircle className="w-3.5 h-3.5" />
-        </button>
-      )}
-    </div>
-  );
+    );
+  }
 
   return (
-    <div className="space-y-5">
-      <div className="grid grid-cols-3 gap-5">
-        {/* Project Manager */}
+    <div className="space-y-6">
+      {/* Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-5">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex justify-between items-start">
             <div>
-              <h4 className="text-sm font-bold text-foreground">
-                Project Manager
-              </h4>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                1 PM per project
-              </p>
+              <div className="text-sm text-muted-foreground">Abstractors</div>
+              <div className="text-3xl font-bold text-primary mt-1">
+                {allocation.total_abstractors || abstractors.length}
+              </div>
             </div>
-            <UserCog className="w-4 h-4 text-primary" />
-          </div>
-          <div className="mb-4">
-            <Avatar name={pm} role="Project Manager" />
-          </div>
-          <div className="mt-3">
-            <label className="text-[11px] text-muted-foreground mb-1.5 block">
-              Change PM
-            </label>
-            <select
-              value={pm}
-              onChange={(e) => setPm(e.target.value)}
-              className="w-full text-xs border border-border rounded-lg px-2.5 py-1.5 bg-input-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-            >
-              {TEAM_MEMBERS.pms.map((m) => (
-                <option key={m}>{m}</option>
-              ))}
-            </select>
+            <Users className="w-8 h-8 text-primary/60" />
           </div>
         </Card>
 
-        {/* Coders */}
         <Card className="p-5">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex justify-between items-start">
             <div>
-              <h4 className="text-sm font-bold text-foreground">Coders</h4>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                {selectedCoders.length} assigned
-              </p>
+              <div className="text-sm text-muted-foreground">QA Users</div>
+              <div className="text-3xl font-bold text-violet-600 mt-1">
+                {allocation.total_qa || qaUsers.length}
+              </div>
             </div>
-            <Users className="w-4 h-4 text-primary" />
+            <ShieldCheck className="w-8 h-8 text-violet-600/60" />
           </div>
-          <div className="space-y-1.5 max-h-52 overflow-y-auto mb-3">
-            {selectedCoders.map((c) => (
-              <Avatar
-                key={c}
-                name={c}
-                role="Medical Coder"
-                onRemove={() =>
-                  setSelectedCoders(selectedCoders.filter((x) => x !== c))
-                }
-              />
-            ))}
-          </div>
-          <select
-            defaultValue=""
-            onChange={(e) => {
-              if (e.target.value && !selectedCoders.includes(e.target.value))
-                setSelectedCoders([...selectedCoders, e.target.value]);
-              e.target.value = "";
-            }}
-            className="w-full text-xs border border-dashed border-primary/50 rounded-lg px-2.5 py-1.5 bg-primary/5 text-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
-          >
-            <option value="">+ Add Coder</option>
-            {TEAM_MEMBERS.coders
-              .filter((c) => !selectedCoders.includes(c))
-              .map((c) => (
-                <option key={c}>{c}</option>
-              ))}
-          </select>
         </Card>
 
-        {/* Auditors */}
         <Card className="p-5">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex justify-between items-start">
             <div>
-              <h4 className="text-sm font-bold text-foreground">Auditors</h4>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                {selectedAuditors.length} assigned
-              </p>
+              <div className="text-sm text-muted-foreground">
+                Total Assigned
+              </div>
+              <div className="text-3xl font-bold text-foreground mt-1">
+                {(allocation.total_abstractors || 0) +
+                  (allocation.total_qa || 0)}
+              </div>
             </div>
-            <UserCheck className="w-4 h-4 text-primary" />
+            <UserCheck className="w-8 h-8 text-foreground/60" />
           </div>
-          <div className="space-y-1.5 max-h-52 overflow-y-auto mb-3">
-            {selectedAuditors.map((a) => (
-              <Avatar
-                key={a}
-                name={a}
-                role="Clinical Auditor"
-                onRemove={() =>
-                  setSelectedAuditors(selectedAuditors.filter((x) => x !== a))
-                }
-              />
-            ))}
-          </div>
-          <select
-            defaultValue=""
-            onChange={(e) => {
-              if (e.target.value && !selectedAuditors.includes(e.target.value))
-                setSelectedAuditors([...selectedAuditors, e.target.value]);
-              e.target.value = "";
-            }}
-            className="w-full text-xs border border-dashed border-primary/50 rounded-lg px-2.5 py-1.5 bg-primary/5 text-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
-          >
-            <option value="">+ Add Auditor</option>
-            {TEAM_MEMBERS.auditors
-              .filter((a) => !selectedAuditors.includes(a))
-              .map((a) => (
-                <option key={a}>{a}</option>
-              ))}
-          </select>
         </Card>
       </div>
 
-      {/* Capacity Overview */}
-      <Card className="p-5">
-        <h4 className="text-sm font-bold text-foreground mb-4">
-          Team Capacity Overview
-        </h4>
-        <div className="grid grid-cols-3 gap-4">
-          {[
-            {
-              role: "Coders",
-              count: selectedCoders.length,
-              capacity: selectedCoders.length * 45,
-              utilization: 78,
-              color: C.primary,
-            },
-            {
-              role: "Auditors",
-              count: selectedAuditors.length,
-              capacity: selectedAuditors.length * 30,
-              utilization: 82,
-              color: C.cyan,
-            },
-            {
-              role: "Rework Pool",
-              count: Math.ceil(selectedCoders.length * 0.3),
-              capacity: Math.ceil(selectedCoders.length * 0.3) * 20,
-              utilization: 45,
-              color: C.amber,
-            },
-          ].map((r) => (
-            <div
-              key={r.role}
-              className="p-4 rounded-xl bg-muted/20 border border-border"
-            >
-              <div className="flex justify-between mb-2">
-                <span className="text-xs font-semibold text-foreground">
-                  {r.role}
-                </span>
-                <span className="text-xs font-bold text-foreground">
-                  {r.count} members
-                </span>
-              </div>
-              <div className="text-[10px] text-muted-foreground mb-2">
-                Daily capacity: {r.capacity} charts
-              </div>
-              <ProgressBar pct={r.utilization} color={r.color} />
-              <div className="text-[10px] text-muted-foreground mt-1">
-                {r.utilization}% utilized
-              </div>
+      {/* Abstractors List */}
+      <Card className="overflow-hidden">
+        <div className="px-5 py-3 bg-muted/30 border-b border-border flex items-center justify-between">
+          <div className="font-semibold flex items-center gap-2">
+            <UserCog className="w-4 h-4" /> Abstractors
+          </div>
+          <span className="text-xs text-muted-foreground">
+            {abstractors.length} members
+          </span>
+        </div>
+        <div className="divide-y divide-border">
+          {abstractors.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">
+              No abstractors assigned to this project yet.
             </div>
-          ))}
+          ) : (
+            abstractors.map((member: any, idx: number) => (
+              <div
+                key={idx}
+                className="px-5 py-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                    <UserCog className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-foreground">
+                      {member.user_name}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {member.role}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-mono text-sm font-bold text-foreground">
+                    {member.assigned_charts}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground">
+                    charts
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </Card>
+
+      {/* QA Users List */}
+      <Card className="overflow-hidden">
+        <div className="px-5 py-3 bg-muted/30 border-b border-border flex items-center justify-between">
+          <div className="font-semibold flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4" /> Quality Assurance (QA)
+          </div>
+          <span className="text-xs text-muted-foreground">
+            {qaUsers.length} members
+          </span>
+        </div>
+        <div className="divide-y divide-border">
+          {qaUsers.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">
+              No QA users assigned to this project yet.
+            </div>
+          ) : (
+            qaUsers.map((member: any, idx: number) => (
+              <div
+                key={idx}
+                className="px-5 py-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-violet-100 flex items-center justify-center">
+                    <ShieldCheck className="w-5 h-5 text-violet-600" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-foreground">
+                      {member.user_name}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {member.role}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-mono text-sm font-bold text-foreground">
+                    {member.assigned_charts}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground">
+                    charts
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </Card>
     </div>
   );
 }
 
-/* Allocation Rules */
-function AllocationTab() {
-  const [method, setMethod] = useState("round-robin");
-  const [priority, setPriority] = useState("sla");
+/* ─── TEAM ALLOCATION TAB ───────────────────────────────────── */
+function AllocationTab({ projectId }: { projectId: string }) {
+  const {
+    data: allocationResponse,
+    isLoading,
+    error,
+  } = useGetApiProjectsIdTeamAllocation(projectId);
+
+  const allocation = allocationResponse?.data || {};
+
+  const abstractors = allocation.abstractors || [];
+  const qaUsers = allocation.qa_users || [];
+
+  if (isLoading) {
+    return (
+      <div className="p-10 text-center text-muted-foreground">
+        Loading team allocation...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-10 text-center text-red-500">
+        Failed to load team allocation.
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-5">
-      <div className="grid grid-cols-2 gap-5">
+    <div className="space-y-6">
+      {/* Summary Stats */}
+      <div className="grid grid-cols-2 gap-4">
         <Card className="p-5">
-          <h4 className="text-sm font-bold text-foreground mb-1">
-            Assignment Method
-          </h4>
-          <p className="text-[11px] text-muted-foreground mb-4">
-            How charts are distributed among the team
-          </p>
-          <div className="space-y-2">
-            {[
-              {
-                id: "round-robin",
-                label: "Round Robin",
-                sub: "Distribute charts evenly across all coders in rotation",
-              },
-              {
-                id: "load-balance",
-                label: "Load Balancing",
-                sub: "Assign charts based on current coder workload and capacity",
-              },
-              {
-                id: "skill-match",
-                label: "Skill-Based Matching",
-                sub: "Route charts to coders with matching specialty expertise",
-              },
-              {
-                id: "manual",
-                label: "Manual Assignment",
-                sub: "PM manually assigns charts to specific coders",
-              },
-            ].map((opt) => (
-              <button
-                key={opt.id}
-                onClick={() => setMethod(opt.id)}
-                className={`w-full text-left p-3 rounded-lg border transition-colors ${method === opt.id ? "border-primary bg-primary/5" : "border-border hover:border-border"}`}
-              >
-                <div className="flex items-start gap-2.5">
-                  <div
-                    className={`w-3.5 h-3.5 mt-0.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${method === opt.id ? "border-primary" : "border-muted-foreground"}`}
-                  >
-                    {method === opt.id && (
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    )}
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-bold text-foreground">
-                      {opt.label}
-                    </div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5">
-                      {opt.sub}
-                    </div>
-                  </div>
-                </div>
-              </button>
-            ))}
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <div className="text-sm font-bold text-foreground">
+                Abstractors
+              </div>
+              <div className="text-2xl font-bold text-primary mt-1">
+                {allocation.total_abstractors || abstractors.length}
+              </div>
+            </div>
+            <Users className="w-8 h-8 text-primary/70" />
+          </div>
+          <div className="text-xs text-muted-foreground">
+            Assigned to project
           </div>
         </Card>
 
-        <div className="space-y-4">
-          <Card className="p-5">
-            <h4 className="text-sm font-bold text-foreground mb-1">
-              Priority Rules
-            </h4>
-            <p className="text-[11px] text-muted-foreground mb-4">
-              How charts are prioritized in the queue
-            </p>
-            <div className="space-y-2">
-              {[
-                {
-                  id: "sla",
-                  label: "SLA Due Date",
-                  sub: "Prioritize charts closest to breach",
-                },
-                {
-                  id: "received",
-                  label: "Date Received",
-                  sub: "FIFO — oldest charts first",
-                },
-                {
-                  id: "value",
-                  label: "Chart Value",
-                  sub: "Higher DRG weight / RVU charts first",
-                },
-                {
-                  id: "custom",
-                  label: "Custom Rules",
-                  sub: "Define custom priority logic",
-                },
-              ].map((opt) => (
-                <button
-                  key={opt.id}
-                  onClick={() => setPriority(opt.id)}
-                  className={`w-full text-left p-3 rounded-lg border transition-colors ${priority === opt.id ? "border-primary bg-primary/5" : "border-border hover:border-border"}`}
-                >
-                  <div className="flex items-start gap-2.5">
-                    <div
-                      className={`w-3.5 h-3.5 mt-0.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${priority === opt.id ? "border-primary" : "border-muted-foreground"}`}
-                    >
-                      {priority === opt.id && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      )}
+        <Card className="p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <div className="text-sm font-bold text-foreground">QA Users</div>
+              <div className="text-2xl font-bold text-violet-600 mt-1">
+                {allocation.total_qa || qaUsers.length}
+              </div>
+            </div>
+            <ShieldCheck className="w-8 h-8 text-violet-600/70" />
+          </div>
+          <div className="text-xs text-muted-foreground">Quality Assurance</div>
+        </Card>
+      </div>
+
+      {/* Abstractors Section */}
+      <Card className="overflow-hidden">
+        <div className="px-5 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
+          <div className="font-semibold text-foreground">Abstractors</div>
+          <div className="text-xs text-muted-foreground">
+            {abstractors.length} members
+          </div>
+        </div>
+        <div className="divide-y divide-border">
+          {abstractors.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">
+              No abstractors assigned yet.
+            </div>
+          ) : (
+            abstractors.map((member: any, idx: number) => (
+              <div
+                key={idx}
+                className="flex items-center justify-between px-5 py-3 hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <UserCog className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-foreground">
+                      {member.user_name}
                     </div>
-                    <div>
-                      <div className="text-[11px] font-bold text-foreground">
-                        {opt.label}
-                      </div>
-                      <div className="text-[10px] text-muted-foreground">
-                        {opt.sub}
-                      </div>
+                    <div className="text-xs text-muted-foreground">
+                      {member.role}
                     </div>
                   </div>
-                </button>
-              ))}
-            </div>
-          </Card>
-
-          <Card className="p-5">
-            <h4 className="text-sm font-bold text-foreground mb-3">
-              Chart Cap Per Coder
-            </h4>
-            <div className="space-y-3">
-              {[
-                { label: "Daily Cap", value: "50 charts" },
-                { label: "Weekly Cap", value: "220 charts" },
-                { label: "Max WIP", value: "8 charts" },
-              ].map((r) => (
-                <div
-                  key={r.label}
-                  className="flex items-center justify-between py-2 border-b border-border last:border-0"
-                >
-                  <span className="text-[11px] text-muted-foreground">
-                    {r.label}
-                  </span>
-                  <span className="text-xs font-bold text-foreground">
-                    {r.value}
-                  </span>
                 </div>
-              ))}
-            </div>
-          </Card>
+                <div className="text-right">
+                  <div className="text-sm font-bold text-foreground">
+                    {member.assigned_charts} charts
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
-      </div>
+      </Card>
+
+      {/* QA Users Section */}
+      <Card className="overflow-hidden">
+        <div className="px-5 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
+          <div className="font-semibold text-foreground">
+            Quality Assurance (QA)
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {qaUsers.length} members
+          </div>
+        </div>
+        <div className="divide-y divide-border">
+          {qaUsers.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">
+              No QA users assigned yet.
+            </div>
+          ) : (
+            qaUsers.map((member: any, idx: number) => (
+              <div
+                key={idx}
+                className="flex items-center justify-between px-5 py-3 hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center">
+                    <ShieldCheck className="w-4 h-4 text-violet-600" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-foreground">
+                      {member.user_name}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {member.role}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-bold text-foreground">
+                    {member.assigned_charts} charts
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </Card>
     </div>
   );
 }
-
 /* Performance Metrics */
 function PerformanceTab({ p }: { p: Project }) {
   return (
@@ -2335,14 +2286,14 @@ function ProjectDetail({
 
   const TABS: { id: TabId; label: string }[] = [
     { id: "overview", label: "Overview" },
-    { id: "scope", label: "Scope Setup" },
-    { id: "workflow", label: "Workflow Setup" },
-    { id: "sla", label: "SLA Configuration" },
+    // { id: "scope", label: "Scope Setup" },
+    // { id: "workflow", label: "Workflow Setup" },
+    // { id: "sla", label: "SLA Configuration" },
     { id: "team", label: "Team Allocation" },
-    { id: "allocation", label: "Allocation Rules" },
-    { id: "performance", label: "Performance Metrics" },
-    { id: "exceptions", label: "Exceptions" },
-    { id: "compliance", label: "Compliance" },
+    // { id: "allocation", label: "Allocation Rules" },
+    // { id: "performance", label: "Performance Metrics" },
+    // { id: "exceptions", label: "Exceptions" },
+    // { id: "compliance", label: "Compliance" },
   ];
   // Fetch detailed project data
   const { data: detailResponse, isLoading: detailLoading } =
@@ -2463,8 +2414,10 @@ function ProjectDetail({
           {activeTab === "scope" && <ScopeTab />}
           {activeTab === "workflow" && <WorkflowTab />}
           {activeTab === "sla" && <SLATab />}
-          {activeTab === "team" && <TeamTab p={project} />}
-          {activeTab === "allocation" && <AllocationTab />}
+          {activeTab === "team" && <TeamTab projectId={project.id} />}
+          {activeTab === "allocation" && (
+            <AllocationTab projectId={project.id} />
+          )}
           {activeTab === "performance" && <PerformanceTab p={project} />}
           {activeTab === "exceptions" && <ExceptionsTab />}
           {activeTab === "compliance" && <ComplianceTab />}

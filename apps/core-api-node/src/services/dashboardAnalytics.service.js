@@ -156,8 +156,8 @@ class DashboardAnalyticsService {
   async getAbstractionVelocity(db, schema, { days = 14 } = {}) {
     const targetValue = parseInt(
       process.env.DASHBOARD_TARGET_CHARTS_PER_DAY ||
-      process.env.DASHBOARD_TARGET_CHARTS ||
-      "40",
+        process.env.DASHBOARD_TARGET_CHARTS ||
+        "40",
       10
     );
 
@@ -843,7 +843,14 @@ class DashboardAnalyticsService {
       "QA Passed",
       "Submission Ready",
     ];
-    const COMPLETED_EVAL_STATUSES = ["Compliant", "Complete", "Completed", "Approved", "QA Pass", "Pass"];
+    const COMPLETED_EVAL_STATUSES = [
+      "Compliant",
+      "Complete",
+      "Completed",
+      "Approved",
+      "QA Pass",
+      "Pass",
+    ];
 
     // Build filter fragments — both queries share the same patient-level filters
     const dataValues = [];
@@ -1012,6 +1019,7 @@ class DashboardAnalyticsService {
       "QA Evidence Requested": 65,
       "Ready for QA Review": 70,
       "QA Returned": 50,
+      "QA Failed": 50,
       Completed: 100,
       "QA Approved": 100,
       "QA Passed": 100,
@@ -1119,6 +1127,7 @@ class DashboardAnalyticsService {
           "Pending QA",
           "Ready for QA Review",
           "QA Evidence Requested",
+          "QA Failed",
           "QA Returned",
         ].includes(stage)
       ) {
@@ -1230,6 +1239,7 @@ class DashboardAnalyticsService {
       "QA Evidence Requested": 65,
       "Ready for QA Review": 70,
       "QA Returned": 50,
+      "QA Failed": 50,
       Completed: 100,
       "QA Approved": 100,
       "QA Passed": 100,
@@ -1318,6 +1328,7 @@ class DashboardAnalyticsService {
           "Rework",
           "Pending QA",
           "Ready for QA Review",
+          "QA Failed",
           "QA Evidence Requested",
           "QA Returned",
         ].includes(stage)
@@ -1364,4 +1375,3 @@ class DashboardAnalyticsService {
 }
 
 module.exports = new DashboardAnalyticsService();
-
