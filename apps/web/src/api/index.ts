@@ -73,6 +73,10 @@ export type { PostApiClinicalTimelineEvidenceEventidAcceptMutationKey } from "./
 export type { PostApiClinicalTimelineEvidenceEventidRejectMutationKey } from "./hooks/Clinical TimelineHooks/usePostApiClinicalTimelineEvidenceEventidReject.ts";
 export type { PostApiHedisClinicalTimelineReviewMutationKey } from "./hooks/Clinical TimelineHooks/usePostApiHedisClinicalTimelineReview.ts";
 export type { PutApiClinicalTimelineEvidenceEventidMutationKey } from "./hooks/Clinical TimelineHooks/usePutApiClinicalTimelineEvidenceEventid.ts";
+export type { GetApiDashboardAbstractionDeadlinesQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardAbstractionDeadlines.ts";
+export type { GetApiDashboardAbstractionDeadlinesInfiniteQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardAbstractionDeadlinesInfinite.ts";
+export type { GetApiDashboardAbstractionDeadlinesSuspenseQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardAbstractionDeadlinesSuspense.ts";
+export type { GetApiDashboardAbstractionDeadlinesSuspenseInfiniteQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardAbstractionDeadlinesSuspenseInfinite.ts";
 export type { GetApiDashboardAbstractionVelocityQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardAbstractionVelocity.ts";
 export type { GetApiDashboardAbstractionVelocitySuspenseQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardAbstractionVelocitySuspense.ts";
 export type { GetApiDashboardAbstractionVelocitySuspenseInfiniteQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardAbstractionVelocitySuspenseInfinite.ts";
@@ -80,6 +84,10 @@ export type { GetApiDashboardMeasureRatesQueryKey } from "./hooks/Dashboard Anal
 export type { GetApiDashboardMeasureRatesInfiniteQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardMeasureRatesInfinite.ts";
 export type { GetApiDashboardMeasureRatesSuspenseQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardMeasureRatesSuspense.ts";
 export type { GetApiDashboardMeasureRatesSuspenseInfiniteQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardMeasureRatesSuspenseInfinite.ts";
+export type { GetApiDashboardMyQueueQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardMyQueue.ts";
+export type { GetApiDashboardMyQueueInfiniteQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardMyQueueInfinite.ts";
+export type { GetApiDashboardMyQueueSuspenseQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardMyQueueSuspense.ts";
+export type { GetApiDashboardMyQueueSuspenseInfiniteQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardMyQueueSuspenseInfinite.ts";
 export type { GetApiDashboardQueueByDomainQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardQueueByDomain.ts";
 export type { GetApiDashboardQueueByDomainSuspenseQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardQueueByDomainSuspense.ts";
 export type { GetApiDashboardQueueByDomainSuspenseInfiniteQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardQueueByDomainSuspenseInfinite.ts";
@@ -90,15 +98,10 @@ export type { GetApiDashboardQueueByMeasureSuspenseInfiniteQueryKey } from "./ho
 export type { GetApiDashboardStatsQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardStats.ts";
 export type { GetApiDashboardStatsSuspenseQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardStatsSuspense.ts";
 export type { GetApiDashboardStatsSuspenseInfiniteQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardStatsSuspenseInfinite.ts";
-export type { GetApiDashboardDeadlinesQueryKey } from "./hooks/DashboardHooks/useGetApiDashboardDeadlines.ts";
-export type { GetApiDashboardDeadlinesSuspenseQueryKey } from "./hooks/DashboardHooks/useGetApiDashboardDeadlinesSuspense.ts";
-export type { GetApiDashboardDeadlinesSuspenseInfiniteQueryKey } from "./hooks/DashboardHooks/useGetApiDashboardDeadlinesSuspenseInfinite.ts";
-export type { GetApiDashboardMyQueueQueryKey } from "./hooks/DashboardHooks/useGetApiDashboardMyQueue.ts";
-export type { GetApiDashboardMyQueueSuspenseQueryKey } from "./hooks/DashboardHooks/useGetApiDashboardMyQueueSuspense.ts";
-export type { GetApiDashboardMyQueueSuspenseInfiniteQueryKey } from "./hooks/DashboardHooks/useGetApiDashboardMyQueueSuspenseInfinite.ts";
-export type { GetApiDashboardSummaryQueryKey } from "./hooks/DashboardHooks/useGetApiDashboardSummary.ts";
-export type { GetApiDashboardSummarySuspenseQueryKey } from "./hooks/DashboardHooks/useGetApiDashboardSummarySuspense.ts";
-export type { GetApiDashboardSummarySuspenseInfiniteQueryKey } from "./hooks/DashboardHooks/useGetApiDashboardSummarySuspenseInfinite.ts";
+export type { GetApiDashboardUserQueueQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardUserQueue.ts";
+export type { GetApiDashboardUserQueueInfiniteQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardUserQueueInfinite.ts";
+export type { GetApiDashboardUserQueueSuspenseQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardUserQueueSuspense.ts";
+export type { GetApiDashboardUserQueueSuspenseInfiniteQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardUserQueueSuspenseInfinite.ts";
 export type { GetApiDepartmentsQueryKey } from "./hooks/DepartmentsHooks/useGetApiDepartments.ts";
 export type { GetApiDepartmentsSuspenseQueryKey } from "./hooks/DepartmentsHooks/useGetApiDepartmentsSuspense.ts";
 export type { GetApiDepartmentsSuspenseInfiniteQueryKey } from "./hooks/DepartmentsHooks/useGetApiDepartmentsSuspenseInfinite.ts";
@@ -230,6 +233,9 @@ export type { GetApiProjectsAccessAllSuspenseInfiniteQueryKey } from "./hooks/Pr
 export type { GetApiProjectsIdQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsId.ts";
 export type { GetApiProjectsIdSuspenseQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsIdSuspense.ts";
 export type { GetApiProjectsIdSuspenseInfiniteQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsIdSuspenseInfinite.ts";
+export type { GetApiProjectsIdTeamAllocationQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsIdTeamAllocation.ts";
+export type { GetApiProjectsIdTeamAllocationSuspenseQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsIdTeamAllocationSuspense.ts";
+export type { GetApiProjectsIdTeamAllocationSuspenseInfiniteQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsIdTeamAllocationSuspenseInfinite.ts";
 export type { GetApiProjectsInfiniteQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsInfinite.ts";
 export type { GetApiProjectsStatsQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsStats.ts";
 export type { GetApiProjectsStatsSuspenseQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsStatsSuspense.ts";
@@ -531,6 +537,16 @@ export type {
   GetApiClinicalTimelineEvidenceEventidReviewEvidenceQueryResponse,
 } from "./types/GetApiClinicalTimelineEvidenceEventidReviewEvidence.ts";
 export type {
+  GetApiDashboardAbstractionDeadlines200,
+  GetApiDashboardAbstractionDeadlines400,
+  GetApiDashboardAbstractionDeadlines401,
+  GetApiDashboardAbstractionDeadlines500,
+  GetApiDashboardAbstractionDeadlinesQuery,
+  GetApiDashboardAbstractionDeadlinesQueryParams,
+  GetApiDashboardAbstractionDeadlinesQueryParamsMeasurementYearEnumKey,
+  GetApiDashboardAbstractionDeadlinesQueryResponse,
+} from "./types/GetApiDashboardAbstractionDeadlines.ts";
+export type {
   GetApiDashboardAbstractionVelocity200,
   GetApiDashboardAbstractionVelocity400,
   GetApiDashboardAbstractionVelocity401,
@@ -540,13 +556,6 @@ export type {
   GetApiDashboardAbstractionVelocityQueryParamsDaysEnumKey,
   GetApiDashboardAbstractionVelocityQueryResponse,
 } from "./types/GetApiDashboardAbstractionVelocity.ts";
-export type {
-  GetApiDashboardDeadlines200,
-  GetApiDashboardDeadlinesQuery,
-  GetApiDashboardDeadlinesQueryParams,
-  GetApiDashboardDeadlinesQueryParamsMeasurementYearEnumKey,
-  GetApiDashboardDeadlinesQueryResponse,
-} from "./types/GetApiDashboardDeadlines.ts";
 export type {
   DataBenchmarkStatusEnumKey,
   GetApiDashboardMeasureRates200,
@@ -559,7 +568,11 @@ export type {
   GetApiDashboardMeasureRatesQueryResponse,
 } from "./types/GetApiDashboardMeasureRates.ts";
 export type {
+  DataChartStatusEnumKey,
   GetApiDashboardMyQueue200,
+  GetApiDashboardMyQueue400,
+  GetApiDashboardMyQueue401,
+  GetApiDashboardMyQueue500,
   GetApiDashboardMyQueueQuery,
   GetApiDashboardMyQueueQueryParams,
   GetApiDashboardMyQueueQueryParamsMeasurementYearEnumKey,
@@ -599,10 +612,16 @@ export type {
   SlaComplianceTrendTypeEnumKey,
 } from "./types/GetApiDashboardStats.ts";
 export type {
-  GetApiDashboardSummary200,
-  GetApiDashboardSummaryQuery,
-  GetApiDashboardSummaryQueryResponse,
-} from "./types/GetApiDashboardSummary.ts";
+  DataChartStatusEnum2Key,
+  GetApiDashboardUserQueue200,
+  GetApiDashboardUserQueue400,
+  GetApiDashboardUserQueue401,
+  GetApiDashboardUserQueue500,
+  GetApiDashboardUserQueueQuery,
+  GetApiDashboardUserQueueQueryParams,
+  GetApiDashboardUserQueueQueryParamsMeasurementYearEnumKey,
+  GetApiDashboardUserQueueQueryResponse,
+} from "./types/GetApiDashboardUserQueue.ts";
 export type {
   GetApiDepartments200,
   GetApiDepartments500,
@@ -889,6 +908,14 @@ export type {
   GetApiProjectsIdQuery,
   GetApiProjectsIdQueryResponse,
 } from "./types/GetApiProjectsId.ts";
+export type {
+  GetApiProjectsIdTeamAllocation200,
+  GetApiProjectsIdTeamAllocation404,
+  GetApiProjectsIdTeamAllocation500,
+  GetApiProjectsIdTeamAllocationPathParams,
+  GetApiProjectsIdTeamAllocationQuery,
+  GetApiProjectsIdTeamAllocationQueryResponse,
+} from "./types/GetApiProjectsIdTeamAllocation.ts";
 export type {
   GetApiProjectsStats200,
   GetApiProjectsStats500,
@@ -1623,14 +1650,14 @@ export { getApiClientsV2 } from "./clients/getApiClientsV2.ts";
 export { getApiClientsV2Id } from "./clients/getApiClientsV2Id.ts";
 export { getApiClientsV2Stats } from "./clients/getApiClientsV2Stats.ts";
 export { getApiClinicalTimelineEvidenceEventidReviewEvidence } from "./clients/getApiClinicalTimelineEvidenceEventidReviewEvidence.ts";
+export { getApiDashboardAbstractionDeadlines } from "./clients/getApiDashboardAbstractionDeadlines.ts";
 export { getApiDashboardAbstractionVelocity } from "./clients/getApiDashboardAbstractionVelocity.ts";
-export { getApiDashboardDeadlines } from "./clients/getApiDashboardDeadlines.ts";
 export { getApiDashboardMeasureRates } from "./clients/getApiDashboardMeasureRates.ts";
 export { getApiDashboardMyQueue } from "./clients/getApiDashboardMyQueue.ts";
 export { getApiDashboardQueueByDomain } from "./clients/getApiDashboardQueueByDomain.ts";
 export { getApiDashboardQueueByMeasure } from "./clients/getApiDashboardQueueByMeasure.ts";
 export { getApiDashboardStats } from "./clients/getApiDashboardStats.ts";
-export { getApiDashboardSummary } from "./clients/getApiDashboardSummary.ts";
+export { getApiDashboardUserQueue } from "./clients/getApiDashboardUserQueue.ts";
 export { getApiDepartments } from "./clients/getApiDepartments.ts";
 export { getApiHedisAbstractorDraftPatientid } from "./clients/getApiHedisAbstractorDraftPatientid.ts";
 export { getApiHedisAbstractorMeasuresPatientid } from "./clients/getApiHedisAbstractorMeasuresPatientid.ts";
@@ -1667,6 +1694,7 @@ export { getApiProfileMe } from "./clients/getApiProfileMe.ts";
 export { getApiProjects } from "./clients/getApiProjects.ts";
 export { getApiProjectsAccessAll } from "./clients/getApiProjectsAccessAll.ts";
 export { getApiProjectsId } from "./clients/getApiProjectsId.ts";
+export { getApiProjectsIdTeamAllocation } from "./clients/getApiProjectsIdTeamAllocation.ts";
 export { getApiProjectsStats } from "./clients/getApiProjectsStats.ts";
 export { getApiRecentActivity } from "./clients/getApiRecentActivity.ts";
 export { getApiReportsAnalyticsAbstractorProductivity } from "./clients/getApiReportsAnalyticsAbstractorProductivity.ts";
@@ -1979,6 +2007,18 @@ export { usePostApiHedisClinicalTimelineReview } from "./hooks/Clinical Timeline
 export { putApiClinicalTimelineEvidenceEventidMutationKey } from "./hooks/Clinical TimelineHooks/usePutApiClinicalTimelineEvidenceEventid.ts";
 export { putApiClinicalTimelineEvidenceEventidMutationOptions } from "./hooks/Clinical TimelineHooks/usePutApiClinicalTimelineEvidenceEventid.ts";
 export { usePutApiClinicalTimelineEvidenceEventid } from "./hooks/Clinical TimelineHooks/usePutApiClinicalTimelineEvidenceEventid.ts";
+export { getApiDashboardAbstractionDeadlinesQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardAbstractionDeadlines.ts";
+export { getApiDashboardAbstractionDeadlinesQueryOptions } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardAbstractionDeadlines.ts";
+export { useGetApiDashboardAbstractionDeadlines } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardAbstractionDeadlines.ts";
+export { getApiDashboardAbstractionDeadlinesInfiniteQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardAbstractionDeadlinesInfinite.ts";
+export { getApiDashboardAbstractionDeadlinesInfiniteQueryOptions } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardAbstractionDeadlinesInfinite.ts";
+export { useGetApiDashboardAbstractionDeadlinesInfinite } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardAbstractionDeadlinesInfinite.ts";
+export { getApiDashboardAbstractionDeadlinesSuspenseQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardAbstractionDeadlinesSuspense.ts";
+export { getApiDashboardAbstractionDeadlinesSuspenseQueryOptions } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardAbstractionDeadlinesSuspense.ts";
+export { useGetApiDashboardAbstractionDeadlinesSuspense } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardAbstractionDeadlinesSuspense.ts";
+export { getApiDashboardAbstractionDeadlinesSuspenseInfiniteQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardAbstractionDeadlinesSuspenseInfinite.ts";
+export { getApiDashboardAbstractionDeadlinesSuspenseInfiniteQueryOptions } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardAbstractionDeadlinesSuspenseInfinite.ts";
+export { useGetApiDashboardAbstractionDeadlinesSuspenseInfinite } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardAbstractionDeadlinesSuspenseInfinite.ts";
 export { getApiDashboardAbstractionVelocityQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardAbstractionVelocity.ts";
 export { getApiDashboardAbstractionVelocityQueryOptions } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardAbstractionVelocity.ts";
 export { useGetApiDashboardAbstractionVelocity } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardAbstractionVelocity.ts";
@@ -2000,6 +2040,18 @@ export { useGetApiDashboardMeasureRatesSuspense } from "./hooks/Dashboard Analyt
 export { getApiDashboardMeasureRatesSuspenseInfiniteQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardMeasureRatesSuspenseInfinite.ts";
 export { getApiDashboardMeasureRatesSuspenseInfiniteQueryOptions } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardMeasureRatesSuspenseInfinite.ts";
 export { useGetApiDashboardMeasureRatesSuspenseInfinite } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardMeasureRatesSuspenseInfinite.ts";
+export { getApiDashboardMyQueueQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardMyQueue.ts";
+export { getApiDashboardMyQueueQueryOptions } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardMyQueue.ts";
+export { useGetApiDashboardMyQueue } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardMyQueue.ts";
+export { getApiDashboardMyQueueInfiniteQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardMyQueueInfinite.ts";
+export { getApiDashboardMyQueueInfiniteQueryOptions } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardMyQueueInfinite.ts";
+export { useGetApiDashboardMyQueueInfinite } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardMyQueueInfinite.ts";
+export { getApiDashboardMyQueueSuspenseQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardMyQueueSuspense.ts";
+export { getApiDashboardMyQueueSuspenseQueryOptions } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardMyQueueSuspense.ts";
+export { useGetApiDashboardMyQueueSuspense } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardMyQueueSuspense.ts";
+export { getApiDashboardMyQueueSuspenseInfiniteQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardMyQueueSuspenseInfinite.ts";
+export { getApiDashboardMyQueueSuspenseInfiniteQueryOptions } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardMyQueueSuspenseInfinite.ts";
+export { useGetApiDashboardMyQueueSuspenseInfinite } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardMyQueueSuspenseInfinite.ts";
 export { getApiDashboardQueueByDomainQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardQueueByDomain.ts";
 export { getApiDashboardQueueByDomainQueryOptions } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardQueueByDomain.ts";
 export { useGetApiDashboardQueueByDomain } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardQueueByDomain.ts";
@@ -2030,33 +2082,18 @@ export { useGetApiDashboardStatsSuspense } from "./hooks/Dashboard AnalyticsHook
 export { getApiDashboardStatsSuspenseInfiniteQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardStatsSuspenseInfinite.ts";
 export { getApiDashboardStatsSuspenseInfiniteQueryOptions } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardStatsSuspenseInfinite.ts";
 export { useGetApiDashboardStatsSuspenseInfinite } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardStatsSuspenseInfinite.ts";
-export { getApiDashboardDeadlinesQueryKey } from "./hooks/DashboardHooks/useGetApiDashboardDeadlines.ts";
-export { getApiDashboardDeadlinesQueryOptions } from "./hooks/DashboardHooks/useGetApiDashboardDeadlines.ts";
-export { useGetApiDashboardDeadlines } from "./hooks/DashboardHooks/useGetApiDashboardDeadlines.ts";
-export { getApiDashboardDeadlinesSuspenseQueryKey } from "./hooks/DashboardHooks/useGetApiDashboardDeadlinesSuspense.ts";
-export { getApiDashboardDeadlinesSuspenseQueryOptions } from "./hooks/DashboardHooks/useGetApiDashboardDeadlinesSuspense.ts";
-export { useGetApiDashboardDeadlinesSuspense } from "./hooks/DashboardHooks/useGetApiDashboardDeadlinesSuspense.ts";
-export { getApiDashboardDeadlinesSuspenseInfiniteQueryKey } from "./hooks/DashboardHooks/useGetApiDashboardDeadlinesSuspenseInfinite.ts";
-export { getApiDashboardDeadlinesSuspenseInfiniteQueryOptions } from "./hooks/DashboardHooks/useGetApiDashboardDeadlinesSuspenseInfinite.ts";
-export { useGetApiDashboardDeadlinesSuspenseInfinite } from "./hooks/DashboardHooks/useGetApiDashboardDeadlinesSuspenseInfinite.ts";
-export { getApiDashboardMyQueueQueryKey } from "./hooks/DashboardHooks/useGetApiDashboardMyQueue.ts";
-export { getApiDashboardMyQueueQueryOptions } from "./hooks/DashboardHooks/useGetApiDashboardMyQueue.ts";
-export { useGetApiDashboardMyQueue } from "./hooks/DashboardHooks/useGetApiDashboardMyQueue.ts";
-export { getApiDashboardMyQueueSuspenseQueryKey } from "./hooks/DashboardHooks/useGetApiDashboardMyQueueSuspense.ts";
-export { getApiDashboardMyQueueSuspenseQueryOptions } from "./hooks/DashboardHooks/useGetApiDashboardMyQueueSuspense.ts";
-export { useGetApiDashboardMyQueueSuspense } from "./hooks/DashboardHooks/useGetApiDashboardMyQueueSuspense.ts";
-export { getApiDashboardMyQueueSuspenseInfiniteQueryKey } from "./hooks/DashboardHooks/useGetApiDashboardMyQueueSuspenseInfinite.ts";
-export { getApiDashboardMyQueueSuspenseInfiniteQueryOptions } from "./hooks/DashboardHooks/useGetApiDashboardMyQueueSuspenseInfinite.ts";
-export { useGetApiDashboardMyQueueSuspenseInfinite } from "./hooks/DashboardHooks/useGetApiDashboardMyQueueSuspenseInfinite.ts";
-export { getApiDashboardSummaryQueryKey } from "./hooks/DashboardHooks/useGetApiDashboardSummary.ts";
-export { getApiDashboardSummaryQueryOptions } from "./hooks/DashboardHooks/useGetApiDashboardSummary.ts";
-export { useGetApiDashboardSummary } from "./hooks/DashboardHooks/useGetApiDashboardSummary.ts";
-export { getApiDashboardSummarySuspenseQueryKey } from "./hooks/DashboardHooks/useGetApiDashboardSummarySuspense.ts";
-export { getApiDashboardSummarySuspenseQueryOptions } from "./hooks/DashboardHooks/useGetApiDashboardSummarySuspense.ts";
-export { useGetApiDashboardSummarySuspense } from "./hooks/DashboardHooks/useGetApiDashboardSummarySuspense.ts";
-export { getApiDashboardSummarySuspenseInfiniteQueryKey } from "./hooks/DashboardHooks/useGetApiDashboardSummarySuspenseInfinite.ts";
-export { getApiDashboardSummarySuspenseInfiniteQueryOptions } from "./hooks/DashboardHooks/useGetApiDashboardSummarySuspenseInfinite.ts";
-export { useGetApiDashboardSummarySuspenseInfinite } from "./hooks/DashboardHooks/useGetApiDashboardSummarySuspenseInfinite.ts";
+export { getApiDashboardUserQueueQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardUserQueue.ts";
+export { getApiDashboardUserQueueQueryOptions } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardUserQueue.ts";
+export { useGetApiDashboardUserQueue } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardUserQueue.ts";
+export { getApiDashboardUserQueueInfiniteQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardUserQueueInfinite.ts";
+export { getApiDashboardUserQueueInfiniteQueryOptions } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardUserQueueInfinite.ts";
+export { useGetApiDashboardUserQueueInfinite } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardUserQueueInfinite.ts";
+export { getApiDashboardUserQueueSuspenseQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardUserQueueSuspense.ts";
+export { getApiDashboardUserQueueSuspenseQueryOptions } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardUserQueueSuspense.ts";
+export { useGetApiDashboardUserQueueSuspense } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardUserQueueSuspense.ts";
+export { getApiDashboardUserQueueSuspenseInfiniteQueryKey } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardUserQueueSuspenseInfinite.ts";
+export { getApiDashboardUserQueueSuspenseInfiniteQueryOptions } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardUserQueueSuspenseInfinite.ts";
+export { useGetApiDashboardUserQueueSuspenseInfinite } from "./hooks/Dashboard AnalyticsHooks/useGetApiDashboardUserQueueSuspenseInfinite.ts";
 export { getApiDepartmentsQueryKey } from "./hooks/DepartmentsHooks/useGetApiDepartments.ts";
 export { getApiDepartmentsQueryOptions } from "./hooks/DepartmentsHooks/useGetApiDepartments.ts";
 export { useGetApiDepartments } from "./hooks/DepartmentsHooks/useGetApiDepartments.ts";
@@ -2450,6 +2487,15 @@ export { useGetApiProjectsIdSuspense } from "./hooks/ProjectsHooks/useGetApiProj
 export { getApiProjectsIdSuspenseInfiniteQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsIdSuspenseInfinite.ts";
 export { getApiProjectsIdSuspenseInfiniteQueryOptions } from "./hooks/ProjectsHooks/useGetApiProjectsIdSuspenseInfinite.ts";
 export { useGetApiProjectsIdSuspenseInfinite } from "./hooks/ProjectsHooks/useGetApiProjectsIdSuspenseInfinite.ts";
+export { getApiProjectsIdTeamAllocationQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsIdTeamAllocation.ts";
+export { getApiProjectsIdTeamAllocationQueryOptions } from "./hooks/ProjectsHooks/useGetApiProjectsIdTeamAllocation.ts";
+export { useGetApiProjectsIdTeamAllocation } from "./hooks/ProjectsHooks/useGetApiProjectsIdTeamAllocation.ts";
+export { getApiProjectsIdTeamAllocationSuspenseQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsIdTeamAllocationSuspense.ts";
+export { getApiProjectsIdTeamAllocationSuspenseQueryOptions } from "./hooks/ProjectsHooks/useGetApiProjectsIdTeamAllocationSuspense.ts";
+export { useGetApiProjectsIdTeamAllocationSuspense } from "./hooks/ProjectsHooks/useGetApiProjectsIdTeamAllocationSuspense.ts";
+export { getApiProjectsIdTeamAllocationSuspenseInfiniteQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsIdTeamAllocationSuspenseInfinite.ts";
+export { getApiProjectsIdTeamAllocationSuspenseInfiniteQueryOptions } from "./hooks/ProjectsHooks/useGetApiProjectsIdTeamAllocationSuspenseInfinite.ts";
+export { useGetApiProjectsIdTeamAllocationSuspenseInfinite } from "./hooks/ProjectsHooks/useGetApiProjectsIdTeamAllocationSuspenseInfinite.ts";
 export { getApiProjectsInfiniteQueryKey } from "./hooks/ProjectsHooks/useGetApiProjectsInfinite.ts";
 export { getApiProjectsInfiniteQueryOptions } from "./hooks/ProjectsHooks/useGetApiProjectsInfinite.ts";
 export { useGetApiProjectsInfinite } from "./hooks/ProjectsHooks/useGetApiProjectsInfinite.ts";
@@ -2782,10 +2828,11 @@ export { getApiClientsQueryParamsStatusEnum } from "./types/GetApiClients.ts";
 export { dataStatusEnum } from "./types/GetApiClientsClientidMeasureProgress.ts";
 export { dataIconTypeEnum } from "./types/GetApiClientsClientidRecentActivity.ts";
 export { getApiClientsExportQueryParamsFormatEnum } from "./types/GetApiClientsExport.ts";
+export { getApiDashboardAbstractionDeadlinesQueryParamsMeasurementYearEnum } from "./types/GetApiDashboardAbstractionDeadlines.ts";
 export { getApiDashboardAbstractionVelocityQueryParamsDaysEnum } from "./types/GetApiDashboardAbstractionVelocity.ts";
-export { getApiDashboardDeadlinesQueryParamsMeasurementYearEnum } from "./types/GetApiDashboardDeadlines.ts";
 export { dataBenchmarkStatusEnum } from "./types/GetApiDashboardMeasureRates.ts";
 export { getApiDashboardMeasureRatesQueryParamsMeasurementYearEnum } from "./types/GetApiDashboardMeasureRates.ts";
+export { dataChartStatusEnum } from "./types/GetApiDashboardMyQueue.ts";
 export { getApiDashboardMyQueueQueryParamsMeasurementYearEnum } from "./types/GetApiDashboardMyQueue.ts";
 export { getApiDashboardQueueByDomainQueryParamsMeasurementYearEnum } from "./types/GetApiDashboardQueueByDomain.ts";
 export { getApiDashboardQueueByMeasureQueryParamsMeasurementYearEnum } from "./types/GetApiDashboardQueueByMeasure.ts";
@@ -2795,6 +2842,8 @@ export { getApiDashboardStatsQueryParamsMeasurementYearEnum } from "./types/GetA
 export { openQueueTrendTypeEnum } from "./types/GetApiDashboardStats.ts";
 export { overallHedisRateTrendTypeEnum } from "./types/GetApiDashboardStats.ts";
 export { slaComplianceTrendTypeEnum } from "./types/GetApiDashboardStats.ts";
+export { dataChartStatusEnum2 } from "./types/GetApiDashboardUserQueue.ts";
+export { getApiDashboardUserQueueQueryParamsMeasurementYearEnum } from "./types/GetApiDashboardUserQueue.ts";
 export { getApiHedisClientsQueryParamsContractTypeEnum } from "./types/GetApiHedisClients.ts";
 export { getApiHedisClientsQueryParamsMeasureYearEnum } from "./types/GetApiHedisClients.ts";
 export { getApiHedisClientsQueryParamsMeasurementYearEnum } from "./types/GetApiHedisClients.ts";
@@ -3117,6 +3166,14 @@ export {
   putApiClinicalTimelineEvidenceEventidPathParamsSchema,
 } from "./zod/Clinical TimelineSchemas/putApiClinicalTimelineEvidenceEventidSchema.ts";
 export {
+  getApiDashboardAbstractionDeadlines200Schema,
+  getApiDashboardAbstractionDeadlines400Schema,
+  getApiDashboardAbstractionDeadlines401Schema,
+  getApiDashboardAbstractionDeadlines500Schema,
+  getApiDashboardAbstractionDeadlinesQueryParamsSchema,
+  getApiDashboardAbstractionDeadlinesQueryResponseSchema,
+} from "./zod/Dashboard AnalyticsSchemas/getApiDashboardAbstractionDeadlinesSchema.ts";
+export {
   getApiDashboardAbstractionVelocity200Schema,
   getApiDashboardAbstractionVelocity400Schema,
   getApiDashboardAbstractionVelocity401Schema,
@@ -3132,6 +3189,14 @@ export {
   getApiDashboardMeasureRatesQueryParamsSchema,
   getApiDashboardMeasureRatesQueryResponseSchema,
 } from "./zod/Dashboard AnalyticsSchemas/getApiDashboardMeasureRatesSchema.ts";
+export {
+  getApiDashboardMyQueue200Schema,
+  getApiDashboardMyQueue400Schema,
+  getApiDashboardMyQueue401Schema,
+  getApiDashboardMyQueue500Schema,
+  getApiDashboardMyQueueQueryParamsSchema,
+  getApiDashboardMyQueueQueryResponseSchema,
+} from "./zod/Dashboard AnalyticsSchemas/getApiDashboardMyQueueSchema.ts";
 export {
   getApiDashboardQueueByDomain200Schema,
   getApiDashboardQueueByDomain401Schema,
@@ -3155,19 +3220,13 @@ export {
   getApiDashboardStatsQueryResponseSchema,
 } from "./zod/Dashboard AnalyticsSchemas/getApiDashboardStatsSchema.ts";
 export {
-  getApiDashboardDeadlines200Schema,
-  getApiDashboardDeadlinesQueryParamsSchema,
-  getApiDashboardDeadlinesQueryResponseSchema,
-} from "./zod/DashboardSchemas/getApiDashboardDeadlinesSchema.ts";
-export {
-  getApiDashboardMyQueue200Schema,
-  getApiDashboardMyQueueQueryParamsSchema,
-  getApiDashboardMyQueueQueryResponseSchema,
-} from "./zod/DashboardSchemas/getApiDashboardMyQueueSchema.ts";
-export {
-  getApiDashboardSummary200Schema,
-  getApiDashboardSummaryQueryResponseSchema,
-} from "./zod/DashboardSchemas/getApiDashboardSummarySchema.ts";
+  getApiDashboardUserQueue200Schema,
+  getApiDashboardUserQueue400Schema,
+  getApiDashboardUserQueue401Schema,
+  getApiDashboardUserQueue500Schema,
+  getApiDashboardUserQueueQueryParamsSchema,
+  getApiDashboardUserQueueQueryResponseSchema,
+} from "./zod/Dashboard AnalyticsSchemas/getApiDashboardUserQueueSchema.ts";
 export {
   getApiDepartments200Schema,
   getApiDepartments500Schema,
@@ -3565,6 +3624,13 @@ export {
   getApiProjectsIdPathParamsSchema,
   getApiProjectsIdQueryResponseSchema,
 } from "./zod/ProjectsSchemas/getApiProjectsIdSchema.ts";
+export {
+  getApiProjectsIdTeamAllocation200Schema,
+  getApiProjectsIdTeamAllocation404Schema,
+  getApiProjectsIdTeamAllocation500Schema,
+  getApiProjectsIdTeamAllocationPathParamsSchema,
+  getApiProjectsIdTeamAllocationQueryResponseSchema,
+} from "./zod/ProjectsSchemas/getApiProjectsIdTeamAllocationSchema.ts";
 export {
   getApiProjects200Schema,
   getApiProjects500Schema,

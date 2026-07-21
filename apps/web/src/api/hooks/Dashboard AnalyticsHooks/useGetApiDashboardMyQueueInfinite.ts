@@ -12,35 +12,39 @@ import type {
   InfiniteData,
   QueryKey,
   QueryClient,
-  UseSuspenseInfiniteQueryOptions,
-  UseSuspenseInfiniteQueryResult,
+  InfiniteQueryObserverOptions,
+  UseInfiniteQueryResult,
 } from "@tanstack/react-query";
 import type {
   GetApiDashboardMyQueueQueryResponse,
   GetApiDashboardMyQueueQueryParams,
+  GetApiDashboardMyQueue400,
+  GetApiDashboardMyQueue401,
+  GetApiDashboardMyQueue500,
 } from "../../types/GetApiDashboardMyQueue.ts";
-import {
-  infiniteQueryOptions,
-  useSuspenseInfiniteQuery,
-} from "@tanstack/react-query";
+import { infiniteQueryOptions, useInfiniteQuery } from "@tanstack/react-query";
 import { getApiDashboardMyQueue } from "../../clients/getApiDashboardMyQueue.ts";
 
-export const getApiDashboardMyQueueSuspenseInfiniteQueryKey = (
+export const getApiDashboardMyQueueInfiniteQueryKey = (
   params?: GetApiDashboardMyQueueQueryParams,
 ) => [{ url: "/api/dashboard/my-queue" }, ...(params ? [params] : [])] as const;
 
-export type GetApiDashboardMyQueueSuspenseInfiniteQueryKey = ReturnType<
-  typeof getApiDashboardMyQueueSuspenseInfiniteQueryKey
+export type GetApiDashboardMyQueueInfiniteQueryKey = ReturnType<
+  typeof getApiDashboardMyQueueInfiniteQueryKey
 >;
 
-export function getApiDashboardMyQueueSuspenseInfiniteQueryOptions(
+export function getApiDashboardMyQueueInfiniteQueryOptions(
   params?: GetApiDashboardMyQueueQueryParams,
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
-  const queryKey = getApiDashboardMyQueueSuspenseInfiniteQueryKey(params);
+  const queryKey = getApiDashboardMyQueueInfiniteQueryKey(params);
   return infiniteQueryOptions<
     GetApiDashboardMyQueueQueryResponse,
-    ResponseErrorConfig<Error>,
+    ResponseErrorConfig<
+      | GetApiDashboardMyQueue400
+      | GetApiDashboardMyQueue401
+      | GetApiDashboardMyQueue500
+    >,
     InfiniteData<GetApiDashboardMyQueueQueryResponse>,
     typeof queryKey,
     NonNullable<GetApiDashboardMyQueueQueryParams["page_no"]>
@@ -68,20 +72,30 @@ export function getApiDashboardMyQueueSuspenseInfiniteQueryOptions(
 }
 
 /**
- * @summary Get assigned patients and charts for the logged-in user
+ * @description Returns all patient-evaluation rows assigned to the currently authenticated user (matched via patients.assigned_to or patients.abstractor_id). The "measure" field returns the full HEDIS year string stored in the patients.measure column (e.g. "HEDIS MY2025"), not the measure code. The "measureCode" field returns the individual HEDIS measure code (e.g. "CDC"). chartStatus is derived from the patient stage and the latest QA decision:
+ * Not Started → stage is Unassigned / Not Started / Assigned;
+ * In Progress → stage is In Progress, Rework, Pending QA, QA Returned, etc.;
+ * QA Pending  → stage is completed but latest qa_status is REQUEST_REVISION;
+ * Completed   → stage is Completed / QA Approved / QA Passed / Submission Ready.
+ * progress is 100 for completed eval status or QA_PASS, otherwise derived from stage. Sorted by due_date ascending (most urgent first), then by priority and last name. Supports pagination and the same global filters used by all dashboard APIs.
+ * @summary Retrieve the authenticated user's assigned patient queue
  * {@link /api/dashboard/my-queue}
  */
-export function useGetApiDashboardMyQueueSuspenseInfinite<
+export function useGetApiDashboardMyQueueInfinite<
   TQueryFnData = GetApiDashboardMyQueueQueryResponse,
-  TError = ResponseErrorConfig<Error>,
+  TError = ResponseErrorConfig<
+    | GetApiDashboardMyQueue400
+    | GetApiDashboardMyQueue401
+    | GetApiDashboardMyQueue500
+  >,
   TData = InfiniteData<TQueryFnData>,
-  TQueryKey extends QueryKey = GetApiDashboardMyQueueSuspenseInfiniteQueryKey,
+  TQueryKey extends QueryKey = GetApiDashboardMyQueueInfiniteQueryKey,
   TPageParam = NonNullable<GetApiDashboardMyQueueQueryParams["page_no"]>,
 >(
   params?: GetApiDashboardMyQueueQueryParams,
   options: {
     query?: Partial<
-      UseSuspenseInfiniteQueryOptions<
+      InfiniteQueryObserverOptions<
         TQueryFnData,
         TError,
         TData,
@@ -95,15 +109,14 @@ export function useGetApiDashboardMyQueueSuspenseInfinite<
   const { query: queryConfig = {}, client: config = {} } = options ?? {};
   const { client: queryClient, ...resolvedOptions } = queryConfig;
   const queryKey =
-    resolvedOptions?.queryKey ??
-    getApiDashboardMyQueueSuspenseInfiniteQueryKey(params);
+    resolvedOptions?.queryKey ?? getApiDashboardMyQueueInfiniteQueryKey(params);
 
-  const query = useSuspenseInfiniteQuery(
+  const query = useInfiniteQuery(
     {
-      ...getApiDashboardMyQueueSuspenseInfiniteQueryOptions(params, config),
+      ...getApiDashboardMyQueueInfiniteQueryOptions(params, config),
       ...resolvedOptions,
       queryKey,
-    } as unknown as UseSuspenseInfiniteQueryOptions<
+    } as unknown as InfiniteQueryObserverOptions<
       TQueryFnData,
       TError,
       TData,
@@ -111,7 +124,7 @@ export function useGetApiDashboardMyQueueSuspenseInfinite<
       TPageParam
     >,
     queryClient,
-  ) as UseSuspenseInfiniteQueryResult<TData, TError> & { queryKey: TQueryKey };
+  ) as UseInfiniteQueryResult<TData, TError> & { queryKey: TQueryKey };
 
   query.queryKey = queryKey as TQueryKey;
 
