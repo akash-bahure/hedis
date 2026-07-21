@@ -234,6 +234,14 @@ export {
   putApiClinicalTimelineEvidenceEventidPathParamsSchema,
 } from "./Clinical TimelineSchemas/putApiClinicalTimelineEvidenceEventidSchema.ts";
 export {
+  getApiDashboardAbstractionDeadlines200Schema,
+  getApiDashboardAbstractionDeadlines400Schema,
+  getApiDashboardAbstractionDeadlines401Schema,
+  getApiDashboardAbstractionDeadlines500Schema,
+  getApiDashboardAbstractionDeadlinesQueryParamsSchema,
+  getApiDashboardAbstractionDeadlinesQueryResponseSchema,
+} from "./Dashboard AnalyticsSchemas/getApiDashboardAbstractionDeadlinesSchema.ts";
+export {
   getApiDashboardAbstractionVelocity200Schema,
   getApiDashboardAbstractionVelocity400Schema,
   getApiDashboardAbstractionVelocity401Schema,
@@ -249,6 +257,14 @@ export {
   getApiDashboardMeasureRatesQueryParamsSchema,
   getApiDashboardMeasureRatesQueryResponseSchema,
 } from "./Dashboard AnalyticsSchemas/getApiDashboardMeasureRatesSchema.ts";
+export {
+  getApiDashboardMyQueue200Schema,
+  getApiDashboardMyQueue400Schema,
+  getApiDashboardMyQueue401Schema,
+  getApiDashboardMyQueue500Schema,
+  getApiDashboardMyQueueQueryParamsSchema,
+  getApiDashboardMyQueueQueryResponseSchema,
+} from "./Dashboard AnalyticsSchemas/getApiDashboardMyQueueSchema.ts";
 export {
   getApiDashboardQueueByDomain200Schema,
   getApiDashboardQueueByDomain401Schema,
@@ -272,19 +288,13 @@ export {
   getApiDashboardStatsQueryResponseSchema,
 } from "./Dashboard AnalyticsSchemas/getApiDashboardStatsSchema.ts";
 export {
-  getApiDashboardDeadlines200Schema,
-  getApiDashboardDeadlinesQueryParamsSchema,
-  getApiDashboardDeadlinesQueryResponseSchema,
-} from "./DashboardSchemas/getApiDashboardDeadlinesSchema.ts";
-export {
-  getApiDashboardMyQueue200Schema,
-  getApiDashboardMyQueueQueryParamsSchema,
-  getApiDashboardMyQueueQueryResponseSchema,
-} from "./DashboardSchemas/getApiDashboardMyQueueSchema.ts";
-export {
-  getApiDashboardSummary200Schema,
-  getApiDashboardSummaryQueryResponseSchema,
-} from "./DashboardSchemas/getApiDashboardSummarySchema.ts";
+  getApiDashboardUserQueue200Schema,
+  getApiDashboardUserQueue400Schema,
+  getApiDashboardUserQueue401Schema,
+  getApiDashboardUserQueue500Schema,
+  getApiDashboardUserQueueQueryParamsSchema,
+  getApiDashboardUserQueueQueryResponseSchema,
+} from "./Dashboard AnalyticsSchemas/getApiDashboardUserQueueSchema.ts";
 export {
   getApiDepartments200Schema,
   getApiDepartments500Schema,
@@ -682,6 +692,13 @@ export {
   getApiProjectsIdPathParamsSchema,
   getApiProjectsIdQueryResponseSchema,
 } from "./ProjectsSchemas/getApiProjectsIdSchema.ts";
+export {
+  getApiProjectsIdTeamAllocation200Schema,
+  getApiProjectsIdTeamAllocation404Schema,
+  getApiProjectsIdTeamAllocation500Schema,
+  getApiProjectsIdTeamAllocationPathParamsSchema,
+  getApiProjectsIdTeamAllocationQueryResponseSchema,
+} from "./ProjectsSchemas/getApiProjectsIdTeamAllocationSchema.ts";
 export {
   getApiProjects200Schema,
   getApiProjects500Schema,

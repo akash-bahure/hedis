@@ -13,49 +13,160 @@ export type GetApiDashboardMyQueueQueryParamsMeasurementYearEnumKey =
 
 export type GetApiDashboardMyQueueQueryParams = {
   /**
-   * @description Filter by HEDIS Measurement Year
+   * @description Filter by HEDIS Measurement Year (matches patients.measure column)
    * @type string | undefined
    */
   measurementYear?: GetApiDashboardMyQueueQueryParamsMeasurementYearEnumKey;
   /**
-   * @description Search by name, MRN, or measure code
+   * @description Case-insensitive search on patient first name, last name, or measure
    * @type string | undefined
    */
   search?: string;
   /**
-   * @description Filter by workflow stage
-   * @type string | undefined
-   */
-  status?: string;
-  /**
-   * @description Sort field (e.g. due_date, priority)
-   * @default 1
-   * @type string | undefined
-   */
-  sort_by?: string;
-  /**
-   * @description Page number
+   * @description Page number (1-based)
+   * @minLength 1
    * @default 1
    * @type integer | undefined
    */
-  page?: number;
+  page_no?: number;
   /**
-   * @description Number of items per page
+   * @description Number of patient queue rows per page
+   * @minLength 1
+   * @maxLength 100
    * @default 10
    * @type integer | undefined
    */
-  limit?: number;
+  page_size?: number;
+};
+
+export const dataChartStatusEnum = {
+  "Not Started": "Not Started",
+  "In Progress": "In Progress",
+  "QA Pending": "QA Pending",
+  Completed: "Completed",
+} as const;
+
+export type DataChartStatusEnumKey =
+  (typeof dataChartStatusEnum)[keyof typeof dataChartStatusEnum];
+
+/**
+ * @description My queue retrieved successfully.
+ */
+export type GetApiDashboardMyQueue200 = {
+  /**
+   * @type boolean | undefined
+   */
+  success?: boolean;
+  /**
+   * @type string | undefined
+   */
+  message?: string;
+  /**
+   * @type array | undefined
+   */
+  data?: {
+    /**
+     * @description Internal patient UUID
+     * @type string | undefined, uuid
+     */
+    patientId?: string;
+    /**
+     * @description External member/patient display ID (patients.patient_id)
+     * @type string | undefined
+     */
+    memberId?: string;
+    /**
+     * @type string | undefined
+     */
+    firstName?: string;
+    /**
+     * @type string | undefined
+     */
+    lastName?: string;
+    /**
+     * @description Full HEDIS year string stored in patients.measure (e.g. HEDIS MY2025)
+     * @type string
+     */
+    measure?: string | null;
+    /**
+     * @description HEDIS measure code from hedis_evaluations
+     * @type string | undefined
+     */
+    measureCode?: string;
+    /**
+     * @description Full HEDIS measure name
+     * @type string | undefined
+     */
+    measureName?: string;
+    /**
+     * @description Derived UI badge status from patient stage and QA decision
+     * @type string | undefined
+     */
+    chartStatus?: DataChartStatusEnumKey;
+    /**
+     * @description Raw patient stage value from the patients table
+     * @type string | undefined
+     */
+    stage?: string;
+    /**
+     * @type string, date
+     */
+    dueDate?: string | null;
+    /**
+     * @type string
+     */
+    priority?: string | null;
+    /**
+     * @description Completion percentage (0–100) derived from stage or eval status
+     * @type integer | undefined
+     */
+    progress?: number;
+  }[];
+  /**
+   * @type object | undefined
+   */
+  pagination?: {
+    /**
+     * @type integer | undefined
+     */
+    total?: number;
+    /**
+     * @type integer | undefined
+     */
+    page?: number;
+    /**
+     * @type integer | undefined
+     */
+    limit?: number;
+    /**
+     * @type integer | undefined
+     */
+    totalPages?: number;
+  };
 };
 
 /**
- * @description My queue retrieved successfully
+ * @description Bad request. Invalid pagination parameters.
  */
-export type GetApiDashboardMyQueue200 = any;
+export type GetApiDashboardMyQueue400 = any;
+
+/**
+ * @description Unauthorized. Missing or invalid Bearer token.
+ */
+export type GetApiDashboardMyQueue401 = any;
+
+/**
+ * @description Internal server error.
+ */
+export type GetApiDashboardMyQueue500 = any;
 
 export type GetApiDashboardMyQueueQueryResponse = GetApiDashboardMyQueue200;
 
 export type GetApiDashboardMyQueueQuery = {
   Response: GetApiDashboardMyQueue200;
   QueryParams: GetApiDashboardMyQueueQueryParams;
-  Errors: any;
+  Errors:
+    | GetApiDashboardMyQueue400
+    | GetApiDashboardMyQueue401
+    | GetApiDashboardMyQueue500;
 };

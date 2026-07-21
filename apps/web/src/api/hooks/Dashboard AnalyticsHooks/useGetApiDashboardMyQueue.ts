@@ -17,6 +17,9 @@ import type {
 import type {
   GetApiDashboardMyQueueQueryResponse,
   GetApiDashboardMyQueueQueryParams,
+  GetApiDashboardMyQueue400,
+  GetApiDashboardMyQueue401,
+  GetApiDashboardMyQueue500,
 } from "../../types/GetApiDashboardMyQueue.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { getApiDashboardMyQueue } from "../../clients/getApiDashboardMyQueue.ts";
@@ -36,7 +39,11 @@ export function getApiDashboardMyQueueQueryOptions(
   const queryKey = getApiDashboardMyQueueQueryKey(params);
   return queryOptions<
     GetApiDashboardMyQueueQueryResponse,
-    ResponseErrorConfig<Error>,
+    ResponseErrorConfig<
+      | GetApiDashboardMyQueue400
+      | GetApiDashboardMyQueue401
+      | GetApiDashboardMyQueue500
+    >,
     GetApiDashboardMyQueueQueryResponse,
     typeof queryKey
   >({
@@ -51,7 +58,13 @@ export function getApiDashboardMyQueueQueryOptions(
 }
 
 /**
- * @summary Get assigned patients and charts for the logged-in user
+ * @description Returns all patient-evaluation rows assigned to the currently authenticated user (matched via patients.assigned_to or patients.abstractor_id). The "measure" field returns the full HEDIS year string stored in the patients.measure column (e.g. "HEDIS MY2025"), not the measure code. The "measureCode" field returns the individual HEDIS measure code (e.g. "CDC"). chartStatus is derived from the patient stage and the latest QA decision:
+ * Not Started → stage is Unassigned / Not Started / Assigned;
+ * In Progress → stage is In Progress, Rework, Pending QA, QA Returned, etc.;
+ * QA Pending  → stage is completed but latest qa_status is REQUEST_REVISION;
+ * Completed   → stage is Completed / QA Approved / QA Passed / Submission Ready.
+ * progress is 100 for completed eval status or QA_PASS, otherwise derived from stage. Sorted by due_date ascending (most urgent first), then by priority and last name. Supports pagination and the same global filters used by all dashboard APIs.
+ * @summary Retrieve the authenticated user's assigned patient queue
  * {@link /api/dashboard/my-queue}
  */
 export function useGetApiDashboardMyQueue<
@@ -64,7 +77,11 @@ export function useGetApiDashboardMyQueue<
     query?: Partial<
       QueryObserverOptions<
         GetApiDashboardMyQueueQueryResponse,
-        ResponseErrorConfig<Error>,
+        ResponseErrorConfig<
+          | GetApiDashboardMyQueue400
+          | GetApiDashboardMyQueue401
+          | GetApiDashboardMyQueue500
+        >,
         TData,
         TQueryData,
         TQueryKey
@@ -85,9 +102,14 @@ export function useGetApiDashboardMyQueue<
       queryKey,
     } as unknown as QueryObserverOptions,
     queryClient,
-  ) as UseQueryResult<TData, ResponseErrorConfig<Error>> & {
-    queryKey: TQueryKey;
-  };
+  ) as UseQueryResult<
+    TData,
+    ResponseErrorConfig<
+      | GetApiDashboardMyQueue400
+      | GetApiDashboardMyQueue401
+      | GetApiDashboardMyQueue500
+    >
+  > & { queryKey: TQueryKey };
 
   query.queryKey = queryKey as TQueryKey;
 
