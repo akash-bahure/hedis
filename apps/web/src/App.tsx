@@ -66,7 +66,7 @@ export default function App() {
   const [role, setRole] = useState<UserRole>("program-manager");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(
-    null,
+    null
   );
   const [selectedChartId, setSelectedChartId] = useState<string | null>(null);
   const [selectedPatientData, setSelectedPatientData] = useState<any>(null);
@@ -98,7 +98,7 @@ export default function App() {
     switch (activeView) {
       /* ── Main ── */
       case "dashboard":
-        return <Dashboard />;
+        return <Dashboard onOpenWorkQueue={() => navigate("work-queue")} />;
       case "projects":
         return <Projects />;
       case "patients":
