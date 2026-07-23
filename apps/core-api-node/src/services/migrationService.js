@@ -1289,6 +1289,12 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
       updated_at TIMESTAMP DEFAULT NOW()
     );
   `);
+  // === IMPORTANT: Add Unique Constraint for ON CONFLICT ===
+//   await client.query(`
+//   ALTER TABLE ${schema}.clinical_timeline_assignments
+//   ADD CONSTRAINT IF NOT EXISTS uq_clinical_timeline_assignments_event_abstractor
+//   UNIQUE (event_id, abstractor_id);
+// `);
 
   await client.query(`
     CREATE TABLE IF NOT EXISTS ${schema}.qa_evidence_requests (

@@ -2189,17 +2189,17 @@ function MeasurePanel({
             >
               <Plus className="w-3.5 h-3.5" /> Add Measure
             </button>
-            <button className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border text-foreground text-[12px] font-semibold hover:bg-muted transition-colors">
+            {/* <button className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border text-foreground text-[12px] font-semibold hover:bg-muted transition-colors">
               <Eye className="w-3.5 h-3.5" /> Mark Reviewed
-            </button>
-            <button
+            </button> */}
+            {/* <button
               // onClick={onSendToQA}
               // disabled={isSendingToQA}
               className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-primary/30 text-primary text-[12px] font-semibold hover:bg-primary/5 transition-colors disabled:opacity-50"
             >
               <Send className="w-3.5 h-3.5" />{" "}
               {isSendingToQA ? "Sending..." : "Send to QA"}
-            </button>
+            </button> */}
             <button
               onClick={onRecalculate}
               disabled={isRecalculating}
@@ -2692,7 +2692,10 @@ export function Patient360({
     // Filter non-eligible first
     let filtered = evaluationResponse.evaluations.filter(
       (ev: any) =>
-        ev.status !== "Not Eligible" && ev.eligible !== false && ev.measure_code // must have a code
+        ev.status !== "Not Eligible" &&
+        ev.status !== "Error" &&
+        ev.eligible !== false &&
+        ev.measure_code // must have a code
     );
 
     // Deduplicate by measure_code (keep the one with highest confidence or latest)

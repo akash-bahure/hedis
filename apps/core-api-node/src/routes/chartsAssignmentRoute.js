@@ -18,84 +18,55 @@ const {
  * @swagger
  * /api/chart-assignments/bulk-assign:
  *   post:
- *     summary: Bulk Assign Charts to QA & Chart Abstractor Users
+ *     summary: Bulk Assign Patients/Charts to Abstractor and/or QA
  *     tags: [Chart Assignments]
- *     description: Assign multiple charts to multiple QA and Chart Abstractor users with priority and assignment notes.
- *
+ *     description: Assign multiple patients to one or more abstractors/QA users. Consistent with single patient assignment.
  *     security:
  *       - bearerAuth: []
- *
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *
  *             required:
- *               - chart_ids
- *               - assigned_users
- *
+ *               - patient_ids
  *             properties:
- *
- *               chart_ids:
+ *               patient_ids:
  *                 type: array
- *                 description: Selected Chart IDs
  *                 items:
  *                   type: string
  *                   format: uuid
- *
- *               assigned_users:
+ *                 description: Array of patient UUIDs (preferred)
+ *               chart_ids:
  *                 type: array
- *
  *                 items:
- *                   type: object
- *
- *                   required:
- *                     - user_id
- *                     - assigned_role
- *
- *                   properties:
- *
- *                     user_id:
- *                       type: string
- *                       format: uuid
- *
- *                     assigned_role:
- *                       type: string
- *                       enum:
- *                         - Chart Abstractor
- *                         - Quality Analyst
- *
+ *                   type: string
+ *                   format: uuid
+ *                 description: Alternative for chart UUIDs (backward compatibility)
+ *               abstractorId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: UUID of Chart Abstractor
+ *               qaId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: UUID of Quality Analyst
  *               priority:
  *                 type: string
- *                 enum:
- *                   - Urgent
- *                   - High
- *                   - Medium
- *                   - Low
- *
+ *                 enum: [Urgent, High, Medium, Low]
  *               assignment_note:
  *                 type: string
- *
  *     responses:
- *       201:
- *         description: Charts assigned successfully
- *
+ *       200:
+ *         description: Bulk assignment successful
  *       400:
- *         description: Validation Error
- *
+ *         description: Validation error
  *       401:
  *         description: Unauthorized
- *
  *       500:
- *         description: Internal Server Error
+ *         description: Internal server error
  */
-
-router.post(
-  "/bulk-assign",
-  authMiddleware,
-  bulkAssignCharts
-);
+router.post("/bulk-assign", authMiddleware, bulkAssignCharts);
 
 module.exports = router;

@@ -65,7 +65,9 @@ class HEDISService {
       savedEvaluations.push(saved);
 
       // Automatically queue QA Review Analysis for the saved evaluation
-      console.log(`[services/hedis.service] Auto-triggering QA Review Analysis queuing for Evaluation ID: ${saved.id}, Code: ${saved.measure_code}`);
+      console.log(
+        `[services/hedis.service] Auto-triggering QA Review Analysis queuing for Evaluation ID: ${saved.id}, Code: ${saved.measure_code}`
+      );
       try {
         await this.queueQAReviewAnalysis(
           saved.id,
@@ -75,7 +77,10 @@ class HEDISService {
           tenantSubdomain
         );
       } catch (err) {
-        console.error(`[services/hedis.service] Failed to auto-trigger QA Review queued job for Evaluation ID ${saved.id}:`, err.message);
+        console.error(
+          `[services/hedis.service] Failed to auto-trigger QA Review queued job for Evaluation ID ${saved.id}:`,
+          err.message
+        );
       }
     }
 
@@ -94,7 +99,13 @@ class HEDISService {
    * @param {object} db - tenant-scoped DB client
    * @returns {object} the saved hedis_evaluations row
    */
-  async evaluateSingleMeasure(patientId, pdfPath, measureData, tenantSubdomain, db) {
+  async evaluateSingleMeasure(
+    patientId,
+    pdfPath,
+    measureData,
+    tenantSubdomain,
+    db
+  ) {
     const aiServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
     const url = `${aiServiceUrl}/api/hedis/analyze-single`;
 
@@ -111,7 +122,9 @@ class HEDISService {
     const { evaluations } = response.data;
 
     if (!evaluations || evaluations.length === 0) {
-      throw new Error(`AI service returned no evaluation for measure ${measureData.measureCode}`);
+      throw new Error(
+        `AI service returned no evaluation for measure ${measureData.measureCode}`
+      );
     }
 
     const evalResult = evaluations[0];
@@ -144,7 +157,9 @@ class HEDISService {
    */
   async queueHedisAnalysis(patientId, chartDocument, tenantSubdomain) {
     if (!patientId || !chartDocument || !tenantSubdomain) {
-      console.error(`[services/hedis.service] queueHedisAnalysis missing required arguments: patientId=${patientId}, tenantSubdomain=${tenantSubdomain}`);
+      console.error(
+        `[services/hedis.service] queueHedisAnalysis missing required arguments: patientId=${patientId}, tenantSubdomain=${tenantSubdomain}`
+      );
       throw new Error("Missing required arguments for queueHedisAnalysis");
     }
 
@@ -152,7 +167,9 @@ class HEDISService {
     const filePath = chartDoc.filePath || `charts/${chartDoc.fileName}`;
     const pdfPath = `/app/uploads/${filePath}`;
 
-    console.log(`[services/hedis.service] Queuing HEDIS analysis for Patient: ${patientId}, Subdomain: ${tenantSubdomain}, Path: ${pdfPath}`);
+    console.log(
+      `[services/hedis.service] Queuing HEDIS analysis for Patient: ${patientId}, Subdomain: ${tenantSubdomain}, Path: ${pdfPath}`
+    );
 
     const job = await hedisQueue.add("hedis-analysis-job", {
       patientId,
@@ -160,20 +177,40 @@ class HEDISService {
       tenantSubdomain,
     });
 
-    console.log(`[services/hedis.service] HEDIS analysis job successfully queued with ID: ${job.id}`);
+    console.log(
+      `[services/hedis.service] HEDIS analysis job successfully queued with ID: ${job.id}`
+    );
     return job;
   }
 
   /**
    * Add a HEDIS QA Review analysis job to the background queue.
    */
-  async queueQAReviewAnalysis(evaluationId, patientId, measureCode, pdfPath, tenantSubdomain, recalculation = false, manualEvidence = null) {
-    if (!evaluationId || !patientId || !measureCode || !pdfPath || !tenantSubdomain) {
-      console.error(`[services/hedis.service] queueQAReviewAnalysis missing required arguments: evaluationId=${evaluationId}, patientId=${patientId}`);
+  async queueQAReviewAnalysis(
+    evaluationId,
+    patientId,
+    measureCode,
+    pdfPath,
+    tenantSubdomain,
+    recalculation = false,
+    manualEvidence = null
+  ) {
+    if (
+      !evaluationId ||
+      !patientId ||
+      !measureCode ||
+      !pdfPath ||
+      !tenantSubdomain
+    ) {
+      console.error(
+        `[services/hedis.service] queueQAReviewAnalysis missing required arguments: evaluationId=${evaluationId}, patientId=${patientId}`
+      );
       throw new Error("Missing required arguments for queueQAReviewAnalysis");
     }
 
-    console.log(`[services/hedis.service] Queuing QA Review analysis for Evaluation: ${evaluationId}, Patient: ${patientId}, Measure: ${measureCode}, Recalculation: ${recalculation}`);
+    console.log(
+      `[services/hedis.service] Queuing QA Review analysis for Evaluation: ${evaluationId}, Patient: ${patientId}, Measure: ${measureCode}, Recalculation: ${recalculation}`
+    );
 
     const job = await qaReviewQueue.add("hedis-qa-review-job", {
       evaluationId,
@@ -185,7 +222,9 @@ class HEDISService {
       manualEvidence,
     });
 
-    console.log(`[services/hedis.service] QA Review analysis job successfully queued with ID: ${job.id}`);
+    console.log(
+      `[services/hedis.service] QA Review analysis job successfully queued with ID: ${job.id}`
+    );
     return job;
   }
 
@@ -194,7 +233,9 @@ class HEDISService {
    */
   async queueTimelineExtraction(patientId, chartDocument, tenantSubdomain) {
     if (!patientId || !chartDocument || !tenantSubdomain) {
-      console.error(`[services/hedis.service] queueTimelineExtraction missing required arguments: patientId=${patientId}, tenantSubdomain=${tenantSubdomain}`);
+      console.error(
+        `[services/hedis.service] queueTimelineExtraction missing required arguments: patientId=${patientId}, tenantSubdomain=${tenantSubdomain}`
+      );
       throw new Error("Missing required arguments for queueTimelineExtraction");
     }
 
@@ -202,7 +243,9 @@ class HEDISService {
     const filePath = chartDoc.filePath || `charts/${chartDoc.fileName}`;
     const pdfPath = `/app/uploads/${filePath}`;
 
-    console.log(`[services/hedis.service] Queuing Clinical Timeline extraction for Patient: ${patientId}, Subdomain: ${tenantSubdomain}, Path: ${pdfPath}`);
+    console.log(
+      `[services/hedis.service] Queuing Clinical Timeline extraction for Patient: ${patientId}, Subdomain: ${tenantSubdomain}, Path: ${pdfPath}`
+    );
 
     const job = await timelineQueue.add("clinical-timeline-job", {
       patientId,
@@ -210,7 +253,9 @@ class HEDISService {
       tenantSubdomain,
     });
 
-    console.log(`[services/hedis.service] Clinical Timeline job successfully queued with ID: ${job.id}`);
+    console.log(
+      `[services/hedis.service] Clinical Timeline job successfully queued with ID: ${job.id}`
+    );
     return job;
   }
 
@@ -272,13 +317,13 @@ class HEDISService {
       event.event_title,
       event.event_date || null,
       event.year ||
-      (event.event_date ? new Date(event.event_date).getFullYear() : null),
+        (event.event_date ? new Date(event.event_date).getFullYear() : null),
       event.month ||
-      (event.event_date
-        ? new Intl.DateTimeFormat("en-US", { month: "long" }).format(
-          new Date(event.event_date)
-        )
-        : null),
+        (event.event_date
+          ? new Intl.DateTimeFormat("en-US", { month: "long" }).format(
+              new Date(event.event_date)
+            )
+          : null),
       event.event_type,
       event.encounter_type,
       event.provider,
@@ -340,7 +385,6 @@ class HEDISService {
     return result.rows;
   }
 
-
   /**
    * Get clinical timeline for a patient with filters and grouping.
    */
@@ -400,8 +444,8 @@ class HEDISService {
         event.month ||
         (event.event_date
           ? new Intl.DateTimeFormat("en-US", { month: "long" }).format(
-            new Date(event.event_date)
-          )
+              new Date(event.event_date)
+            )
           : "Unknown");
 
       if (!grouped[year]) grouped[year] = {};
@@ -485,20 +529,20 @@ class HEDISService {
       status,
       remarks || null,
       reviewedBy || null,
-      status === "ACCEPTED" ? (abstractorId || null) : null,
+      status === "ACCEPTED" ? abstractorId || null : null,
       status === "ACCEPTED" ? "ASSIGNED" : "REJECTED",
     ]);
 
     // 4. Update assignment table if accepted
     if (status === "ACCEPTED" && abstractorId) {
-      await db.query(
-        `
-        INSERT INTO clinical_timeline_assignments (event_id, abstractor_id, assigned_by)
-        VALUES ($1, $2, $3)
-        ON CONFLICT (event_id, abstractor_id) DO UPDATE SET status = 'Assigned', updated_at = NOW()
-      `,
-        [eventId, abstractorId, reviewedBy || null]
-      );
+      // await db.query(
+      //   `
+      //   INSERT INTO clinical_timeline_assignments (event_id, abstractor_id, assigned_by)
+      //   VALUES ($1, $2, $3)
+      //   ON CONFLICT (event_id, abstractor_id) DO UPDATE SET status = 'Assigned', updated_at = NOW()
+      // `,
+      //   [eventId, abstractorId, reviewedBy || null]
+      // );
 
       // Update event with abstractor
       await db.query(
@@ -579,8 +623,8 @@ class HEDISService {
         event.month ||
         (event.event_date
           ? new Intl.DateTimeFormat("en-US", { month: "long" }).format(
-            new Date(event.event_date)
-          )
+              new Date(event.event_date)
+            )
           : "Unknown");
 
       if (!grouped[year]) grouped[year] = {};
@@ -616,7 +660,11 @@ class HEDISService {
    * @param {object} params.draftData  - field values to persist
    * @param {string} params.userId     - req.user.id (created_by / updated_by)
    */
-  async saveDraft(db, schema, { patientId, chartId, measureId, draftData, userId }) {
+  async saveDraft(
+    db,
+    schema,
+    { patientId, chartId, measureId, draftData, userId }
+  ) {
     // Guard: do not overwrite a fully-submitted record with a draft
     const existingCheck = await db.query(
       `SELECT id, is_draft FROM ${schema}.hedis_measure_evidence
@@ -624,7 +672,10 @@ class HEDISService {
       [patientId, chartId, measureId]
     );
 
-    if (existingCheck.rows.length > 0 && existingCheck.rows[0].is_draft === false) {
+    if (
+      existingCheck.rows.length > 0 &&
+      existingCheck.rows[0].is_draft === false
+    ) {
       const err = new Error(
         "This measure has already been submitted to QA and cannot be overwritten with a draft. Use submitAbstractorQA to update."
       );
@@ -729,7 +780,11 @@ class HEDISService {
    * @param {string|null} params.comment
    * @param {string|null} params.userId
    */
-  async markNotFound(db, schema, { patientId, chartId, measureId, comment, userId }) {
+  async markNotFound(
+    db,
+    schema,
+    { patientId, chartId, measureId, comment, userId }
+  ) {
     const upsertQuery = `
       INSERT INTO ${schema}.hedis_measure_evidence (
         patient_id, chart_id, measure_id,

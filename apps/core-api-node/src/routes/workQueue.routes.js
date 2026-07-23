@@ -45,6 +45,12 @@ const authMiddleware = require("../middlewares/authMiddleware");
  *           format: uuid
  *         description: Filter charts by Project UUID
  *       - in: query
+ *         name: client_id
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filter by Client UUID (used when user selects a client from the sidebar)
+ *       - in: query
  *         name: plan
  *         schema:
  *           type: string
