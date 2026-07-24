@@ -26,8 +26,8 @@ function getPostApiChartAssignmentsBulkAssignUrl() {
 }
 
 /**
- * @description Assign multiple charts to multiple QA and Chart Abstractor users with priority and assignment notes.
- * @summary Bulk Assign Charts to QA & Chart Abstractor Users
+ * @description Assign multiple patients to one or more abstractors/QA users. Consistent with single patient assignment.
+ * @summary Bulk Assign Patients/Charts to Abstractor and/or QA
  * {@link /api/chart-assignments/bulk-assign}
  */
 export async function postApiChartAssignmentsBulkAssign(

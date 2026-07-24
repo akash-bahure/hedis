@@ -985,8 +985,7 @@ export type {
   PostApiAuthTwoFaValidateOtpMutationResponse,
 } from "./PostApiAuthTwoFaValidateOtp.ts";
 export type {
-  AssignedUsersAssignedRoleEnumKey,
-  PostApiChartAssignmentsBulkAssign201,
+  PostApiChartAssignmentsBulkAssign200,
   PostApiChartAssignmentsBulkAssign400,
   PostApiChartAssignmentsBulkAssign401,
   PostApiChartAssignmentsBulkAssign500,
@@ -1209,6 +1208,34 @@ export type {
   PostApiUsersDeactivateMutationResponse,
 } from "./PostApiUsersDeactivate.ts";
 export type {
+  PostApiWorkQueueChangePriority200,
+  PostApiWorkQueueChangePriority400,
+  PostApiWorkQueueChangePriority404,
+  PostApiWorkQueueChangePriority500,
+  PostApiWorkQueueChangePriorityMutation,
+  PostApiWorkQueueChangePriorityMutationRequest,
+  PostApiWorkQueueChangePriorityMutationRequestPriorityEnumKey,
+  PostApiWorkQueueChangePriorityMutationResponse,
+} from "./PostApiWorkQueueChangePriority.ts";
+export type {
+  PostApiWorkQueueMarkComplete200,
+  PostApiWorkQueueMarkComplete400,
+  PostApiWorkQueueMarkComplete404,
+  PostApiWorkQueueMarkComplete500,
+  PostApiWorkQueueMarkCompleteMutation,
+  PostApiWorkQueueMarkCompleteMutationRequest,
+  PostApiWorkQueueMarkCompleteMutationResponse,
+} from "./PostApiWorkQueueMarkComplete.ts";
+export type {
+  PostApiWorkQueueReassign200,
+  PostApiWorkQueueReassign400,
+  PostApiWorkQueueReassign404,
+  PostApiWorkQueueReassign500,
+  PostApiWorkQueueReassignMutation,
+  PostApiWorkQueueReassignMutationRequest,
+  PostApiWorkQueueReassignMutationResponse,
+} from "./PostApiWorkQueueReassign.ts";
+export type {
   PutApiClinicalTimelineEvidenceEventid200,
   PutApiClinicalTimelineEvidenceEventidMutation,
   PutApiClinicalTimelineEvidenceEventidMutationRequest,
@@ -1359,7 +1386,6 @@ export { patchApiUsersIdMutationRequestUserTypeEnum } from "./PatchApiUsersId.ts
 export { schedulesShiftEnum } from "./PatchApiUsersShifts.ts";
 export { postApiAuditStageMutationRequestActionEnum } from "./PostApiAuditAuditStage.ts";
 export { decisionsAuditStatusEnum } from "./PostApiAuditDecisions.ts";
-export { assignedUsersAssignedRoleEnum } from "./PostApiChartAssignmentsBulkAssign.ts";
 export { postApiChartAssignmentsBulkAssignMutationRequestPriorityEnum } from "./PostApiChartAssignmentsBulkAssign.ts";
 export { postApiClientsMutationRequestContractTypeEnum } from "./PostApiClients.ts";
 export { postApiClientsMutationRequestMeasureYearEnum } from "./PostApiClients.ts";
@@ -1377,6 +1403,7 @@ export { postApiProjectsMutationRequestStatusEnum } from "./PostApiProjects.ts";
 export { rolePermissionsModuleEnum } from "./PostApiUserRoles.ts";
 export { postApiUsersMutationRequestShiftEnum } from "./PostApiUsers.ts";
 export { postApiUsersMutationRequestUserTypeEnum } from "./PostApiUsers.ts";
+export { postApiWorkQueueChangePriorityMutationRequestPriorityEnum } from "./PostApiWorkQueueChangePriority.ts";
 export { dataAuthTokenLifetimeEnum2 } from "./PutApiSecurityComplianceAccessExpiryPolicy.ts";
 export { dataForceReauthenticationEnum2 } from "./PutApiSecurityComplianceAccessExpiryPolicy.ts";
 export { dataInactivityDeactivationEnum2 } from "./PutApiSecurityComplianceAccessExpiryPolicy.ts";

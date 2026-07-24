@@ -6,7 +6,7 @@
 import * as z from "zod";
 import type { ToZod } from "../../.kubb/ToZod.ts";
 import type {
-  PostApiChartAssignmentsBulkAssign201,
+  PostApiChartAssignmentsBulkAssign200,
   PostApiChartAssignmentsBulkAssign400,
   PostApiChartAssignmentsBulkAssign401,
   PostApiChartAssignmentsBulkAssign500,
@@ -15,13 +15,13 @@ import type {
 } from "../../types/PostApiChartAssignmentsBulkAssign.ts";
 
 /**
- * @description Charts assigned successfully
+ * @description Bulk assignment successful
  */
-export const postApiChartAssignmentsBulkAssign201Schema =
-  z.unknown() as unknown as ToZod<PostApiChartAssignmentsBulkAssign201>;
+export const postApiChartAssignmentsBulkAssign200Schema =
+  z.unknown() as unknown as ToZod<PostApiChartAssignmentsBulkAssign200>;
 
 /**
- * @description Validation Error
+ * @description Validation error
  */
 export const postApiChartAssignmentsBulkAssign400Schema =
   z.unknown() as unknown as ToZod<PostApiChartAssignmentsBulkAssign400>;
@@ -33,23 +33,28 @@ export const postApiChartAssignmentsBulkAssign401Schema =
   z.unknown() as unknown as ToZod<PostApiChartAssignmentsBulkAssign401>;
 
 /**
- * @description Internal Server Error
+ * @description Internal server error
  */
 export const postApiChartAssignmentsBulkAssign500Schema =
   z.unknown() as unknown as ToZod<PostApiChartAssignmentsBulkAssign500>;
 
 export const postApiChartAssignmentsBulkAssignMutationRequestSchema = z.object({
-  chart_ids: z.array(z.string().uuid()).describe("Selected Chart IDs"),
-  assigned_users: z.array(
-    z.object({
-      user_id: z.string().uuid(),
-      assigned_role: z.enum(["Chart Abstractor", "Quality Analyst"]),
-    }),
+  patient_ids: z
+    .array(z.string().uuid())
+    .describe("Array of patient UUIDs (preferred)"),
+  chart_ids: z.optional(
+    z
+      .array(z.string().uuid())
+      .describe("Alternative for chart UUIDs (backward compatibility)"),
   ),
+  abstractorId: z.optional(
+    z.string().uuid().describe("UUID of Chart Abstractor"),
+  ),
+  qaId: z.optional(z.string().uuid().describe("UUID of Quality Analyst")),
   priority: z.optional(z.enum(["Urgent", "High", "Medium", "Low"])),
   assignment_note: z.optional(z.string()),
 }) as unknown as ToZod<PostApiChartAssignmentsBulkAssignMutationRequest>;
 
 export const postApiChartAssignmentsBulkAssignMutationResponseSchema = z.lazy(
-  () => postApiChartAssignmentsBulkAssign201Schema,
+  () => postApiChartAssignmentsBulkAssign200Schema,
 ) as unknown as ToZod<PostApiChartAssignmentsBulkAssignMutationResponse>;

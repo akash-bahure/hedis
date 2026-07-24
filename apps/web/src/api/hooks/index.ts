@@ -342,6 +342,9 @@ export type { GetApiWorkQueueQueryKey } from "./Work QueueHooks/useGetApiWorkQue
 export type { GetApiWorkQueueInfiniteQueryKey } from "./Work QueueHooks/useGetApiWorkQueueInfinite.ts";
 export type { GetApiWorkQueueSuspenseQueryKey } from "./Work QueueHooks/useGetApiWorkQueueSuspense.ts";
 export type { GetApiWorkQueueSuspenseInfiniteQueryKey } from "./Work QueueHooks/useGetApiWorkQueueSuspenseInfinite.ts";
+export type { PostApiWorkQueueChangePriorityMutationKey } from "./Work QueueHooks/usePostApiWorkQueueChangePriority.ts";
+export type { PostApiWorkQueueMarkCompleteMutationKey } from "./Work QueueHooks/usePostApiWorkQueueMarkComplete.ts";
+export type { PostApiWorkQueueReassignMutationKey } from "./Work QueueHooks/usePostApiWorkQueueReassign.ts";
 export { postApiChartsChartidMarkNotFoundMutationKey } from "./Abstraction WorkflowHooks/usePostApiChartsChartidMarkNotFound.ts";
 export { postApiChartsChartidMarkNotFoundMutationOptions } from "./Abstraction WorkflowHooks/usePostApiChartsChartidMarkNotFound.ts";
 export { usePostApiChartsChartidMarkNotFound } from "./Abstraction WorkflowHooks/usePostApiChartsChartidMarkNotFound.ts";
@@ -1374,3 +1377,12 @@ export { useGetApiWorkQueueSuspense } from "./Work QueueHooks/useGetApiWorkQueue
 export { getApiWorkQueueSuspenseInfiniteQueryKey } from "./Work QueueHooks/useGetApiWorkQueueSuspenseInfinite.ts";
 export { getApiWorkQueueSuspenseInfiniteQueryOptions } from "./Work QueueHooks/useGetApiWorkQueueSuspenseInfinite.ts";
 export { useGetApiWorkQueueSuspenseInfinite } from "./Work QueueHooks/useGetApiWorkQueueSuspenseInfinite.ts";
+export { postApiWorkQueueChangePriorityMutationKey } from "./Work QueueHooks/usePostApiWorkQueueChangePriority.ts";
+export { postApiWorkQueueChangePriorityMutationOptions } from "./Work QueueHooks/usePostApiWorkQueueChangePriority.ts";
+export { usePostApiWorkQueueChangePriority } from "./Work QueueHooks/usePostApiWorkQueueChangePriority.ts";
+export { postApiWorkQueueMarkCompleteMutationKey } from "./Work QueueHooks/usePostApiWorkQueueMarkComplete.ts";
+export { postApiWorkQueueMarkCompleteMutationOptions } from "./Work QueueHooks/usePostApiWorkQueueMarkComplete.ts";
+export { usePostApiWorkQueueMarkComplete } from "./Work QueueHooks/usePostApiWorkQueueMarkComplete.ts";
+export { postApiWorkQueueReassignMutationKey } from "./Work QueueHooks/usePostApiWorkQueueReassign.ts";
+export { postApiWorkQueueReassignMutationOptions } from "./Work QueueHooks/usePostApiWorkQueueReassign.ts";
+export { usePostApiWorkQueueReassign } from "./Work QueueHooks/usePostApiWorkQueueReassign.ts";
