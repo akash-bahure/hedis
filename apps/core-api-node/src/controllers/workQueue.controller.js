@@ -244,12 +244,24 @@ exports.reassignChart = async (req, res) => {
   try {
     const schema = req.tenant.schema_name;
 
-    const patientId =
-      req.params.patientId ||
-      req.body.patientId ||
-      req.body.patient_id ||
-      req.params.id;
-    const chartId = req.params.chartId || req.body.chartId || req.body.chart_id;
+    // Support both single and bulk
+    let patientIds =
+      req.body.patientIds || (req.body.patientId ? [req.body.patientId] : []);
+    let chartIds =
+      req.body.chartIds || (req.body.chartId ? [req.body.chartId] : []);
+
+    // Fallback for URL params (single)
+    if (!patientIds.length && !chartIds.length) {
+      const patientId =
+        req.params.patientId ||
+        req.body.patientId ||
+        req.body.patient_id ||
+        req.params.id;
+      const chartId =
+        req.params.chartId || req.body.chartId || req.body.chart_id;
+      if (patientId) patientIds = [patientId];
+      if (chartId) chartIds = [chartId];
+    }
 
     let { abstractorId, abstractor_id, qaId, qa_id, userId, role } = req.body;
     abstractorId = abstractorId || abstractor_id;
@@ -264,19 +276,16 @@ exports.reassignChart = async (req, res) => {
       }
     }
 
-    if (!patientId && !chartId) {
+    if ((!patientIds.length && !chartIds.length) || (!abstractorId && !qaId)) {
       return res.status(400).json({
         success: false,
-        message: "patientId (or chartId) is required in params or body",
+        message:
+          "patientId(s) or chartId(s) and at least one of abstractorId/qaId required",
       });
     }
 
-    if (!abstractorId && !qaId) {
-      return res.status(400).json({
-        success: false,
-        message: "At least abstractorId or qaId is required to reassign",
-      });
-    }
+    const ids = patientIds.length ? patientIds : chartIds;
+    const isPatientBased = patientIds.length > 0;
 
     const patientUpdates = [];
     const patientValues = [];
@@ -292,54 +301,46 @@ exports.reassignChart = async (req, res) => {
     }
     patientUpdates.push(`updated_at = NOW()`);
 
-    let patientWhere = "";
-    if (patientId) {
-      patientWhere = `id::text = $${pParamIdx} OR patient_id = $${pParamIdx}`;
-      patientValues.push(patientId);
-    } else {
-      patientWhere = `id IN (SELECT patient_id FROM ${schema}.patient_charts WHERE id::text = $${pParamIdx} OR chart_id = $${pParamIdx})`;
-      patientValues.push(chartId);
-    }
-
     const patientQuery = `
       UPDATE ${schema}.patients
       SET ${patientUpdates.join(", ")}
-      WHERE ${patientWhere}
+      WHERE ${isPatientBased ? `id = ANY($${pParamIdx})` : `id IN (SELECT patient_id FROM ${schema}.patient_charts WHERE id = ANY($${pParamIdx}))`}
       RETURNING id, patient_id, first_name, last_name, abstractor_id, qa_id, priority, stage, updated_at
     `;
 
+    patientValues.push(ids);
     const patientResult = await client.query(patientQuery, patientValues);
 
     if (patientResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Patient record not found for reassignment",
+        message: "No records found for reassignment",
       });
     }
 
-    const updatedPatient = patientResult.rows[0];
-
-    if (chartId || updatedPatient.id) {
-      const cVal = chartId || updatedPatient.id;
-      await client.query(
-        `UPDATE ${schema}.patient_charts SET updated_at = NOW() WHERE id::text = $1 OR chart_id = $1 OR patient_id::text = $1`,
-        [cVal]
-      );
-    }
+    // Update charts timestamp
+    await client.query(
+      `UPDATE ${schema}.patient_charts SET updated_at = NOW() WHERE patient_id = ANY($1)`,
+      [patientResult.rows.map((r) => r.id)]
+    );
 
     await AuditLog.createAuditLog(client, {
       user_id: req.user?.id,
       user_name: req.user?.full_name || "System",
-      event_type: "Patient Reassignment",
-      details: `Reassigned patient ${updatedPatient.patient_id} (${updatedPatient.first_name} ${updatedPatient.last_name}). Abstractor: ${abstractorId || "Unchanged"}, QA: ${qaId || "Unchanged"}`,
+      event_type:
+        patientIds.length > 1
+          ? "Bulk Patient Reassignment"
+          : "Patient Reassignment",
+      details: `Reassigned ${patientResult.rowCount} patient(s). Abstractor: ${abstractorId || "Unchanged"}, QA: ${qaId || "Unchanged"}`,
       ip_address: req.ip,
       status: "Success",
     });
 
     return res.status(200).json({
       success: true,
-      message: "Patient/chart reassigned successfully",
-      data: updatedPatient,
+      message: `${patientResult.rowCount} patient(s) reassigned successfully`,
+      count: patientResult.rowCount,
+      data: patientResult.rows,
     });
   } catch (error) {
     console.error("Reassign Chart Error:", error);
@@ -361,25 +362,30 @@ exports.changePriority = async (req, res) => {
   try {
     const schema = req.tenant.schema_name;
 
-    const patientId =
-      req.params.patientId ||
-      req.body.patientId ||
-      req.body.patient_id ||
-      req.params.id;
-    const chartId = req.params.chartId || req.body.chartId || req.body.chart_id;
-    const priority = req.body.priority;
+    let patientIds =
+      req.body.patientIds || (req.body.patientId ? [req.body.patientId] : []);
+    let chartIds =
+      req.body.chartIds || (req.body.chartId ? [req.body.chartId] : []);
 
-    if (!patientId && !chartId) {
-      return res.status(400).json({
-        success: false,
-        message: "patientId or chartId parameter is required",
-      });
+    // Fallback for URL params
+    if (!patientIds.length && !chartIds.length) {
+      const patientId =
+        req.params.patientId ||
+        req.body.patientId ||
+        req.body.patient_id ||
+        req.params.id;
+      const chartId =
+        req.params.chartId || req.body.chartId || req.body.chart_id;
+      if (patientId) patientIds = [patientId];
+      if (chartId) chartIds = [chartId];
     }
 
-    if (!priority) {
+    const priority = req.body.priority;
+
+    if ((!patientIds.length && !chartIds.length) || !priority) {
       return res.status(400).json({
         success: false,
-        message: "priority is required in request body",
+        message: "patientId(s) or chartId(s) and priority are required",
       });
     }
 
@@ -389,14 +395,12 @@ exports.changePriority = async (req, res) => {
         (p) => p.toLowerCase() === priority.trim().toLowerCase()
       ) || priority;
 
-    const targetId = patientId || chartId;
+    const ids = patientIds.length ? patientIds : chartIds;
+    const isPatientBased = patientIds.length > 0;
 
-    let patientWhere = "";
-    if (patientId) {
-      patientWhere = `id::text = $2 OR patient_id = $2`;
-    } else {
-      patientWhere = `id IN (SELECT patient_id FROM ${schema}.patient_charts WHERE id::text = $2 OR chart_id = $2)`;
-    }
+    const patientWhere = isPatientBased
+      ? `id = ANY($2)`
+      : `id IN (SELECT patient_id FROM ${schema}.patient_charts WHERE id = ANY($2))`;
 
     const patientQuery = `
       UPDATE ${schema}.patients
@@ -407,43 +411,37 @@ exports.changePriority = async (req, res) => {
 
     const patientResult = await client.query(patientQuery, [
       normalizedPriority,
-      targetId,
+      ids,
     ]);
 
-    let chartWhere = "";
-    if (chartId) {
-      chartWhere = `id::text = $2 OR chart_id = $2`;
-    } else {
-      chartWhere = `patient_id::text = $2 OR patient_id IN (SELECT id FROM ${schema}.patients WHERE patient_id = $2)`;
-    }
+    const chartWhere = isPatientBased ? `patient_id = ANY($2)` : `id = ANY($2)`;
 
     await client.query(
       `UPDATE ${schema}.patient_charts SET priority = $1, updated_at = NOW() WHERE ${chartWhere}`,
-      [normalizedPriority, targetId]
+      [normalizedPriority, ids]
     );
 
     if (patientResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Patient record not found",
+        message: "No records found",
       });
     }
-
-    const updatedPatient = patientResult.rows[0];
 
     await AuditLog.createAuditLog(client, {
       user_id: req.user?.id,
       user_name: req.user?.full_name || "System",
-      event_type: "Change Priority",
-      details: `Priority updated to '${normalizedPriority}' for patient ${updatedPatient.patient_id}`,
+      event_type: ids.length > 1 ? "Bulk Change Priority" : "Change Priority",
+      details: `Priority updated to '${normalizedPriority}' for ${ids.length} record(s)`,
       ip_address: req.ip,
       status: "Success",
     });
 
     return res.status(200).json({
       success: true,
-      message: "Priority updated successfully",
-      data: updatedPatient,
+      message: `Priority updated successfully for ${ids.length} record(s)`,
+      count: ids.length,
+      data: patientResult.rows,
     });
   } catch (error) {
     console.error("Change Priority Error:", error);
@@ -465,77 +463,72 @@ exports.markComplete = async (req, res) => {
   try {
     const schema = req.tenant.schema_name;
 
-    const patientId =
-      req.params.patientId ||
-      req.body.patientId ||
-      req.body.patient_id ||
-      req.params.id;
-    const chartId = req.params.chartId || req.body.chartId || req.body.chart_id;
+    let patientIds =
+      req.body.patientIds || (req.body.patientId ? [req.body.patientId] : []);
+    let chartIds =
+      req.body.chartIds || (req.body.chartId ? [req.body.chartId] : []);
 
-    if (!patientId && !chartId) {
+    // Fallback for URL params
+    if (!patientIds.length && !chartIds.length) {
+      const patientId =
+        req.params.patientId ||
+        req.body.patientId ||
+        req.body.patient_id ||
+        req.params.id;
+      const chartId =
+        req.params.chartId || req.body.chartId || req.body.chart_id;
+      if (patientId) patientIds = [patientId];
+      if (chartId) chartIds = [chartId];
+    }
+
+    if (!patientIds.length && !chartIds.length) {
       return res.status(400).json({
         success: false,
-        message: "patientId or chartId parameter is required",
+        message: "patientId(s) or chartId(s) parameter is required",
       });
     }
 
-    const targetId = patientId || chartId;
+    const ids = patientIds.length ? patientIds : chartIds;
+    const isPatientBased = patientIds.length > 0;
 
-    let chartWhere = "";
-    if (chartId) {
-      chartWhere = `id::text = $1 OR chart_id = $1`;
-    } else {
-      chartWhere = `patient_id::text = $1 OR patient_id IN (SELECT id FROM ${schema}.patients WHERE patient_id = $1)`;
-    }
+    const chartWhere = isPatientBased ? `patient_id = ANY($1)` : `id = ANY($1)`;
 
     const chartResult = await client.query(
       `UPDATE ${schema}.patient_charts 
        SET status = 'Completed', updated_at = NOW() 
        WHERE ${chartWhere} 
        RETURNING id, chart_id, patient_id, status`,
-      [targetId]
+      [ids]
     );
 
-    let patientWhere = "";
-    if (patientId) {
-      patientWhere = `id::text = $1 OR patient_id = $1`;
-    } else {
-      patientWhere = `id IN (SELECT patient_id FROM ${schema}.patient_charts WHERE id::text = $1 OR chart_id = $1)`;
-    }
+    const patientWhere = isPatientBased
+      ? `id = ANY($1)`
+      : `id IN (SELECT patient_id FROM ${schema}.patient_charts WHERE id = ANY($1))`;
 
     const patientResult = await client.query(
       `UPDATE ${schema}.patients 
        SET stage = 'QA Passed', qa_reviewed = TRUE, updated_at = NOW() 
        WHERE ${patientWhere} 
        RETURNING id, patient_id, first_name, last_name, stage, qa_reviewed, updated_at`,
-      [targetId]
+      [ids]
     );
-
-    if (patientResult.rows.length === 0 && chartResult.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Patient or Chart record not found",
-      });
-    }
-
-    const updatedPatient = patientResult.rows[0] || {};
-    const updatedChart = chartResult.rows[0] || {};
 
     await AuditLog.createAuditLog(client, {
       user_id: req.user?.id,
       user_name: req.user?.full_name || "System",
-      event_type: "Mark Complete",
-      details: `Chart ${updatedChart.chart_id || targetId} marked Completed and patient ${updatedPatient.patient_id || targetId} set to QA Passed`,
+      event_type: ids.length > 1 ? "Bulk Mark Complete" : "Mark Complete",
+      details: `Marked ${ids.length} chart(s) as Completed`,
       ip_address: req.ip,
       status: "Success",
     });
 
     return res.status(200).json({
       success: true,
-      message: "Patient chart marked complete successfully",
+      message: `${ids.length} chart(s) marked complete successfully`,
+      count: ids.length,
       data: {
-        patient: updatedPatient,
-        chart: updatedChart,
+        patients: patientResult.rows,
+        charts: chartResult.rows,
       },
     });
   } catch (error) {
