@@ -70,7 +70,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url,
+  import.meta.url
 ).toString();
 
 /* ══════════════════════════════════════════════════════════════
@@ -721,7 +721,7 @@ function DocumentViewer({
             max={numPages}
             onChange={(e) =>
               setPage(
-                Math.min(numPages, Math.max(1, parseInt(e.target.value) || 1)),
+                Math.min(numPages, Math.max(1, parseInt(e.target.value) || 1))
               )
             }
             className="w-8 text-center bg-white/10 border border-white/20 rounded text-white text-[10px] px-1 py-0.5 focus:outline-none focus:border-white/40"
@@ -1045,8 +1045,8 @@ function EvidenceTimeline({
         hedisRelevant: true,
 
         ...event,
-      })),
-    ),
+      }))
+    )
   );
 
   type FilterKey = EventType | "all" | "hedis";
@@ -1116,7 +1116,7 @@ function EvidenceTimeline({
   });
 
   const satisfiesCount = events.filter(
-    (e) => e.hedisMatch === "satisfies",
+    (e) => e.hedisMatch === "satisfies"
   ).length;
   const failsCount = events.filter((e) => e.hedisMatch === "fails").length;
 
@@ -1361,7 +1361,7 @@ function EvidenceTimeline({
                                       <span className="text-[9px] text-muted-foreground truncate">
                                         {
                                           (ev.provider ?? "Unknown").split(
-                                            ",",
+                                            ","
                                           )[0]
                                         }
                                       </span>
@@ -1405,7 +1405,7 @@ function EvidenceTimeline({
                                           onClick={() =>
                                             onSelectEvent(
                                               ev.docPage!,
-                                              ev.code || ev.title,
+                                              ev.code || ev.title
                                             )
                                           }
                                           className="inline-flex items-center gap-1 text-[9px] font-black px-2 py-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
@@ -1459,7 +1459,10 @@ function AbstractionForm({
   setFiles,
   hasUploadedEvidence,
   uploadedEvidenceName,
+  onOpenSubmitModal,
   isSubmittingQA,
+  selectedTimelineEvidence,
+  onClearSelectedEvidence,
 }: {
   form: FormData;
   setForm: React.Dispatch<React.SetStateAction<FormData>>;
@@ -1473,6 +1476,9 @@ function AbstractionForm({
   isSubmittingQA: boolean;
   hasUploadedEvidence: boolean;
   uploadedEvidenceName: string;
+  onOpenSubmitModal: () => void;
+  selectedTimelineEvidence?: any;
+  onClearSelectedEvidence?: () => void;
 }) {
   const [dragOver, setDragOver] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
@@ -1514,7 +1520,7 @@ function AbstractionForm({
     "No Compliance Threshold Available";
   const cptCodes =
     measure?.numerator?.codes?.filter(
-      (code: any) => code.codeSystem === "CPT" || code.codeSystem === "HCPCS",
+      (code: any) => code.codeSystem === "CPT" || code.codeSystem === "HCPCS"
     ) ?? [];
   const exclusionCodes = measure?.eligibility?.exclusions ?? [];
   const evidenceSources = measure?.numerator?.requiredServices ?? [];
@@ -1560,7 +1566,7 @@ function AbstractionForm({
     onSaveDraft();
     setTimeout(() => setSavedFlash(false), 2200);
   };
-
+  const hasSupportingDoc = hasUploadedEvidence || files.length > 0;
   return (
     <div className="flex flex-col h-full bg-card">
       {/* ── Measure info banner ── */}
@@ -1595,7 +1601,7 @@ function AbstractionForm({
         </div>
 
         {/* Numerator criteria */}
-        <div className="flex items-start gap-2 px-2.5 py-2 rounded-xl bg-blue-50 border border-blue-200">
+        {/* <div className="flex items-start gap-2 px-2.5 py-2 rounded-xl bg-blue-50 border border-blue-200">
           <Sparkles className="w-3 h-3 text-blue-500 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-[9px] font-black text-blue-800 mb-0.5">
@@ -1608,7 +1614,7 @@ function AbstractionForm({
               this form.
             </p>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* ── Scrollable form body ── */}
@@ -1640,49 +1646,56 @@ function AbstractionForm({
                 ))}
               </select>
             </FormField>
+            {/* ─── Evidence Type Section ─── */}
             <div className="col-span-2">
               <FormField label="Evidence Type">
-                <select
-                  value={form.evidenceType}
-                  onChange={(e) => set("evidenceType", e.target.value)}
-                  className="form-input"
-                >
-                  <option value="">
-                    {evidenceTypes.length
-                      ? "Select Evidence Type"
-                      : "No Evidence Types Available"}
-                  </option>
-
-                  {evidenceTypes.map((item: any) => (
-                    <option key={item.type} value={item.type}>
-                      {item.type} - {item.notes ?? "No Notes"}
+                <div className="relative">
+                  <select
+                    value={form.evidenceType}
+                    onChange={(e) => set("evidenceType", e.target.value)}
+                    className="form-input w-full"
+                  >
+                    <option value="">
+                      {evidenceTypes.length
+                        ? "Select Evidence Type"
+                        : "No Evidence Types Available"}
                     </option>
-                  ))}
-                </select>
-                {/* {form.evidenceType && (
-                  <div className="mt-2 rounded border bg-slate-50 p-3">
-                    {evidenceTypes.some(
-                      (e: any) => e.type === form.evidenceType,
-                    ) ? (
-                      evidenceTypes
-                        .filter((e: any) => e.type === form.evidenceType)
-                        .map((e: any) => (
-                          <div key={e.type} className="space-y-1">
-                            <p>
-                              <b>Priority:</b> {e.priority ?? "N/A"}
-                            </p>
 
-                            <p>
-                              <b>Notes:</b> {e.notes ?? "No Notes Available"}
-                            </p>
-                          </div>
-                        ))
-                    ) : (
-                      <p>No details available for this Evidence Type.</p>
-                    )}
-                  </div>
-                )} */}
+                    {evidenceTypes.map((item: any) => (
+                      <option key={item.type} value={item.type}>
+                        {item.type} - {item.notes ?? "No Notes"}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Badge when selected from Timeline */}
+                  {/* {selectedTimelineEvidence && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2.5 py-1 rounded-full border border-emerald-200 flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Used from Timeline
+                    </div>
+                  )} */}
+                </div>
               </FormField>
+
+              {/* Selected Evidence Info Message */}
+              {selectedTimelineEvidence && (
+                <div className="mt-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-xl text-xs">
+                  <span className="font-semibold text-emerald-800">
+                    Evidence Selected:
+                  </span>{" "}
+                  <span className="text-emerald-700">
+                    {selectedTimelineEvidence.title ||
+                      selectedTimelineEvidence.event_title}
+                  </span>
+                  <span className="text-emerald-600 text-[10px] ml-2">
+                    (
+                    {selectedTimelineEvidence.date ||
+                      selectedTimelineEvidence.event_date}
+                    )
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -1758,7 +1771,7 @@ function AbstractionForm({
         <section>
           <SectionHeader icon={Heart} label="Numerator Evidence" />
 
-          <FormField label="Compliance Threshold">
+          <FormField label="Readings">
             <input
               value={form.numerator}
               onChange={(e) => set("numerator", e.target.value)}
@@ -1838,7 +1851,7 @@ function AbstractionForm({
 
         {/* ─── SECTION 4: Upload Documentation ─── */}
         <section>
-          <SectionHeader icon={Upload} label="Supporting Documentation" />
+          <SectionHeader icon={Upload} label="Supporting Documentation *" />
           <div
             onDragOver={(e) => {
               e.preventDefault();
@@ -1966,7 +1979,7 @@ function AbstractionForm({
       {/* ── Sticky footer — submission ── */}
       <div className="flex-shrink-0 px-4 py-3 border-t border-border bg-card space-y-2.5">
         {/* Completion bar */}
-        <div>
+        {/* <div>
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[9px] text-muted-foreground font-semibold">
               Form completion
@@ -1986,7 +1999,7 @@ function AbstractionForm({
               style={{ width: `${completePct}%` }}
             />
           </div>
-        </div>
+        </div> */}
 
         {/* Secondary buttons */}
         <div className="grid grid-cols-2 gap-2">
@@ -2017,24 +2030,21 @@ function AbstractionForm({
 
         {/* Primary submit */}
         <button
-          onClick={onSubmitQA}
-          disabled={
-            isSubmittingQA || (!hasUploadedEvidence && files.length === 0)
-          }
-          className="w-full inline-flex items-center justify-center gap-2 py-2.5 text-[12px] font-black rounded-xl text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm whitespace-nowrap"
+          onClick={onOpenSubmitModal}
+          disabled={!hasSupportingDoc || isSubmittingQA}
+          className="w-full py-3.5 text-base font-black rounded-2xl text-white transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           style={{
-            background: formHasData
+            background: hasSupportingDoc
               ? "linear-gradient(135deg, #0891b2, #0e7490)"
-              : undefined,
-            backgroundColor: !formHasData ? "#94a3b8" : undefined,
+              : "#94a3b8",
           }}
         >
-          <Send className="w-3.5 h-3.5" />
+          <Send className="w-4 h-4 inline mr-2" />
           Submit for QA Review
-          <span className="text-[9px] opacity-75 font-semibold ml-1">
-            · HEDIS Engine Re-run
-          </span>
         </button>
+        <p className="text-center text-[10px] text-muted-foreground">
+          Supporting documentation is required to submit
+        </p>
       </div>
     </div>
   );
@@ -2504,15 +2514,15 @@ export function AbstractionWorkspace({
   const [flashActive, setFlashActive] = useState(false);
   const [submitMode, setSubmitMode] = useState<SubmitMode>(null);
   const [savedStatus, setSavedStatus] = useState<"idle" | "saving" | "saved">(
-    "idle",
+    "idle"
   );
   const [mobileTab, setMobileTab] = useState<"doc" | "timeline" | "form">(
-    "timeline",
+    "timeline"
   );
   const [viewerFull, setViewerFull] = useState(false);
   const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
   const [prefill, setPrefill] = useState<Partial<FormData> | undefined>(
-    undefined,
+    undefined
   );
   const [selectedMeasureId, setSelectedMeasureId] = useState<string>("");
   const [timelineFilter, setTimelineFilter] = useState("all");
@@ -2520,6 +2530,8 @@ export function AbstractionWorkspace({
   const [files, setFiles] = useState<File[]>([]);
   const [hasUploadedEvidence, setHasUploadedEvidence] = useState(false);
   const [uploadedEvidenceName, setUploadedEvidenceName] = useState("");
+  const [selectedTimelineEvidence, setSelectedTimelineEvidence] =
+    useState<any>(null);
   useEffect(() => {
     console.log("========== FILE STATE UPDATED ==========");
     console.log("Files:", files);
@@ -2543,6 +2555,7 @@ export function AbstractionWorkspace({
     hour: "2-digit",
     minute: "2-digit",
   });
+  const hasSupportingDoc = hasUploadedEvidence || files.length > 0;
   // const { data: patientsResponse } = useGetApiPatients();
   const { data: profile } = useGetApiProfileMe();
 
@@ -2569,6 +2582,14 @@ export function AbstractionWorkspace({
   //         : "",
   //     }
   //   : null;
+
+  const handleOpenSubmitModal = () => {
+    if (!selectedMeasure) {
+      toast.error("Please select a measure.");
+      return;
+    }
+    setSubmitMode("qa");
+  };
   const { data: workQueueResponse } = useGetApiWorkQueue({
     page_no: 1,
     page_size: 10,
@@ -2622,29 +2643,39 @@ export function AbstractionWorkspace({
     setTimeout(() => setFlashActive(false), 2800);
   };
 
-  const handleAutoFill = (ev: TLEvent) => {
-    const dateMatch = ev.isoDate;
-    const bpMatch = ev.value?.match(/(\d+)\/(\d+)/);
+  const handleAutoFill = (ev: any) => {
+    setSelectedTimelineEvidence(ev);
+
+    const dateMatch = ev.isoDate || ev.event_date;
+    const bpMatch =
+      ev.value?.match(/(\d+)\/(\d+)/) || ev.evidence?.match(/(\d+)\/(\d+)/);
+
     setPrefill({
-      serviceDate: dateMatch,
+      serviceDate: dateMatch?.split("T")[0] || "",
       systolic: bpMatch?.[1] ?? "",
       diastolic: bpMatch?.[2] ?? "",
-      cptCode: CPT_OPTIONS.find((c) => c.startsWith(ev.code)) ?? "",
-      evidenceSource: "Specialist Consultation Note",
-      evidenceType: "Specialist Consult BP Reading",
+      numerator: ev.value || ev.evidence || "",
+      cptCode: ev.code
+        ? (CPT_OPTIONS.find((c: string) => c.startsWith(ev.code)) ?? "")
+        : "",
+      evidenceSource: ev.subtitle || "Specialist Consultation Note",
+      evidenceType: "Specialist Consult BP Reading", // ← This will pre-select Evidence Type
+      notes: ev.notes || "",
     });
+
+    if (mobileTab !== "form") setMobileTab("form");
   };
 
   const handleSaveDraft = async () => {
     try {
       setSavedStatus("saving");
-
+  
       await saveDraftMutation.mutateAsync({
         data: {
           patientId: currentPatientId,
           chartId: currentChartUuid,
-          measureId: selectedMeasure.measure_id,
-
+          measureId: selectedMeasure?.measure_id,
+  
           serviceDate: formData.serviceDate,
           screeningType: formData.screeningType,
           evidenceType: formData.evidenceType,
@@ -2655,30 +2686,38 @@ export function AbstractionWorkspace({
           notes: formData.notes,
         },
       });
-
+  
       await queryClient.invalidateQueries({
         queryKey: getApiHedisAbstractorDraftPatientidQueryKey(
           currentPatientId,
           {
             chartId: currentChartUuid,
             measureId: selectedMeasure!.measure_id,
-          },
+          }
         ),
       });
-
+  
       await refetchDraft();
-
+  
       setSavedStatus("saved");
-
       toast.success("Draft Saved Successfully");
-
+  
       setTimeout(() => {
         setSavedStatus("idle");
       }, 2000);
-    } catch (error) {
+    } catch (error: any) {
       setSavedStatus("idle");
-
-      toast.error("Unable to Save Draft");
+  
+      // Improved error handling
+      const errorMessage = 
+        error?.response?.data?.error || 
+        error?.response?.data?.message || 
+        error?.message ||
+        "Unable to Save Draft";
+  
+      toast.error(errorMessage);
+  
+      console.error("Save Draft Error:", error?.response?.data || error);
     }
   };
   const markNotFoundMutation = usePostApiHedisAbstractorMarkNotFound();
@@ -2691,7 +2730,7 @@ export function AbstractionWorkspace({
   console.log("selectedMeasureCode:", selectedMeasureId);
   console.log(
     "Available Measure Codes:",
-    measureList.map((m) => m.measure_code),
+    measureList.map((m) => m.measure_code)
   );
   useEffect(() => {
     if (measureList.length > 0 && !selectedMeasureId) {
@@ -2700,7 +2739,7 @@ export function AbstractionWorkspace({
   }, [measureList, selectedMeasureId]);
 
   const selectedMeasure = measureList.find(
-    (m: any) => m.id === selectedMeasureId,
+    (m: any) => m.id === selectedMeasureId
   );
 
   console.log("Selected Measure ID State:", selectedMeasureId);
@@ -2710,7 +2749,7 @@ export function AbstractionWorkspace({
     measureList.map((m) => ({
       id: m.id,
       code: m.measure_code,
-    })),
+    }))
   );
   console.log({
     patientId: currentPatientId,
@@ -2734,7 +2773,7 @@ export function AbstractionWorkspace({
         enabled:
           !!currentPatientId && !!currentChartUuid && !!selectedMeasure?.id,
       },
-    },
+    }
   );
   console.log("Draft Response", draftData);
 
@@ -2784,7 +2823,7 @@ export function AbstractionWorkspace({
       query: {
         enabled: !!selectedMeasure?.measure_code,
       },
-    },
+    }
   );
   const submitQaMutation = usePostApiHedisAbstractorSubmitQa();
   const handleMarkNotFound = async () => {
@@ -2807,7 +2846,7 @@ export function AbstractionWorkspace({
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ??
-          "Unable to mark evidence as Not Found.",
+          "Unable to mark evidence as Not Found."
       );
     }
   };
@@ -2897,7 +2936,7 @@ export function AbstractionWorkspace({
       setFiles([]);
 
       toast.success(
-        `Evidence for ${selectedMeasure.measure_code} submitted successfully to QA for ${selectedPatient?.patientName}.`,
+        `Evidence for ${selectedMeasure.measure_code} submitted successfully to QA for ${selectedPatient?.patientName}.`
       );
 
       await queryClient.invalidateQueries();
@@ -2906,7 +2945,7 @@ export function AbstractionWorkspace({
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ??
-          `Failed to upload manual evidence for ${selectedMeasure?.measure_code} to QA. Please try again.`,
+          `Failed to upload manual evidence for ${selectedMeasure?.measure_code} to QA. Please try again.`
       );
     }
   };
@@ -2962,7 +3001,7 @@ export function AbstractionWorkspace({
       // timeline refetch would be good if you extract it
     } catch (error: any) {
       toast.error(
-        error?.response?.data?.message ?? "Failed to add missing evidence",
+        error?.response?.data?.message ?? "Failed to add missing evidence"
       );
     }
   };
@@ -3141,7 +3180,13 @@ export function AbstractionWorkspace({
             </button>
             <button
               onClick={() => setSubmitMode("qa")}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-black rounded-xl text-white bg-[#0891b2] hover:bg-[#0e7490] transition-all shadow-sm whitespace-nowrap"
+              disabled={!hasSupportingDoc}
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[11px] font-black rounded-xl text-white transition-all shadow-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: hasSupportingDoc
+                  ? "linear-gradient(135deg, #0891b2, #0e7490)"
+                  : "#94a3b8",
+              }}
             >
               <Send className="w-3.5 h-3.5" />
               Submit for QA
@@ -3228,6 +3273,9 @@ export function AbstractionWorkspace({
             hasUploadedEvidence={hasUploadedEvidence}
             uploadedEvidenceName={uploadedEvidenceName}
             isSubmittingQA={submitQaMutation.isPending}
+            onOpenSubmitModal={handleOpenSubmitModal}
+            selectedTimelineEvidence={selectedTimelineEvidence} // ← New
+            onClearSelectedEvidence={() => setSelectedTimelineEvidence(null)} // ← New
           />
         </div>
       </div>

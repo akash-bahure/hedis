@@ -12,6 +12,7 @@ exports.getWorkQueue = async (req, res) => {
       search,
       measurementYear,
       project_id,
+      client_id,
       plan,
       priority,
       page_no = 1,
@@ -25,6 +26,12 @@ exports.getWorkQueue = async (req, res) => {
     // ====================== BASE FILTERS ======================
     let baseWhere = "WHERE 1=1";
     let values = [];
+
+    // CLIENT FILTER
+    if (client_id) {
+      values.push(client_id);
+      baseWhere += ` AND p.client_id = $${values.length}`;
+    }
 
     if (search) {
       const term = `%${search.trim()}%`;

@@ -1,171 +1,105 @@
 // controllers/chartAssignmentController.js
 
 const { v4: uuidv4 } = require("uuid");
+// controllers/chartAssignmentController.js
+
 const AuditLog = require("../models/AuditLog");
 
 /**
  * BULK ASSIGN CHARTS
- * Assign selected charts to QA or Chart Abstractor
+ * Assign multiple patients/charts to Abstractors and/or QA users
+ * Consistent with single assignPatient API
  */
 exports.bulkAssignCharts = async (req, res) => {
   const client = req.db;
 
   try {
     const {
+      patient_ids,
       chart_ids,
-      assigned_users,
+      abstractorId,
+      qaId,
       priority,
       assignment_note,
     } = req.body;
 
-    console.log(
-      "BULK ASSIGN BODY =>",
-      JSON.stringify(req.body, null, 2)
-    );
+    const ids = patient_ids || chart_ids;
 
-    // Validate chart ids
-    if (
-      !chart_ids ||
-      !Array.isArray(chart_ids) ||
-      chart_ids.length === 0
-    ) {
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "chart_ids is required",
+        message: "patient_ids (or chart_ids) array is required",
       });
     }
 
-    // Validate assigned users
-    if (
-      !assigned_users ||
-      !Array.isArray(assigned_users) ||
-      assigned_users.length === 0
-    ) {
+    if (!abstractorId && !qaId) {
       return res.status(400).json({
         success: false,
-        message: "assigned_users is required",
+        message: "At least abstractorId or qaId is required",
       });
     }
 
-    const insertedAssignments = [];
+    const schema = req.tenant.schema_name;
 
-    // Loop through assigned users
-    for (const user of assigned_users) {
-      const assigned_to = user.user_id;
-      const assigned_role = user.assigned_role;
+    const updates = [];
+    const values = [];
+    let paramIndex = 1;
 
-      if (!assigned_to) {
-        return res.status(400).json({
-          success: false,
-          message: "user_id is required",
-        });
-      }
+    if (abstractorId) {
+      updates.push(`abstractor_id = $${paramIndex++}`);
+      values.push(abstractorId);
+    }
+    if (qaId) {
+      updates.push(`qa_id = $${paramIndex++}`);
+      values.push(qaId);
+    }
+    if (priority) {
+      updates.push(`priority = $${paramIndex++}`);
+      values.push(priority);
+    }
+    updates.push(`updated_at = NOW()`);
 
-      if (!assigned_role) {
-        return res.status(400).json({
-          success: false,
-          message: "assigned_role is required",
-        });
-      }
+    // === CRITICAL FIX: Cast to uuid[] ===
+    const placeholders = ids
+      .map((_, i) => `$${paramIndex + i}::uuid`)
+      .join(", ");
+    values.push(...ids);
 
-      // Validate role
-      const allowedRoles = [
-        "Quality Analyst",
-        "Chart Abstractor",
-      ];
+    const query = `
+      UPDATE ${schema}.patients 
+      SET ${updates.join(", ")}
+      WHERE id = ANY(ARRAY[${placeholders}])
+      RETURNING id, patient_id, first_name, last_name, 
+                abstractor_id, qa_id, priority, stage, updated_at
+    `;
 
-      if (!allowedRoles.includes(assigned_role)) {
-        return res.status(400).json({
-          success: false,
-          message: `Invalid assigned_role: ${assigned_role}`,
-        });
-      }
+    const result = await client.query(query, values);
 
-      // Verify user exists
-      const userCheck = await client.query(
-        `
-        SELECT u.id
-        FROM users u
-        WHERE u.id = $1
-        LIMIT 1
-        `,
-        [assigned_to]
-      );
-
-      if (userCheck.rows.length === 0) {
-        return res.status(400).json({
-          success: false,
-          message: `User not found: ${assigned_to}`,
-        });
-      }
-
-      // Assign all selected charts
-      for (const chartId of chart_ids) {
-        const result = await client.query(
-          `
-          INSERT INTO chart_assignments (
-            id,
-            patient_chart_id,
-            assigned_to,
-            assigned_role,
-            priority,
-            assignment_note,
-            assigned_by,
-            assigned_at,
-            created_at,
-            updated_at
-          )
-          VALUES (
-            $1,$2,$3,$4,$5,$6,$7,NOW(),NOW(),NOW()
-          )
-          RETURNING *
-          `,
-          [
-            uuidv4(),
-            chartId,
-            assigned_to,
-            assigned_role,
-            priority || "Medium",
-            assignment_note || null,
-            req.user.id,
-          ]
-        );
-
-        insertedAssignments.push(result.rows[0]);
-
-        await client.query(
-          `
-          UPDATE chartser
-          SET
-            assigned_to = $1,
-            assignment_status = 'assigned',
-            updated_at = NOW()
-          WHERE id = $2
-          `,
-          [assigned_to, chartId]
-        );
-      }
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No matching patients found",
+      });
     }
 
+    // Audit Log (optional)
     await AuditLog.createAuditLog(client, {
-      user_id: req.user.id,
-      user_name: req.user.full_name || "System",
-      event_type: "Bulk Chart Assignment",
-      details: `${chart_ids.length} charts assigned`,
+      user_id: req.user?.id,
+      user_name: req.user?.full_name || "System",
+      event_type: "Bulk Patient Assignment",
+      details: `${result.rows.length} patients assigned`,
       ip_address: req.ip,
-      device: req.headers["user-agent"],
-      risk_level: "Low",
       status: "Success",
     });
 
-    return res.status(201).json({
+    return res.status(200).json({
       success: true,
-      message: `${chart_ids.length} charts assigned successfully`,
-      data: insertedAssignments,
+      message: `${result.rows.length} patient(s) assigned successfully`,
+      assignedCount: result.rows.length,
+      data: result.rows,
     });
   } catch (error) {
     console.error("Bulk Assign Charts Error:", error);
-
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -173,7 +107,6 @@ exports.bulkAssignCharts = async (req, res) => {
     });
   }
 };
-
 /**
  * GET USERS FOR ASSIGNMENT
  * Fetch only QA & Chart Abstractor users

@@ -61,6 +61,7 @@ import {
   usePatchApiPatientsIdStage,
   usePostApiPatientsIdAssign,
   useGetApiHedisEvaluationsId,
+  useGetApiClients,
   // usePostApiHedisEvaluateId,
 } from "@/api";
 import { toast } from "sonner";
@@ -617,7 +618,14 @@ function RowAction({
 
     // Show "Begin QA Review" for Pending QA, QA Returned, Rework
     if (
-      ["Assigned", "Pending QA", "QA Returned", "Rework"].includes(row.status)
+      [
+        "Assigned",
+        "Pending QA",
+        "QA Returned",
+        "Rework",
+        "Completed",
+        "Audit Sample",
+      ].includes(row.status)
     ) {
       return (
         <button
@@ -1674,31 +1682,31 @@ function AddClientModal({
 ───────────────────────────────────────────────────────────── */
 function BulkBar({ count, onClear }: { count: number; onClear: () => void }) {
   const actions = [
-    {
-      label: "Bulk Assign",
-      icon: UserPlus,
-      cls: "text-primary hover:bg-primary/10",
-    },
-    {
-      label: "Reassign",
-      icon: RefreshCw,
-      cls: "text-cyan-600 hover:bg-cyan-50",
-    },
-    {
-      label: "Change Priority",
-      icon: Flag,
-      cls: "text-amber-600 hover:bg-amber-50",
-    },
-    {
-      label: "Send to QA",
-      icon: SendHorizontal,
-      cls: "text-violet-600 hover:bg-violet-50",
-    },
-    {
-      label: "Mark Complete",
-      icon: CheckCircle2,
-      cls: "text-emerald-600 hover:bg-emerald-50",
-    },
+    // {
+    //   label: "Bulk Assign",
+    //   icon: UserPlus,
+    //   cls: "text-primary hover:bg-primary/10",
+    // },
+    // {
+    //   label: "Reassign",
+    //   icon: RefreshCw,
+    //   cls: "text-cyan-600 hover:bg-cyan-50",
+    // },
+    // {
+    //   label: "Change Priority",
+    //   icon: Flag,
+    //   cls: "text-amber-600 hover:bg-amber-50",
+    // },
+    // {
+    //   label: "Send to QA",
+    //   icon: SendHorizontal,
+    //   cls: "text-violet-600 hover:bg-violet-50",
+    // },
+    // {
+    //   label: "Mark Complete",
+    //   icon: CheckCircle2,
+    //   cls: "text-emerald-600 hover:bg-emerald-50",
+    // },
   ];
   return (
     <div className="flex items-center gap-2 px-4 py-2.5 bg-primary/5 border-b border-primary/20">
@@ -1817,6 +1825,7 @@ export function WorkQueue({
   const { userDetail } = usePermissions();
   const rawRole = userDetail?.user_role?.name?.toLowerCase();
   const [search, setSearch] = useState(globalSearch);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
 
   // ===============================
   // ASSIGN MUTATION
@@ -2009,9 +2018,12 @@ export function WorkQueue({
     {
       tab: selectedTab as any,
 
-      measurementYear: measurementYear || undefined,   // null → undefined = no filter
+      measurementYear: measurementYear || undefined, // null → undefined = no filter
       search: globalSearch || undefined,
-
+      client_id:
+        effectiveRole === "program-manager"
+          ? selectedClientId || undefined
+          : undefined,
       plan: filterPlan !== "All Plans" ? filterPlan : undefined,
 
       priority: filterPriority !== "All" ? filterPriority : undefined,
@@ -2438,6 +2450,29 @@ export function WorkQueue({
     }
   };
 
+  // Remove MOCK_CLIENTS completely
+
+  // Add these states near other useState declarations
+
+  // Fetch real clients
+  const { data: clientsResponse, isLoading: clientsLoading } = useGetApiClients(
+    {
+      search: clientSearch || undefined,
+      limit: 50,
+    }
+  );
+  // Auto-select first client when clients are loaded
+  // Auto-select first client (Only for Program Manager)
+  useEffect(() => {
+    if (
+      effectiveRole === "program-manager" &&
+      clientsResponse?.data?.length > 0 &&
+      selectedClientId === null
+    ) {
+      setSelectedClientId(clientsResponse.data[0].id);
+    }
+  }, [clientsResponse?.data, selectedClientId, effectiveRole]);
+
   return (
     <div className="flex h-full overflow-hidden bg-background">
       {/* ══════════════════════════════════════════════════════
@@ -2452,21 +2487,14 @@ export function WorkQueue({
             <div className="flex flex-col items-center py-3 h-full">
               <button
                 onClick={() => setClientSidebarCollapsed(false)}
-                className="inline-flex items-center gap-2 whitespace-nowrap p-2 rounded hover:bg-muted transition-colors"
-                title="Expand clients"
+                className="p-2 rounded hover:bg-muted"
               >
                 <ChevronRight className="w-4 h-4 text-primary" />
               </button>
-              <div className="mt-3 flex flex-col items-center gap-2">
-                <Building2 className="w-4 h-4 text-primary" />
-                <span className="text-[10px] font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded-full border border-primary/20">
-                  {MOCK_CLIENTS.filter((c) => c.status === "Active").length}
-                </span>
-              </div>
             </div>
           ) : (
             <>
-              {/* Client sidebar header */}
+              {/* Header */}
               <div className="flex-shrink-0 px-3 pt-3 pb-2.5 border-b border-border">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-1.5">
@@ -2475,144 +2503,163 @@ export function WorkQueue({
                       Clients
                     </span>
                     <span className="text-[10px] font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded-full border border-primary/20">
-                      {MOCK_CLIENTS.filter((c) => c.status === "Active").length}
+                      {clientsResponse?.data?.length || 0}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 whitespace-nowrap">
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => setShowAddClient(true)}
-                      className="inline-flex items-center gap-1 whitespace-nowrap px-2 py-1 text-[10px] font-bold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-                      title="Add new client"
+                      className="text-[10px] font-bold bg-primary text-white px-2 py-1 rounded-lg hover:bg-primary/90"
                     >
-                      <Plus className="w-3 h-3" />
-                      Add
+                      <Plus className="w-3 h-3 inline" /> Add
                     </button>
                     <button
                       onClick={() => setClientSidebarCollapsed(true)}
-                      className="inline-flex items-center gap-2 whitespace-nowrap p-1 rounded hover:bg-muted transition-colors"
-                      title="Minimize clients"
+                      className="p-1 rounded hover:bg-muted"
                     >
-                      <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground" />
+                      <ChevronLeft className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
-                <div className="relative mb-2">
+
+                <div className="relative">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                   <input
                     type="text"
                     placeholder="Search clients..."
                     value={clientSearch}
                     onChange={(e) => setClientSearch(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 text-[11px] border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full pl-8 pr-3 py-1.5 text-[11px] border border-border rounded-lg bg-background placeholder:text-muted-foreground"
                   />
                 </div>
               </div>
 
-              {/* Client list */}
+              {/* Client List */}
               <div className="flex-1 overflow-y-auto">
-                {filteredClients.map((client) => (
-                  <button
-                    key={client.id}
-                    onClick={() =>
-                      setSelectedClient(
-                        client.id === selectedClient ? null : client.id
-                      )
-                    }
-                    className={`w-full text-left px-3 py-2.5 border-b border-border hover:bg-muted/50 transition-colors ${selectedClient === client.id ? "bg-primary/5" : ""}`}
-                  >
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
-                          <Building2 className="w-3.5 h-3.5 text-primary" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[11px] font-bold text-foreground truncate">
-                            {client.name}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground">
-                            {client.type}
-                          </p>
-                        </div>
-                      </div>
-                      <span
-                        className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold flex-shrink-0 ${
-                          client.status === "Active"
-                            ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                            : client.status === "Onboarding"
-                              ? "bg-blue-100 text-blue-700 border border-blue-200"
-                              : "bg-slate-100 text-slate-600 border border-slate-200"
-                        }`}
-                      >
-                        {client.status}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2 mt-2">
-                      <div className="text-center">
-                        <p className="text-[10px] font-bold text-foreground">
-                          {client.activeCases}
-                        </p>
-                        <p className="text-[9px] text-muted-foreground">
-                          Active
-                        </p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-[10px] font-bold text-foreground">
-                          {client.completedCases}
-                        </p>
-                        <p className="text-[9px] text-muted-foreground">Done</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-[10px] font-bold text-foreground">
-                          {(client.memberCount / 1000).toFixed(1)}k
-                        </p>
-                        <p className="text-[9px] text-muted-foreground">
-                          Members
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-2 text-[10px] text-muted-foreground">
-                      <span className="inline-flex items-center gap-1">
-                        <User className="w-3 h-3" />
-                        {client.primaryContact}
-                      </span>
-                    </div>
-                  </button>
-                ))}
-                {filteredClients.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                    <Search className="w-7 h-7 opacity-30 mb-2" />
-                    <p className="text-[12px]">No clients found</p>
+                {clientsLoading ? (
+                  <div className="p-4 text-center text-muted-foreground text-sm">
+                    Loading clients...
                   </div>
+                ) : clientsResponse?.data?.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground">
+                    No clients found
+                  </div>
+                ) : (
+                  clientsResponse?.data?.map((client: any) => (
+                    <button
+                      key={client.id}
+                      onClick={() => {
+                        setSelectedClientId(
+                          client.id === selectedClientId ? null : client.id
+                        );
+                        setPage(1);
+                      }}
+                      className={`w-full text-left px-3 py-3 border-b border-border hover:bg-muted/50 transition-colors ${
+                        selectedClientId === client.id ? "bg-primary/5" : ""
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
+                            <Building2 className="w-3.5 h-3.5 text-primary" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-bold text-foreground truncate">
+                              {client.org_name}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {client.client_id}
+                            </p>
+                          </div>
+                        </div>
+
+                        <span
+                          className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                            client.status === "Active"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "bg-amber-100 text-amber-700"
+                          }`}
+                        >
+                          {client.status}
+                        </span>
+                      </div>
+
+                      {/* Stats Grid - Updated with member_count */}
+                      <div className="grid grid-cols-3 gap-2 mt-2 text-center">
+                        <div>
+                          <p className="text-[10px] font-bold text-foreground">
+                            {client.total_charts || 0}
+                          </p>
+                          <p className="text-[9px] text-muted-foreground">
+                            Charts
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-[10px] font-bold text-foreground">
+                            {client.completed_charts || 0}
+                          </p>
+                          <p className="text-[9px] text-muted-foreground">
+                            Done
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-[10px] font-bold text-foreground">
+                            {client.active_patient_count || 0}{" "}
+                          </p>
+                          <p className="text-[9px] text-muted-foreground">
+                            Members
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Primary Contact - Below the grid */}
+                      <div className="mt-2 text-[10px] text-muted-foreground flex items-center gap-1">
+                        <User className="w-3 h-3" />
+                        <span className="truncate">
+                          {client.primary_contact || "—"}
+                        </span>
+                      </div>
+                    </button>
+                  ))
                 )}
               </div>
-
-              {/* Client stats footer */}
-              <div className="flex-shrink-0 border-t border-border px-3 py-2.5">
-                <div className="grid grid-cols-3 gap-2 text-center">
+              {/* Client Stats Footer */}
+              <div className="flex-shrink-0 border-t border-border px-3 py-2.5 bg-card">
+                <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
                   <div>
-                    <p className="text-sm font-bold text-emerald-600">
-                      {MOCK_CLIENTS.filter((c) => c.status === "Active").length}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">Active</p>
+                    <span className="font-bold text-emerald-600">
+                      {clientsResponse?.data?.filter(
+                        (c: any) => c.status === "Active"
+                      ).length || 0}
+                    </span>
+                    <span className="block text-[9px] text-muted-foreground">
+                      Active
+                    </span>
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-blue-600">
-                      {
-                        MOCK_CLIENTS.filter((c) => c.status === "Onboarding")
-                          .length
-                      }
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">
+                    <span className="font-bold text-blue-600">
+                      {clientsResponse?.data?.filter(
+                        (c: any) => c.status === "Onboarding"
+                      ).length || 0}
+                    </span>
+                    <span className="block text-[9px] text-muted-foreground">
                       Onboarding
-                    </p>
+                    </span>
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-primary">
-                      {MOCK_CLIENTS.reduce((sum, c) => sum + c.activeCases, 0)}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      Total Cases
-                    </p>
+                    <span className="font-bold text-primary">
+                      {(
+                        clientsResponse?.data?.reduce(
+                          (sum: number, c: any) => sum + (c.total_charts || 0),
+                          0
+                        ) || 0
+                      ).toLocaleString()}
+                    </span>
+                    <span className="block text-[9px] text-muted-foreground">
+                      Charts
+                    </span>
                   </div>
                 </div>
               </div>
@@ -2691,26 +2738,28 @@ export function WorkQueue({
                 />
                 {isFetching ? "Refreshing..." : "Refresh"}
               </button>
-              <button
-                disabled={selected.size === 0}
-                onClick={() => {
-                  setAssignModal(Array.from(selected));
-                }}
-                className={`inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 text-xs font-bold rounded-lg transition-colors
-                ${
-                  selected.size === 0
-                    ? "bg-slate-300 text-slate-500 cursor-not-allowed"
-                    : "bg-primary text-white hover:bg-primary/90"
-                }`}
-              >
-                <UserPlus className="w-3.5 h-3.5" />
-                Bulk Assign
-                {selected.size > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full bg-white/20 text-[10px]">
-                    {selected.size}
-                  </span>
-                )}
-              </button>
+              {effectiveRole === "program-manager" && (
+                <button
+                  disabled={selected.size === 0}
+                  onClick={() => {
+                    setAssignModal(Array.from(selected));
+                  }}
+                  className={`inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 text-xs font-bold rounded-lg transition-colors
+        ${
+          selected.size === 0
+            ? "bg-slate-300 text-slate-500 cursor-not-allowed"
+            : "bg-primary text-white hover:bg-primary/90"
+        }`}
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  Bulk Assign
+                  {selected.size > 0 && (
+                    <span className="px-1.5 py-0.5 rounded-full bg-white/20 text-[10px]">
+                      {selected.size}
+                    </span>
+                  )}
+                </button>
+              )}
               <button
                 onClick={handleExport}
                 className="inline-flex items-center gap-2 whitespace-nowrap px-3 py-1.5 text-xs font-semibold border border-border rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
@@ -2962,18 +3011,21 @@ export function WorkQueue({
           <table className="w-full border-collapse min-w-[1100px]">
             <thead>
               <tr className="bg-muted/40 border-b border-border">
-                <th className="px-3 py-3 w-8">
-                  <button
-                    onClick={toggleAll}
-                    className="flex items-center justify-center w-4 h-4"
-                  >
-                    {allOnPage ? (
-                      <CheckSquare className="w-4 h-4 text-primary" />
-                    ) : (
-                      <Square className="w-4 h-4 text-muted-foreground" />
-                    )}
-                  </button>
-                </th>
+                {/* Checkbox Header - Only for Program Manager */}
+                {effectiveRole === "program-manager" && (
+                  <th className="px-3 py-3 w-8">
+                    <button
+                      onClick={toggleAll}
+                      className="flex items-center justify-center w-4 h-4"
+                    >
+                      {allOnPage ? (
+                        <CheckSquare className="w-4 h-4 text-primary" />
+                      ) : (
+                        <Square className="w-4 h-4 text-muted-foreground" />
+                      )}
+                    </button>
+                  </th>
+                )}
                 <Th
                   col="id"
                   label="Chart ID"
@@ -3050,18 +3102,21 @@ export function WorkQueue({
                       className={`group hover:bg-muted/20 transition-colors ${isSel ? "bg-primary/5" : "bg-card"} ${row.overdue ? "border-l-2 border-l-red-400" : ""}`}
                     >
                       {/* Checkbox */}
-                      <td className="px-3 py-3">
-                        <button
-                          onClick={() => toggleRow(row.id)}
-                          className="flex items-center justify-center w-4 h-4"
-                        >
-                          {isSel ? (
-                            <CheckSquare className="w-4 h-4 text-primary" />
-                          ) : (
-                            <Square className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100" />
-                          )}
-                        </button>
-                      </td>
+                      {/* Checkbox - Only for Program Manager */}
+                      {effectiveRole === "program-manager" && (
+                        <td className="px-3 py-3">
+                          <button
+                            onClick={() => toggleRow(row.id)}
+                            className="flex items-center justify-center w-4 h-4"
+                          >
+                            {isSel ? (
+                              <CheckSquare className="w-4 h-4 text-primary" />
+                            ) : (
+                              <Square className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100" />
+                            )}
+                          </button>
+                        </td>
+                      )}
 
                       {/* Chart ID */}
                       {/* Chart ID */}
@@ -3353,57 +3408,44 @@ export function WorkQueue({
           </div>
         </div>
 
-        {/* MODALS */}
         {assignModal.length > 0 && (
           <AssignModal
             chartIds={assignModal}
             roleType={effectiveRole === "qa-analyst" ? "QA" : "Abstractor"}
             onClose={() => setAssignModal([])}
-            onAssign={async ({ abstractorId, qaId }) => {
+            onAssign={async ({ abstractorId, qaId, note, priority }) => {
               try {
-                // SINGLE CHART ASSIGN
-                if (assignModal.length === 1) {
-                  const chartId = assignModal[0];
+                const isSingle = assignModal.length === 1;
+
+                if (isSingle) {
+                  // ==================== SINGLE ASSIGN ====================
+                  const patientId = assignModal[0];
 
                   await assignPatientMutation.mutateAsync({
-                    id: chartId,
+                    id: patientId,
                     data: {
                       abstractorId,
                       qaId,
                     },
                   });
 
-                  await updateStageMutation.mutateAsync({
-                    id: chartId,
-                    data: {
-                      stage: "Assigned",
-                    },
-                  });
+                  // Optional: Update stage to Assigned
+                  if (assignPatientMutation.isSuccess) {
+                    await updateStageMutation.mutateAsync({
+                      id: patientId,
+                      data: { stage: "Assigned" },
+                    });
+                  }
 
                   toast.success("Chart assigned successfully");
-                }
-
-                // BULK CHART ASSIGN
-                else {
-                  const assigned_users = [];
-                  if (abstractorId) {
-                    assigned_users.push({
-                      user_id: abstractorId,
-                      assigned_role: "Chart Abstractor",
-                    });
-                  }
-                  if (qaId) {
-                    assigned_users.push({
-                      user_id: qaId,
-                      assigned_role: "Quality Analyst",
-                    });
-                  }
-
+                } else {
+                  // ==================== BULK ASSIGN ====================
                   const payload = {
-                    chart_ids: assignModal,
-                    assigned_users,
-                    priority: "Medium",
-                    assignment_note: "Bulk assigned from Work Queue",
+                    patient_ids: assignModal,
+                    abstractorId: abstractorId || undefined,
+                    qaId: qaId || undefined,
+                    priority: priority || "Medium",
+                    assignment_note: note || `Bulk assignment from Work Queue`,
                   };
 
                   await bulkAssignMutation.mutateAsync({
@@ -3415,13 +3457,13 @@ export function WorkQueue({
                   );
                 }
 
+                // Reset UI
                 setAssignModal([]);
                 setSelected(new Set());
-
-                refetch();
+                refetch(); // Refresh the work queue
               } catch (error) {
-                console.error(error);
-                toast.error("Failed to assign charts");
+                console.error("Assignment failed:", error);
+                toast.error("Failed to assign chart(s). Please try again.");
               }
             }}
           />

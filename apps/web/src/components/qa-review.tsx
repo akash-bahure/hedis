@@ -903,14 +903,13 @@ export function QAReview({
     );
   }, [evaluationsData]);
 
-  // Filter out "Not Eligible" measures for dropdown
-  const eligibleMeasures = useMemo(() => {
-    return allEvaluations.filter((m: any) => {
-      const status = (m.status || "").toLowerCase();
-      // return m.eligible === true && status !== "not eligible";
-      return status !== "error";
-    });
-  }, [allEvaluations]);
+// Filter out "Error" and "Not Eligible" measures for dropdown
+const eligibleMeasures = useMemo(() => {
+  return allEvaluations.filter((m: any) => {
+    const status = (m.status || "").toLowerCase().trim();
+    return status !== "error" && status !== "not eligible";
+  });
+}, [allEvaluations]);
 
   // === FETCH QA REVIEW DETAILS (AI Analysis) ===
   const {
