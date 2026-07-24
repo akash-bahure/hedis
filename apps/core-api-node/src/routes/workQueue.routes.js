@@ -210,7 +210,7 @@ router.get("/", authMiddleware, controller.getWorkQueue);
  * @swagger
  * /api/work-queue/reassign:
  *   post:
- *     summary: Reassign a patient chart to an Abstractor and/or QA user
+ *     summary: Reassign patient(s) - Supports Single & Bulk
  *     tags: [Work Queue]
  *     security:
  *       - bearerAuth: []
@@ -221,10 +221,13 @@ router.get("/", authMiddleware, controller.getWorkQueue);
  *           schema:
  *             type: object
  *             properties:
- *               patientId:
- *                 type: string
- *               chartId:
- *                 type: string
+ *               patientIds:
+ *                 type: array
+ *                 items: { type: string }
+ *                 description: List of patient UUIDs
+ *               chartIds:
+ *                 type: array
+ *                 items: { type: string }
  *               abstractorId:
  *                 type: string
  *                 format: uuid
@@ -232,28 +235,23 @@ router.get("/", authMiddleware, controller.getWorkQueue);
  *                 type: string
  *                 format: uuid
  *     responses:
- *       200:
- *         description: Patient chart reassigned successfully
- *       400:
- *         description: Bad request - missing parameters
- *       404:
- *         description: Patient or chart not found
- *       500:
- *         description: Internal Server Error
+ *       200: { description: Success }
+ *       400: { description: Bad Request }
+ *       500: { description: Server Error }
  */
 router.post("/reassign", authMiddleware, controller.reassignChart);
+router.post("/reassign/:patientId", authMiddleware, controller.reassignChart);
 router.post(
   "/reassign/:patientId/:chartId",
   authMiddleware,
   controller.reassignChart
 );
-router.post("/reassign/:patientId", authMiddleware, controller.reassignChart);
 
 /**
  * @swagger
  * /api/work-queue/change-priority:
  *   post:
- *     summary: Change priority of a patient chart
+ *     summary: Change priority of patient(s) - Supports Single & Bulk
  *     tags: [Work Queue]
  *     security:
  *       - bearerAuth: []
@@ -263,34 +261,29 @@ router.post("/reassign/:patientId", authMiddleware, controller.reassignChart);
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - priority
  *             properties:
- *               patientId:
- *                 type: string
- *               chartId:
- *                 type: string
+ *               patientIds:
+ *                 type: array
+ *                 items: { type: string }
+ *               chartIds:
+ *                 type: array
+ *                 items: { type: string }
  *               priority:
  *                 type: string
  *                 enum: [Urgent, High, Medium, Low]
  *     responses:
- *       200:
- *         description: Priority updated successfully
- *       400:
- *         description: Bad request - missing parameters
- *       404:
- *         description: Patient or chart not found
- *       500:
- *         description: Internal Server Error
+ *       200: { description: Success }
+ *       400: { description: Bad Request }
+ *       500: { description: Server Error }
  */
 router.post("/change-priority", authMiddleware, controller.changePriority);
 router.post(
-  "/change-priority/:patientId/:chartId",
+  "/change-priority/:patientId",
   authMiddleware,
   controller.changePriority
 );
 router.post(
-  "/change-priority/:patientId",
+  "/change-priority/:patientId/:chartId",
   authMiddleware,
   controller.changePriority
 );
@@ -299,7 +292,7 @@ router.post(
  * @swagger
  * /api/work-queue/mark-complete:
  *   post:
- *     summary: Mark a patient chart as Complete (Chart Status = Completed, Patient Stage = QA Passed)
+ *     summary: Mark Complete patient chart(s) - Supports Single & Bulk
  *     tags: [Work Queue]
  *     security:
  *       - bearerAuth: []
@@ -310,28 +303,25 @@ router.post(
  *           schema:
  *             type: object
  *             properties:
- *               patientId:
- *                 type: string
- *               chartId:
- *                 type: string
+ *               patientIds:
+ *                 type: array
+ *                 items: { type: string }
+ *               chartIds:
+ *                 type: array
+ *                 items: { type: string }
  *     responses:
- *       200:
- *         description: Patient chart marked complete successfully
- *       400:
- *         description: Bad request - missing parameters
- *       404:
- *         description: Patient or chart not found
- *       500:
- *         description: Internal Server Error
+ *       200: { description: Success }
+ *       400: { description: Bad Request }
+ *       500: { description: Server Error }
  */
 router.post("/mark-complete", authMiddleware, controller.markComplete);
 router.post(
-  "/mark-complete/:patientId/:chartId",
+  "/mark-complete/:patientId",
   authMiddleware,
   controller.markComplete
 );
 router.post(
-  "/mark-complete/:patientId",
+  "/mark-complete/:patientId/:chartId",
   authMiddleware,
   controller.markComplete
 );
