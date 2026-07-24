@@ -51,6 +51,11 @@ export type GetApiWorkQueueQueryParams = {
    */
   project_id?: string;
   /**
+   * @description Filter by Client UUID (used when user selects a client from the sidebar)
+   * @type string | undefined, uuid
+   */
+  client_id?: string;
+  /**
    * @description Filter charts by Payer/Health Plan (e.g. Medicare, Medicaid, Commercial)
    * @type string | undefined
    */

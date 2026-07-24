@@ -4,12 +4,12 @@
  */
 
 /**
- * @description Charts assigned successfully
+ * @description Bulk assignment successful
  */
-export type PostApiChartAssignmentsBulkAssign201 = any;
+export type PostApiChartAssignmentsBulkAssign200 = any;
 
 /**
- * @description Validation Error
+ * @description Validation error
  */
 export type PostApiChartAssignmentsBulkAssign400 = any;
 
@@ -19,17 +19,9 @@ export type PostApiChartAssignmentsBulkAssign400 = any;
 export type PostApiChartAssignmentsBulkAssign401 = any;
 
 /**
- * @description Internal Server Error
+ * @description Internal server error
  */
 export type PostApiChartAssignmentsBulkAssign500 = any;
-
-export const assignedUsersAssignedRoleEnum = {
-  "Chart Abstractor": "Chart Abstractor",
-  "Quality Analyst": "Quality Analyst",
-} as const;
-
-export type AssignedUsersAssignedRoleEnumKey =
-  (typeof assignedUsersAssignedRoleEnum)[keyof typeof assignedUsersAssignedRoleEnum];
 
 export const postApiChartAssignmentsBulkAssignMutationRequestPriorityEnum = {
   Urgent: "Urgent",
@@ -43,23 +35,25 @@ export type PostApiChartAssignmentsBulkAssignMutationRequestPriorityEnumKey =
 
 export type PostApiChartAssignmentsBulkAssignMutationRequest = {
   /**
-   * @description Selected Chart IDs
+   * @description Array of patient UUIDs (preferred)
    * @type array
    */
-  chart_ids: string[];
+  patient_ids: string[];
   /**
-   * @type array
+   * @description Alternative for chart UUIDs (backward compatibility)
+   * @type array | undefined
    */
-  assigned_users: {
-    /**
-     * @type string, uuid
-     */
-    user_id: string;
-    /**
-     * @type string
-     */
-    assigned_role: AssignedUsersAssignedRoleEnumKey;
-  }[];
+  chart_ids?: string[];
+  /**
+   * @description UUID of Chart Abstractor
+   * @type string | undefined, uuid
+   */
+  abstractorId?: string;
+  /**
+   * @description UUID of Quality Analyst
+   * @type string | undefined, uuid
+   */
+  qaId?: string;
   /**
    * @type string | undefined
    */
@@ -71,10 +65,10 @@ export type PostApiChartAssignmentsBulkAssignMutationRequest = {
 };
 
 export type PostApiChartAssignmentsBulkAssignMutationResponse =
-  PostApiChartAssignmentsBulkAssign201;
+  PostApiChartAssignmentsBulkAssign200;
 
 export type PostApiChartAssignmentsBulkAssignMutation = {
-  Response: PostApiChartAssignmentsBulkAssign201;
+  Response: PostApiChartAssignmentsBulkAssign200;
   Request: PostApiChartAssignmentsBulkAssignMutationRequest;
   Errors:
     | PostApiChartAssignmentsBulkAssign400

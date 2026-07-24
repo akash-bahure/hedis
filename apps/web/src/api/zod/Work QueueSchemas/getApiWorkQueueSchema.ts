@@ -47,6 +47,14 @@ export const getApiWorkQueueQueryParamsSchema = z.object({
   project_id: z.optional(
     z.string().uuid().describe("Filter charts by Project UUID"),
   ),
+  client_id: z.optional(
+    z
+      .string()
+      .uuid()
+      .describe(
+        "Filter by Client UUID (used when user selects a client from the sidebar)",
+      ),
+  ),
   plan: z.optional(
     z
       .string()

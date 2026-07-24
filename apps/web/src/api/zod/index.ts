@@ -107,7 +107,7 @@ export {
   postApiAuthTwoFaValidateOtpMutationResponseSchema,
 } from "./AuthSchemas/postApiAuthTwoFaValidateOtpSchema.ts";
 export {
-  postApiChartAssignmentsBulkAssign201Schema,
+  postApiChartAssignmentsBulkAssign200Schema,
   postApiChartAssignmentsBulkAssign400Schema,
   postApiChartAssignmentsBulkAssign401Schema,
   postApiChartAssignmentsBulkAssign500Schema,
@@ -1001,6 +1001,30 @@ export {
   getApiWorkQueueQueryParamsSchema,
   getApiWorkQueueQueryResponseSchema,
 } from "./Work QueueSchemas/getApiWorkQueueSchema.ts";
+export {
+  postApiWorkQueueChangePriority200Schema,
+  postApiWorkQueueChangePriority400Schema,
+  postApiWorkQueueChangePriority404Schema,
+  postApiWorkQueueChangePriority500Schema,
+  postApiWorkQueueChangePriorityMutationRequestSchema,
+  postApiWorkQueueChangePriorityMutationResponseSchema,
+} from "./Work QueueSchemas/postApiWorkQueueChangePrioritySchema.ts";
+export {
+  postApiWorkQueueMarkComplete200Schema,
+  postApiWorkQueueMarkComplete400Schema,
+  postApiWorkQueueMarkComplete404Schema,
+  postApiWorkQueueMarkComplete500Schema,
+  postApiWorkQueueMarkCompleteMutationRequestSchema,
+  postApiWorkQueueMarkCompleteMutationResponseSchema,
+} from "./Work QueueSchemas/postApiWorkQueueMarkCompleteSchema.ts";
+export {
+  postApiWorkQueueReassign200Schema,
+  postApiWorkQueueReassign400Schema,
+  postApiWorkQueueReassign404Schema,
+  postApiWorkQueueReassign500Schema,
+  postApiWorkQueueReassignMutationRequestSchema,
+  postApiWorkQueueReassignMutationResponseSchema,
+} from "./Work QueueSchemas/postApiWorkQueueReassignSchema.ts";
 export { auditLogSchema } from "./auditLogSchema.ts";
 export { shiftScheduleMatrixSchema } from "./shiftScheduleMatrixSchema.ts";
 export { userSchema } from "./userSchema.ts";

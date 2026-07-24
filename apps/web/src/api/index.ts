@@ -342,6 +342,9 @@ export type { GetApiWorkQueueQueryKey } from "./hooks/Work QueueHooks/useGetApiW
 export type { GetApiWorkQueueInfiniteQueryKey } from "./hooks/Work QueueHooks/useGetApiWorkQueueInfinite.ts";
 export type { GetApiWorkQueueSuspenseQueryKey } from "./hooks/Work QueueHooks/useGetApiWorkQueueSuspense.ts";
 export type { GetApiWorkQueueSuspenseInfiniteQueryKey } from "./hooks/Work QueueHooks/useGetApiWorkQueueSuspenseInfinite.ts";
+export type { PostApiWorkQueueChangePriorityMutationKey } from "./hooks/Work QueueHooks/usePostApiWorkQueueChangePriority.ts";
+export type { PostApiWorkQueueMarkCompleteMutationKey } from "./hooks/Work QueueHooks/usePostApiWorkQueueMarkComplete.ts";
+export type { PostApiWorkQueueReassignMutationKey } from "./hooks/Work QueueHooks/usePostApiWorkQueueReassign.ts";
 export type {
   AuditLog,
   AuditLogRiskLevelEnumKey,
@@ -1329,8 +1332,7 @@ export type {
   PostApiAuthTwoFaValidateOtpMutationResponse,
 } from "./types/PostApiAuthTwoFaValidateOtp.ts";
 export type {
-  AssignedUsersAssignedRoleEnumKey,
-  PostApiChartAssignmentsBulkAssign201,
+  PostApiChartAssignmentsBulkAssign200,
   PostApiChartAssignmentsBulkAssign400,
   PostApiChartAssignmentsBulkAssign401,
   PostApiChartAssignmentsBulkAssign500,
@@ -1552,6 +1554,34 @@ export type {
   PostApiUsersDeactivateMutationRequest,
   PostApiUsersDeactivateMutationResponse,
 } from "./types/PostApiUsersDeactivate.ts";
+export type {
+  PostApiWorkQueueChangePriority200,
+  PostApiWorkQueueChangePriority400,
+  PostApiWorkQueueChangePriority404,
+  PostApiWorkQueueChangePriority500,
+  PostApiWorkQueueChangePriorityMutation,
+  PostApiWorkQueueChangePriorityMutationRequest,
+  PostApiWorkQueueChangePriorityMutationRequestPriorityEnumKey,
+  PostApiWorkQueueChangePriorityMutationResponse,
+} from "./types/PostApiWorkQueueChangePriority.ts";
+export type {
+  PostApiWorkQueueMarkComplete200,
+  PostApiWorkQueueMarkComplete400,
+  PostApiWorkQueueMarkComplete404,
+  PostApiWorkQueueMarkComplete500,
+  PostApiWorkQueueMarkCompleteMutation,
+  PostApiWorkQueueMarkCompleteMutationRequest,
+  PostApiWorkQueueMarkCompleteMutationResponse,
+} from "./types/PostApiWorkQueueMarkComplete.ts";
+export type {
+  PostApiWorkQueueReassign200,
+  PostApiWorkQueueReassign400,
+  PostApiWorkQueueReassign404,
+  PostApiWorkQueueReassign500,
+  PostApiWorkQueueReassignMutation,
+  PostApiWorkQueueReassignMutationRequest,
+  PostApiWorkQueueReassignMutationResponse,
+} from "./types/PostApiWorkQueueReassign.ts";
 export type {
   PutApiClinicalTimelineEvidenceEventid200,
   PutApiClinicalTimelineEvidenceEventidMutation,
@@ -1775,6 +1805,9 @@ export { postApiUserRoles } from "./clients/postApiUserRoles.ts";
 export { postApiUsers } from "./clients/postApiUsers.ts";
 export { postApiUsersAssignRole } from "./clients/postApiUsersAssignRole.ts";
 export { postApiUsersDeactivate } from "./clients/postApiUsersDeactivate.ts";
+export { postApiWorkQueueChangePriority } from "./clients/postApiWorkQueueChangePriority.ts";
+export { postApiWorkQueueMarkComplete } from "./clients/postApiWorkQueueMarkComplete.ts";
+export { postApiWorkQueueReassign } from "./clients/postApiWorkQueueReassign.ts";
 export { putApiClinicalTimelineEvidenceEventid } from "./clients/putApiClinicalTimelineEvidenceEventid.ts";
 export { putApiSecurityComplianceAccessExpiryPolicy } from "./clients/putApiSecurityComplianceAccessExpiryPolicy.ts";
 export { putApiSecurityComplianceDataRetentionPolicy } from "./clients/putApiSecurityComplianceDataRetentionPolicy.ts";
@@ -2814,6 +2847,15 @@ export { useGetApiWorkQueueSuspense } from "./hooks/Work QueueHooks/useGetApiWor
 export { getApiWorkQueueSuspenseInfiniteQueryKey } from "./hooks/Work QueueHooks/useGetApiWorkQueueSuspenseInfinite.ts";
 export { getApiWorkQueueSuspenseInfiniteQueryOptions } from "./hooks/Work QueueHooks/useGetApiWorkQueueSuspenseInfinite.ts";
 export { useGetApiWorkQueueSuspenseInfinite } from "./hooks/Work QueueHooks/useGetApiWorkQueueSuspenseInfinite.ts";
+export { postApiWorkQueueChangePriorityMutationKey } from "./hooks/Work QueueHooks/usePostApiWorkQueueChangePriority.ts";
+export { postApiWorkQueueChangePriorityMutationOptions } from "./hooks/Work QueueHooks/usePostApiWorkQueueChangePriority.ts";
+export { usePostApiWorkQueueChangePriority } from "./hooks/Work QueueHooks/usePostApiWorkQueueChangePriority.ts";
+export { postApiWorkQueueMarkCompleteMutationKey } from "./hooks/Work QueueHooks/usePostApiWorkQueueMarkComplete.ts";
+export { postApiWorkQueueMarkCompleteMutationOptions } from "./hooks/Work QueueHooks/usePostApiWorkQueueMarkComplete.ts";
+export { usePostApiWorkQueueMarkComplete } from "./hooks/Work QueueHooks/usePostApiWorkQueueMarkComplete.ts";
+export { postApiWorkQueueReassignMutationKey } from "./hooks/Work QueueHooks/usePostApiWorkQueueReassign.ts";
+export { postApiWorkQueueReassignMutationOptions } from "./hooks/Work QueueHooks/usePostApiWorkQueueReassign.ts";
+export { usePostApiWorkQueueReassign } from "./hooks/Work QueueHooks/usePostApiWorkQueueReassign.ts";
 export { auditLogRiskLevelEnum } from "./types/AuditLog.ts";
 export { auditLogStatusEnum } from "./types/AuditLog.ts";
 export { getApiAccessLogsAccessMonitorQueryParamsAccessTypeEnum } from "./types/GetApiAccessLogsAccessMonitor.ts";
@@ -2893,7 +2935,6 @@ export { patchApiUsersIdMutationRequestUserTypeEnum } from "./types/PatchApiUser
 export { schedulesShiftEnum } from "./types/PatchApiUsersShifts.ts";
 export { postApiAuditStageMutationRequestActionEnum } from "./types/PostApiAuditAuditStage.ts";
 export { decisionsAuditStatusEnum } from "./types/PostApiAuditDecisions.ts";
-export { assignedUsersAssignedRoleEnum } from "./types/PostApiChartAssignmentsBulkAssign.ts";
 export { postApiChartAssignmentsBulkAssignMutationRequestPriorityEnum } from "./types/PostApiChartAssignmentsBulkAssign.ts";
 export { postApiClientsMutationRequestContractTypeEnum } from "./types/PostApiClients.ts";
 export { postApiClientsMutationRequestMeasureYearEnum } from "./types/PostApiClients.ts";
@@ -2911,6 +2952,7 @@ export { postApiProjectsMutationRequestStatusEnum } from "./types/PostApiProject
 export { rolePermissionsModuleEnum } from "./types/PostApiUserRoles.ts";
 export { postApiUsersMutationRequestShiftEnum } from "./types/PostApiUsers.ts";
 export { postApiUsersMutationRequestUserTypeEnum } from "./types/PostApiUsers.ts";
+export { postApiWorkQueueChangePriorityMutationRequestPriorityEnum } from "./types/PostApiWorkQueueChangePriority.ts";
 export { dataAuthTokenLifetimeEnum2 } from "./types/PutApiSecurityComplianceAccessExpiryPolicy.ts";
 export { dataForceReauthenticationEnum2 } from "./types/PutApiSecurityComplianceAccessExpiryPolicy.ts";
 export { dataInactivityDeactivationEnum2 } from "./types/PutApiSecurityComplianceAccessExpiryPolicy.ts";
@@ -3039,7 +3081,7 @@ export {
   postApiAuthTwoFaValidateOtpMutationResponseSchema,
 } from "./zod/AuthSchemas/postApiAuthTwoFaValidateOtpSchema.ts";
 export {
-  postApiChartAssignmentsBulkAssign201Schema,
+  postApiChartAssignmentsBulkAssign200Schema,
   postApiChartAssignmentsBulkAssign400Schema,
   postApiChartAssignmentsBulkAssign401Schema,
   postApiChartAssignmentsBulkAssign500Schema,
@@ -3933,6 +3975,30 @@ export {
   getApiWorkQueueQueryParamsSchema,
   getApiWorkQueueQueryResponseSchema,
 } from "./zod/Work QueueSchemas/getApiWorkQueueSchema.ts";
+export {
+  postApiWorkQueueChangePriority200Schema,
+  postApiWorkQueueChangePriority400Schema,
+  postApiWorkQueueChangePriority404Schema,
+  postApiWorkQueueChangePriority500Schema,
+  postApiWorkQueueChangePriorityMutationRequestSchema,
+  postApiWorkQueueChangePriorityMutationResponseSchema,
+} from "./zod/Work QueueSchemas/postApiWorkQueueChangePrioritySchema.ts";
+export {
+  postApiWorkQueueMarkComplete200Schema,
+  postApiWorkQueueMarkComplete400Schema,
+  postApiWorkQueueMarkComplete404Schema,
+  postApiWorkQueueMarkComplete500Schema,
+  postApiWorkQueueMarkCompleteMutationRequestSchema,
+  postApiWorkQueueMarkCompleteMutationResponseSchema,
+} from "./zod/Work QueueSchemas/postApiWorkQueueMarkCompleteSchema.ts";
+export {
+  postApiWorkQueueReassign200Schema,
+  postApiWorkQueueReassign400Schema,
+  postApiWorkQueueReassign404Schema,
+  postApiWorkQueueReassign500Schema,
+  postApiWorkQueueReassignMutationRequestSchema,
+  postApiWorkQueueReassignMutationResponseSchema,
+} from "./zod/Work QueueSchemas/postApiWorkQueueReassignSchema.ts";
 export { auditLogSchema } from "./zod/auditLogSchema.ts";
 export { shiftScheduleMatrixSchema } from "./zod/shiftScheduleMatrixSchema.ts";
 export { userSchema } from "./zod/userSchema.ts";
