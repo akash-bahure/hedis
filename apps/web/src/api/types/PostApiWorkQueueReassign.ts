@@ -4,34 +4,30 @@
  */
 
 /**
- * @description Patient chart reassigned successfully
+ * @description Success
  */
 export type PostApiWorkQueueReassign200 = any;
 
 /**
- * @description Bad request - missing parameters
+ * @description Bad Request
  */
 export type PostApiWorkQueueReassign400 = any;
 
 /**
- * @description Patient or chart not found
- */
-export type PostApiWorkQueueReassign404 = any;
-
-/**
- * @description Internal Server Error
+ * @description Server Error
  */
 export type PostApiWorkQueueReassign500 = any;
 
 export type PostApiWorkQueueReassignMutationRequest = {
   /**
-   * @type string | undefined
+   * @description List of patient UUIDs
+   * @type array | undefined
    */
-  patientId?: string;
+  patientIds?: string[];
   /**
-   * @type string | undefined
+   * @type array | undefined
    */
-  chartId?: string;
+  chartIds?: string[];
   /**
    * @type string | undefined, uuid
    */
@@ -48,8 +44,5 @@ export type PostApiWorkQueueReassignMutationResponse =
 export type PostApiWorkQueueReassignMutation = {
   Response: PostApiWorkQueueReassign200;
   Request: PostApiWorkQueueReassignMutationRequest;
-  Errors:
-    | PostApiWorkQueueReassign400
-    | PostApiWorkQueueReassign404
-    | PostApiWorkQueueReassign500;
+  Errors: PostApiWorkQueueReassign400 | PostApiWorkQueueReassign500;
 };

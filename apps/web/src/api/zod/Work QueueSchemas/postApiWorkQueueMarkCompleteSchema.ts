@@ -8,39 +8,32 @@ import type { ToZod } from "../../.kubb/ToZod.ts";
 import type {
   PostApiWorkQueueMarkComplete200,
   PostApiWorkQueueMarkComplete400,
-  PostApiWorkQueueMarkComplete404,
   PostApiWorkQueueMarkComplete500,
   PostApiWorkQueueMarkCompleteMutationRequest,
   PostApiWorkQueueMarkCompleteMutationResponse,
 } from "../../types/PostApiWorkQueueMarkComplete.ts";
 
 /**
- * @description Patient chart marked complete successfully
+ * @description Success
  */
 export const postApiWorkQueueMarkComplete200Schema =
   z.unknown() as unknown as ToZod<PostApiWorkQueueMarkComplete200>;
 
 /**
- * @description Bad request - missing parameters
+ * @description Bad Request
  */
 export const postApiWorkQueueMarkComplete400Schema =
   z.unknown() as unknown as ToZod<PostApiWorkQueueMarkComplete400>;
 
 /**
- * @description Patient or chart not found
- */
-export const postApiWorkQueueMarkComplete404Schema =
-  z.unknown() as unknown as ToZod<PostApiWorkQueueMarkComplete404>;
-
-/**
- * @description Internal Server Error
+ * @description Server Error
  */
 export const postApiWorkQueueMarkComplete500Schema =
   z.unknown() as unknown as ToZod<PostApiWorkQueueMarkComplete500>;
 
 export const postApiWorkQueueMarkCompleteMutationRequestSchema = z.object({
-  patientId: z.optional(z.string()),
-  chartId: z.optional(z.string()),
+  patientIds: z.optional(z.array(z.string())),
+  chartIds: z.optional(z.array(z.string())),
 }) as unknown as ToZod<PostApiWorkQueueMarkCompleteMutationRequest>;
 
 export const postApiWorkQueueMarkCompleteMutationResponseSchema = z.lazy(

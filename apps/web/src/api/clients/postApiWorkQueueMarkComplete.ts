@@ -13,7 +13,6 @@ import type {
   PostApiWorkQueueMarkCompleteMutationRequest,
   PostApiWorkQueueMarkCompleteMutationResponse,
   PostApiWorkQueueMarkComplete400,
-  PostApiWorkQueueMarkComplete404,
   PostApiWorkQueueMarkComplete500,
 } from "../types/PostApiWorkQueueMarkComplete.ts";
 
@@ -23,7 +22,7 @@ function getPostApiWorkQueueMarkCompleteUrl() {
 }
 
 /**
- * @summary Mark a patient chart as Complete (Chart Status = Completed, Patient Stage = QA Passed)
+ * @summary Mark Complete patient chart(s) - Supports Single & Bulk
  * {@link /api/work-queue/mark-complete}
  */
 export async function postApiWorkQueueMarkComplete(
@@ -39,9 +38,7 @@ export async function postApiWorkQueueMarkComplete(
   const res = await request<
     PostApiWorkQueueMarkCompleteMutationResponse,
     ResponseErrorConfig<
-      | PostApiWorkQueueMarkComplete400
-      | PostApiWorkQueueMarkComplete404
-      | PostApiWorkQueueMarkComplete500
+      PostApiWorkQueueMarkComplete400 | PostApiWorkQueueMarkComplete500
     >,
     PostApiWorkQueueMarkCompleteMutationRequest
   >({

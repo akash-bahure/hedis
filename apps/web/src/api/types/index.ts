@@ -1210,7 +1210,6 @@ export type {
 export type {
   PostApiWorkQueueChangePriority200,
   PostApiWorkQueueChangePriority400,
-  PostApiWorkQueueChangePriority404,
   PostApiWorkQueueChangePriority500,
   PostApiWorkQueueChangePriorityMutation,
   PostApiWorkQueueChangePriorityMutationRequest,
@@ -1220,7 +1219,6 @@ export type {
 export type {
   PostApiWorkQueueMarkComplete200,
   PostApiWorkQueueMarkComplete400,
-  PostApiWorkQueueMarkComplete404,
   PostApiWorkQueueMarkComplete500,
   PostApiWorkQueueMarkCompleteMutation,
   PostApiWorkQueueMarkCompleteMutationRequest,
@@ -1229,7 +1227,6 @@ export type {
 export type {
   PostApiWorkQueueReassign200,
   PostApiWorkQueueReassign400,
-  PostApiWorkQueueReassign404,
   PostApiWorkQueueReassign500,
   PostApiWorkQueueReassignMutation,
   PostApiWorkQueueReassignMutationRequest,

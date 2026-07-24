@@ -1557,7 +1557,6 @@ export type {
 export type {
   PostApiWorkQueueChangePriority200,
   PostApiWorkQueueChangePriority400,
-  PostApiWorkQueueChangePriority404,
   PostApiWorkQueueChangePriority500,
   PostApiWorkQueueChangePriorityMutation,
   PostApiWorkQueueChangePriorityMutationRequest,
@@ -1567,7 +1566,6 @@ export type {
 export type {
   PostApiWorkQueueMarkComplete200,
   PostApiWorkQueueMarkComplete400,
-  PostApiWorkQueueMarkComplete404,
   PostApiWorkQueueMarkComplete500,
   PostApiWorkQueueMarkCompleteMutation,
   PostApiWorkQueueMarkCompleteMutationRequest,
@@ -1576,7 +1574,6 @@ export type {
 export type {
   PostApiWorkQueueReassign200,
   PostApiWorkQueueReassign400,
-  PostApiWorkQueueReassign404,
   PostApiWorkQueueReassign500,
   PostApiWorkQueueReassignMutation,
   PostApiWorkQueueReassignMutationRequest,
@@ -3978,7 +3975,6 @@ export {
 export {
   postApiWorkQueueChangePriority200Schema,
   postApiWorkQueueChangePriority400Schema,
-  postApiWorkQueueChangePriority404Schema,
   postApiWorkQueueChangePriority500Schema,
   postApiWorkQueueChangePriorityMutationRequestSchema,
   postApiWorkQueueChangePriorityMutationResponseSchema,
@@ -3986,7 +3982,6 @@ export {
 export {
   postApiWorkQueueMarkComplete200Schema,
   postApiWorkQueueMarkComplete400Schema,
-  postApiWorkQueueMarkComplete404Schema,
   postApiWorkQueueMarkComplete500Schema,
   postApiWorkQueueMarkCompleteMutationRequestSchema,
   postApiWorkQueueMarkCompleteMutationResponseSchema,
@@ -3994,7 +3989,6 @@ export {
 export {
   postApiWorkQueueReassign200Schema,
   postApiWorkQueueReassign400Schema,
-  postApiWorkQueueReassign404Schema,
   postApiWorkQueueReassign500Schema,
   postApiWorkQueueReassignMutationRequestSchema,
   postApiWorkQueueReassignMutationResponseSchema,

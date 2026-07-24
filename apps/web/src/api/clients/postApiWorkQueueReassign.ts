@@ -13,7 +13,6 @@ import type {
   PostApiWorkQueueReassignMutationRequest,
   PostApiWorkQueueReassignMutationResponse,
   PostApiWorkQueueReassign400,
-  PostApiWorkQueueReassign404,
   PostApiWorkQueueReassign500,
 } from "../types/PostApiWorkQueueReassign.ts";
 
@@ -23,7 +22,7 @@ function getPostApiWorkQueueReassignUrl() {
 }
 
 /**
- * @summary Reassign a patient chart to an Abstractor and/or QA user
+ * @summary Reassign patient(s) - Supports Single & Bulk
  * {@link /api/work-queue/reassign}
  */
 export async function postApiWorkQueueReassign(
@@ -39,9 +38,7 @@ export async function postApiWorkQueueReassign(
   const res = await request<
     PostApiWorkQueueReassignMutationResponse,
     ResponseErrorConfig<
-      | PostApiWorkQueueReassign400
-      | PostApiWorkQueueReassign404
-      | PostApiWorkQueueReassign500
+      PostApiWorkQueueReassign400 | PostApiWorkQueueReassign500
     >,
     PostApiWorkQueueReassignMutationRequest
   >({

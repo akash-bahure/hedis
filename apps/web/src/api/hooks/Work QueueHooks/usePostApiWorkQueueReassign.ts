@@ -17,7 +17,6 @@ import type {
   PostApiWorkQueueReassignMutationRequest,
   PostApiWorkQueueReassignMutationResponse,
   PostApiWorkQueueReassign400,
-  PostApiWorkQueueReassign404,
   PostApiWorkQueueReassign500,
 } from "../../types/PostApiWorkQueueReassign.ts";
 import { mutationOptions, useMutation } from "@tanstack/react-query";
@@ -39,9 +38,7 @@ export function postApiWorkQueueReassignMutationOptions<TContext = unknown>(
   return mutationOptions<
     PostApiWorkQueueReassignMutationResponse,
     ResponseErrorConfig<
-      | PostApiWorkQueueReassign400
-      | PostApiWorkQueueReassign404
-      | PostApiWorkQueueReassign500
+      PostApiWorkQueueReassign400 | PostApiWorkQueueReassign500
     >,
     { data: PostApiWorkQueueReassignMutationRequest },
     TContext
@@ -54,7 +51,7 @@ export function postApiWorkQueueReassignMutationOptions<TContext = unknown>(
 }
 
 /**
- * @summary Reassign a patient chart to an Abstractor and/or QA user
+ * @summary Reassign patient(s) - Supports Single & Bulk
  * {@link /api/work-queue/reassign}
  */
 export function usePostApiWorkQueueReassign<TContext>(
@@ -62,9 +59,7 @@ export function usePostApiWorkQueueReassign<TContext>(
     mutation?: UseMutationOptions<
       PostApiWorkQueueReassignMutationResponse,
       ResponseErrorConfig<
-        | PostApiWorkQueueReassign400
-        | PostApiWorkQueueReassign404
-        | PostApiWorkQueueReassign500
+        PostApiWorkQueueReassign400 | PostApiWorkQueueReassign500
       >,
       { data: PostApiWorkQueueReassignMutationRequest },
       TContext
@@ -84,9 +79,7 @@ export function usePostApiWorkQueueReassign<TContext>(
   ) as UseMutationOptions<
     PostApiWorkQueueReassignMutationResponse,
     ResponseErrorConfig<
-      | PostApiWorkQueueReassign400
-      | PostApiWorkQueueReassign404
-      | PostApiWorkQueueReassign500
+      PostApiWorkQueueReassign400 | PostApiWorkQueueReassign500
     >,
     { data: PostApiWorkQueueReassignMutationRequest },
     TContext
@@ -95,9 +88,7 @@ export function usePostApiWorkQueueReassign<TContext>(
   return useMutation<
     PostApiWorkQueueReassignMutationResponse,
     ResponseErrorConfig<
-      | PostApiWorkQueueReassign400
-      | PostApiWorkQueueReassign404
-      | PostApiWorkQueueReassign500
+      PostApiWorkQueueReassign400 | PostApiWorkQueueReassign500
     >,
     { data: PostApiWorkQueueReassignMutationRequest },
     TContext
@@ -111,9 +102,7 @@ export function usePostApiWorkQueueReassign<TContext>(
   ) as UseMutationResult<
     PostApiWorkQueueReassignMutationResponse,
     ResponseErrorConfig<
-      | PostApiWorkQueueReassign400
-      | PostApiWorkQueueReassign404
-      | PostApiWorkQueueReassign500
+      PostApiWorkQueueReassign400 | PostApiWorkQueueReassign500
     >,
     { data: PostApiWorkQueueReassignMutationRequest },
     TContext

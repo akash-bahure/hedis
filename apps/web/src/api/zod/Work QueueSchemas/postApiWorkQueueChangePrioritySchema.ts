@@ -8,40 +8,33 @@ import type { ToZod } from "../../.kubb/ToZod.ts";
 import type {
   PostApiWorkQueueChangePriority200,
   PostApiWorkQueueChangePriority400,
-  PostApiWorkQueueChangePriority404,
   PostApiWorkQueueChangePriority500,
   PostApiWorkQueueChangePriorityMutationRequest,
   PostApiWorkQueueChangePriorityMutationResponse,
 } from "../../types/PostApiWorkQueueChangePriority.ts";
 
 /**
- * @description Priority updated successfully
+ * @description Success
  */
 export const postApiWorkQueueChangePriority200Schema =
   z.unknown() as unknown as ToZod<PostApiWorkQueueChangePriority200>;
 
 /**
- * @description Bad request - missing parameters
+ * @description Bad Request
  */
 export const postApiWorkQueueChangePriority400Schema =
   z.unknown() as unknown as ToZod<PostApiWorkQueueChangePriority400>;
 
 /**
- * @description Patient or chart not found
- */
-export const postApiWorkQueueChangePriority404Schema =
-  z.unknown() as unknown as ToZod<PostApiWorkQueueChangePriority404>;
-
-/**
- * @description Internal Server Error
+ * @description Server Error
  */
 export const postApiWorkQueueChangePriority500Schema =
   z.unknown() as unknown as ToZod<PostApiWorkQueueChangePriority500>;
 
 export const postApiWorkQueueChangePriorityMutationRequestSchema = z.object({
-  patientId: z.optional(z.string()),
-  chartId: z.optional(z.string()),
-  priority: z.enum(["Urgent", "High", "Medium", "Low"]),
+  patientIds: z.optional(z.array(z.string())),
+  chartIds: z.optional(z.array(z.string())),
+  priority: z.optional(z.enum(["Urgent", "High", "Medium", "Low"])),
 }) as unknown as ToZod<PostApiWorkQueueChangePriorityMutationRequest>;
 
 export const postApiWorkQueueChangePriorityMutationResponseSchema = z.lazy(

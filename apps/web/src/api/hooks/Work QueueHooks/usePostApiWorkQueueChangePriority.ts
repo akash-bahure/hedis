@@ -17,7 +17,6 @@ import type {
   PostApiWorkQueueChangePriorityMutationRequest,
   PostApiWorkQueueChangePriorityMutationResponse,
   PostApiWorkQueueChangePriority400,
-  PostApiWorkQueueChangePriority404,
   PostApiWorkQueueChangePriority500,
 } from "../../types/PostApiWorkQueueChangePriority.ts";
 import { mutationOptions, useMutation } from "@tanstack/react-query";
@@ -41,9 +40,7 @@ export function postApiWorkQueueChangePriorityMutationOptions<
   return mutationOptions<
     PostApiWorkQueueChangePriorityMutationResponse,
     ResponseErrorConfig<
-      | PostApiWorkQueueChangePriority400
-      | PostApiWorkQueueChangePriority404
-      | PostApiWorkQueueChangePriority500
+      PostApiWorkQueueChangePriority400 | PostApiWorkQueueChangePriority500
     >,
     { data: PostApiWorkQueueChangePriorityMutationRequest },
     TContext
@@ -56,7 +53,7 @@ export function postApiWorkQueueChangePriorityMutationOptions<
 }
 
 /**
- * @summary Change priority of a patient chart
+ * @summary Change priority of patient(s) - Supports Single & Bulk
  * {@link /api/work-queue/change-priority}
  */
 export function usePostApiWorkQueueChangePriority<TContext>(
@@ -64,9 +61,7 @@ export function usePostApiWorkQueueChangePriority<TContext>(
     mutation?: UseMutationOptions<
       PostApiWorkQueueChangePriorityMutationResponse,
       ResponseErrorConfig<
-        | PostApiWorkQueueChangePriority400
-        | PostApiWorkQueueChangePriority404
-        | PostApiWorkQueueChangePriority500
+        PostApiWorkQueueChangePriority400 | PostApiWorkQueueChangePriority500
       >,
       { data: PostApiWorkQueueChangePriorityMutationRequest },
       TContext
@@ -86,9 +81,7 @@ export function usePostApiWorkQueueChangePriority<TContext>(
   ) as UseMutationOptions<
     PostApiWorkQueueChangePriorityMutationResponse,
     ResponseErrorConfig<
-      | PostApiWorkQueueChangePriority400
-      | PostApiWorkQueueChangePriority404
-      | PostApiWorkQueueChangePriority500
+      PostApiWorkQueueChangePriority400 | PostApiWorkQueueChangePriority500
     >,
     { data: PostApiWorkQueueChangePriorityMutationRequest },
     TContext
@@ -97,9 +90,7 @@ export function usePostApiWorkQueueChangePriority<TContext>(
   return useMutation<
     PostApiWorkQueueChangePriorityMutationResponse,
     ResponseErrorConfig<
-      | PostApiWorkQueueChangePriority400
-      | PostApiWorkQueueChangePriority404
-      | PostApiWorkQueueChangePriority500
+      PostApiWorkQueueChangePriority400 | PostApiWorkQueueChangePriority500
     >,
     { data: PostApiWorkQueueChangePriorityMutationRequest },
     TContext
@@ -113,9 +104,7 @@ export function usePostApiWorkQueueChangePriority<TContext>(
   ) as UseMutationResult<
     PostApiWorkQueueChangePriorityMutationResponse,
     ResponseErrorConfig<
-      | PostApiWorkQueueChangePriority400
-      | PostApiWorkQueueChangePriority404
-      | PostApiWorkQueueChangePriority500
+      PostApiWorkQueueChangePriority400 | PostApiWorkQueueChangePriority500
     >,
     { data: PostApiWorkQueueChangePriorityMutationRequest },
     TContext
