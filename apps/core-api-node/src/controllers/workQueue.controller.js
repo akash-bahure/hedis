@@ -1,3 +1,5 @@
+const AuditLog = require("../models/AuditLog");
+
 /**
  * GET Work Queue - Role & Stage Aware
  */
@@ -228,6 +230,320 @@ exports.getWorkQueue = async (req, res) => {
       success: false,
       message: "Internal server error",
       error: err.message,
+    });
+  }
+};
+
+/**
+ * REASSIGN PATIENT / CHART
+ * Accepts patientId and/or chartId in params or body
+ * Updates abstractor_id and/or qa_id
+ */
+exports.reassignChart = async (req, res) => {
+  const client = req.db;
+  try {
+    const schema = req.tenant.schema_name;
+
+    const patientId =
+      req.params.patientId ||
+      req.body.patientId ||
+      req.body.patient_id ||
+      req.params.id;
+    const chartId = req.params.chartId || req.body.chartId || req.body.chart_id;
+
+    let { abstractorId, abstractor_id, qaId, qa_id, userId, role } = req.body;
+    abstractorId = abstractorId || abstractor_id;
+    qaId = qaId || qa_id;
+
+    if (userId && role) {
+      const lowerRole = role.toLowerCase();
+      if (lowerRole.includes("qa") || lowerRole.includes("quality")) {
+        qaId = userId;
+      } else if (lowerRole.includes("abstractor")) {
+        abstractorId = userId;
+      }
+    }
+
+    if (!patientId && !chartId) {
+      return res.status(400).json({
+        success: false,
+        message: "patientId (or chartId) is required in params or body",
+      });
+    }
+
+    if (!abstractorId && !qaId) {
+      return res.status(400).json({
+        success: false,
+        message: "At least abstractorId or qaId is required to reassign",
+      });
+    }
+
+    const patientUpdates = [];
+    const patientValues = [];
+    let pParamIdx = 1;
+
+    if (abstractorId) {
+      patientUpdates.push(`abstractor_id = $${pParamIdx++}`);
+      patientValues.push(abstractorId);
+    }
+    if (qaId) {
+      patientUpdates.push(`qa_id = $${pParamIdx++}`);
+      patientValues.push(qaId);
+    }
+    patientUpdates.push(`updated_at = NOW()`);
+
+    let patientWhere = "";
+    if (patientId) {
+      patientWhere = `id::text = $${pParamIdx} OR patient_id = $${pParamIdx}`;
+      patientValues.push(patientId);
+    } else {
+      patientWhere = `id IN (SELECT patient_id FROM ${schema}.patient_charts WHERE id::text = $${pParamIdx} OR chart_id = $${pParamIdx})`;
+      patientValues.push(chartId);
+    }
+
+    const patientQuery = `
+      UPDATE ${schema}.patients
+      SET ${patientUpdates.join(", ")}
+      WHERE ${patientWhere}
+      RETURNING id, patient_id, first_name, last_name, abstractor_id, qa_id, priority, stage, updated_at
+    `;
+
+    const patientResult = await client.query(patientQuery, patientValues);
+
+    if (patientResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient record not found for reassignment",
+      });
+    }
+
+    const updatedPatient = patientResult.rows[0];
+
+    if (chartId || updatedPatient.id) {
+      const cVal = chartId || updatedPatient.id;
+      await client.query(
+        `UPDATE ${schema}.patient_charts SET updated_at = NOW() WHERE id::text = $1 OR chart_id = $1 OR patient_id::text = $1`,
+        [cVal]
+      );
+    }
+
+    await AuditLog.createAuditLog(client, {
+      user_id: req.user?.id,
+      user_name: req.user?.full_name || "System",
+      event_type: "Patient Reassignment",
+      details: `Reassigned patient ${updatedPatient.patient_id} (${updatedPatient.first_name} ${updatedPatient.last_name}). Abstractor: ${abstractorId || "Unchanged"}, QA: ${qaId || "Unchanged"}`,
+      ip_address: req.ip,
+      status: "Success",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Patient/chart reassigned successfully",
+      data: updatedPatient,
+    });
+  } catch (error) {
+    console.error("Reassign Chart Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * CHANGE PRIORITY
+ * Accepts patientId and/or chartId in params or body, and priority in body
+ * Updates priority in both patients and patient_charts tables
+ */
+exports.changePriority = async (req, res) => {
+  const client = req.db;
+  try {
+    const schema = req.tenant.schema_name;
+
+    const patientId =
+      req.params.patientId ||
+      req.body.patientId ||
+      req.body.patient_id ||
+      req.params.id;
+    const chartId = req.params.chartId || req.body.chartId || req.body.chart_id;
+    const priority = req.body.priority;
+
+    if (!patientId && !chartId) {
+      return res.status(400).json({
+        success: false,
+        message: "patientId or chartId parameter is required",
+      });
+    }
+
+    if (!priority) {
+      return res.status(400).json({
+        success: false,
+        message: "priority is required in request body",
+      });
+    }
+
+    const validPriorities = ["Urgent", "High", "Medium", "Low"];
+    const normalizedPriority =
+      validPriorities.find(
+        (p) => p.toLowerCase() === priority.trim().toLowerCase()
+      ) || priority;
+
+    const targetId = patientId || chartId;
+
+    let patientWhere = "";
+    if (patientId) {
+      patientWhere = `id::text = $2 OR patient_id = $2`;
+    } else {
+      patientWhere = `id IN (SELECT patient_id FROM ${schema}.patient_charts WHERE id::text = $2 OR chart_id = $2)`;
+    }
+
+    const patientQuery = `
+      UPDATE ${schema}.patients
+      SET priority = $1, updated_at = NOW()
+      WHERE ${patientWhere}
+      RETURNING id, patient_id, first_name, last_name, priority, stage, updated_at
+    `;
+
+    const patientResult = await client.query(patientQuery, [
+      normalizedPriority,
+      targetId,
+    ]);
+
+    let chartWhere = "";
+    if (chartId) {
+      chartWhere = `id::text = $2 OR chart_id = $2`;
+    } else {
+      chartWhere = `patient_id::text = $2 OR patient_id IN (SELECT id FROM ${schema}.patients WHERE patient_id = $2)`;
+    }
+
+    await client.query(
+      `UPDATE ${schema}.patient_charts SET priority = $1, updated_at = NOW() WHERE ${chartWhere}`,
+      [normalizedPriority, targetId]
+    );
+
+    if (patientResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient record not found",
+      });
+    }
+
+    const updatedPatient = patientResult.rows[0];
+
+    await AuditLog.createAuditLog(client, {
+      user_id: req.user?.id,
+      user_name: req.user?.full_name || "System",
+      event_type: "Change Priority",
+      details: `Priority updated to '${normalizedPriority}' for patient ${updatedPatient.patient_id}`,
+      ip_address: req.ip,
+      status: "Success",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Priority updated successfully",
+      data: updatedPatient,
+    });
+  } catch (error) {
+    console.error("Change Priority Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * MARK COMPLETE
+ * Accepts patientId and/or chartId in params or body
+ * Updates patient_charts status to 'Completed' and patients stage to 'QA Passed'
+ */
+exports.markComplete = async (req, res) => {
+  const client = req.db;
+  try {
+    const schema = req.tenant.schema_name;
+
+    const patientId =
+      req.params.patientId ||
+      req.body.patientId ||
+      req.body.patient_id ||
+      req.params.id;
+    const chartId = req.params.chartId || req.body.chartId || req.body.chart_id;
+
+    if (!patientId && !chartId) {
+      return res.status(400).json({
+        success: false,
+        message: "patientId or chartId parameter is required",
+      });
+    }
+
+    const targetId = patientId || chartId;
+
+    let chartWhere = "";
+    if (chartId) {
+      chartWhere = `id::text = $1 OR chart_id = $1`;
+    } else {
+      chartWhere = `patient_id::text = $1 OR patient_id IN (SELECT id FROM ${schema}.patients WHERE patient_id = $1)`;
+    }
+
+    const chartResult = await client.query(
+      `UPDATE ${schema}.patient_charts 
+       SET status = 'Completed', updated_at = NOW() 
+       WHERE ${chartWhere} 
+       RETURNING id, chart_id, patient_id, status`,
+      [targetId]
+    );
+
+    let patientWhere = "";
+    if (patientId) {
+      patientWhere = `id::text = $1 OR patient_id = $1`;
+    } else {
+      patientWhere = `id IN (SELECT patient_id FROM ${schema}.patient_charts WHERE id::text = $1 OR chart_id = $1)`;
+    }
+
+    const patientResult = await client.query(
+      `UPDATE ${schema}.patients 
+       SET stage = 'QA Passed', qa_reviewed = TRUE, updated_at = NOW() 
+       WHERE ${patientWhere} 
+       RETURNING id, patient_id, first_name, last_name, stage, qa_reviewed, updated_at`,
+      [targetId]
+    );
+
+    if (patientResult.rows.length === 0 && chartResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient or Chart record not found",
+      });
+    }
+
+    const updatedPatient = patientResult.rows[0] || {};
+    const updatedChart = chartResult.rows[0] || {};
+
+    await AuditLog.createAuditLog(client, {
+      user_id: req.user?.id,
+      user_name: req.user?.full_name || "System",
+      event_type: "Mark Complete",
+      details: `Chart ${updatedChart.chart_id || targetId} marked Completed and patient ${updatedPatient.patient_id || targetId} set to QA Passed`,
+      ip_address: req.ip,
+      status: "Success",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Patient chart marked complete successfully",
+      data: {
+        patient: updatedPatient,
+        chart: updatedChart,
+      },
+    });
+  } catch (error) {
+    console.error("Mark Complete Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
     });
   }
 };
