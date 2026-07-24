@@ -4,34 +4,29 @@
  */
 
 /**
- * @description Patient chart marked complete successfully
+ * @description Success
  */
 export type PostApiWorkQueueMarkComplete200 = any;
 
 /**
- * @description Bad request - missing parameters
+ * @description Bad Request
  */
 export type PostApiWorkQueueMarkComplete400 = any;
 
 /**
- * @description Patient or chart not found
- */
-export type PostApiWorkQueueMarkComplete404 = any;
-
-/**
- * @description Internal Server Error
+ * @description Server Error
  */
 export type PostApiWorkQueueMarkComplete500 = any;
 
 export type PostApiWorkQueueMarkCompleteMutationRequest = {
   /**
-   * @type string | undefined
+   * @type array | undefined
    */
-  patientId?: string;
+  patientIds?: string[];
   /**
-   * @type string | undefined
+   * @type array | undefined
    */
-  chartId?: string;
+  chartIds?: string[];
 };
 
 export type PostApiWorkQueueMarkCompleteMutationResponse =
@@ -40,8 +35,5 @@ export type PostApiWorkQueueMarkCompleteMutationResponse =
 export type PostApiWorkQueueMarkCompleteMutation = {
   Response: PostApiWorkQueueMarkComplete200;
   Request: PostApiWorkQueueMarkCompleteMutationRequest;
-  Errors:
-    | PostApiWorkQueueMarkComplete400
-    | PostApiWorkQueueMarkComplete404
-    | PostApiWorkQueueMarkComplete500;
+  Errors: PostApiWorkQueueMarkComplete400 | PostApiWorkQueueMarkComplete500;
 };

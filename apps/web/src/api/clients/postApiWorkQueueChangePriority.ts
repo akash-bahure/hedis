@@ -13,7 +13,6 @@ import type {
   PostApiWorkQueueChangePriorityMutationRequest,
   PostApiWorkQueueChangePriorityMutationResponse,
   PostApiWorkQueueChangePriority400,
-  PostApiWorkQueueChangePriority404,
   PostApiWorkQueueChangePriority500,
 } from "../types/PostApiWorkQueueChangePriority.ts";
 
@@ -26,7 +25,7 @@ function getPostApiWorkQueueChangePriorityUrl() {
 }
 
 /**
- * @summary Change priority of a patient chart
+ * @summary Change priority of patient(s) - Supports Single & Bulk
  * {@link /api/work-queue/change-priority}
  */
 export async function postApiWorkQueueChangePriority(
@@ -42,9 +41,7 @@ export async function postApiWorkQueueChangePriority(
   const res = await request<
     PostApiWorkQueueChangePriorityMutationResponse,
     ResponseErrorConfig<
-      | PostApiWorkQueueChangePriority400
-      | PostApiWorkQueueChangePriority404
-      | PostApiWorkQueueChangePriority500
+      PostApiWorkQueueChangePriority400 | PostApiWorkQueueChangePriority500
     >,
     PostApiWorkQueueChangePriorityMutationRequest
   >({

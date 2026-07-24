@@ -4,22 +4,17 @@
  */
 
 /**
- * @description Priority updated successfully
+ * @description Success
  */
 export type PostApiWorkQueueChangePriority200 = any;
 
 /**
- * @description Bad request - missing parameters
+ * @description Bad Request
  */
 export type PostApiWorkQueueChangePriority400 = any;
 
 /**
- * @description Patient or chart not found
- */
-export type PostApiWorkQueueChangePriority404 = any;
-
-/**
- * @description Internal Server Error
+ * @description Server Error
  */
 export type PostApiWorkQueueChangePriority500 = any;
 
@@ -35,17 +30,17 @@ export type PostApiWorkQueueChangePriorityMutationRequestPriorityEnumKey =
 
 export type PostApiWorkQueueChangePriorityMutationRequest = {
   /**
-   * @type string | undefined
+   * @type array | undefined
    */
-  patientId?: string;
+  patientIds?: string[];
+  /**
+   * @type array | undefined
+   */
+  chartIds?: string[];
   /**
    * @type string | undefined
    */
-  chartId?: string;
-  /**
-   * @type string
-   */
-  priority: PostApiWorkQueueChangePriorityMutationRequestPriorityEnumKey;
+  priority?: PostApiWorkQueueChangePriorityMutationRequestPriorityEnumKey;
 };
 
 export type PostApiWorkQueueChangePriorityMutationResponse =
@@ -54,8 +49,5 @@ export type PostApiWorkQueueChangePriorityMutationResponse =
 export type PostApiWorkQueueChangePriorityMutation = {
   Response: PostApiWorkQueueChangePriority200;
   Request: PostApiWorkQueueChangePriorityMutationRequest;
-  Errors:
-    | PostApiWorkQueueChangePriority400
-    | PostApiWorkQueueChangePriority404
-    | PostApiWorkQueueChangePriority500;
+  Errors: PostApiWorkQueueChangePriority400 | PostApiWorkQueueChangePriority500;
 };

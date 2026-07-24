@@ -8,39 +8,32 @@ import type { ToZod } from "../../.kubb/ToZod.ts";
 import type {
   PostApiWorkQueueReassign200,
   PostApiWorkQueueReassign400,
-  PostApiWorkQueueReassign404,
   PostApiWorkQueueReassign500,
   PostApiWorkQueueReassignMutationRequest,
   PostApiWorkQueueReassignMutationResponse,
 } from "../../types/PostApiWorkQueueReassign.ts";
 
 /**
- * @description Patient chart reassigned successfully
+ * @description Success
  */
 export const postApiWorkQueueReassign200Schema =
   z.unknown() as unknown as ToZod<PostApiWorkQueueReassign200>;
 
 /**
- * @description Bad request - missing parameters
+ * @description Bad Request
  */
 export const postApiWorkQueueReassign400Schema =
   z.unknown() as unknown as ToZod<PostApiWorkQueueReassign400>;
 
 /**
- * @description Patient or chart not found
- */
-export const postApiWorkQueueReassign404Schema =
-  z.unknown() as unknown as ToZod<PostApiWorkQueueReassign404>;
-
-/**
- * @description Internal Server Error
+ * @description Server Error
  */
 export const postApiWorkQueueReassign500Schema =
   z.unknown() as unknown as ToZod<PostApiWorkQueueReassign500>;
 
 export const postApiWorkQueueReassignMutationRequestSchema = z.object({
-  patientId: z.optional(z.string()),
-  chartId: z.optional(z.string()),
+  patientIds: z.optional(z.array(z.string()).describe("List of patient UUIDs")),
+  chartIds: z.optional(z.array(z.string())),
   abstractorId: z.optional(z.string().uuid()),
   qaId: z.optional(z.string().uuid()),
 }) as unknown as ToZod<PostApiWorkQueueReassignMutationRequest>;

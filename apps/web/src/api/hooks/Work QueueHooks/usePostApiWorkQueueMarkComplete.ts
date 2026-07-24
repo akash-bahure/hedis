@@ -17,7 +17,6 @@ import type {
   PostApiWorkQueueMarkCompleteMutationRequest,
   PostApiWorkQueueMarkCompleteMutationResponse,
   PostApiWorkQueueMarkComplete400,
-  PostApiWorkQueueMarkComplete404,
   PostApiWorkQueueMarkComplete500,
 } from "../../types/PostApiWorkQueueMarkComplete.ts";
 import { mutationOptions, useMutation } from "@tanstack/react-query";
@@ -39,9 +38,7 @@ export function postApiWorkQueueMarkCompleteMutationOptions<TContext = unknown>(
   return mutationOptions<
     PostApiWorkQueueMarkCompleteMutationResponse,
     ResponseErrorConfig<
-      | PostApiWorkQueueMarkComplete400
-      | PostApiWorkQueueMarkComplete404
-      | PostApiWorkQueueMarkComplete500
+      PostApiWorkQueueMarkComplete400 | PostApiWorkQueueMarkComplete500
     >,
     { data: PostApiWorkQueueMarkCompleteMutationRequest },
     TContext
@@ -54,7 +51,7 @@ export function postApiWorkQueueMarkCompleteMutationOptions<TContext = unknown>(
 }
 
 /**
- * @summary Mark a patient chart as Complete (Chart Status = Completed, Patient Stage = QA Passed)
+ * @summary Mark Complete patient chart(s) - Supports Single & Bulk
  * {@link /api/work-queue/mark-complete}
  */
 export function usePostApiWorkQueueMarkComplete<TContext>(
@@ -62,9 +59,7 @@ export function usePostApiWorkQueueMarkComplete<TContext>(
     mutation?: UseMutationOptions<
       PostApiWorkQueueMarkCompleteMutationResponse,
       ResponseErrorConfig<
-        | PostApiWorkQueueMarkComplete400
-        | PostApiWorkQueueMarkComplete404
-        | PostApiWorkQueueMarkComplete500
+        PostApiWorkQueueMarkComplete400 | PostApiWorkQueueMarkComplete500
       >,
       { data: PostApiWorkQueueMarkCompleteMutationRequest },
       TContext
@@ -84,9 +79,7 @@ export function usePostApiWorkQueueMarkComplete<TContext>(
   ) as UseMutationOptions<
     PostApiWorkQueueMarkCompleteMutationResponse,
     ResponseErrorConfig<
-      | PostApiWorkQueueMarkComplete400
-      | PostApiWorkQueueMarkComplete404
-      | PostApiWorkQueueMarkComplete500
+      PostApiWorkQueueMarkComplete400 | PostApiWorkQueueMarkComplete500
     >,
     { data: PostApiWorkQueueMarkCompleteMutationRequest },
     TContext
@@ -95,9 +88,7 @@ export function usePostApiWorkQueueMarkComplete<TContext>(
   return useMutation<
     PostApiWorkQueueMarkCompleteMutationResponse,
     ResponseErrorConfig<
-      | PostApiWorkQueueMarkComplete400
-      | PostApiWorkQueueMarkComplete404
-      | PostApiWorkQueueMarkComplete500
+      PostApiWorkQueueMarkComplete400 | PostApiWorkQueueMarkComplete500
     >,
     { data: PostApiWorkQueueMarkCompleteMutationRequest },
     TContext
@@ -111,9 +102,7 @@ export function usePostApiWorkQueueMarkComplete<TContext>(
   ) as UseMutationResult<
     PostApiWorkQueueMarkCompleteMutationResponse,
     ResponseErrorConfig<
-      | PostApiWorkQueueMarkComplete400
-      | PostApiWorkQueueMarkComplete404
-      | PostApiWorkQueueMarkComplete500
+      PostApiWorkQueueMarkComplete400 | PostApiWorkQueueMarkComplete500
     >,
     { data: PostApiWorkQueueMarkCompleteMutationRequest },
     TContext
