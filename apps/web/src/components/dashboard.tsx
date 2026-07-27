@@ -44,6 +44,12 @@ import {
   Layers,
   X,
   CircleDot,
+  RotateCcw,
+  Eye,
+  Award,
+  ThumbsUp,
+  UserCheck,
+  XCircle,
 } from "lucide-react";
 import {
   useGetApiDashboardMeasureRates,
@@ -58,6 +64,9 @@ import {
 import { Pagination } from "./Pagination";
 import { useNavigate } from "@tanstack/react-router";
 import { useGlobalFilters } from "@/contexts/GlobalFiltersContext";
+import { usePermissions } from "@/hooks/usePermissions";
+import { toast } from "sonner";
+
 /* ─── Colours ──────────────────────────────────────────── */
 const C = {
   primary: "#0891b2",
@@ -610,6 +619,7 @@ function AbstractionVelocityChart() {
     data: velocityResponse,
     isLoading,
     error,
+    refetch: refetchVelocity,
   } = useGetApiDashboardAbstractionVelocity({ days: 14 });
 
   const chartData =
@@ -746,6 +756,7 @@ function DomainBreakdownChart() {
     data: domainResponse,
     isLoading,
     error,
+    refetch: refetchDomain,
   } = useGetApiDashboardQueueByDomain({
     measurementYear: measurementYear || undefined, // null → undefined = no filter
     search: globalSearch || undefined,
@@ -849,6 +860,7 @@ function DashboardKpiCards() {
     data: statsResponse,
     isLoading,
     error,
+    refetch: refetchStats,
   } = useGetApiDashboardStats({
     measurementYear: measurementYear || undefined, // null → undefined = no filter
     search: globalSearch || undefined,
@@ -958,13 +970,398 @@ function DashboardKpiCards() {
 }
 
 type DashboardProps = {
-  onOpenWorkQueue: () => void;
+  role?: UserRole;
+  onOpenWorkQueue?: () => void;
 };
 
+export type UserRole = "program-manager" | "abstractor" | "qa-analyst";
+
+/* ─── Abstractor-specific data ───────────────────────────── */
+const myQueueItems = [
+  { member: "Anderson, Jennifer K.", id: "MBR-789456", measure: "CDC", status: "In Progress", due: "Feb 28", pct: 70, urgency: false },
+  { member: "Williams, David M.", id: "MBR-667890", measure: "CBP", status: "Not Started", due: "Feb 28", pct: 0, urgency: false },
+  { member: "Thompson, Sandra A.", id: "MBR-332178", measure: "BCS", status: "In Progress", due: "Feb 27", pct: 45, urgency: true },
+  { member: "Martinez, Robert L.", id: "MBR-445512", measure: "COL", status: "Not Started", due: "Feb 26", pct: 0, urgency: true },
+  { member: "Chen, Lisa W.", id: "MBR-112453", measure: "CDC", status: "QA Pending", due: "Feb 25", pct: 100, urgency: false },
+];
+
+const myVelocity = [
+  { day: "Mon", completed: 8, aiAssist: 7 },
+  { day: "Tue", completed: 11, aiAssist: 9 },
+  { day: "Wed", completed: 9, aiAssist: 8 },
+  { day: "Thu", completed: 14, aiAssist: 12 },
+  { day: "Fri", completed: 10, aiAssist: 9 },
+  { day: "Today", completed: 6, aiAssist: 5 },
+];
+
+const aiSuggestions = [
+  { measure: "CDC", member: "MBR-789456", suggestion: "HbA1c result 7.2% found in lab report (p.4)", confidence: 96, status: "pending" },
+  { measure: "CBP", member: "MBR-667890", suggestion: "BP reading 138/88 documented on 01/14/2026", confidence: 91, status: "pending" },
+  { measure: "BCS", member: "MBR-332178", suggestion: "Mammogram on file — date matches numerator criteria", confidence: 88, status: "accepted" },
+];
+
+/* ─── QA Analyst-specific data ───────────────────────────── */
+const qaQueue = [
+  { member: "Anderson, Jennifer K.", id: "MBR-789456", measure: "CDC", abstractor: "S. Johnson", submitted: "2h ago", risk: "low" },
+  { member: "Park, Michael T.", id: "MBR-558833", measure: "CBP", abstractor: "R. Gupta", submitted: "3h ago", risk: "medium" },
+  { member: "Garcia, Elena R.", id: "MBR-221047", measure: "COL", abstractor: "M. Patel", submitted: "5h ago", risk: "high" },
+  { member: "Brown, Samuel J.", id: "MBR-990122", measure: "BCS", abstractor: "S. Johnson", submitted: "6h ago", risk: "low" },
+  { member: "Lee, Rachel S.", id: "MBR-443320", measure: "AMR", abstractor: "D. Pillai", submitted: "8h ago", risk: "medium" },
+];
+
+const qaThrough = [
+  { day: "Mon", reviewed: 22, returned: 3 },
+  { day: "Tue", reviewed: 28, returned: 4 },
+  { day: "Wed", reviewed: 19, returned: 2 },
+  { day: "Thu", reviewed: 31, returned: 5 },
+  { day: "Fri", reviewed: 25, returned: 3 },
+  { day: "Today", reviewed: 14, returned: 2 },
+];
+
+const discrepancyTypes = [
+  { type: "Missing Documentation", count: 12, color: C.red },
+  { type: "Wrong Date / Period", count: 8, color: C.orange },
+  { type: "Coding Error", count: 6, color: C.amber },
+  { type: "Eligibility Issue", count: 4, color: C.violet },
+];
+const discrepancyTotal = discrepancyTypes.reduce((s, d) => s + d.count, 0);
+
+/* ─── Abstractor Dashboard ────────────────────────────────── */
+function AbstractorDashboard() {
+  const navigate = useNavigate();
+  const uid = useId();
+  const gradId = `absGrad-${uid}`;
+  return (
+    <div className="space-y-5">
+      <div className="max-w-screen-2xl mx-auto px-4 py-4 space-y-5">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-base font-bold text-foreground">My Abstraction Dashboard</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              MY 2026 · Chart Abstractor View · Last updated Feb 24, 2026 at 09:41 AM
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors">
+              <RefreshCw className="w-3.5 h-3.5" />Refresh
+            </button>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-50 border border-blue-200 rounded-lg text-blue-700 font-semibold">
+              <CircleDot className="w-3 h-3 fill-blue-500" />Live
+            </span>
+          </div>
+        </div>
+
+        {/* KPIs */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { label: 'My Queue',         value: '5',     sub: 'charts assigned to me', icon: ClipboardList, color: 'bg-blue-50 text-blue-700',    trend: '↑ 2 new today', trendUp: false },
+            { label: 'Completed Today',  value: '6',     sub: 'abstractions finalized', icon: CheckCircle2, color: 'bg-emerald-50 text-emerald-700',trend: '+20% vs avg',  trendUp: true  },
+            { label: 'QA Pending',       value: '3',     sub: 'awaiting QA review',     icon: Eye,          color: 'bg-amber-50 text-amber-700',   trend: 'from last wk',  trendUp: false },
+            { label: 'My Accuracy',      value: '96.2%', sub: 'QA pass rate this month',icon: Award,        color: 'bg-violet-50 text-violet-700', trend: '+0.4% this wk', trendUp: true  },
+          ].map(k => <KpiCard key={k.label} {...k} />)}
+        </div>
+
+        {/* Row 2: Velocity + AI Suggestions */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 bg-card border border-border rounded-xl p-5">
+            <SectionTitle title="My Abstraction Velocity" sub="Charts completed this week — total vs. AI-assisted">
+              <span className="flex items-center gap-1 text-[10px] text-muted-foreground border border-border rounded px-2 py-1">
+                <Calendar className="w-3 h-3" />This Week
+              </span>
+            </SectionTitle>
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={myVelocity} margin={{ top: 4, right: 8, left: -20, bottom: 0 }} barGap={4}>
+                <defs>
+                  <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={C.blue} stopOpacity={0.15} />
+                    <stop offset="95%" stopColor={C.blue} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid key="av-grid" strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                <XAxis key="av-xaxis" dataKey="day" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} />
+                <YAxis key="av-yaxis" tick={{ fontSize: 9, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} />
+                <Tooltip key="av-tooltip" contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 11 }} />
+                <Bar key="av-completed" dataKey="completed" name="Charts Done" fill={C.blue}   radius={[3,3,0,0]} maxBarSize={28} />
+                <Bar key="av-aiAssist"  dataKey="aiAssist"  name="AI-Assisted" fill={C.violet} radius={[3,3,0,0]} maxBarSize={28} />
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground">
+              <span className="flex items-center gap-1"><span className="w-3 h-2 rounded bg-blue-500 inline-block" />Charts Done</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-2 rounded bg-violet-500 inline-block" />AI-Assisted</span>
+            </div>
+          </div>
+
+          {/* AI Pre-Analysis */}
+          <div className="bg-card border border-border rounded-xl p-5 flex flex-col justify-between">
+            <SectionTitle title="AI Pre-Analysis" sub="High-confidence clinical findings" />
+            <div className="space-y-3 my-2">
+              {aiSuggestions.map((s, idx) => (
+                <div key={idx} className="p-3 bg-muted/20 rounded-lg border border-border/50 space-y-1">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="font-bold text-foreground">{s.measure} · {s.member}</span>
+                    <span className="text-[10px] font-bold text-violet-600 bg-violet-50 border border-violet-200 px-1.5 py-0.5 rounded-full">
+                      {s.confidence}% conf.
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">{s.suggestion}</p>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => navigate({ to: "/work-queue" })}
+              className="w-full py-2 text-xs font-semibold text-violet-700 bg-violet-50 border border-violet-200 rounded-lg hover:bg-violet-100 transition-colors flex items-center justify-center gap-1.5"
+            >
+              <Sparkles className="w-3.5 h-3.5" /> Review All Findings
+            </button>
+          </div>
+        </div>
+
+        {/* Row 3: My Queue Table */}
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3 border-b border-border">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-foreground">My Assigned Queue</span>
+              <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full">5 active</span>
+            </div>
+            <button
+              onClick={() => navigate({ to: "/work-queue" })}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Open Work Queue <ArrowUpRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-border bg-muted/20">
+                {['Member', 'Measure', 'Status', 'Due Date', 'Progress', 'Action'].map((h) => (
+                  <th key={h} className="text-left px-4 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wide">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {myQueueItems.map((row) => (
+                <tr key={row.id} className="hover:bg-muted/10 transition-colors group">
+                  <td className="px-4 py-3">
+                    <div className="font-semibold text-foreground">{row.member}</div>
+                    <div className="text-[10px] font-mono text-muted-foreground">{row.id}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center justify-center w-10 h-5 bg-primary/10 text-primary border border-primary/20 rounded text-[10px] font-bold">{row.measure}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${
+                      row.status === 'QA Pending'  ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                      row.status === 'In Progress' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                                     'bg-muted text-muted-foreground border-border'
+                    }`}>{row.status}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`flex items-center gap-1 font-semibold ${row.urgency ? 'text-red-600' : 'text-foreground'}`}>
+                      {row.urgency && <AlertTriangle className="w-3 h-3" />}{row.due}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {row.pct > 0 ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full ${row.pct === 100 ? 'bg-emerald-500' : 'bg-blue-500'}`} style={{ width: `${row.pct}%` }} />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground">{row.pct}%</span>
+                      </div>
+                    ) : <span className="text-muted-foreground/40">—</span>}
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => navigate({ to: "/work-queue" })}
+                      className="flex items-center gap-1 text-[11px] text-blue-600 font-semibold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
+                    >
+                      Abstract <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="h-2" />
+      </div>
+    </div>
+  );
+}
+
+/* ─── QA Analyst Dashboard ────────────────────────────────── */
+function QADashboard() {
+  const navigate = useNavigate();
+  const discrepancyData = discrepancyTypes.map(d => ({ ...d, pct: Math.round((d.count / discrepancyTotal) * 100) }));
+  return (
+    <div className="space-y-5">
+      <div className="max-w-screen-2xl mx-auto px-4 py-4 space-y-5">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-base font-bold text-foreground">QA Review Dashboard</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              MY 2026 · Quality Analyst View · Last updated Feb 24, 2026 at 09:41 AM
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors">
+              <RefreshCw className="w-3.5 h-3.5" />Refresh
+            </button>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700 font-semibold">
+              <CircleDot className="w-3 h-3 fill-emerald-500" />Live
+            </span>
+          </div>
+        </div>
+
+        {/* KPIs */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { label: 'Pending QA Review',  value: '34',    sub: 'charts awaiting review', icon: ClipboardList, color: 'bg-emerald-50 text-emerald-700', trend: '↑ 8 new today',  trendUp: false },
+            { label: 'Reviewed Today',     value: '14',    sub: 'cases completed',        icon: CheckCircle2,  color: 'bg-primary/10 text-primary',      trend: '+17% vs avg',    trendUp: true  },
+            { label: 'Returned to Coder',  value: '2',     sub: 'discrepancies found',    icon: RotateCcw,     color: 'bg-amber-50 text-amber-700',      trend: '14% return rate',trendUp: false },
+            { label: 'Approval Rate',      value: '86.1%', sub: 'cases passed QA',        icon: ThumbsUp,      color: 'bg-violet-50 text-violet-700',    trend: '+1.3% this wk',  trendUp: true  },
+          ].map(k => <KpiCard key={k.label} {...k} />)}
+        </div>
+
+        {/* Row 2: QA Throughput + Discrepancy Breakdown */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 bg-card border border-border rounded-xl p-5">
+            <SectionTitle title="QA Review Throughput" sub="Cases reviewed vs. returned this week">
+              <span className="flex items-center gap-1 text-[10px] text-muted-foreground border border-border rounded px-2 py-1">
+                <Calendar className="w-3 h-3" />This Week
+              </span>
+            </SectionTitle>
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={qaThrough} margin={{ top: 4, right: 8, left: -20, bottom: 0 }} barGap={4}>
+                <CartesianGrid key="qt-grid" strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                <XAxis key="qt-xaxis" dataKey="day" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} />
+                <YAxis key="qt-yaxis" tick={{ fontSize: 9, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} />
+                <Tooltip key="qt-tooltip" contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 11 }} />
+                <Bar key="qt-reviewed" dataKey="reviewed" name="Reviewed"  fill={C.emerald} radius={[3,3,0,0]} maxBarSize={28} />
+                <Bar key="qt-returned" dataKey="returned" name="Returned"  fill={C.amber}   radius={[3,3,0,0]} maxBarSize={28} />
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground">
+              <span className="flex items-center gap-1"><span className="w-3 h-2 rounded bg-emerald-500 inline-block" />Reviewed</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-2 rounded bg-amber-500 inline-block" />Returned to Coder</span>
+            </div>
+          </div>
+
+          {/* Discrepancy Breakdown */}
+          <div className="bg-card border border-border rounded-xl p-4">
+            <SectionTitle title="Discrepancy Types" sub={`${discrepancyTotal} total this month`} />
+            <div className="space-y-3">
+              {discrepancyData.map(d => (
+                <div key={d.type}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-semibold text-foreground">{d.type}</span>
+                    <span className="text-[11px] font-bold text-foreground">{d.count} <span className="font-normal text-muted-foreground">({d.pct}%)</span></span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: `${d.pct}%`, background: d.color }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 pt-3 border-t border-border">
+              <p className="text-[10px] text-muted-foreground font-semibold mb-2">Top Issue</p>
+              <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-2.5">
+                <AlertTriangle className="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" />
+                <p className="text-[10px] text-red-700 leading-snug">Missing documentation is the leading discrepancy type — coordinate with abstractors on documentation standards.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 3: QA Queue Table */}
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3 border-b border-border">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-foreground">Pending QA Review Queue</span>
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">34 pending</span>
+            </div>
+            <button
+              onClick={() => navigate({ to: "/work-queue" })}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+            >
+              Open QA Queue <ArrowUpRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-border bg-muted/20">
+                {['Member', 'Measure', 'Abstractor', 'Submitted', 'Risk', 'Action'].map((h) => (
+                  <th key={h} className="text-left px-4 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wide">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {qaQueue.map((row) => (
+                <tr key={row.id} className="hover:bg-muted/10 transition-colors group">
+                  <td className="px-4 py-3">
+                    <div className="font-semibold text-foreground">{row.member}</div>
+                    <div className="text-[10px] font-mono text-muted-foreground">{row.id}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center justify-center w-10 h-5 bg-primary/10 text-primary border border-primary/20 rounded text-[10px] font-bold">{row.measure}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[8px] font-bold text-primary">{row.abstractor.charAt(0)}</div>
+                      <span className="text-[11px] text-foreground font-medium">{row.abstractor}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-[11px] text-muted-foreground">{row.submitted}</td>
+                  <td className="px-4 py-3">
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                      row.risk === 'high'   ? 'bg-red-50 text-red-700 border-red-200' :
+                      row.risk === 'medium' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                             'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    }`}>{row.risk}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => navigate({ to: "/work-queue" })}
+                      className="flex items-center gap-1 text-[11px] text-emerald-600 font-semibold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
+                    >
+                      Review <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="h-2" />
+      </div>
+    </div>
+  );
+}
+
 /* ═══════════════════════════════════════════════════════════
-   MAIN DASHBOARD
+   MAIN DASHBOARD WRAPPER WITH ROLE-BASED DISPATCH
 ═══════════════════════════════════════════════════════════ */
-export function Dashboard({ onOpenWorkQueue }: DashboardProps) {
+export function Dashboard({ role, onOpenWorkQueue }: DashboardProps = {}) {
+  const { userDetail } = usePermissions();
+  const userRoleName = userDetail?.user_role?.name?.toLowerCase() || "";
+
+  const activeRole: UserRole = role
+    ? role
+    : userRoleName.includes("abstractor") || userRoleName.includes("coder")
+    ? "abstractor"
+    : userRoleName.includes("qa") || userRoleName.includes("quality")
+    ? "qa-analyst"
+    : "program-manager";
+
+  if (activeRole === "abstractor") return <AbstractorDashboard />;
+  if (activeRole === "qa-analyst") return <QADashboard />;
+
+  return <ProgramManagerDashboard onOpenWorkQueue={onOpenWorkQueue} />;
+}
+
+function ProgramManagerDashboard({ onOpenWorkQueue }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<"rates" | "queue">("rates");
   const [ratesModalOpen, setRatesModalOpen] = useState(false);
   const [queueModalOpen, setQueueModalOpen] = useState(false);
@@ -984,6 +1381,8 @@ export function Dashboard({ onOpenWorkQueue }: DashboardProps) {
   const completionPct = Math.round((totalCompleted / totalDenominator) * 100);
   const navigate = useNavigate();
   const { measurementYear, globalSearch } = useGlobalFilters();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
 
   // Reset page when global filters change
   useEffect(() => {
@@ -995,6 +1394,7 @@ export function Dashboard({ onOpenWorkQueue }: DashboardProps) {
     data: ratesResponse,
     isLoading: ratesLoading,
     error: ratesError,
+    refetch: refetchMeasureRates,
   } = useGetApiDashboardMeasureRates({
     measurementYear: measurementYear || undefined, // null → undefined = no filter
     search: globalSearch || undefined,
@@ -1025,7 +1425,7 @@ export function Dashboard({ onOpenWorkQueue }: DashboardProps) {
     data: deadlinesData,
     isLoading: deadlinesLoading,
     isError: deadlinesError,
-    refetch,
+    refetch: refetchDeadlines,
   } = useGetApiDashboardAbstractionDeadlines({
     measurementYear: measurementYear || undefined,
     search: globalSearch || undefined,
@@ -1062,6 +1462,7 @@ export function Dashboard({ onOpenWorkQueue }: DashboardProps) {
     data: myQueueResponse,
     isLoading: myQueueLoading,
     error: myQueueError,
+    refetch: refetchMyQueue,
   } = useGetApiDashboardUserQueue({
     measurementYear: measurementYear || undefined,
     search: globalSearch || undefined,
@@ -1090,6 +1491,7 @@ export function Dashboard({ onOpenWorkQueue }: DashboardProps) {
     data: queueResponse,
     isLoading: queueLoading,
     error: queueError,
+    refetch: refetchQueue,
   } = useGetApiDashboardQueueByMeasure({
     page_no: 1,
     page_size: 8,
@@ -1124,6 +1526,7 @@ export function Dashboard({ onOpenWorkQueue }: DashboardProps) {
     data: activityResponse,
     isLoading: activityLoading,
     error: activityError,
+    refetch: refetchActivity,
   } = useGetApiRecentActivity({ page: 1, limit: 6 }); // small for sidebar
   const recentActivities = activityResponse?.data ?? [];
 
@@ -1151,6 +1554,53 @@ export function Dashboard({ onOpenWorkQueue }: DashboardProps) {
   const fullSlaData = fullSlaResponse?.data ?? [];
   const fullSlaPagination = fullSlaResponse?.pagination;
 
+  const {
+    data: statsResponse,
+
+    refetch: refetchStats,
+  } = useGetApiDashboardStats({
+    measurementYear: measurementYear || undefined, // null → undefined = no filter
+    search: globalSearch || undefined,
+  });
+  const {
+    data: velocityResponse,
+
+    refetch: refetchVelocity,
+  } = useGetApiDashboardAbstractionVelocity({ days: 14 });
+
+  const {
+    data: domainResponse,
+
+    refetch: refetchDomain,
+  } = useGetApiDashboardQueueByDomain({
+    measurementYear: measurementYear || undefined, // null → undefined = no filter
+    search: globalSearch || undefined,
+  });
+
+  const handleRefreshDashboard = async () => {
+    try {
+      setIsRefreshing(true);
+
+      await Promise.all([
+        refetchStats(),
+        refetchMeasureRates(),
+        refetchQueue(),
+        refetchVelocity(),
+        refetchDomain(),
+        refetchActivity(),
+        refetchDeadlines(),
+        refetchMyQueue(),
+      ]);
+
+      setLastUpdated(new Date());
+
+      toast.success("Dashboard refreshed successfully.");
+    } catch (error) {
+      toast.error("Failed to refresh dashboard.");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
   return (
     <div className="space-y-5">
       <div className="max-w-screen-2xl mx-auto px-4 py-4 space-y-5">
@@ -1160,15 +1610,25 @@ export function Dashboard({ onOpenWorkQueue }: DashboardProps) {
             <h1 className="text-base font-bold text-foreground">
               HEDIS Abstractor Dashboard
             </h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Measurement Year 2026 · NCQA Hybrid Methodology · Last updated Feb
-              24, 2026 at 09:41 AM
+            <p className="text-xs text-muted-foreground">
+              Last updated{" "}
+              {lastUpdated.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors">
-              <RefreshCw className="w-3.5 h-3.5" />
-              Refresh
+            <button
+              onClick={handleRefreshDashboard}
+              disabled={isRefreshing}
+              className="inline-flex items-center gap-2 px-3 py-2 border rounded-lg disabled:opacity-60"
+            >
+              <RefreshCw
+                className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
+              />
+
+              {isRefreshing ? "Refreshing..." : "Refresh"}
             </button>
           </div>
         </div>
