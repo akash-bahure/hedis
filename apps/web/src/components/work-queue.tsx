@@ -4,6 +4,9 @@ import {
   getApiPatientsExport,
   useGetApiWorkQueue,
   usePostApiChartAssignmentsBulkAssign,
+  usePostApiWorkQueueReassign,
+  usePostApiWorkQueueChangePriority,
+  usePostApiWorkQueueMarkComplete,
 } from "@/api";
 import {
   Search,
@@ -1331,7 +1334,7 @@ function AssignModal({
 
         <div className="p-5 space-y-4">
           {/* Chart IDs */}
-          <div className="flex flex-wrap gap-1.5">
+          {/* <div className="flex flex-wrap gap-1.5">
             {chartIds.map((id) => (
               <span
                 key={id}
@@ -1340,7 +1343,7 @@ function AssignModal({
                 {id}
               </span>
             ))}
-          </div>
+          </div> */}
 
           {/* Assignee Selection */}
           <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
@@ -1426,7 +1429,7 @@ function AssignModal({
           </div>
 
           {/* Priority */}
-          <div>
+          {/* <div>
             <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block mb-1.5">
               Priority
             </label>
@@ -1444,7 +1447,7 @@ function AssignModal({
                 );
               })}
             </div>
-          </div>
+          </div> */}
 
           {/* Note */}
           <div>
@@ -1678,64 +1681,86 @@ function AddClientModal({
 }
 
 /* ─────────────────────────────────────────────────────────────
-   BULK ACTION BAR
+   BULK ACTION BAR (Updated with Better UI)
 ───────────────────────────────────────────────────────────── */
-function BulkBar({ count, onClear }: { count: number; onClear: () => void }) {
-  const actions = [
-    // {
-    //   label: "Bulk Assign",
-    //   icon: UserPlus,
-    //   cls: "text-primary hover:bg-primary/10",
-    // },
-    // {
-    //   label: "Reassign",
-    //   icon: RefreshCw,
-    //   cls: "text-cyan-600 hover:bg-cyan-50",
-    // },
-    // {
-    //   label: "Change Priority",
-    //   icon: Flag,
-    //   cls: "text-amber-600 hover:bg-amber-50",
-    // },
-    // {
-    //   label: "Send to QA",
-    //   icon: SendHorizontal,
-    //   cls: "text-violet-600 hover:bg-violet-50",
-    // },
-    // {
-    //   label: "Mark Complete",
-    //   icon: CheckCircle2,
-    //   cls: "text-emerald-600 hover:bg-emerald-50",
-    // },
-  ];
+function BulkBar({
+  count,
+  onClear,
+  onBulkAssign,
+  onReassign,
+  onChangePriority,
+  onMarkComplete,
+  effectiveRole,
+}: {
+  count: number;
+  onClear: () => void;
+  onBulkAssign?: () => void;
+  onReassign?: () => void;
+  onChangePriority?: () => void;
+  onMarkComplete?: () => void;
+  effectiveRole?: string;
+}) {
   return (
-    <div className="flex items-center gap-2 px-4 py-2.5 bg-primary/5 border-b border-primary/20">
+    <div className="sticky top-0 z-40 flex items-center gap-2 px-4 py-2.5 bg-primary/5 border-b border-primary/20 backdrop-blur-sm">
+      {/* Selected Count */}
       <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
         <span className="text-white text-[9px] font-bold">{count}</span>
       </div>
+
       <span className="text-[12px] font-semibold text-foreground mr-1">
         {count} selected
       </span>
+
       <div className="w-px h-4 bg-border mx-1" />
-      {actions.map((a) => {
-        const Icon = a.icon;
-        return (
+
+      {/* Program Manager Actions */}
+      {effectiveRole === "program-manager" && (
+        <>
           <button
-            key={a.label}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-colors ${a.cls}`}
+            onClick={onBulkAssign}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-primary hover:bg-primary/10 transition-colors"
           >
-            <Icon className="w-3.5 h-3.5" />
-            {a.label}
+            <UserPlus className="w-3.5 h-3.5" />
+            Bulk Assign
           </button>
-        );
-      })}
+
+          <button
+            onClick={onReassign}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-cyan-600 hover:bg-cyan-50 transition-colors"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            Reassign
+          </button>
+        </>
+      )}
+
+      {/* Change Priority */}
+      <button
+        onClick={onChangePriority}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-amber-600 hover:bg-amber-50 transition-colors"
+      >
+        <Flag className="w-3.5 h-3.5" />
+        Change Priority
+      </button>
+
+      {/* Mark Complete */}
+      <button
+        onClick={onMarkComplete}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-emerald-600 hover:bg-emerald-50 transition-colors"
+      >
+        <CheckCircle2 className="w-3.5 h-3.5" />
+        Mark Complete
+      </button>
+
       <div className="flex-1" />
+
+      {/* Clear Selection */}
       <button
         onClick={onClear}
         className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground px-2 py-1.5 rounded-lg hover:bg-muted transition-colors"
       >
         <X className="w-3.5 h-3.5" />
-        Deselect all
+        Clear Selection
       </button>
     </div>
   );
@@ -1826,7 +1851,9 @@ export function WorkQueue({
   const rawRole = userDetail?.user_role?.name?.toLowerCase();
   const [search, setSearch] = useState(globalSearch);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-
+  const [showReassignModal, setShowReassignModal] = useState(false);
+  const [showPriorityModal, setShowPriorityModal] = useState(false);
+  const [selectedPriority, setSelectedPriority] = useState<Priority>("High");
   // ===============================
   // ASSIGN MUTATION
   // ===============================
@@ -1867,6 +1894,75 @@ export function WorkQueue({
       },
     },
   });
+
+  const reassignMutation = usePostApiWorkQueueReassign();
+  const changePriorityMutation = usePostApiWorkQueueChangePriority();
+  const markCompleteMutation = usePostApiWorkQueueMarkComplete();
+
+  const handleBulkMarkComplete = async () => {
+    if (selected.size === 0) return;
+
+    try {
+      await markCompleteMutation.mutateAsync({
+        data: { patientIds: Array.from(selected) },
+      });
+      toast.success(`${selected.size} chart(s) marked complete successfully`);
+      setSelected(new Set());
+      refetch();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to mark charts as complete");
+    }
+  };
+
+  const handleReassign = async ({
+    abstractorId,
+    qaId,
+  }: {
+    abstractorId?: string;
+    qaId?: string;
+  }) => {
+    if (selected.size === 0) return;
+
+    try {
+      await reassignMutation.mutateAsync({
+        data: {
+          patientIds: Array.from(selected),
+          abstractorId,
+          qaId,
+        },
+      });
+      toast.success(`${selected.size} chart(s) reassigned successfully`);
+      setShowReassignModal(false);
+      setSelected(new Set());
+      refetch();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to reassign charts");
+    }
+  };
+
+  const handleChangePriority = async () => {
+    if (selected.size === 0) return;
+
+    try {
+      await changePriorityMutation.mutateAsync({
+        data: {
+          patientIds: Array.from(selected),
+          priority: selectedPriority,
+        },
+      });
+      toast.success(
+        `Priority updated to ${selectedPriority} for ${selected.size} chart(s)`
+      );
+      setShowPriorityModal(false);
+      setSelected(new Set());
+      refetch();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update priority");
+    }
+  };
 
   // const evaluateMutation = usePostApiHedisEvaluateId();
 
@@ -3004,6 +3100,11 @@ export function WorkQueue({
             <BulkBar
               count={selected.size}
               onClear={() => setSelected(new Set())}
+              onBulkAssign={() => setAssignModal(Array.from(selected))}
+              onReassign={() => setShowReassignModal(true)}
+              onChangePriority={() => setShowPriorityModal(true)}
+              onMarkComplete={handleBulkMarkComplete}
+              effectiveRole={effectiveRole}
             />
           )}
 
@@ -3478,6 +3579,61 @@ export function WorkQueue({
               setShowAddClient(false);
             }}
           />
+        )}
+
+        {/* Reassign Modal */}
+        {showReassignModal && (
+          <AssignModal
+            chartIds={Array.from(selected)}
+            onClose={() => setShowReassignModal(false)}
+            onAssign={handleReassign}
+            roleType="Reassign"
+          />
+        )}
+
+        {/* Change Priority Modal */}
+        {showPriorityModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl shadow-xl w-[380px] p-6">
+              <h3 className="text-lg font-semibold mb-1">Change Priority</h3>
+              <p className="text-sm text-gray-600 mb-6">
+                {selected.size} charts selected
+              </p>
+
+              <div className="grid grid-cols-4 gap-3 mb-8">
+                {(["Urgent", "High", "Medium", "Low"] as Priority[]).map(
+                  (p) => (
+                    <button
+                      key={p}
+                      onClick={() => setSelectedPriority(p)}
+                      className={`py-3 rounded-xl border font-semibold text-sm transition-all ${
+                        selectedPriority === p
+                          ? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  )
+                )}
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowPriorityModal(false)}
+                  className="flex-1 py-3 border rounded-xl text-sm font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleChangePriority}
+                  className="flex-1 py-3 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700"
+                >
+                  Update Priority
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
       {/* Hidden file input for HEDIS evaluation */}
