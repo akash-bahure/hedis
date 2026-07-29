@@ -41,12 +41,7 @@ const ROLE_ACCESS: Record<UserRole, string[]> = {
     "ai-optimization",
     "settings",
   ],
-  abstractor: [
-    "dashboard",
-    "work-queue",
-    "reports-submissions",
-    "measure-library",
-  ],
+  abstractor: ["dashboard", "work-queue", "measure-library"],
   "qa-analyst": ["dashboard", "work-queue"],
 };
 

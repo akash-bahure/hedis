@@ -82,7 +82,7 @@ const PRIMARY_NAV: NavItem[] = [
     id: "reports-analytics",
     label: "Reports",
     icon: BarChart2,
-    roles: ["program-manager", "abstractor"],
+    roles: ["program-manager"],
   },
   {
     id: "measure-library",
@@ -137,7 +137,7 @@ export const ROLE_CONFIG: Record<
     avatarGradient: "from-blue-500 to-cyan-500",
     description: "Clinical Documentation Specialist",
     workflowStep: 2,
-    accessSummary: "Dashboard · Work Queue · Reports · Measures",
+    accessSummary: "Dashboard · Work Queue · Measures",
   },
   "qa-analyst": {
     label: "Quality Analyst",
@@ -381,9 +381,18 @@ export function Sidebar({
 }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [showRolePicker, setShowRolePicker] = useState(false);
-  const { canView } = usePermissions();
+  const { canView, userDetail } = usePermissions();
 
-  const cfg = ROLE_CONFIG[role];
+  // Derive the real role from the logged-in user (not just the demo prop)
+  const userRoleName = userDetail?.user_role?.name?.toLowerCase() || "";
+  const effectiveRole: UserRole =
+    userRoleName.includes("abstractor") || userRoleName.includes("coder")
+      ? "abstractor"
+      : userRoleName.includes("qa") || userRoleName.includes("quality")
+        ? "qa-analyst"
+        : role; // fall back to the prop (demo switcher still works for PM)
+
+  const cfg = ROLE_CONFIG[effectiveRole];
   const storedUser =
     typeof window !== "undefined"
       ? (() => {
@@ -425,9 +434,12 @@ export function Sidebar({
     return canView(backendModule);
   };
 
-  const visiblePrimary = PRIMARY_NAV.filter((n) => checkAccess(n));
-  const visibleSettings = SETTINGS_NAV.filter((n) => checkAccess(n));
-
+  const visiblePrimary = PRIMARY_NAV.filter(
+    (n) => n.roles.includes(effectiveRole) && checkAccess(n)
+  );
+  const visibleSettings = SETTINGS_NAV.filter(
+    (n) => n.roles.includes(effectiveRole) && checkAccess(n)
+  );
   const navigate = useNavigate();
 
   const { mutate: logout, isPending: isLoggingOut } = usePostApiAuthLogout({
@@ -655,13 +667,13 @@ export function Sidebar({
                 </p>
               </div>
               {/* Role switcher */}
-              <button
+              {/* <button
                 onClick={() => setShowRolePicker((v) => !v)}
                 title="Switch role"
                 className={`p-1.5 rounded-md transition-colors flex-shrink-0 ${showRolePicker ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"}`}
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-              </button>
+              </button> */}
             </div>
 
             {/* Role badge + plan */}

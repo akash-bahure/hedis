@@ -1195,9 +1195,9 @@ function EvidenceDrawer({
               <Check className="w-3.5 h-3.5" />{" "}
               {reviewMutation.isPending ? "Accepting..." : "Accept"}
             </button>
-            <button className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-border text-foreground text-[12px] font-bold hover:bg-muted transition-colors">
+            {/* <button className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-border text-foreground text-[12px] font-bold hover:bg-muted transition-colors">
               <Edit3 className="w-3.5 h-3.5" /> Edit
-            </button>
+            </button> */}
             <button
               disabled={
                 reviewMutation.isPending || detail?.review_status === "REJECTED"

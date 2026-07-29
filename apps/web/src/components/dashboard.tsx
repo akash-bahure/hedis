@@ -60,6 +60,14 @@ import {
   useGetApiDashboardStats,
   useGetApiDashboardAbstractionDeadlines,
   useGetApiDashboardUserQueue,
+  useGetApiDashboardQaStats,
+  useGetApiDashboardQaThroughput,
+  useGetApiDashboardQaDiscrepancyTypes,
+  useGetApiDashboardQaUserQueue,
+  useGetApiDashboardAbstractorStats,
+  useGetApiDashboardAbstractorVelocity,
+  useGetApiDashboardAbstractorAiFindings,
+  useGetApiDashboardAbstractorUserQueue,
 } from "@/api";
 import { Pagination } from "./Pagination";
 import { useNavigate } from "@tanstack/react-router";
@@ -81,100 +89,6 @@ const C = {
   rose: "#f43f5e",
   indigo: "#6366f1",
 };
-
-/* ─── HEDIS Measure data ────────────────────────────────── */
-const hedisRates = [
-  {
-    measure: "CBP",
-    name: "Controlling High Blood Pressure",
-    rate: 72.4,
-    benchmark: 74.0,
-    target: 76.0,
-    domain: "Cardiovascular",
-    change: +1.8,
-    status: "below",
-  },
-  {
-    measure: "CDC",
-    name: "Comprehensive Diabetes Care",
-    rate: 68.1,
-    benchmark: 69.3,
-    target: 72.0,
-    domain: "Diabetes",
-    change: +0.9,
-    status: "below",
-  },
-  {
-    measure: "BCS",
-    name: "Breast Cancer Screening",
-    rate: 77.3,
-    benchmark: 75.8,
-    target: 78.0,
-    domain: "Preventive",
-    change: +2.1,
-    status: "above",
-  },
-  {
-    measure: "COL",
-    name: "Colorectal Cancer Screening",
-    rate: 65.8,
-    benchmark: 68.0,
-    target: 70.0,
-    domain: "Preventive",
-    change: +0.4,
-    status: "below",
-  },
-  {
-    measure: "AMR",
-    name: "Medication Management – Asthma",
-    rate: 81.2,
-    benchmark: 80.5,
-    target: 82.0,
-    domain: "Respiratory",
-    change: +3.2,
-    status: "above",
-  },
-  {
-    measure: "EED",
-    name: "Eye Exam for Patients w/ Diabetes",
-    rate: 60.7,
-    benchmark: 62.1,
-    target: 65.0,
-    domain: "Diabetes",
-    change: -0.5,
-    status: "below",
-  },
-  {
-    measure: "HBD",
-    name: "Hemoglobin A1c Testing",
-    rate: 87.4,
-    benchmark: 85.0,
-    target: 88.0,
-    domain: "Diabetes",
-    change: +4.1,
-    status: "above",
-  },
-  {
-    measure: "W15",
-    name: "Well-Child Visits (15 months)",
-    rate: 63.9,
-    benchmark: 67.4,
-    target: 70.0,
-    domain: "Child Health",
-    change: +1.1,
-    status: "below",
-  },
-  {
-    measure: "FUH",
-    name: "Follow-Up After Hospitalization",
-    rate: 55.2,
-    benchmark: 57.0,
-    target: 60.0,
-    domain: "Mental Health",
-    change: -1.2,
-    status: "below",
-  },
-];
 
 /* ─── Abstraction velocity trend ────────────────────────── */
 const velocityTrend = [
@@ -214,64 +128,6 @@ const queueByMeasure = [
   { measure: "EED", open: 71, inProgress: 14, completed: 187, total: 272 },
   { measure: "HBD", open: 29, inProgress: 8, completed: 341, total: 378 },
   { measure: "FUH", open: 93, inProgress: 22, completed: 112, total: 227 },
-];
-
-/* ─── Recent activity ─────────────────────────────────────── */
-const recentActivity = [
-  {
-    id: 1,
-    user: "S. Johnson",
-    action: "Completed abstraction",
-    detail: "CDC — Member MBR-789456",
-    time: "2 min ago",
-    icon: CheckCircle2,
-    color: "text-emerald-600 bg-emerald-50",
-  },
-  {
-    id: 2,
-    user: "R. Gupta",
-    action: "QA return resolved",
-    detail: "CBP — Member MBR-667890",
-    time: "14 min ago",
-    icon: RefreshCw,
-    color: "text-blue-600 bg-blue-50",
-  },
-  {
-    id: 3,
-    user: "AI Engine",
-    action: "AI suggestion accepted",
-    detail: "COL — HbA1c conf. 94%",
-    time: "21 min ago",
-    icon: Sparkles,
-    color: "text-violet-600 bg-violet-50",
-  },
-  {
-    id: 4,
-    user: "M. Patel",
-    action: "Audit sample reviewed",
-    detail: "BCS — AUD-2025-0044",
-    time: "38 min ago",
-    icon: Shield,
-    color: "text-primary bg-primary/10",
-  },
-  {
-    id: 5,
-    user: "D. Pillai",
-    action: "Chart uploaded",
-    detail: "AMR — Member MBR-554320",
-    time: "1 hr ago",
-    icon: FileText,
-    color: "text-slate-600 bg-slate-100",
-  },
-  {
-    id: 6,
-    user: "S. Johnson",
-    action: "Exception flagged",
-    detail: "EED — Member MBR-771092",
-    time: "1.5 hrs ago",
-    icon: AlertTriangle,
-    color: "text-amber-600 bg-amber-50",
-  },
 ];
 
 /* ─── SLA / Deadline tracker ──────────────────────────────── */
@@ -978,11 +834,51 @@ export type UserRole = "program-manager" | "abstractor" | "qa-analyst";
 
 /* ─── Abstractor-specific data ───────────────────────────── */
 const myQueueItems = [
-  { member: "Anderson, Jennifer K.", id: "MBR-789456", measure: "CDC", status: "In Progress", due: "Feb 28", pct: 70, urgency: false },
-  { member: "Williams, David M.", id: "MBR-667890", measure: "CBP", status: "Not Started", due: "Feb 28", pct: 0, urgency: false },
-  { member: "Thompson, Sandra A.", id: "MBR-332178", measure: "BCS", status: "In Progress", due: "Feb 27", pct: 45, urgency: true },
-  { member: "Martinez, Robert L.", id: "MBR-445512", measure: "COL", status: "Not Started", due: "Feb 26", pct: 0, urgency: true },
-  { member: "Chen, Lisa W.", id: "MBR-112453", measure: "CDC", status: "QA Pending", due: "Feb 25", pct: 100, urgency: false },
+  {
+    member: "Anderson, Jennifer K.",
+    id: "MBR-789456",
+    measure: "CDC",
+    status: "In Progress",
+    due: "Feb 28",
+    pct: 70,
+    urgency: false,
+  },
+  {
+    member: "Williams, David M.",
+    id: "MBR-667890",
+    measure: "CBP",
+    status: "Not Started",
+    due: "Feb 28",
+    pct: 0,
+    urgency: false,
+  },
+  {
+    member: "Thompson, Sandra A.",
+    id: "MBR-332178",
+    measure: "BCS",
+    status: "In Progress",
+    due: "Feb 27",
+    pct: 45,
+    urgency: true,
+  },
+  {
+    member: "Martinez, Robert L.",
+    id: "MBR-445512",
+    measure: "COL",
+    status: "Not Started",
+    due: "Feb 26",
+    pct: 0,
+    urgency: true,
+  },
+  {
+    member: "Chen, Lisa W.",
+    id: "MBR-112453",
+    measure: "CDC",
+    status: "QA Pending",
+    due: "Feb 25",
+    pct: 100,
+    urgency: false,
+  },
 ];
 
 const myVelocity = [
@@ -995,18 +891,71 @@ const myVelocity = [
 ];
 
 const aiSuggestions = [
-  { measure: "CDC", member: "MBR-789456", suggestion: "HbA1c result 7.2% found in lab report (p.4)", confidence: 96, status: "pending" },
-  { measure: "CBP", member: "MBR-667890", suggestion: "BP reading 138/88 documented on 01/14/2026", confidence: 91, status: "pending" },
-  { measure: "BCS", member: "MBR-332178", suggestion: "Mammogram on file — date matches numerator criteria", confidence: 88, status: "accepted" },
+  {
+    measure: "CDC",
+    member: "MBR-789456",
+    suggestion: "HbA1c result 7.2% found in lab report (p.4)",
+    confidence: 96,
+    status: "pending",
+  },
+  {
+    measure: "CBP",
+    member: "MBR-667890",
+    suggestion: "BP reading 138/88 documented on 01/14/2026",
+    confidence: 91,
+    status: "pending",
+  },
+  {
+    measure: "BCS",
+    member: "MBR-332178",
+    suggestion: "Mammogram on file — date matches numerator criteria",
+    confidence: 88,
+    status: "accepted",
+  },
 ];
 
 /* ─── QA Analyst-specific data ───────────────────────────── */
 const qaQueue = [
-  { member: "Anderson, Jennifer K.", id: "MBR-789456", measure: "CDC", abstractor: "S. Johnson", submitted: "2h ago", risk: "low" },
-  { member: "Park, Michael T.", id: "MBR-558833", measure: "CBP", abstractor: "R. Gupta", submitted: "3h ago", risk: "medium" },
-  { member: "Garcia, Elena R.", id: "MBR-221047", measure: "COL", abstractor: "M. Patel", submitted: "5h ago", risk: "high" },
-  { member: "Brown, Samuel J.", id: "MBR-990122", measure: "BCS", abstractor: "S. Johnson", submitted: "6h ago", risk: "low" },
-  { member: "Lee, Rachel S.", id: "MBR-443320", measure: "AMR", abstractor: "D. Pillai", submitted: "8h ago", risk: "medium" },
+  {
+    member: "Anderson, Jennifer K.",
+    id: "MBR-789456",
+    measure: "CDC",
+    abstractor: "S. Johnson",
+    submitted: "2h ago",
+    risk: "low",
+  },
+  {
+    member: "Park, Michael T.",
+    id: "MBR-558833",
+    measure: "CBP",
+    abstractor: "R. Gupta",
+    submitted: "3h ago",
+    risk: "medium",
+  },
+  {
+    member: "Garcia, Elena R.",
+    id: "MBR-221047",
+    measure: "COL",
+    abstractor: "M. Patel",
+    submitted: "5h ago",
+    risk: "high",
+  },
+  {
+    member: "Brown, Samuel J.",
+    id: "MBR-990122",
+    measure: "BCS",
+    abstractor: "S. Johnson",
+    submitted: "6h ago",
+    risk: "low",
+  },
+  {
+    member: "Lee, Rachel S.",
+    id: "MBR-443320",
+    measure: "AMR",
+    abstractor: "D. Pillai",
+    submitted: "8h ago",
+    risk: "medium",
+  },
 ];
 
 const qaThrough = [
@@ -1027,93 +976,386 @@ const discrepancyTypes = [
 const discrepancyTotal = discrepancyTypes.reduce((s, d) => s + d.count, 0);
 
 /* ─── Abstractor Dashboard ────────────────────────────────── */
-function AbstractorDashboard() {
+function AbstractorDashboard({ onOpenWorkQueue }: DashboardProps) {
   const navigate = useNavigate();
   const uid = useId();
   const gradId = `absGrad-${uid}`;
+  const { measurementYear, globalSearch } = useGlobalFilters();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+
+  // ── Abstractor Stats API ──────────────────────────────────
+  const {
+    data: absStatsResponse,
+    isLoading: absStatsLoading,
+    error: absStatsError,
+    refetch: refetchAbsStats,
+  } = useGetApiDashboardAbstractorStats({
+    measurementYear: measurementYear || undefined,
+    search: globalSearch || undefined,
+  });
+
+  const stats = absStatsResponse?.data ?? {};
+
+  // Safe getters (same pattern as QA / Program Manager)
+  const getValue = (obj: any, fallback: string | number = "0") => {
+    const val = obj?.value ?? null;
+    return val !== null && val !== undefined ? val : fallback;
+  };
+
+  const getSub = (obj: any, fallback: string) => obj?.subtext ?? fallback;
+
+  const getTrend = (obj: any) => {
+    // API uses both "trend" and "badge"
+    return obj?.trend ?? obj?.badge ?? "";
+  };
+
+  const getTrendUp = (obj: any) => {
+    const type = obj?.trendType;
+    if (type === "up") return true;
+    if (type === "down") return false;
+    return undefined; // neutral → no arrow
+  };
+
+  // ── Abstractor Velocity API ───────────────────────────────
+  const {
+    data: velocityResponse,
+    isLoading: velocityLoading,
+    error: velocityError,
+    refetch: refetchVelocity,
+  } = useGetApiDashboardAbstractorVelocity({
+    measurementYear: measurementYear || undefined,
+    search: globalSearch || undefined,
+  });
+
+  const velocityData =
+    velocityResponse?.data?.map((item: any) => ({
+      day: item.isToday ? "Today" : item.day, // show “Today” when flagged
+      completed: item.chartsDone ?? 0,
+      aiAssist: item.aiAssisted ?? 0,
+    })) ?? [];
+
+  // Fallback to mock only if API returns empty
+  const finalVelocityData = velocityData.length > 0 ? velocityData : myVelocity;
+
+  // ── AI Pre-Analysis Findings API ──────────────────────────
+  const {
+    data: aiFindingsResponse,
+    isLoading: aiFindingsLoading,
+    error: aiFindingsError,
+    refetch: refetchAiFindings,
+  } = useGetApiDashboardAbstractorAiFindings({
+    measurementYear: measurementYear || undefined,
+    search: globalSearch || undefined,
+    limit: 3, // dashboard preview
+  });
+
+  const aiFindings = aiFindingsResponse?.data?.findings ?? [];
+  const aiFindingsTotal = aiFindingsResponse?.data?.total ?? 0;
+
+  // Fallback to mock only if API returns empty
+  const finalAiFindings =
+    aiFindings.length > 0
+      ? aiFindings
+      : aiSuggestions.map((s) => ({
+          label: `${s.measure} · ${s.member}`,
+          measureCode: s.measure,
+          memberId: s.member,
+          confidencePct: s.confidence,
+          confidenceLabel: `${s.confidence}% conf.`,
+          findingSummary: s.suggestion,
+        }));
+
+  // ── My Assigned Queue API ─────────────────────────────────
+  const {
+    data: myQueueResponse,
+    isLoading: myQueueLoading,
+    error: myQueueError,
+    refetch: refetchMyQueue,
+  } = useGetApiDashboardAbstractorUserQueue({
+    measurementYear: measurementYear || undefined,
+    search: globalSearch || undefined,
+    page_no: 1,
+    page_size: 10, // dashboard preview
+  });
+
+  const myQueueItems = myQueueResponse?.data ?? [];
+  const myQueuePagination = myQueueResponse?.pagination;
+  const activeCount = myQueuePagination?.total ?? myQueueItems.length;
+
+  const handleRefreshDashboard = async () => {
+    try {
+      setIsRefreshing(true);
+
+      await Promise.all([
+        refetchAbsStats(),
+        refetchVelocity(),
+        refetchAiFindings(),
+        refetchMyQueue(),
+      ]);
+
+      setLastUpdated(new Date());
+      toast.success("Dashboard refreshed successfully.");
+    } catch (error) {
+      toast.error("Failed to refresh dashboard.");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   return (
     <div className="space-y-5">
       <div className="max-w-screen-2xl mx-auto px-4 py-4 space-y-5">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-base font-bold text-foreground">My Abstraction Dashboard</h1>
+            <h1 className="text-base font-bold text-foreground">
+              My Abstraction Dashboard
+            </h1>
             <p className="text-xs text-muted-foreground mt-0.5">
-              MY 2026 · Chart Abstractor View · Last updated Feb 24, 2026 at 09:41 AM
+              MY 2026 · Chart Abstractor View · Last updated{" "}
+              {new Date().toLocaleString([], {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors">
-              <RefreshCw className="w-3.5 h-3.5" />Refresh
+            <button
+              onClick={handleRefreshDashboard}
+              disabled={isRefreshing}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors disabled:opacity-60"
+            >
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`}
+              />
+              {isRefreshing ? "Refreshing..." : "Refresh"}
             </button>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-50 border border-blue-200 rounded-lg text-blue-700 font-semibold">
-              <CircleDot className="w-3 h-3 fill-blue-500" />Live
-            </span>
           </div>
         </div>
 
-        {/* KPIs */}
+        {/* ── KPIs (API-driven) ── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            { label: 'My Queue',         value: '5',     sub: 'charts assigned to me', icon: ClipboardList, color: 'bg-blue-50 text-blue-700',    trend: '↑ 2 new today', trendUp: false },
-            { label: 'Completed Today',  value: '6',     sub: 'abstractions finalized', icon: CheckCircle2, color: 'bg-emerald-50 text-emerald-700',trend: '+20% vs avg',  trendUp: true  },
-            { label: 'QA Pending',       value: '3',     sub: 'awaiting QA review',     icon: Eye,          color: 'bg-amber-50 text-amber-700',   trend: 'from last wk',  trendUp: false },
-            { label: 'My Accuracy',      value: '96.2%', sub: 'QA pass rate this month',icon: Award,        color: 'bg-violet-50 text-violet-700', trend: '+0.4% this wk', trendUp: true  },
-          ].map(k => <KpiCard key={k.label} {...k} />)}
+          {absStatsLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-card border border-border rounded-xl p-4 flex flex-col gap-3 animate-pulse"
+              >
+                <div className="w-9 h-9 bg-muted rounded-lg" />
+                <div>
+                  <div className="h-8 w-16 bg-muted rounded" />
+                  <div className="h-3 w-24 bg-muted rounded mt-2" />
+                  <div className="h-3 w-20 bg-muted rounded mt-1" />
+                </div>
+              </div>
+            ))
+          ) : absStatsError ? (
+            <div className="col-span-full h-32 flex items-center justify-center text-red-500 border border-border rounded-xl">
+              Failed to load abstractor statistics.
+            </div>
+          ) : (
+            <>
+              <KpiCard
+                label="My Queue"
+                value={getValue(stats.myQueue).toLocaleString()}
+                sub={getSub(stats.myQueue, "charts assigned to me")}
+                icon={ClipboardList}
+                color="bg-blue-50 text-blue-700"
+                trend={getTrend(stats.myQueue)}
+                trendUp={getTrendUp(stats.myQueue)}
+              />
+
+              <KpiCard
+                label="Completed Today"
+                value={getValue(stats.completedToday).toString()}
+                sub={getSub(stats.completedToday, "abstractions finalized")}
+                icon={CheckCircle2}
+                color="bg-emerald-50 text-emerald-700"
+                trend={getTrend(stats.completedToday)}
+                trendUp={getTrendUp(stats.completedToday)}
+              />
+
+              <KpiCard
+                label="QA Pending"
+                value={getValue(stats.qaPending).toString()}
+                sub={getSub(stats.qaPending, "awaiting QA review")}
+                icon={Eye}
+                color="bg-amber-50 text-amber-700"
+                trend={getTrend(stats.qaPending)}
+                trendUp={getTrendUp(stats.qaPending)}
+              />
+
+              <KpiCard
+                label="My Accuracy"
+                value={`${getValue(stats.myAccuracy)}%`}
+                sub={getSub(stats.myAccuracy, "QA pass rate this month")}
+                icon={Award}
+                color="bg-violet-50 text-violet-700"
+                trend={getTrend(stats.myAccuracy)}
+                trendUp={getTrendUp(stats.myAccuracy)}
+              />
+            </>
+          )}
         </div>
 
         {/* Row 2: Velocity + AI Suggestions */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 bg-card border border-border rounded-xl p-5">
-            <SectionTitle title="My Abstraction Velocity" sub="Charts completed this week — total vs. AI-assisted">
+            <SectionTitle
+              title="My Abstraction Velocity"
+              sub="Charts completed this week — total vs. AI-assisted"
+            >
               <span className="flex items-center gap-1 text-[10px] text-muted-foreground border border-border rounded px-2 py-1">
-                <Calendar className="w-3 h-3" />This Week
+                <Calendar className="w-3 h-3" />
+                This Week
               </span>
             </SectionTitle>
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={myVelocity} margin={{ top: 4, right: 8, left: -20, bottom: 0 }} barGap={4}>
-                <defs>
-                  <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={C.blue} stopOpacity={0.15} />
-                    <stop offset="95%" stopColor={C.blue} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid key="av-grid" strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis key="av-xaxis" dataKey="day" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} />
-                <YAxis key="av-yaxis" tick={{ fontSize: 9, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} />
-                <Tooltip key="av-tooltip" contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 11 }} />
-                <Bar key="av-completed" dataKey="completed" name="Charts Done" fill={C.blue}   radius={[3,3,0,0]} maxBarSize={28} />
-                <Bar key="av-aiAssist"  dataKey="aiAssist"  name="AI-Assisted" fill={C.violet} radius={[3,3,0,0]} maxBarSize={28} />
-              </BarChart>
-            </ResponsiveContainer>
-            <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground">
-              <span className="flex items-center gap-1"><span className="w-3 h-2 rounded bg-blue-500 inline-block" />Charts Done</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-2 rounded bg-violet-500 inline-block" />AI-Assisted</span>
-            </div>
+
+            {velocityLoading ? (
+              <div className="h-[180px] flex items-center justify-center text-muted-foreground">
+                Loading velocity data...
+              </div>
+            ) : velocityError ? (
+              <div className="h-[180px] flex items-center justify-center text-red-500">
+                Failed to load abstraction velocity.
+              </div>
+            ) : (
+              <>
+                <ResponsiveContainer width="100%" height={180}>
+                  <BarChart
+                    data={finalVelocityData}
+                    margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
+                    barGap={4}
+                  >
+                    <defs>
+                      <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                        <stop
+                          offset="5%"
+                          stopColor={C.blue}
+                          stopOpacity={0.15}
+                        />
+                        <stop offset="95%" stopColor={C.blue} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="var(--border)"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="day"
+                      tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 9, fill: "var(--muted-foreground)" }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        background: "var(--card)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 8,
+                        fontSize: 11,
+                      }}
+                    />
+                    <Bar
+                      dataKey="completed"
+                      name="Charts Done"
+                      fill={C.blue}
+                      radius={[3, 3, 0, 0]}
+                      maxBarSize={28}
+                    />
+                    <Bar
+                      dataKey="aiAssist"
+                      name="AI-Assisted"
+                      fill={C.violet}
+                      radius={[3, 3, 0, 0]}
+                      maxBarSize={28}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+
+                <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <span className="w-3 h-2 rounded bg-blue-500 inline-block" />
+                    Charts Done
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-3 h-2 rounded bg-violet-500 inline-block" />
+                    AI-Assisted
+                  </span>
+                </div>
+              </>
+            )}
           </div>
 
           {/* AI Pre-Analysis */}
           <div className="bg-card border border-border rounded-xl p-5 flex flex-col justify-between">
-            <SectionTitle title="AI Pre-Analysis" sub="High-confidence clinical findings" />
-            <div className="space-y-3 my-2">
-              {aiSuggestions.map((s, idx) => (
-                <div key={idx} className="p-3 bg-muted/20 rounded-lg border border-border/50 space-y-1">
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="font-bold text-foreground">{s.measure} · {s.member}</span>
-                    <span className="text-[10px] font-bold text-violet-600 bg-violet-50 border border-violet-200 px-1.5 py-0.5 rounded-full">
-                      {s.confidence}% conf.
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground">{s.suggestion}</p>
+            <SectionTitle
+              title="AI Pre-Analysis"
+              sub="High-confidence clinical findings"
+            />
+
+            {aiFindingsLoading ? (
+              <div className="h-[180px] flex items-center justify-center text-muted-foreground">
+                Loading AI findings...
+              </div>
+            ) : aiFindingsError ? (
+              <div className="h-[180px] flex items-center justify-center text-red-500">
+                Failed to load AI findings.
+              </div>
+            ) : finalAiFindings.length === 0 ? (
+              <div className="h-[180px] flex items-center justify-center text-muted-foreground">
+                No AI findings available.
+              </div>
+            ) : (
+              <>
+                <div className="space-y-3 my-2">
+                  {finalAiFindings.map((s: any, idx: number) => (
+                    <div
+                      key={s.memberId + s.measureCode + idx}
+                      className="p-3 bg-muted/20 rounded-lg border border-border/50 space-y-1"
+                    >
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="font-bold text-foreground truncate">
+                          {s.label || `${s.measureCode} · ${s.memberId}`}
+                        </span>
+                        <span className="text-[10px] font-bold text-violet-600 bg-violet-50 border border-violet-200 px-1.5 py-0.5 rounded-full flex-shrink-0 ml-2">
+                          {s.confidenceLabel || `${s.confidencePct}% conf.`}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground line-clamp-2">
+                        {s.findingSummary}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <button
-              onClick={() => navigate({ to: "/work-queue" })}
-              className="w-full py-2 text-xs font-semibold text-violet-700 bg-violet-50 border border-violet-200 rounded-lg hover:bg-violet-100 transition-colors flex items-center justify-center gap-1.5"
-            >
-              <Sparkles className="w-3.5 h-3.5" /> Review All Findings
-            </button>
+
+                <button
+                  onClick={() =>
+                    onOpenWorkQueue
+                      ? onOpenWorkQueue()
+                      : navigate({ to: "/work-queue" })
+                  }
+                  className="w-full py-2 text-xs font-semibold text-violet-700 bg-violet-50 border border-violet-200 rounded-lg hover:bg-violet-100 transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Review All Findings
+                  {aiFindingsTotal > 0 && (
+                    <span className="ml-1 text-[10px] opacity-70">
+                      ({aiFindingsTotal})
+                    </span>
+                  )}
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -1121,68 +1363,183 @@ function AbstractorDashboard() {
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="flex items-center justify-between px-5 py-3 border-b border-border">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-foreground">My Assigned Queue</span>
-              <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full">5 active</span>
+              <span className="text-xs font-bold text-foreground">
+                My Assigned Queue
+              </span>
+              <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full">
+                {activeCount} active
+              </span>
             </div>
             <button
-              onClick={() => navigate({ to: "/work-queue" })}
+              onClick={() =>
+                onOpenWorkQueue
+                  ? onOpenWorkQueue()
+                  : navigate({ to: "/work-queue" })
+              }
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Open Work Queue <ArrowUpRight className="w-3.5 h-3.5" />
             </button>
           </div>
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-border bg-muted/20">
-                {['Member', 'Measure', 'Status', 'Due Date', 'Progress', 'Action'].map((h) => (
-                  <th key={h} className="text-left px-4 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wide">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {myQueueItems.map((row) => (
-                <tr key={row.id} className="hover:bg-muted/10 transition-colors group">
-                  <td className="px-4 py-3">
-                    <div className="font-semibold text-foreground">{row.member}</div>
-                    <div className="text-[10px] font-mono text-muted-foreground">{row.id}</div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex items-center justify-center w-10 h-5 bg-primary/10 text-primary border border-primary/20 rounded text-[10px] font-bold">{row.measure}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${
-                      row.status === 'QA Pending'  ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                      row.status === 'In Progress' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                                     'bg-muted text-muted-foreground border-border'
-                    }`}>{row.status}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`flex items-center gap-1 font-semibold ${row.urgency ? 'text-red-600' : 'text-foreground'}`}>
-                      {row.urgency && <AlertTriangle className="w-3 h-3" />}{row.due}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    {row.pct > 0 ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div className={`h-full rounded-full ${row.pct === 100 ? 'bg-emerald-500' : 'bg-blue-500'}`} style={{ width: `${row.pct}%` }} />
-                        </div>
-                        <span className="text-[10px] text-muted-foreground">{row.pct}%</span>
-                      </div>
-                    ) : <span className="text-muted-foreground/40">—</span>}
-                  </td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => navigate({ to: "/work-queue" })}
-                      className="flex items-center gap-1 text-[11px] text-blue-600 font-semibold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
+
+          <div className="w-full overflow-x-auto">
+            <table className="min-w-[750px] w-full text-xs">
+              <thead>
+                <tr className="border-b border-border bg-muted/20">
+                  {[
+                    "Member",
+                    "Measure",
+                    "Status",
+                    "Due Date",
+                    "Progress",
+                    "Action",
+                  ].map((h) => (
+                    <th
+                      key={h}
+                      className="text-left px-4 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wide"
                     >
-                      Abstract <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  </td>
+                      {h}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {myQueueLoading ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="py-8 text-center text-muted-foreground"
+                    >
+                      Loading My Queue...
+                    </td>
+                  </tr>
+                ) : myQueueError ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-red-500">
+                      Failed to load My Queue.
+                    </td>
+                  </tr>
+                ) : myQueueItems.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="py-8 text-center text-muted-foreground"
+                    >
+                      No charts assigned.
+                    </td>
+                  </tr>
+                ) : (
+                  myQueueItems.map((row: any) => {
+                    const isOverdue =
+                      row.dueDate && new Date(row.dueDate) < new Date();
+                    const status =
+                      row.stage || row.chartStatus || "Not Started";
+
+                    return (
+                      <tr
+                        key={row.patientId}
+                        className="hover:bg-muted/10 transition-colors group"
+                      >
+                        {/* Member */}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="font-semibold text-foreground">
+                            {row.firstName} {row.lastName}
+                          </div>
+                          <div className="text-[10px] font-mono text-muted-foreground">
+                            {row.memberId}
+                          </div>
+                        </td>
+
+                        {/* Measure */}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span className="inline-flex items-center justify-center w-10 h-5 bg-primary/10 text-primary border border-primary/20 rounded text-[10px] font-bold">
+                            {row.measure
+                              ? row.measure.split(" ").pop() || row.measure
+                              : "-"}
+                          </span>
+                        </td>
+
+                        {/* Status – uses stage as requested */}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span
+                            className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${
+                              status === "QA Pending" || status === "QA Passed"
+                                ? "bg-amber-50 text-amber-700 border-amber-200"
+                                : status === "In Progress" ||
+                                    status === "Revision Required"
+                                  ? "bg-blue-50 text-blue-700 border-blue-200"
+                                  : status === "Completed"
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                    : "bg-muted text-muted-foreground border-border"
+                            }`}
+                          >
+                            {status}
+                          </span>
+                        </td>
+
+                        {/* Due Date */}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span
+                            className={`flex items-center gap-1 font-semibold ${
+                              isOverdue ? "text-red-600" : "text-foreground"
+                            }`}
+                          >
+                            {isOverdue && <AlertTriangle className="w-3 h-3" />}
+                            {row.dueDate
+                              ? new Date(row.dueDate).toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    month: "short",
+                                    day: "numeric",
+                                  }
+                                )
+                              : "-"}
+                          </span>
+                        </td>
+
+                        {/* Progress */}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          {row.progress > 0 ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full ${
+                                    row.progress === 100
+                                      ? "bg-emerald-500"
+                                      : "bg-blue-500"
+                                  }`}
+                                  style={{ width: `${row.progress}%` }}
+                                />
+                              </div>
+                              <span className="text-[10px] text-muted-foreground">
+                                {row.progress}%
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground/40">—</span>
+                          )}
+                        </td>
+
+                        {/* Action */}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <button
+                            onClick={() =>
+                              onOpenWorkQueue
+                                ? onOpenWorkQueue()
+                                : navigate({ to: "/work-queue" })
+                            }
+                            className="flex items-center gap-1 text-[11px] text-blue-600 font-semibold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
+                          >
+                            Abstract <ChevronRight className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
         <div className="h-2" />
       </div>
@@ -1191,87 +1548,416 @@ function AbstractorDashboard() {
 }
 
 /* ─── QA Analyst Dashboard ────────────────────────────────── */
-function QADashboard() {
+function QADashboard({ onOpenWorkQueue }: DashboardProps) {
   const navigate = useNavigate();
-  const discrepancyData = discrepancyTypes.map(d => ({ ...d, pct: Math.round((d.count / discrepancyTotal) * 100) }));
+  const { measurementYear, globalSearch } = useGlobalFilters();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+
+  // ── QA Stats API ──────────────────────────────────────────
+  const {
+    data: qaStatsResponse,
+    isLoading: qaStatsLoading,
+    error: qaStatsError,
+    refetch: refetchQaStats,
+  } = useGetApiDashboardQaStats({
+    measurementYear: measurementYear || undefined,
+    search: globalSearch || undefined,
+  });
+
+  const stats = qaStatsResponse?.data ?? {};
+
+  // Safe getters (same pattern as Program Manager)
+  const getValue = (obj: any, fallback: string | number = "0") => {
+    const val = obj?.value ?? null;
+    return val !== null && val !== undefined ? val : fallback;
+  };
+
+  const getSub = (obj: any, fallback: string) => obj?.subtext ?? fallback;
+
+  const getTrend = (obj: any) => {
+    // Some fields use "badge", some use "trend"
+    return obj?.trend ?? obj?.badge ?? "";
+  };
+
+  const getTrendUp = (obj: any) => {
+    const type = obj?.trendType;
+    if (type === "up") return true;
+    if (type === "down") return false;
+    return undefined; // neutral → no arrow
+  };
+
+  // ── QA Throughput API ─────────────────────────────────────
+  const {
+    data: throughputResponse,
+    isLoading: throughputLoading,
+    error: throughputError,
+    refetch: refetchThroughput,
+  } = useGetApiDashboardQaThroughput({
+    measurementYear: measurementYear || undefined,
+    search: globalSearch || undefined,
+  });
+
+  const throughputData =
+    throughputResponse?.data?.map((item: any) => ({
+      day: item.day,
+      reviewed: item.reviewed ?? 0,
+      returned: item.returned ?? 0,
+    })) ?? [];
+
+  // Fallback to mock only if API returns empty
+  const finalThroughputData =
+    throughputData.length > 0 ? throughputData : qaThrough;
+
+  // ── QA Discrepancy Types API ──────────────────────────────
+  const {
+    data: discrepancyResponse,
+    isLoading: discrepancyLoading,
+    error: discrepancyError,
+    refetch: refetchDiscrepancy,
+  } = useGetApiDashboardQaDiscrepancyTypes({
+    measurementYear: measurementYear || undefined,
+    search: globalSearch || undefined,
+  });
+
+  const discrepancyApi = discrepancyResponse?.data;
+
+  // Color palette (same order as the old mock)
+  const discrepancyColors = [C.red, C.orange ?? "#f97316", C.amber, C.violet];
+
+  const discrepancyItems =
+    discrepancyApi?.items?.map((item: any, index: number) => ({
+      type: item.type,
+      count: item.count ?? 0,
+      pct: item.percentage ?? 0,
+      color: discrepancyColors[index % discrepancyColors.length],
+    })) ?? [];
+
+  // Fallback to mock only if API returns empty
+  const finalDiscrepancyData =
+    discrepancyItems.length > 0
+      ? discrepancyItems
+      : discrepancyTypes.map((d) => ({
+          ...d,
+          pct: Math.round((d.count / discrepancyTotal) * 100),
+        }));
+
+  const totalDiscrepancies =
+    discrepancyApi?.totalDiscrepancies ?? discrepancyTotal;
+
+  const timeframeLabel =
+    discrepancyApi?.timeframeLabel ?? `${discrepancyTotal} total this month`;
+
+  const topIssue = discrepancyApi?.topIssue ?? {
+    type: "Missing Documentation",
+    message:
+      "Missing documentation is the leading discrepancy type — coordinate with abstractors on documentation standards.",
+  };
+
+  // ── Pending QA Queue API ──────────────────────────────────
+  const {
+    data: qaQueueResponse,
+    isLoading: qaQueueLoading,
+    error: qaQueueError,
+    refetch: refetchQaQueue,
+  } = useGetApiDashboardQaUserQueue({
+    measurementYear: measurementYear || undefined,
+    search: globalSearch || undefined,
+    page_no: 1,
+    page_size: 10, // dashboard preview
+  });
+
+  const qaQueueItems = qaQueueResponse?.data ?? [];
+  const qaQueuePagination = qaQueueResponse?.pagination;
+  const pendingCount = qaQueuePagination?.total ?? qaQueueItems.length;
+
+  // Helper: relative time (same logic as ActivityRow)
+  const getRelativeTime = (dateString?: string): string => {
+    if (!dateString) return "-";
+    const now = new Date();
+    const created = new Date(dateString);
+    const diffMs = now.getTime() - created.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hr ago`;
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return created.toLocaleDateString([], { month: "short", day: "numeric" });
+  };
+
+  // Map priority → risk color class
+  const getRiskClass = (priority?: string) => {
+    const p = (priority || "").toLowerCase();
+    if (p === "high") return "bg-red-50 text-red-700 border-red-200";
+    if (p === "urgent") return "bg-red-50 text-red-700 border-red-200";
+    if (p === "medium") return "bg-amber-50 text-amber-700 border-amber-200";
+    return "bg-emerald-50 text-emerald-700 border-emerald-200";
+  };
+
+  const handleRefreshDashboard = async () => {
+    try {
+      setIsRefreshing(true);
+
+      await Promise.all([
+        refetchQaStats(),
+        refetchThroughput(),
+        refetchDiscrepancy(),
+        refetchQaQueue(),
+      ]);
+
+      setLastUpdated(new Date());
+      toast.success("Dashboard refreshed successfully.");
+    } catch (error) {
+      toast.error("Failed to refresh dashboard.");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   return (
     <div className="space-y-5">
       <div className="max-w-screen-2xl mx-auto px-4 py-4 space-y-5">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-base font-bold text-foreground">QA Review Dashboard</h1>
+            <h1 className="text-base font-bold text-foreground">
+              QA Review Dashboard
+            </h1>
             <p className="text-xs text-muted-foreground mt-0.5">
-              MY 2026 · Quality Analyst View · Last updated Feb 24, 2026 at 09:41 AM
+              MY 2026 · Quality Analyst View · Last updated{" "}
+              {new Date().toLocaleString([], {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors">
-              <RefreshCw className="w-3.5 h-3.5" />Refresh
+            <button
+              onClick={handleRefreshDashboard}
+              disabled={isRefreshing}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors disabled:opacity-60"
+            >
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`}
+              />
+              {isRefreshing ? "Refreshing..." : "Refresh"}
             </button>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700 font-semibold">
-              <CircleDot className="w-3 h-3 fill-emerald-500" />Live
-            </span>
           </div>
         </div>
 
-        {/* KPIs */}
+        {/* ── KPIs (API-driven) ── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            { label: 'Pending QA Review',  value: '34',    sub: 'charts awaiting review', icon: ClipboardList, color: 'bg-emerald-50 text-emerald-700', trend: '↑ 8 new today',  trendUp: false },
-            { label: 'Reviewed Today',     value: '14',    sub: 'cases completed',        icon: CheckCircle2,  color: 'bg-primary/10 text-primary',      trend: '+17% vs avg',    trendUp: true  },
-            { label: 'Returned to Coder',  value: '2',     sub: 'discrepancies found',    icon: RotateCcw,     color: 'bg-amber-50 text-amber-700',      trend: '14% return rate',trendUp: false },
-            { label: 'Approval Rate',      value: '86.1%', sub: 'cases passed QA',        icon: ThumbsUp,      color: 'bg-violet-50 text-violet-700',    trend: '+1.3% this wk',  trendUp: true  },
-          ].map(k => <KpiCard key={k.label} {...k} />)}
+          {qaStatsLoading ? (
+            // Loading skeleton
+            Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-card border border-border rounded-xl p-4 flex flex-col gap-3 animate-pulse"
+              >
+                <div className="w-9 h-9 bg-muted rounded-lg" />
+                <div>
+                  <div className="h-8 w-16 bg-muted rounded" />
+                  <div className="h-3 w-24 bg-muted rounded mt-2" />
+                  <div className="h-3 w-20 bg-muted rounded mt-1" />
+                </div>
+              </div>
+            ))
+          ) : qaStatsError ? (
+            <div className="col-span-full h-32 flex items-center justify-center text-red-500 border border-border rounded-xl">
+              Failed to load QA statistics.
+            </div>
+          ) : (
+            <>
+              <KpiCard
+                label="Pending QA Review"
+                value={getValue(stats.pendingQAReview).toLocaleString()}
+                sub={getSub(stats.pendingQAReview, "charts awaiting review")}
+                icon={ClipboardList}
+                color="bg-emerald-50 text-emerald-700"
+                trend={getTrend(stats.pendingQAReview)}
+                trendUp={getTrendUp(stats.pendingQAReview)}
+              />
+
+              <KpiCard
+                label="Reviewed Today"
+                value={getValue(stats.reviewedToday).toString()}
+                sub={getSub(stats.reviewedToday, "cases completed")}
+                icon={CheckCircle2}
+                color="bg-primary/10 text-primary"
+                trend={getTrend(stats.reviewedToday)}
+                trendUp={getTrendUp(stats.reviewedToday)}
+              />
+
+              <KpiCard
+                label="Returned to Coder"
+                value={getValue(stats.returnedToCoder).toString()}
+                sub={getSub(stats.returnedToCoder, "discrepancies found")}
+                icon={RotateCcw}
+                color="bg-amber-50 text-amber-700"
+                trend={getTrend(stats.returnedToCoder)}
+                trendUp={getTrendUp(stats.returnedToCoder)}
+              />
+
+              <KpiCard
+                label="Approval Rate"
+                value={`${getValue(stats.approvalRate)}%`}
+                sub={getSub(stats.approvalRate, "cases passed QA")}
+                icon={ThumbsUp}
+                color="bg-violet-50 text-violet-700"
+                trend={getTrend(stats.approvalRate)}
+                trendUp={getTrendUp(stats.approvalRate)}
+              />
+            </>
+          )}
         </div>
 
         {/* Row 2: QA Throughput + Discrepancy Breakdown */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 bg-card border border-border rounded-xl p-5">
-            <SectionTitle title="QA Review Throughput" sub="Cases reviewed vs. returned this week">
+            <SectionTitle
+              title="QA Review Throughput"
+              sub="Cases reviewed vs. returned this week"
+            >
               <span className="flex items-center gap-1 text-[10px] text-muted-foreground border border-border rounded px-2 py-1">
-                <Calendar className="w-3 h-3" />This Week
+                <Calendar className="w-3 h-3" />
+                This Week
               </span>
             </SectionTitle>
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={qaThrough} margin={{ top: 4, right: 8, left: -20, bottom: 0 }} barGap={4}>
-                <CartesianGrid key="qt-grid" strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis key="qt-xaxis" dataKey="day" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} />
-                <YAxis key="qt-yaxis" tick={{ fontSize: 9, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} />
-                <Tooltip key="qt-tooltip" contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 11 }} />
-                <Bar key="qt-reviewed" dataKey="reviewed" name="Reviewed"  fill={C.emerald} radius={[3,3,0,0]} maxBarSize={28} />
-                <Bar key="qt-returned" dataKey="returned" name="Returned"  fill={C.amber}   radius={[3,3,0,0]} maxBarSize={28} />
-              </BarChart>
-            </ResponsiveContainer>
-            <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground">
-              <span className="flex items-center gap-1"><span className="w-3 h-2 rounded bg-emerald-500 inline-block" />Reviewed</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-2 rounded bg-amber-500 inline-block" />Returned to Coder</span>
-            </div>
+
+            {throughputLoading ? (
+              <div className="h-[180px] flex items-center justify-center text-muted-foreground">
+                Loading throughput data...
+              </div>
+            ) : throughputError ? (
+              <div className="h-[180px] flex items-center justify-center text-red-500">
+                Failed to load QA throughput.
+              </div>
+            ) : (
+              <>
+                <ResponsiveContainer width="100%" height={180}>
+                  <BarChart
+                    data={finalThroughputData}
+                    margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
+                    barGap={4}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="var(--border)"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="day"
+                      tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 9, fill: "var(--muted-foreground)" }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        background: "var(--card)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 8,
+                        fontSize: 11,
+                      }}
+                    />
+                    <Bar
+                      dataKey="reviewed"
+                      name="Reviewed"
+                      fill={C.emerald}
+                      radius={[3, 3, 0, 0]}
+                      maxBarSize={28}
+                    />
+                    <Bar
+                      dataKey="returned"
+                      name="Returned"
+                      fill={C.amber}
+                      radius={[3, 3, 0, 0]}
+                      maxBarSize={28}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+
+                <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <span className="w-3 h-2 rounded bg-emerald-500 inline-block" />
+                    Reviewed
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-3 h-2 rounded bg-amber-500 inline-block" />
+                    Returned to Coder
+                  </span>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Discrepancy Breakdown */}
           <div className="bg-card border border-border rounded-xl p-4">
-            <SectionTitle title="Discrepancy Types" sub={`${discrepancyTotal} total this month`} />
-            <div className="space-y-3">
-              {discrepancyData.map(d => (
-                <div key={d.type}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[11px] font-semibold text-foreground">{d.type}</span>
-                    <span className="text-[11px] font-bold text-foreground">{d.count} <span className="font-normal text-muted-foreground">({d.pct}%)</span></span>
-                  </div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: `${d.pct}%`, background: d.color }} />
+            <SectionTitle title="Discrepancy Types" sub={totalDiscrepancies} />
+
+            {discrepancyLoading ? (
+              <div className="h-[180px] flex items-center justify-center text-muted-foreground">
+                Loading discrepancy data...
+              </div>
+            ) : discrepancyError ? (
+              <div className="h-[180px] flex items-center justify-center text-red-500">
+                Failed to load discrepancy types.
+              </div>
+            ) : finalDiscrepancyData.length === 0 ? (
+              <div className="h-[180px] flex items-center justify-center text-muted-foreground">
+                No discrepancies found.
+              </div>
+            ) : (
+              <>
+                <div className="space-y-3">
+                  {finalDiscrepancyData.map((d) => (
+                    <div key={d.type}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[11px] font-semibold text-foreground">
+                          {d.type}
+                        </span>
+                        <span className="text-[11px] font-bold text-foreground">
+                          {d.count}{" "}
+                          <span className="font-normal text-muted-foreground">
+                            ({d.pct}%)
+                          </span>
+                        </span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{ width: `${d.pct}%`, background: d.color }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Top Issue */}
+                <div className="mt-4 pt-3 border-t border-border">
+                  <p className="text-[10px] text-muted-foreground font-semibold mb-2">
+                    Top Issue
+                  </p>
+                  <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-2.5">
+                    <AlertTriangle className="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-[10px] text-red-700 leading-snug">
+                      {topIssue.message}
+                    </p>
                   </div>
                 </div>
-              ))}
-            </div>
-            <div className="mt-4 pt-3 border-t border-border">
-              <p className="text-[10px] text-muted-foreground font-semibold mb-2">Top Issue</p>
-              <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-2.5">
-                <AlertTriangle className="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" />
-                <p className="text-[10px] text-red-700 leading-snug">Missing documentation is the leading discrepancy type — coordinate with abstractors on documentation standards.</p>
-              </div>
-            </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -1279,60 +1965,141 @@ function QADashboard() {
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="flex items-center justify-between px-5 py-3 border-b border-border">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-foreground">Pending QA Review Queue</span>
-              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">34 pending</span>
+              <span className="text-xs font-bold text-foreground">
+                Pending QA Review Queue
+              </span>
+              {/* <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">
+                {pendingCount} pending
+              </span> */}
             </div>
             <button
-              onClick={() => navigate({ to: "/work-queue" })}
+              onClick={onOpenWorkQueue}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
             >
               Open QA Queue <ArrowUpRight className="w-3.5 h-3.5" />
             </button>
           </div>
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-border bg-muted/20">
-                {['Member', 'Measure', 'Abstractor', 'Submitted', 'Risk', 'Action'].map((h) => (
-                  <th key={h} className="text-left px-4 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wide">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {qaQueue.map((row) => (
-                <tr key={row.id} className="hover:bg-muted/10 transition-colors group">
-                  <td className="px-4 py-3">
-                    <div className="font-semibold text-foreground">{row.member}</div>
-                    <div className="text-[10px] font-mono text-muted-foreground">{row.id}</div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex items-center justify-center w-10 h-5 bg-primary/10 text-primary border border-primary/20 rounded text-[10px] font-bold">{row.measure}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[8px] font-bold text-primary">{row.abstractor.charAt(0)}</div>
-                      <span className="text-[11px] text-foreground font-medium">{row.abstractor}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-[11px] text-muted-foreground">{row.submitted}</td>
-                  <td className="px-4 py-3">
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
-                      row.risk === 'high'   ? 'bg-red-50 text-red-700 border-red-200' :
-                      row.risk === 'medium' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                                             'bg-emerald-50 text-emerald-700 border-emerald-200'
-                    }`}>{row.risk}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => navigate({ to: "/work-queue" })}
-                      className="flex items-center gap-1 text-[11px] text-emerald-600 font-semibold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
+
+          <div className="w-full overflow-x-auto">
+            <table className="min-w-[750px] w-full text-xs">
+              <thead>
+                <tr className="border-b border-border bg-muted/20">
+                  {[
+                    "Member",
+                    "Measure",
+                    "Abstractor",
+                    "Submitted",
+                    "Risk",
+                    "Action",
+                  ].map((h) => (
+                    <th
+                      key={h}
+                      className="text-left px-4 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wide"
                     >
-                      Review <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  </td>
+                      {h}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {qaQueueLoading ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="py-8 text-center text-muted-foreground"
+                    >
+                      Loading QA queue...
+                    </td>
+                  </tr>
+                ) : qaQueueError ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-red-500">
+                      Failed to load QA queue.
+                    </td>
+                  </tr>
+                ) : qaQueueItems.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="py-8 text-center text-muted-foreground"
+                    >
+                      No charts pending QA review.
+                    </td>
+                  </tr>
+                ) : (
+                  qaQueueItems.map((row: any) => (
+                    <tr
+                      key={row.patientId}
+                      className="hover:bg-muted/10 transition-colors group"
+                    >
+                      {/* Member */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="font-semibold text-foreground">
+                          {row.firstName} {row.lastName}
+                        </div>
+                        <div className="text-[10px] font-mono text-muted-foreground">
+                          {row.memberId}
+                        </div>
+                      </td>
+
+                      {/* Measure */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="inline-flex items-center justify-center w-10 h-5 bg-primary/10 text-primary border border-primary/20 rounded text-[10px] font-bold">
+                          {row.measure
+                            ? row.measure.split(" ").pop() || row.measure
+                            : "-"}
+                        </span>
+                      </td>
+
+                      {/* Abstractor */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[8px] font-bold text-primary">
+                            {(row.abstractorName || "?")
+                              .charAt(0)
+                              .toUpperCase()}
+                          </div>
+                          <span className="text-[11px] text-foreground font-medium">
+                            {row.abstractorName || "-"}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Submitted */}
+                      <td className="px-4 py-3 text-[11px] text-muted-foreground whitespace-nowrap">
+                        {getRelativeTime(row.submittedAt)}
+                      </td>
+
+                      {/* Risk (from priority) */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span
+                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${getRiskClass(
+                            row.priority
+                          )}`}
+                        >
+                          {(row.priority || "low").toLowerCase()}
+                        </span>
+                      </td>
+
+                      {/* Action */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <button
+                          onClick={() =>
+                            onOpenWorkQueue
+                              ? onOpenWorkQueue()
+                              : navigate({ to: "/work-queue" })
+                          }
+                          className="flex items-center gap-1 text-[11px] text-emerald-600 font-semibold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
+                        >
+                          Review <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
         <div className="h-2" />
       </div>
@@ -1350,13 +2117,15 @@ export function Dashboard({ role, onOpenWorkQueue }: DashboardProps = {}) {
   const activeRole: UserRole = role
     ? role
     : userRoleName.includes("abstractor") || userRoleName.includes("coder")
-    ? "abstractor"
-    : userRoleName.includes("qa") || userRoleName.includes("quality")
-    ? "qa-analyst"
-    : "program-manager";
+      ? "abstractor"
+      : userRoleName.includes("qa") || userRoleName.includes("quality")
+        ? "qa-analyst"
+        : "program-manager";
 
-  if (activeRole === "abstractor") return <AbstractorDashboard />;
-  if (activeRole === "qa-analyst") return <QADashboard />;
+  if (activeRole === "abstractor")
+    return <AbstractorDashboard onOpenWorkQueue={onOpenWorkQueue} />;
+  if (activeRole === "qa-analyst")
+    return <QADashboard onOpenWorkQueue={onOpenWorkQueue} />;
 
   return <ProgramManagerDashboard onOpenWorkQueue={onOpenWorkQueue} />;
 }
