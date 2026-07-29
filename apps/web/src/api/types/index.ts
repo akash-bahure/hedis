@@ -213,6 +213,33 @@ export type {
   GetApiDashboardAbstractionVelocityQueryResponse,
 } from "./GetApiDashboardAbstractionVelocity.ts";
 export type {
+  GetApiDashboardAbstractorAiFindings200,
+  GetApiDashboardAbstractorAiFindingsQuery,
+  GetApiDashboardAbstractorAiFindingsQueryParams,
+  GetApiDashboardAbstractorAiFindingsQueryResponse,
+} from "./GetApiDashboardAbstractorAiFindings.ts";
+export type {
+  GetApiDashboardAbstractorStats200,
+  GetApiDashboardAbstractorStats401,
+  GetApiDashboardAbstractorStatsQuery,
+  GetApiDashboardAbstractorStatsQueryParams,
+  GetApiDashboardAbstractorStatsQueryResponse,
+} from "./GetApiDashboardAbstractorStats.ts";
+export type {
+  GetApiDashboardAbstractorUserQueue200,
+  GetApiDashboardAbstractorUserQueue400,
+  GetApiDashboardAbstractorUserQueue401,
+  GetApiDashboardAbstractorUserQueueQuery,
+  GetApiDashboardAbstractorUserQueueQueryParams,
+  GetApiDashboardAbstractorUserQueueQueryResponse,
+} from "./GetApiDashboardAbstractorUserQueue.ts";
+export type {
+  GetApiDashboardAbstractorVelocity200,
+  GetApiDashboardAbstractorVelocityQuery,
+  GetApiDashboardAbstractorVelocityQueryParams,
+  GetApiDashboardAbstractorVelocityQueryResponse,
+} from "./GetApiDashboardAbstractorVelocity.ts";
+export type {
   DataBenchmarkStatusEnumKey,
   GetApiDashboardMeasureRates200,
   GetApiDashboardMeasureRates400,
@@ -234,6 +261,32 @@ export type {
   GetApiDashboardMyQueueQueryParamsMeasurementYearEnumKey,
   GetApiDashboardMyQueueQueryResponse,
 } from "./GetApiDashboardMyQueue.ts";
+export type {
+  GetApiDashboardQaDiscrepancyTypes200,
+  GetApiDashboardQaDiscrepancyTypesQuery,
+  GetApiDashboardQaDiscrepancyTypesQueryParams,
+  GetApiDashboardQaDiscrepancyTypesQueryResponse,
+} from "./GetApiDashboardQaDiscrepancyTypes.ts";
+export type {
+  GetApiDashboardQaStats200,
+  GetApiDashboardQaStatsQuery,
+  GetApiDashboardQaStatsQueryParams,
+  GetApiDashboardQaStatsQueryResponse,
+} from "./GetApiDashboardQaStats.ts";
+export type {
+  GetApiDashboardQaThroughput200,
+  GetApiDashboardQaThroughputQuery,
+  GetApiDashboardQaThroughputQueryParams,
+  GetApiDashboardQaThroughputQueryResponse,
+} from "./GetApiDashboardQaThroughput.ts";
+export type {
+  GetApiDashboardQaUserQueue200,
+  GetApiDashboardQaUserQueue400,
+  GetApiDashboardQaUserQueue401,
+  GetApiDashboardQaUserQueueQuery,
+  GetApiDashboardQaUserQueueQueryParams,
+  GetApiDashboardQaUserQueueQueryResponse,
+} from "./GetApiDashboardQaUserQueue.ts";
 export type {
   GetApiDashboardQueueByDomain200,
   GetApiDashboardQueueByDomain401,
