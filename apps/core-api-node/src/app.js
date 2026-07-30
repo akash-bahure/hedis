@@ -145,4 +145,5 @@ app.use("/api/dashboard/abstractor", require("./routes/dashboardAbstractor.route
 app.use("/api/reports", require("./routes/reports.routes"));
 app.use("/api/hedis-reports", require("./routes/hedisReport.route"));
 app.use("/api/audit", require("./routes/auditSampling.route"));
+app.use("/api/text2sql", require("./routes/text2sql.routes"));
 module.exports = app;
