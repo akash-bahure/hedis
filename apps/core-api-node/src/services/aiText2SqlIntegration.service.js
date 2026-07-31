@@ -3,13 +3,15 @@ const axios = require("axios");
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:8000";
 
 /**
- * Sends natural language question and schema context to ai-service-node for SQL generation.
- * 
- * @param {string} question 
- * @param {string} schemaContext 
+ * Sends natural language question, schema context, and optional conversation history
+ * to ai-service-node for SQL generation via Ollama.
+ *
+ * @param {string} question
+ * @param {string} schemaContext
+ * @param {Array} conversationHistory - Array of { question, generated_sql, explanation }
  * @returns {Promise<{ sql: string, explanation: string }>}
  */
-async function requestSqlFromAiService(question, schemaContext) {
+async function requestSqlFromAiService(question, schemaContext, conversationHistory = []) {
   try {
     console.log(`[AI-Text2SQL Integration] Requesting SQL generation from ${AI_SERVICE_URL}/api/text2sql/generate`);
 
@@ -18,12 +20,13 @@ async function requestSqlFromAiService(question, schemaContext) {
       {
         question,
         schemaContext,
+        conversationHistory,
       },
       {
         headers: {
           "Content-Type": "application/json",
         },
-        timeout: 60000, // 60 seconds timeout
+        timeout: 120000, // 120 seconds timeout for complex queries
       }
     );
 

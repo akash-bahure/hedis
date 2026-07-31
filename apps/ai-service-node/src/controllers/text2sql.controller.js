@@ -3,11 +3,12 @@ const { buildText2SqlPrompt } = require("../prompts/text2sql.prompt");
 
 /**
  * POST /api/text2sql/generate
- * Generates a PostgreSQL query from a natural language question and schema context.
+ * Generates a PostgreSQL query from a natural language question, schema context,
+ * and optional conversation history for ChatGPT-like follow-up context.
  */
 exports.generateSql = async (req, res) => {
   try {
-    const { question, schemaContext } = req.body;
+    const { question, schemaContext, conversationHistory = [] } = req.body;
 
     if (!question) {
       return res.status(400).json({ error: "question is required" });
@@ -18,8 +19,15 @@ exports.generateSql = async (req, res) => {
     }
 
     console.log(`[AI Text-to-SQL] Processing question: "${question}"`);
+    if (conversationHistory.length > 0) {
+      console.log(`[AI Text-to-SQL] Conversation history: ${conversationHistory.length} messages`);
+    }
 
-    const prompt = buildText2SqlPrompt({ question, schemaContext });
+    const prompt = buildText2SqlPrompt({
+      question,
+      schemaContext,
+      conversationHistory,
+    });
 
     const aiResult = await callOllama(prompt);
 

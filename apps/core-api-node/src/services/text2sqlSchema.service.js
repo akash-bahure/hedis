@@ -479,6 +479,59 @@ const DEFAULT_TABLE_KEYS = [
  * @param {string} question - Natural language user prompt
  * @returns {string} - Formatted schema context string
  */
+// ──────────────────────────────────────────────────────────────
+// Dynamic Column Parser & Schema Extension
+// ──────────────────────────────────────────────────────────────
+
+// Pre-process dictionary to extract column names and merge with keywords
+for (const [tableKey, tableMeta] of Object.entries(DATABASE_SCHEMA_DICTIONARY)) {
+  const ddlLines = tableMeta.ddl.split("\n");
+  const extractedColumns = [];
+  for (const line of ddlLines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("TABLE") || trimmed.startsWith(");") || trimmed.startsWith("--")) {
+      continue;
+    }
+    // Match first word as column name
+    const match = trimmed.match(/^([a-zA-Z0-9_]+)\b/);
+    if (match) {
+      const colName = match[1].toLowerCase();
+      const ignoredKeyords = ["table", "constraint", "primary", "foreign", "unique", "check", "references", "default", "on", "index"];
+      if (!ignoredKeyords.includes(colName)) {
+        extractedColumns.push(colName);
+      }
+    }
+  }
+  tableMeta.columns = extractedColumns;
+  // Create a combined list of searchable words/keywords
+  tableMeta.allKeywords = [...new Set([
+    ...tableMeta.keywords.map(k => k.toLowerCase()),
+    ...extractedColumns,
+    tableKey.toLowerCase()
+  ])];
+}
+
+// Map foreign key relations for automatic inclusion
+const RELATIONSHIP_MAP = {
+  patients: ["projects", "clients"],
+  patient_charts: ["patients"],
+  manual_chart_abstractions: ["patients", "patient_charts", "users"],
+  chart_assignments: ["patient_charts", "users"],
+  hedis_evaluations: ["patients", "measures"],
+  clinical_timeline_events: ["patients", "patient_charts"],
+  projects: ["clients", "users"],
+  users: ["departments", "user_roles"],
+  hedis_qa_measure_decisions: ["patients", "patient_charts", "hedis_evaluations"],
+  hedis_measure_evidence: ["patients", "patient_charts", "hedis_evaluations", "users"],
+};
+
+/**
+ * Generates schema DDL context formatted for the Text-to-SQL prompt based on the question.
+ * Uses smart keyword matching on tables, columns, and relationship maps.
+ *
+ * @param {string} question - Natural language user prompt
+ * @returns {string} - Formatted schema context string
+ */
 function getRelevantSchema(question) {
   if (!question || typeof question !== "string") {
     return getDefaultSchemaContext();
@@ -487,11 +540,10 @@ function getRelevantSchema(question) {
   const normalizedQuestion = question.toLowerCase();
   const matchedKeys = new Set();
 
-  // Search for keywords matching tables
-  for (const [tableKey, tableMeta] of Object.entries(
-    DATABASE_SCHEMA_DICTIONARY
-  )) {
-    for (const keyword of tableMeta.keywords) {
+  // 1. Match tables using direct keywords, table names, and column names
+  for (const [tableKey, tableMeta] of Object.entries(DATABASE_SCHEMA_DICTIONARY)) {
+    // Check if the user question contains any table/column keyword
+    for (const keyword of tableMeta.allKeywords) {
       if (normalizedQuestion.includes(keyword)) {
         matchedKeys.add(tableKey);
         break;
@@ -499,37 +551,28 @@ function getRelevantSchema(question) {
     }
   }
 
-  // Include foreign key dependency tables for seamless JOIN generation
-  if (matchedKeys.has("patients")) {
-    matchedKeys.add("projects");
-    matchedKeys.add("clients");
-  }
-  if (matchedKeys.has("patient_charts")) {
-    matchedKeys.add("patients");
-  }
-  if (matchedKeys.has("manual_chart_abstractions")) {
-    matchedKeys.add("patients");
-    matchedKeys.add("patient_charts");
-    matchedKeys.add("users");
-  }
-  if (matchedKeys.has("chart_assignments")) {
-    matchedKeys.add("patient_charts");
-    matchedKeys.add("users");
-  }
-  if (matchedKeys.has("hedis_evaluations")) {
-    matchedKeys.add("patients");
-    matchedKeys.add("measures");
-  }
-  if (matchedKeys.has("clinical_timeline_events")) {
-    matchedKeys.add("patients");
-    matchedKeys.add("patient_charts");
-  }
-  if (matchedKeys.has("projects")) {
-    matchedKeys.add("clients");
-    matchedKeys.add("users");
+  // 2. Expand relationships recursively to ensure JOINs have all required tables
+  const keysToProcess = Array.from(matchedKeys);
+  const visited = new Set();
+  
+  while (keysToProcess.length > 0) {
+    const key = keysToProcess.shift();
+    if (visited.has(key)) continue;
+    visited.add(key);
+    matchedKeys.add(key);
+
+    const related = RELATIONSHIP_MAP[key];
+    if (related) {
+      for (const relKey of related) {
+        if (!matchedKeys.has(relKey)) {
+          matchedKeys.add(relKey);
+          keysToProcess.push(relKey);
+        }
+      }
+    }
   }
 
-  // If no specific table matched, fall back to core tables
+  // 3. Fallback to default core tables if nothing matches
   if (matchedKeys.size === 0) {
     DEFAULT_TABLE_KEYS.forEach((key) => matchedKeys.add(key));
   }
@@ -562,6 +605,7 @@ function getAllSchemaOverview() {
     tableName: table,
     description: meta.description,
     keywords: meta.keywords,
+    columns: meta.columns || [],
   }));
 }
 
@@ -571,3 +615,4 @@ module.exports = {
   getAllSchemaOverview,
   DATABASE_SCHEMA_DICTIONARY,
 };
+

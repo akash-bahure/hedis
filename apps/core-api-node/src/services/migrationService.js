@@ -1360,6 +1360,44 @@ CREATE TABLE IF NOT EXISTS ${schema}.chart_assignments (
       err.message
     );
   }
+
+  // ──────────────────────────────────────────────────────────────
+  // Text-to-SQL Conversation History Tables
+  // ──────────────────────────────────────────────────────────────
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.text2sql_conversations (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES ${schema}.users(id) ON DELETE SET NULL,
+      title VARCHAR(255) NOT NULL DEFAULT 'New Conversation',
+      status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'archived')),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_text2sql_conv_user ON ${schema}.text2sql_conversations(user_id);
+    CREATE INDEX IF NOT EXISTS idx_text2sql_conv_status ON ${schema}.text2sql_conversations(status);
+    CREATE INDEX IF NOT EXISTS idx_text2sql_conv_created ON ${schema}.text2sql_conversations(created_at DESC);
+  `);
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ${schema}.text2sql_messages (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      conversation_id UUID NOT NULL REFERENCES ${schema}.text2sql_conversations(id) ON DELETE CASCADE,
+      question TEXT NOT NULL,
+      generated_sql TEXT,
+      explanation TEXT,
+      result_data JSONB DEFAULT '[]'::jsonb,
+      row_count INTEGER DEFAULT 0,
+      execution_time_ms INTEGER DEFAULT 0,
+      success BOOLEAN DEFAULT TRUE,
+      error TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_text2sql_msg_conv ON ${schema}.text2sql_messages(conversation_id);
+    CREATE INDEX IF NOT EXISTS idx_text2sql_msg_created ON ${schema}.text2sql_messages(created_at DESC);
+  `);
 }
 
 module.exports = { runMigrations };

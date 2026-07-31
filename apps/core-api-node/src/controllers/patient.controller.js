@@ -106,8 +106,9 @@ exports.getPatients = async (req, res) => {
         user_name: req.user?.full_name || "System",
         ip_address: req.ip,
         description: `${total} charts accessed in a single request — 3.9x above established baseline of 8 charts/hour (simulated baseline).`,
-        investigation_details: "Delhi office IP, within working hours. Possible credential sharing. Investigation open.",
-        metadata: { requested_limit: limit, total_records: total }
+        investigation_details:
+          "Delhi office IP, within working hours. Possible credential sharing. Investigation open.",
+        metadata: { requested_limit: limit, total_records: total },
       });
     }
 
@@ -123,7 +124,10 @@ exports.getPatients = async (req, res) => {
     console.error("Get Patients Error:", err);
 
     // Create Security Alert for Inactive User Access
-    if (req.user?.user_status === 'Inactive' || req.user?.user_status === 'Suspended') {
+    if (
+      req.user?.user_status === "Inactive" ||
+      req.user?.user_status === "Suspended"
+    ) {
       await SecurityAlert.createSecurityAlert(req.db, {
         alert_type: "Inactive User Access",
         severity: "Critical",
@@ -132,8 +136,9 @@ exports.getPatients = async (req, res) => {
         user_name: req.user.full_name,
         ip_address: req.ip,
         description: `User "${req.user.full_name}" (Status: ${req.user.user_status}) attempted to access chart list.`,
-        investigation_details: "User marked inactive/suspended accessed charts without re-activation approval.",
-        metadata: { user_status: req.user.user_status }
+        investigation_details:
+          "User marked inactive/suspended accessed charts without re-activation approval.",
+        metadata: { user_status: req.user.user_status },
       });
     }
 
@@ -154,14 +159,22 @@ exports.assignPatient = async (req, res) => {
     let paramIndex = 1;
 
     if (userId && role) {
-      if (role.toLowerCase() === "quality analyst" || role.toLowerCase() === "qa") {
+      if (
+        role.toLowerCase() === "quality analyst" ||
+        role.toLowerCase() === "qa"
+      ) {
         updates.push(`qa_id = $${paramIndex++}`);
         values.push(userId);
-      } else if (role.toLowerCase() === "chart abstractor" || role.toLowerCase() === "abstractor") {
+      } else if (
+        role.toLowerCase() === "chart abstractor" ||
+        role.toLowerCase() === "abstractor"
+      ) {
         updates.push(`abstractor_id = $${paramIndex++}`);
         values.push(userId);
       } else {
-        return res.status(400).json({ error: "Invalid role. Use 'QA' or 'Abstractor'" });
+        return res
+          .status(400)
+          .json({ error: "Invalid role. Use 'QA' or 'Abstractor'" });
       }
     }
 
@@ -176,8 +189,16 @@ exports.assignPatient = async (req, res) => {
     }
 
     if (updates.length === 0) {
-      return res.status(400).json({ error: "Missing assignment data (abstractorId, qaId, or userId/role)" });
+      return res
+        .status(400)
+        .json({
+          error: "Missing assignment data (abstractorId, qaId, or userId/role)",
+        });
     }
+
+    // Always move stage to Assigned on successful assignment
+    updates.push(`stage = $${paramIndex++}`);
+    values.push("Assigned");
 
     const schema = req.tenant.schema_name;
     values.push(id);
@@ -290,19 +311,21 @@ exports.exportPatients = async (req, res) => {
     // Create Security Alert for Data Export
     const recordCount = patients.length;
     const isLargeExport = recordCount > 100;
-    
+
     await SecurityAlert.createSecurityAlert(req.db, {
-      alert_type: isLargeExport ? "Unauthorized PHI Export Attempt" : "Authorized Bulk Data Export",
+      alert_type: isLargeExport
+        ? "Unauthorized PHI Export Attempt"
+        : "Authorized Bulk Data Export",
       severity: isLargeExport ? "Critical" : "Low",
       status: isLargeExport ? "Active" : "Resolved",
       user_id: req.user?.id || null,
       user_name: req.user?.full_name || "System",
       ip_address: req.ip,
       description: `Bulk export of ${recordCount} PHI records attempted. Access ${isLargeExport ? "denied by DLP (placeholder logic)" : "within authorized scope"}.`,
-      investigation_details: isLargeExport 
+      investigation_details: isLargeExport
         ? "Pattern: all-charts URL export. Account suspicious. Manager notified."
         : "Routine export within normal parameters.",
-      metadata: { record_count: recordCount, format: format }
+      metadata: { record_count: recordCount, format: format },
     });
 
     // ================= CSV =================
