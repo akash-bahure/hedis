@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const { pdf } = require("pdf-to-img");
-const ollama = require("ollama");
+const { executeOllamaJob } = require("../queues/ollama.queue");
 
 class OCRService {
   async extract(pdfPath) {
@@ -27,7 +27,7 @@ class OCRService {
   }
 
   async ocrPage(imagePath, pageNo) {
-    const response = await ollama.chat({
+    const response = await executeOllamaJob("ocr-page", {
       model: "medgemma:4b",
       messages: [
         {

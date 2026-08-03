@@ -1,5 +1,5 @@
 const { buildHEDISCriteriaPrompt } = require("../prompts/hedis.prompt");
-const ollama = require("../config/ollama");
+const { executeOllamaJob } = require("../queues/ollama.queue");
 
 /**
  * Service for HEDIS Engine logic.
@@ -11,7 +11,7 @@ class HEDISService {
   async extractCriteria(text) {
     const prompt = buildHEDISCriteriaPrompt(text);
 
-    const response = await ollama.chat({
+    const response = await executeOllamaJob("criteria", {
       model: "gemma4:31b-cloud",
       messages: [{ role: "user", content: prompt }],
       format: "json",

@@ -3,7 +3,7 @@ const path = require("path");
 
 const { fromPath } = require("pdf2pic");
 
-const ollama = require("../config/ollama");
+const { executeOllamaJob } = require("../queues/ollama.queue");
 
 const OUTPUT_DIR = path.join(process.cwd(), "tmp-pages");
 
@@ -58,10 +58,10 @@ async function ocrImage(imagePath) {
 
     console.log("[AI] Using Host:", process.env.OLLAMA_CLOUD_URL);
     console.log("[AI] Using Model:", "gemma4:31b-cloud");
-    console.log("[AI] Starting OCR Request...");
+    console.log("[AI] Submitting OCR Job to Queue...");
     console.log("[AI] Image Path:", imagePath);
 
-    const response = await ollama.chat({
+    const response = await executeOllamaJob("ocr", {
       model: "gemma4:31b-cloud",
       messages: [
         {
@@ -90,7 +90,7 @@ Return plain text only.`,
       ],
     });
 
-    console.log("[AI] OCR Response Received");
+    console.log("[AI] OCR Response Received from Queue");
 
     return response.message.content;
   } catch (error) {
