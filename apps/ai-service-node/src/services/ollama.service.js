@@ -18,16 +18,16 @@
 // module.exports = {
 //   callOllama,
 // };
-const ollama = require("../config/ollama");
+const { executeOllamaJob } = require("../queues/ollama.queue");
 
 async function callOllama(prompt) {
   try {
-    console.log("[AI] Calling Ollama...");
+    console.log("[AI] Submitting Ollama job to queue...");
     console.log("[AI] Host:", process.env.OLLAMA_CLOUD_URL);
     console.log("[AI] Model:", "gemma4:31b-cloud");
     console.log("[AI] Prompt Length:", prompt?.length);
 
-    const response = await ollama.chat({
+    const response = await executeOllamaJob("chat", {
       model: "gemma4:31b-cloud",
       messages: [
         {
@@ -38,7 +38,7 @@ async function callOllama(prompt) {
       format: "json",
     });
 
-    console.log("[AI] Response Received");
+    console.log("[AI] Response Received from Queue");
 
     const raw = response.message.content
       .trim()
@@ -50,7 +50,7 @@ async function callOllama(prompt) {
 
     return JSON.parse(raw);
   } catch (error) {
-    console.error("[AI] Ollama Error:");
+    console.error("[AI] Ollama Service Error:");
     console.error(error);
 
     throw error;

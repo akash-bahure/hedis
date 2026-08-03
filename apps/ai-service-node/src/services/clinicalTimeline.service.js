@@ -1,5 +1,5 @@
 const { buildClinicalTimelinePrompt } = require("../prompts/clinicalTimeline.prompt");
-const ollama = require("../config/ollama");
+const { executeOllamaJob } = require("../queues/ollama.queue");
 
 /**
  * Service for Clinical Timeline extraction.
@@ -16,7 +16,7 @@ class ClinicalTimelineService {
     const prompt = buildClinicalTimelinePrompt(text);
 
     try {
-      const response = await ollama.chat({
+      const response = await executeOllamaJob("timeline", {
         model: "gemma4:31b-cloud",
         messages: [{ role: "user", content: prompt }],
         format: "json",

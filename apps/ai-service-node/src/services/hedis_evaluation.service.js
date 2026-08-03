@@ -1,4 +1,4 @@
-const ollama = require("../config/ollama");
+const { executeOllamaJob } = require("../queues/ollama.queue");
 const { buildBulkHEDISEvaluationPrompt } = require("../prompts/hedis_evaluation.prompt");
 
 class HEDISEvaluationService {
@@ -15,7 +15,7 @@ class HEDISEvaluationService {
       try {
         const prompt = buildBulkHEDISEvaluationPrompt(chartText, [measure]);
 
-        const response = await ollama.chat({
+        const response = await executeOllamaJob("eval", {
           model: "gemma4:31b-cloud",
           messages: [{ role: "user", content: prompt }],
           format: "json",

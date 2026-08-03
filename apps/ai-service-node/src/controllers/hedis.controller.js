@@ -97,14 +97,14 @@ exports.qaReviewAnalysis = async (req, res) => {
     const prompt = buildQAReviewAnalysisPrompt(text, measureRules, manualEvidence);
 
     // 3. Call LLM
-    console.log("Calling LLM for QA Review Analysis...");
-    const ollama = require("../config/ollama");
-    const response = await ollama.chat({
+    console.log("Submitting LLM job for QA Review Analysis...");
+    const { executeOllamaJob } = require("../queues/ollama.queue");
+    const response = await executeOllamaJob("qa-review", {
       model: "gemma4:31b-cloud",
       messages: [{ role: "user", content: prompt }],
       format: "json",
     });
-    console.log("LLM response received.");
+    console.log("LLM response received from queue.");
 
     let raw = response.message.content.trim();
     
