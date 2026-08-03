@@ -941,6 +941,38 @@ export {
   postAdminUsersMutationResponseSchema,
 } from "./Super Admin UsersSchemas/postAdminUsersSchema.ts";
 export {
+  deleteApiText2SqlConversationsId200Schema,
+  deleteApiText2SqlConversationsId404Schema,
+  deleteApiText2SqlConversationsId500Schema,
+  deleteApiText2SqlConversationsIdMutationResponseSchema,
+  deleteApiText2SqlConversationsIdPathParamsSchema,
+} from "./Text-to-SQLSchemas/deleteApiText2SqlConversationsIdSchema.ts";
+export {
+  getApiText2SqlConversationsId200Schema,
+  getApiText2SqlConversationsId404Schema,
+  getApiText2SqlConversationsId500Schema,
+  getApiText2SqlConversationsIdPathParamsSchema,
+  getApiText2SqlConversationsIdQueryResponseSchema,
+} from "./Text-to-SQLSchemas/getApiText2SqlConversationsIdSchema.ts";
+export {
+  getApiText2SqlConversations200Schema,
+  getApiText2SqlConversations401Schema,
+  getApiText2SqlConversations500Schema,
+  getApiText2SqlConversationsQueryParamsSchema,
+  getApiText2SqlConversationsQueryResponseSchema,
+} from "./Text-to-SQLSchemas/getApiText2SqlConversationsSchema.ts";
+export {
+  getApiText2SqlSchema200Schema,
+  getApiText2SqlSchemaQueryResponseSchema,
+} from "./Text-to-SQLSchemas/getApiText2SqlSchemaSchema.ts";
+export {
+  postApiText2SqlQuery200Schema,
+  postApiText2SqlQuery400Schema,
+  postApiText2SqlQuery500Schema,
+  postApiText2SqlQueryMutationRequestSchema,
+  postApiText2SqlQueryMutationResponseSchema,
+} from "./Text-to-SQLSchemas/postApiText2SqlQuerySchema.ts";
+export {
   getApiUserRolesId200Schema,
   getApiUserRolesId404Schema,
   getApiUserRolesId500Schema,

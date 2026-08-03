@@ -38,6 +38,14 @@ export type {
   DeleteApiSecurityAllowedIpsIdPathParams,
 } from "./DeleteApiSecurityAllowedIpsId.ts";
 export type {
+  DeleteApiText2SqlConversationsId200,
+  DeleteApiText2SqlConversationsId404,
+  DeleteApiText2SqlConversationsId500,
+  DeleteApiText2SqlConversationsIdMutation,
+  DeleteApiText2SqlConversationsIdMutationResponse,
+  DeleteApiText2SqlConversationsIdPathParams,
+} from "./DeleteApiText2SqlConversationsId.ts";
+export type {
   DeleteApiUsersId200,
   DeleteApiUsersId404,
   DeleteApiUsersId500,
@@ -734,6 +742,27 @@ export type {
   GetApiSecurityStatsQueryResponse,
 } from "./GetApiSecurityStats.ts";
 export type {
+  GetApiText2SqlConversations200,
+  GetApiText2SqlConversations401,
+  GetApiText2SqlConversations500,
+  GetApiText2SqlConversationsQuery,
+  GetApiText2SqlConversationsQueryParams,
+  GetApiText2SqlConversationsQueryResponse,
+} from "./GetApiText2SqlConversations.ts";
+export type {
+  GetApiText2SqlConversationsId200,
+  GetApiText2SqlConversationsId404,
+  GetApiText2SqlConversationsId500,
+  GetApiText2SqlConversationsIdPathParams,
+  GetApiText2SqlConversationsIdQuery,
+  GetApiText2SqlConversationsIdQueryResponse,
+} from "./GetApiText2SqlConversationsId.ts";
+export type {
+  GetApiText2SqlSchema200,
+  GetApiText2SqlSchemaQuery,
+  GetApiText2SqlSchemaQueryResponse,
+} from "./GetApiText2SqlSchema.ts";
+export type {
   GetApiUserRoles200,
   GetApiUserRoles500,
   GetApiUserRolesQuery,
@@ -1225,6 +1254,14 @@ export type {
   PostApiSecurityAllowedIpsMutationRequest,
   PostApiSecurityAllowedIpsMutationResponse,
 } from "./PostApiSecurityAllowedIps.ts";
+export type {
+  PostApiText2SqlQuery200,
+  PostApiText2SqlQuery400,
+  PostApiText2SqlQuery500,
+  PostApiText2SqlQueryMutation,
+  PostApiText2SqlQueryMutationRequest,
+  PostApiText2SqlQueryMutationResponse,
+} from "./PostApiText2SqlQuery.ts";
 export type {
   PostApiUserRoles201,
   PostApiUserRoles400,

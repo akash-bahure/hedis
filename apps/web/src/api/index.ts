@@ -335,6 +335,17 @@ export type { GetAdminUsersSuspenseQueryKey } from "./hooks/Super Admin UsersHoo
 export type { GetAdminUsersSuspenseInfiniteQueryKey } from "./hooks/Super Admin UsersHooks/useGetAdminUsersSuspenseInfinite.ts";
 export type { PatchAdminUsersIdMutationKey } from "./hooks/Super Admin UsersHooks/usePatchAdminUsersId.ts";
 export type { PostAdminUsersMutationKey } from "./hooks/Super Admin UsersHooks/usePostAdminUsers.ts";
+export type { DeleteApiText2SqlConversationsIdMutationKey } from "./hooks/Text-to-SQLHooks/useDeleteApiText2SqlConversationsId.ts";
+export type { GetApiText2SqlConversationsQueryKey } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversations.ts";
+export type { GetApiText2SqlConversationsIdQueryKey } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversationsId.ts";
+export type { GetApiText2SqlConversationsIdSuspenseQueryKey } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversationsIdSuspense.ts";
+export type { GetApiText2SqlConversationsIdSuspenseInfiniteQueryKey } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversationsIdSuspenseInfinite.ts";
+export type { GetApiText2SqlConversationsSuspenseQueryKey } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversationsSuspense.ts";
+export type { GetApiText2SqlConversationsSuspenseInfiniteQueryKey } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversationsSuspenseInfinite.ts";
+export type { GetApiText2SqlSchemaQueryKey } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlSchema.ts";
+export type { GetApiText2SqlSchemaSuspenseQueryKey } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlSchemaSuspense.ts";
+export type { GetApiText2SqlSchemaSuspenseInfiniteQueryKey } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlSchemaSuspenseInfinite.ts";
+export type { PostApiText2SqlQueryMutationKey } from "./hooks/Text-to-SQLHooks/usePostApiText2SqlQuery.ts";
 export type { GetApiUserRolesQueryKey } from "./hooks/User RolesHooks/useGetApiUserRoles.ts";
 export type { GetApiUserRolesIdQueryKey } from "./hooks/User RolesHooks/useGetApiUserRolesId.ts";
 export type { GetApiUserRolesIdSuspenseQueryKey } from "./hooks/User RolesHooks/useGetApiUserRolesIdSuspense.ts";
@@ -410,6 +421,14 @@ export type {
   DeleteApiSecurityAllowedIpsIdMutationResponse,
   DeleteApiSecurityAllowedIpsIdPathParams,
 } from "./types/DeleteApiSecurityAllowedIpsId.ts";
+export type {
+  DeleteApiText2SqlConversationsId200,
+  DeleteApiText2SqlConversationsId404,
+  DeleteApiText2SqlConversationsId500,
+  DeleteApiText2SqlConversationsIdMutation,
+  DeleteApiText2SqlConversationsIdMutationResponse,
+  DeleteApiText2SqlConversationsIdPathParams,
+} from "./types/DeleteApiText2SqlConversationsId.ts";
 export type {
   DeleteApiUsersId200,
   DeleteApiUsersId404,
@@ -1107,6 +1126,27 @@ export type {
   GetApiSecurityStatsQueryResponse,
 } from "./types/GetApiSecurityStats.ts";
 export type {
+  GetApiText2SqlConversations200,
+  GetApiText2SqlConversations401,
+  GetApiText2SqlConversations500,
+  GetApiText2SqlConversationsQuery,
+  GetApiText2SqlConversationsQueryParams,
+  GetApiText2SqlConversationsQueryResponse,
+} from "./types/GetApiText2SqlConversations.ts";
+export type {
+  GetApiText2SqlConversationsId200,
+  GetApiText2SqlConversationsId404,
+  GetApiText2SqlConversationsId500,
+  GetApiText2SqlConversationsIdPathParams,
+  GetApiText2SqlConversationsIdQuery,
+  GetApiText2SqlConversationsIdQueryResponse,
+} from "./types/GetApiText2SqlConversationsId.ts";
+export type {
+  GetApiText2SqlSchema200,
+  GetApiText2SqlSchemaQuery,
+  GetApiText2SqlSchemaQueryResponse,
+} from "./types/GetApiText2SqlSchema.ts";
+export type {
   GetApiUserRoles200,
   GetApiUserRoles500,
   GetApiUserRolesQuery,
@@ -1599,6 +1639,14 @@ export type {
   PostApiSecurityAllowedIpsMutationResponse,
 } from "./types/PostApiSecurityAllowedIps.ts";
 export type {
+  PostApiText2SqlQuery200,
+  PostApiText2SqlQuery400,
+  PostApiText2SqlQuery500,
+  PostApiText2SqlQueryMutation,
+  PostApiText2SqlQueryMutationRequest,
+  PostApiText2SqlQueryMutationResponse,
+} from "./types/PostApiText2SqlQuery.ts";
+export type {
   PostApiUserRoles201,
   PostApiUserRoles400,
   PostApiUserRoles500,
@@ -1735,6 +1783,7 @@ export { deleteApiClientsId } from "./clients/deleteApiClientsId.ts";
 export { deleteApiProfileActiveSessionsSessionid } from "./clients/deleteApiProfileActiveSessionsSessionid.ts";
 export { deleteApiProjectsId } from "./clients/deleteApiProjectsId.ts";
 export { deleteApiSecurityAllowedIpsId } from "./clients/deleteApiSecurityAllowedIpsId.ts";
+export { deleteApiText2SqlConversationsId } from "./clients/deleteApiText2SqlConversationsId.ts";
 export { deleteApiUsersId } from "./clients/deleteApiUsersId.ts";
 export { getAdminOrgs } from "./clients/getAdminOrgs.ts";
 export { getAdminUsers } from "./clients/getAdminUsers.ts";
@@ -1825,6 +1874,9 @@ export { getApiSecurityPhiEncryptionControls } from "./clients/getApiSecurityPhi
 export { getApiSecuritySecurityScore } from "./clients/getApiSecuritySecurityScore.ts";
 export { getApiSecuritySessionManagementV2 } from "./clients/getApiSecuritySessionManagementV2.ts";
 export { getApiSecurityStats } from "./clients/getApiSecurityStats.ts";
+export { getApiText2SqlConversations } from "./clients/getApiText2SqlConversations.ts";
+export { getApiText2SqlConversationsId } from "./clients/getApiText2SqlConversationsId.ts";
+export { getApiText2SqlSchema } from "./clients/getApiText2SqlSchema.ts";
 export { getApiUserRoles } from "./clients/getApiUserRoles.ts";
 export { getApiUserRolesId } from "./clients/getApiUserRolesId.ts";
 export { getApiUsers } from "./clients/getApiUsers.ts";
@@ -1885,6 +1937,7 @@ export { postApiProfileActiveSessionsRevokeOthers } from "./clients/postApiProfi
 export { postApiProjects } from "./clients/postApiProjects.ts";
 export { postApiSecurityAlertsBlockUser } from "./clients/postApiSecurityAlertsBlockUser.ts";
 export { postApiSecurityAllowedIps } from "./clients/postApiSecurityAllowedIps.ts";
+export { postApiText2SqlQuery } from "./clients/postApiText2SqlQuery.ts";
 export { postApiUserRoles } from "./clients/postApiUserRoles.ts";
 export { postApiUsers } from "./clients/postApiUsers.ts";
 export { postApiUsersAssignRole } from "./clients/postApiUsersAssignRole.ts";
@@ -2910,6 +2963,39 @@ export { usePatchAdminUsersId } from "./hooks/Super Admin UsersHooks/usePatchAdm
 export { postAdminUsersMutationKey } from "./hooks/Super Admin UsersHooks/usePostAdminUsers.ts";
 export { postAdminUsersMutationOptions } from "./hooks/Super Admin UsersHooks/usePostAdminUsers.ts";
 export { usePostAdminUsers } from "./hooks/Super Admin UsersHooks/usePostAdminUsers.ts";
+export { deleteApiText2SqlConversationsIdMutationKey } from "./hooks/Text-to-SQLHooks/useDeleteApiText2SqlConversationsId.ts";
+export { deleteApiText2SqlConversationsIdMutationOptions } from "./hooks/Text-to-SQLHooks/useDeleteApiText2SqlConversationsId.ts";
+export { useDeleteApiText2SqlConversationsId } from "./hooks/Text-to-SQLHooks/useDeleteApiText2SqlConversationsId.ts";
+export { getApiText2SqlConversationsQueryKey } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversations.ts";
+export { getApiText2SqlConversationsQueryOptions } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversations.ts";
+export { useGetApiText2SqlConversations } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversations.ts";
+export { getApiText2SqlConversationsIdQueryKey } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversationsId.ts";
+export { getApiText2SqlConversationsIdQueryOptions } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversationsId.ts";
+export { useGetApiText2SqlConversationsId } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversationsId.ts";
+export { getApiText2SqlConversationsIdSuspenseQueryKey } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversationsIdSuspense.ts";
+export { getApiText2SqlConversationsIdSuspenseQueryOptions } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversationsIdSuspense.ts";
+export { useGetApiText2SqlConversationsIdSuspense } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversationsIdSuspense.ts";
+export { getApiText2SqlConversationsIdSuspenseInfiniteQueryKey } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversationsIdSuspenseInfinite.ts";
+export { getApiText2SqlConversationsIdSuspenseInfiniteQueryOptions } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversationsIdSuspenseInfinite.ts";
+export { useGetApiText2SqlConversationsIdSuspenseInfinite } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversationsIdSuspenseInfinite.ts";
+export { getApiText2SqlConversationsSuspenseQueryKey } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversationsSuspense.ts";
+export { getApiText2SqlConversationsSuspenseQueryOptions } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversationsSuspense.ts";
+export { useGetApiText2SqlConversationsSuspense } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversationsSuspense.ts";
+export { getApiText2SqlConversationsSuspenseInfiniteQueryKey } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversationsSuspenseInfinite.ts";
+export { getApiText2SqlConversationsSuspenseInfiniteQueryOptions } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversationsSuspenseInfinite.ts";
+export { useGetApiText2SqlConversationsSuspenseInfinite } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlConversationsSuspenseInfinite.ts";
+export { getApiText2SqlSchemaQueryKey } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlSchema.ts";
+export { getApiText2SqlSchemaQueryOptions } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlSchema.ts";
+export { useGetApiText2SqlSchema } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlSchema.ts";
+export { getApiText2SqlSchemaSuspenseQueryKey } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlSchemaSuspense.ts";
+export { getApiText2SqlSchemaSuspenseQueryOptions } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlSchemaSuspense.ts";
+export { useGetApiText2SqlSchemaSuspense } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlSchemaSuspense.ts";
+export { getApiText2SqlSchemaSuspenseInfiniteQueryKey } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlSchemaSuspenseInfinite.ts";
+export { getApiText2SqlSchemaSuspenseInfiniteQueryOptions } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlSchemaSuspenseInfinite.ts";
+export { useGetApiText2SqlSchemaSuspenseInfinite } from "./hooks/Text-to-SQLHooks/useGetApiText2SqlSchemaSuspenseInfinite.ts";
+export { postApiText2SqlQueryMutationKey } from "./hooks/Text-to-SQLHooks/usePostApiText2SqlQuery.ts";
+export { postApiText2SqlQueryMutationOptions } from "./hooks/Text-to-SQLHooks/usePostApiText2SqlQuery.ts";
+export { usePostApiText2SqlQuery } from "./hooks/Text-to-SQLHooks/usePostApiText2SqlQuery.ts";
 export { getApiUserRolesQueryKey } from "./hooks/User RolesHooks/useGetApiUserRoles.ts";
 export { getApiUserRolesQueryOptions } from "./hooks/User RolesHooks/useGetApiUserRoles.ts";
 export { useGetApiUserRoles } from "./hooks/User RolesHooks/useGetApiUserRoles.ts";
@@ -4076,6 +4162,38 @@ export {
   postAdminUsersMutationRequestSchema,
   postAdminUsersMutationResponseSchema,
 } from "./zod/Super Admin UsersSchemas/postAdminUsersSchema.ts";
+export {
+  deleteApiText2SqlConversationsId200Schema,
+  deleteApiText2SqlConversationsId404Schema,
+  deleteApiText2SqlConversationsId500Schema,
+  deleteApiText2SqlConversationsIdMutationResponseSchema,
+  deleteApiText2SqlConversationsIdPathParamsSchema,
+} from "./zod/Text-to-SQLSchemas/deleteApiText2SqlConversationsIdSchema.ts";
+export {
+  getApiText2SqlConversationsId200Schema,
+  getApiText2SqlConversationsId404Schema,
+  getApiText2SqlConversationsId500Schema,
+  getApiText2SqlConversationsIdPathParamsSchema,
+  getApiText2SqlConversationsIdQueryResponseSchema,
+} from "./zod/Text-to-SQLSchemas/getApiText2SqlConversationsIdSchema.ts";
+export {
+  getApiText2SqlConversations200Schema,
+  getApiText2SqlConversations401Schema,
+  getApiText2SqlConversations500Schema,
+  getApiText2SqlConversationsQueryParamsSchema,
+  getApiText2SqlConversationsQueryResponseSchema,
+} from "./zod/Text-to-SQLSchemas/getApiText2SqlConversationsSchema.ts";
+export {
+  getApiText2SqlSchema200Schema,
+  getApiText2SqlSchemaQueryResponseSchema,
+} from "./zod/Text-to-SQLSchemas/getApiText2SqlSchemaSchema.ts";
+export {
+  postApiText2SqlQuery200Schema,
+  postApiText2SqlQuery400Schema,
+  postApiText2SqlQuery500Schema,
+  postApiText2SqlQueryMutationRequestSchema,
+  postApiText2SqlQueryMutationResponseSchema,
+} from "./zod/Text-to-SQLSchemas/postApiText2SqlQuerySchema.ts";
 export {
   getApiUserRolesId200Schema,
   getApiUserRolesId404Schema,
