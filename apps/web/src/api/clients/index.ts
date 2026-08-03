@@ -3,6 +3,7 @@ export { deleteApiClientsId } from "./deleteApiClientsId.ts";
 export { deleteApiProfileActiveSessionsSessionid } from "./deleteApiProfileActiveSessionsSessionid.ts";
 export { deleteApiProjectsId } from "./deleteApiProjectsId.ts";
 export { deleteApiSecurityAllowedIpsId } from "./deleteApiSecurityAllowedIpsId.ts";
+export { deleteApiText2SqlConversationsId } from "./deleteApiText2SqlConversationsId.ts";
 export { deleteApiUsersId } from "./deleteApiUsersId.ts";
 export { getAdminOrgs } from "./getAdminOrgs.ts";
 export { getAdminUsers } from "./getAdminUsers.ts";
@@ -93,6 +94,9 @@ export { getApiSecurityPhiEncryptionControls } from "./getApiSecurityPhiEncrypti
 export { getApiSecuritySecurityScore } from "./getApiSecuritySecurityScore.ts";
 export { getApiSecuritySessionManagementV2 } from "./getApiSecuritySessionManagementV2.ts";
 export { getApiSecurityStats } from "./getApiSecurityStats.ts";
+export { getApiText2SqlConversations } from "./getApiText2SqlConversations.ts";
+export { getApiText2SqlConversationsId } from "./getApiText2SqlConversationsId.ts";
+export { getApiText2SqlSchema } from "./getApiText2SqlSchema.ts";
 export { getApiUserRoles } from "./getApiUserRoles.ts";
 export { getApiUserRolesId } from "./getApiUserRolesId.ts";
 export { getApiUsers } from "./getApiUsers.ts";
@@ -153,6 +157,7 @@ export { postApiProfileActiveSessionsRevokeOthers } from "./postApiProfileActive
 export { postApiProjects } from "./postApiProjects.ts";
 export { postApiSecurityAlertsBlockUser } from "./postApiSecurityAlertsBlockUser.ts";
 export { postApiSecurityAllowedIps } from "./postApiSecurityAllowedIps.ts";
+export { postApiText2SqlQuery } from "./postApiText2SqlQuery.ts";
 export { postApiUserRoles } from "./postApiUserRoles.ts";
 export { postApiUsers } from "./postApiUsers.ts";
 export { postApiUsersAssignRole } from "./postApiUsersAssignRole.ts";
